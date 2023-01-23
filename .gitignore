@@ -1,0 +1,4 @@
+*.cpe
+*.exe
+build/
+license_data.dat
