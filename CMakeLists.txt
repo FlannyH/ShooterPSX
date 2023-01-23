@@ -11,7 +11,7 @@ project(
 	HOMEPAGE_URL "http://lameguy64.net/?page=psn00bsdk"
 )
 
-file(GLOB _sources *.c *.s)
+file(GLOB _sources ./source/*.c ./source/*.s)
 psn00bsdk_add_executable(main GPREL ${_sources})
 
 psn00bsdk_add_cd_image(
