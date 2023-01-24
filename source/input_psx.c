@@ -1,5 +1,7 @@
+#ifdef _PSX
 #include "input.h"
 #include <psxapi.h>     // API header, has InitPAD() and StartPAD() defs
+#include <psxpad.h>
 
 char pad_buff[2][34];
 uint16_t button_prev[2] = {0, 0};
@@ -108,3 +110,4 @@ int8_t input_right_stick_y(int player_id) {
 int8_t input_right_stick_y_relative(int player_id) {
     return right_stick_y_curr[player_id] - left_stick_y_prev[player_id];
 }
+#endif

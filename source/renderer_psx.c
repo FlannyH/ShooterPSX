@@ -1,5 +1,10 @@
+#ifdef _PSX
 #include "renderer.h"
 #include <stdio.h>
+#include <psxgte.h>	// GTE header, not really used but libgpu.h depends on it
+#include <psxgpu.h>	// GPU library header
+#include <psxetc.h>	// Includes some functions that controls the display
+#include <inline_c.h>
 
 // Define environment pairs and buffer counter
 DISPENV disp[2];
@@ -306,3 +311,4 @@ int renderer_get_n_rendered_triangles() {
 int renderer_get_n_total_triangles() {
     return n_total_triangles;
 }
+#endif

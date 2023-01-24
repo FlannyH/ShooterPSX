@@ -1,7 +1,6 @@
 #ifndef INPUT_H
 #define INPUT_H
 #include <stdint.h>
-#include <psxpad.h>
 
 void input_init();
 void input_update();

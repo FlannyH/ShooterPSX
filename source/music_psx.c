@@ -1,3 +1,4 @@
+#ifdef _PSX
 #include "music.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -87,3 +88,4 @@ void music_play_file(const char* path) {
     printf("start playing xa file allegedly\n");
     xa_play_channel = 0;
 }
+#endif

@@ -1,12 +1,13 @@
 #ifndef RENDERER_H
 #define RENDERER_H
+#ifdef _PSX
+#include <psxgte.h>
+#else
+#include "win/psx.h"
+#endif
 #include <sys/types.h>	// This provides typedefs needed by libgte.h and libgpu.h
 #include <stdint.h>
 #include <stdlib.h>	
-#include <psxgte.h>	// GTE header, not really used but libgpu.h depends on it
-#include <psxgpu.h>	// GPU library header
-#include <psxetc.h>	// Includes some functions that controls the display
-#include <inline_c.h>
 #include "mesh.h"
 #include "common.h"
 

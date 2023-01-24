@@ -5,22 +5,49 @@
 		"minor": 21,
 		"patch": 0
 	},
-	"configurePresets": [
-		{
-			"name":          "default",
-			"displayName":   "Default configuration",
-			"description":   "Use this preset to build the project using PSn00bSDK.",
-			"generator":     "Ninja",
-			"toolchainFile": "$env{PSN00BSDK_LIBS}/cmake/sdk.cmake",
-			"binaryDir":     "${sourceDir}/build",
-			"cacheVariables": {
-				"CMAKE_BUILD_TYPE": "Debug",
-				"PSN00BSDK_TC":     "",
-				"PSN00BSDK_TARGET": "mipsel-none-elf"
-			},
-			"warnings": {
-				"dev": false
-			}
-		}
-	]
+    "configurePresets": [
+        {
+            "name": "psx-debug",
+            "displayName": "Playstation 1",
+            "description": "Use this preset to build the project using PSn00bSDK.",
+            "generator": "Ninja",
+            "toolchainFile": "$env{PSN00BSDK_LIBS}/cmake/sdk.cmake",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "PSN00BSDK_TC": "",
+                "PSN00BSDK_TARGET": "mipsel-none-elf"
+            },
+            "warnings": {
+                "dev": false
+            }
+        },
+        {
+            "name": "windows-base",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe",
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "windows-x64-debug",
+            "displayName": "Windows Debug (OpenGL)",
+            "inherits": "windows-base",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        }
+    ]
 }

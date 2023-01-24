@@ -3,20 +3,41 @@
 
 cmake_minimum_required(VERSION 3.21)
 
-project(
-	PSn00bSDK-template
-	LANGUAGES    C CXX ASM
-	VERSION      1.0.0
-	DESCRIPTION  "PSn00bSDK template"
-	HOMEPAGE_URL "http://lameguy64.net/?page=psn00bsdk"
-)
+if (DEFINED PSN00BSDK_TARGET)
+    project(
+	    PSn00bSDK-template
+	    LANGUAGES    C CXX ASM
+	    VERSION      1.0.0
+	    DESCRIPTION  "PSn00bSDK template"
+	    HOMEPAGE_URL "http://lameguy64.net/?page=psn00bsdk"
+    )
+    
+    psn00bsdk_add_executable(main GPREL 
+        source/file_psx.c 
+        source/input_psx.c 
+        source/renderer_psx.c 
+        source/music_psx.c
+        source/main.c 
+        source/mesh.c 
+        source/camera.c)
 
-file(GLOB _sources ./source/*.c ./source/*.s)
-psn00bsdk_add_executable(main GPREL ${_sources})
-
-psn00bsdk_add_cd_image(
-	iso      # Target name
-	ShooterPSX # Output file name (= template.bin + template.cue)
-	iso.xml  # Path to config file
-	DEPENDS main
-)
+    psn00bsdk_add_cd_image(
+	    iso      # Target name
+	    ShooterPSX # Output file name (= template.bin + template.cue)
+	    iso.xml  # Path to config file
+	    DEPENDS main
+    )
+    add_compile_definitions(_PSX)
+else()
+    project ("ShooterPSX")
+    add_executable (ShooterPSX
+        source/file_windows.c 
+        source/input_windows.c 
+        source/renderer_windows.c 
+        source/music_windows.c
+        source/main.c 
+        source/mesh.c 
+        source/camera.c
+    )
+    add_compile_definitions(_WINDOWS)
+endif()

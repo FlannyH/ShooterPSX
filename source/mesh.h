@@ -1,6 +1,6 @@
 #ifndef MESH_H
 #define MESH_H
-#include <psxgte.h>
+#include <stdint.h>
 
 typedef struct _vertex_2d {
     int16_t x, y; // 2D position

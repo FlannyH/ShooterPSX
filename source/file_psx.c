@@ -1,7 +1,8 @@
+#ifdef _PSX
 #include "file.h"
-#include <psxcd.h> // Disc IO
 #include <stdio.h>
 #include <stdlib.h>
+#include <psxcd.h> // Disc IO
 
 int file_read(const char* path, char** destination, size_t* size) {
     // Search for the file on disc - return false if it does not exist
@@ -29,3 +30,4 @@ int file_read(const char* path, char** destination, size_t* size) {
 
     return 1;
 }
+#endif

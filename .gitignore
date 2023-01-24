@@ -2,3 +2,4 @@
 *.exe
 build/
 license_data.dat
+.vs/
