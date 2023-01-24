@@ -34,6 +34,7 @@ void renderer_end_frame(); // Draws the render queue, swaps the drawbuffer, clea
 void renderer_draw_mesh_shaded(Mesh* mesh, Transform model_transform); // Draws a 3D mesh at a given transform using shaded triangle primitives
 void renderer_draw_triangles_shaded_2d(Vertex2D* vertex_buffer, uint16_t n_verts, int16_t x, int16_t y);
 int renderer_get_delta_time_raw();
+int renderer_get_delta_time_ms();
 int renderer_get_n_rendered_triangles();
 int renderer_get_n_total_triangles();
 #endif

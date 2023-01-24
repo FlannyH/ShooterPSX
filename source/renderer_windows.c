@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "renderer.h"
 #include <glfw/glfw3.h>
@@ -17,6 +18,7 @@ mat4 view_matrix;
 GLuint shader;
 GLuint vao;
 GLuint vbo;
+clock_t dt_clock;
 
 typedef enum _shader_type{
     vertex,
@@ -242,6 +244,9 @@ void renderer_init() {
     glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex3D), offsetof(Vertex3D, r));
     glVertexAttribPointer(2, 2, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(Vertex3D), offsetof(Vertex3D, u));
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // Initialize delta time clock
+    dt_clock = clock();
 }
 
 void renderer_begin_frame(Transform* camera_transform) {
@@ -252,9 +257,9 @@ void renderer_begin_frame(Transform* camera_transform) {
         (float)(camera_transform->position.vz >> 12)
     };
     vec3 rotation = {
-        (float)camera_transform->rotation.vx * (2*PI / 1048576.0f),
-        -(float)camera_transform->rotation.vy * (2*PI / 1048576.0f) + PI,
-        (float)camera_transform->rotation.vz * (2*PI / 1048576.0f) + PI
+        (float)camera_transform->rotation.vx * (2*PI / 131072.0f),
+        -(float)camera_transform->rotation.vy * (2*PI / 131072.0f) + PI,
+        (float)camera_transform->rotation.vz * (2*PI / 131072.0f) + PI
     };
 
     // Set view matrix
@@ -295,9 +300,9 @@ void renderer_draw_mesh_shaded(Mesh* mesh, Transform model_transform) {
         (float)model_transform.position.vz,
     };
     glm_translate(model_matrix, position);
-    glm_rotate_x(model_matrix, (float)model_transform.rotation.vx * 2 * PI / 4194304.0f, model_matrix);
-    glm_rotate_y(model_matrix, (float)model_transform.rotation.vy * 2 * PI / 4194304.0f, model_matrix);
-    glm_rotate_z(model_matrix, (float)model_transform.rotation.vz * 2 * PI / 4194304.0f, model_matrix);
+    glm_rotate_x(model_matrix, (float)model_transform.rotation.vx * 2 * PI / 131072.0f, model_matrix);
+    glm_rotate_y(model_matrix, (float)model_transform.rotation.vy * 2 * PI / 131072.0f, model_matrix);
+    glm_rotate_z(model_matrix, (float)model_transform.rotation.vz * 2 * PI / 131072.0f, model_matrix);
 
     // Bind shader
     glUseProgram(shader);
@@ -327,6 +332,13 @@ void renderer_draw_triangles_shaded_2d(Vertex2D* vertex_buffer, uint16_t n_verts
 
 int renderer_get_delta_time_raw() {
     return 0;
+}
+
+int renderer_get_delta_time_ms() {
+    int new_dt = clock();
+    int dt = (new_dt - dt_clock) * 1000 / CLOCKS_PER_SEC;
+    dt_clock = new_dt;
+    return dt;
 }
 
 int renderer_get_n_rendered_triangles() {

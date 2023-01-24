@@ -28,7 +28,7 @@ int main() {
     camera_transform.position.vy = 0;
     camera_transform.position.vz = 0;
     camera_transform.rotation.vx = 0;
-    camera_transform.rotation.vy = 1 << 20;
+    camera_transform.rotation.vy = 0;
     camera_transform.rotation.vz = 0;
 
     // Load model
@@ -49,13 +49,14 @@ int main() {
     //music_play_file("\\MUSIC.XA");
 
     int delta_time = 300;
+    int frame_counter = 0;
     while (1)
     {
+        delta_time = renderer_get_delta_time_ms();
         renderer_begin_frame(&camera_transform);
         input_update();
-        camera_update_flycam(&camera_transform);
-        camera_transform.position.vz -= 1;
-        t_cube1.rotation.vy += 1536;
+        camera_update_flycam(&camera_transform, delta_time);
+        t_cube1.rotation.vy += 64 * delta_time;
         renderer_draw_mesh_shaded(m_cube, t_cube1);
         renderer_draw_mesh_shaded(m_level, t_level);
         FntPrint(-1, "Frame: %i\n", frame_index++);
@@ -66,7 +67,6 @@ int main() {
         FntPrint(-1, "Triangles (rendered/total): %i / %i\n", renderer_get_n_rendered_triangles(), renderer_get_n_total_triangles());
         FntFlush(-1);
         renderer_end_frame();
-        //delta_time = renderer_get_delta_time_raw();
     }
     return 0;
 }

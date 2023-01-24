@@ -6,7 +6,7 @@
 
 int hisin(int a) {
     // Bring angle from [0, 4194304] -> [0, 2pi]
-    double angle_radians = (double)a * (2.0f * PI / 1048576.0f);
+    double angle_radians = (double)a * (2.0f * PI / 131072.0f);
 
     // Calculate the sine and convert it from [0.0, 1.0] to [0, 4096]
     int sine = (int)(sin(angle_radians) * 4096.0f);
@@ -15,7 +15,7 @@ int hisin(int a) {
 
 int hicos(int a) {
     // Bring angle from [0, 4194304] -> [0, 2pi]
-    float angle_radians = ((float)a) * (2.0f * PI / 1048576.0f);
+    double angle_radians = ((double)a) * (2.0 * PI / 131072.0f);
 
     // Calculate the cosine and convert it from [0.0, 1.0] to [0, 4096]
     int cosine = (int)(cos(angle_radians) * 4096.0f);

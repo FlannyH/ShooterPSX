@@ -20,6 +20,7 @@ char primitive_buffer[2][32768 << 3];
 char* next_primitive;
 MATRIX view_matrix;
 RECT	screen_clip;
+int vsync_enable = 0;
 
 int frame_counter = 0;
 
@@ -274,9 +275,13 @@ void renderer_draw_triangles_shaded_2d(Vertex2D* vertex_buffer, uint16_t n_verts
 void renderer_end_frame() {
     // Wait for GPU to finish drawing and V-blank
     DrawSync(0);
-    //while (((VSync(-1) - frame_counter) & 0x3FFF) < 2)
-    //    VSync(0);
-    //frame_counter = VSync(-1);
+
+    if (vsync_enable)
+    {
+        while (((VSync(-1) - frame_counter) & 0x3FFF) < vsync_enable)
+            VSync(0);
+        frame_counter = VSync(-1);
+    }
 
     // Flip buffer counter
     drawbuffer = !drawbuffer;
@@ -299,9 +304,35 @@ void renderer_end_frame() {
 }
 
 int renderer_get_delta_time_raw() {
-    delta_time_raw_prev = delta_time_raw_curr;
-    delta_time_raw_curr = VSync(-1);
-    return (delta_time_raw_curr - delta_time_raw_prev) & 0x7FFF;
+    if (vsync_enable) {
+        delta_time_raw_prev = delta_time_raw_curr;
+        delta_time_raw_curr = VSync(-1);
+        return (delta_time_raw_curr - delta_time_raw_prev) & 0x7FFF;
+    }
+    else {
+        delta_time_raw_prev = delta_time_raw_curr;
+        delta_time_raw_curr = VSync(1);
+        return (delta_time_raw_curr - delta_time_raw_prev) & 0x7FFF;
+    }
+}
+
+int renderer_get_delta_time_ms() {
+    int dt_raw = renderer_get_delta_time_raw();
+    int dt_ms = 0;
+    if (vsync_enable) {
+#ifdef PAL
+        dt_ms = 20 * dt_raw;
+#else
+        dt_ms = (16666 * dt_raw) / 1000;
+#endif
+    }
+    else {
+        dt_ms = (1000 * dt_raw) / 15625; // Somehow this works for both PAL and NTSC
+    }
+    if (dt_ms == 0) {
+        dt_ms = 1;
+    }
+    return dt_ms;
 }
 
 int renderer_get_n_rendered_triangles() {
