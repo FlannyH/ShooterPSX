@@ -30,4 +30,5 @@ int file_read(const char* path, char** destination, size_t* size) {
 
     return 1;
 }
+
 #endif

@@ -11,6 +11,7 @@ if (DEFINED PSN00BSDK_TARGET)
 	    DESCRIPTION  "PSn00bSDK template"
 	    HOMEPAGE_URL "http://lameguy64.net/?page=psn00bsdk"
     )
+    add_compile_definitions(_PSX)
     
     psn00bsdk_add_executable(main GPREL 
         source/file_psx.c 
@@ -27,7 +28,6 @@ if (DEFINED PSN00BSDK_TARGET)
 	    iso.xml  # Path to config file
 	    DEPENDS main
     )
-    add_compile_definitions(_PSX)
 else()
     project ("ShooterPSX")
     add_executable (ShooterPSX
@@ -38,6 +38,17 @@ else()
         source/main.c 
         source/mesh.c 
         source/camera.c
+        source/win/psx.c
+        external/source/GL/gl3w.c
+    )
+    target_link_libraries(ShooterPSX ${CMAKE_CURRENT_SOURCE_DIR}/external/libraries/glfw3.lib)
+    include_directories(external/include/)
+
+    add_custom_command(
+        TARGET ShooterPSX POST_BUILD
+        COMMAND robocopy /MIR
+                ${CMAKE_CURRENT_SOURCE_DIR}/assets/
+                ${CMAKE_CURRENT_BINARY_DIR}/assets/
     )
     add_compile_definitions(_WINDOWS)
 endif()

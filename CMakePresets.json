@@ -7,7 +7,7 @@
 	},
     "configurePresets": [
         {
-            "name": "psx-debug",
+            "name": "psx",
             "displayName": "Playstation 1",
             "description": "Use this preset to build the project using PSn00bSDK.",
             "generator": "Ninja",
@@ -20,7 +20,7 @@
             },
             "warnings": {
                 "dev": false
-            }
+            },
         },
         {
             "name": "windows-base",

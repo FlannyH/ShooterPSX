@@ -62,19 +62,20 @@
 			contain any number of files.
 		-->
 		<directory_tree>
-			<file name="SYSTEM.CNF"		type="data" source="${PROJECT_SOURCE_DIR}/system.cnf" />
-			<file name="MAIN.EXE"	type="data" source="main.exe" />
-			<file name="CUBETEST.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/cubetest.msh" />
-			<file name="LEVEL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/level.msh" />
-			<!--file name="MUSIC.XA" type="mixed" source="${PROJECT_SOURCE_DIR}/assets/music.xa"/>-->
-			<!--
-				This file is only required if you are using dynamic linking
-				(see the system/dynlink example). It contains the executable's
-				symbol map and can be used to obtain the address of a function
-				or global variable by its name.
-			-->
-			<!--<file name="TEMPLATE.MAP"	type="data" source="template.map" />-->
-
+            <file name="MAIN.EXE"	type="data" source="main.exe" />
+            <file name="SYSTEM.CNF"		type="data" source="${PROJECT_SOURCE_DIR}/system.cnf" />
+            <dir name="ASSETS">
+			    <file name="CUBETEST.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/cubetest.msh" />
+			    <file name="LEVEL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/level.msh" />
+			    <!--file name="MUSIC.XA" type="mixed" source="${PROJECT_SOURCE_DIR}/assets/music.xa"/>-->
+			    <!--
+				    This file is only required if you are using dynamic linking
+				    (see the system/dynlink example). It contains the executable's
+				    symbol map and can be used to obtain the address of a function
+				    or global variable by its name.
+			    -->
+			    <!--<file name="TEMPLATE.MAP"	type="data" source="template.map" />-->
+            </dir>
 			<dummy sectors="1024"/>
 		</directory_tree>
 	</track>

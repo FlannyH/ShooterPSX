@@ -26,10 +26,10 @@ void camera_update_flycam(Transform* camera_transform) {
             camera_transform->position.vz -= (hisin(camera_transform->rotation.vy) * (input_left_stick_x(0))) >> 2;
 
             // Look up and down
-            camera_transform->rotation.vx += (input_right_stick_y(0)) << 3;
+            camera_transform->rotation.vx += (int32_t)(input_right_stick_y(0)) << 3;
 
             // Look left and right
-            camera_transform->rotation.vy -= (input_right_stick_x(0)) << 3;
+            camera_transform->rotation.vy -= (int32_t)(input_right_stick_x(0)) << 3;
         }
         if (input_held(PAD_R1, 0)) {
             // Slide up

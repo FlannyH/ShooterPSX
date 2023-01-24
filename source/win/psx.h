@@ -2,7 +2,6 @@
 #define WIN_GTE_H
 
 // This entire document is a duct tape fix for the Windows debug version
-
 #ifdef _WINDOWS
 #include <stdint.h>
 typedef struct _VECTOR {
@@ -11,6 +10,10 @@ typedef struct _VECTOR {
 
 int hisin(int a);
 int hicos(int a);
+int FntPrint(int id, const char* fmt, ...);
+char* FntFlush(int id);
+
+#define FntPrint(a, b) {}
 
 typedef enum {
     // Standard pads, analog joystick, Jogcon
