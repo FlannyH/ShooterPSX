@@ -39,16 +39,33 @@ else()
         source/mesh.c 
         source/camera.c
         source/win/psx.c
+        source/win/debug_layer.cpp
         external/source/GL/gl3w.c
+        external/include/imgui/imgui.cpp
+        external/include/imgui/imgui_widgets.cpp
+        external/include/imgui/imgui_tables.cpp
+        external/include/imgui/imgui_draw.cpp
+        external/include/imgui/imgui_impl_glfw.cpp
+        external/include/imgui/imgui_impl_opengl3.cpp
     )
-    target_link_libraries(ShooterPSX ${CMAKE_CURRENT_SOURCE_DIR}/external/libraries/glfw3.lib)
+    target_link_libraries(
+        ShooterPSX 
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/libraries/glfw3.lib
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/libraries/cimgui.lib
+    )
     include_directories(external/include/)
-
+    include_directories(external/include/imgui)
+    
     add_custom_command(
         TARGET ShooterPSX POST_BUILD
-        COMMAND robocopy /MIR
+        COMMAND robocopy /e /xx
                 ${CMAKE_CURRENT_SOURCE_DIR}/assets/
                 ${CMAKE_CURRENT_BINARY_DIR}/assets/
+                || (exit 0)
+        COMMAND robocopy /e /xx
+                ${CMAKE_CURRENT_SOURCE_DIR}/external/dll/
+                ${CMAKE_CURRENT_BINARY_DIR}/
+                || (exit 0)
     )
     add_compile_definitions(_WINDOWS)
 endif()

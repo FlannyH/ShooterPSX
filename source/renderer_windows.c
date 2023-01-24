@@ -3,6 +3,7 @@
 #include <time.h>
 
 #include "renderer.h"
+#include "win/debug_layer.h"
 #include <glfw/glfw3.h>
 #include <GL/gl3w.h>
 #include <cglm/cam.h>
@@ -247,9 +248,18 @@ void renderer_init() {
 
     // Initialize delta time clock
     dt_clock = clock();
+
+    // Initialize ImGui
+    debug_layer_init(window);
 }
 
 void renderer_begin_frame(Transform* camera_transform) {
+    // Close if desired
+    if (glfwWindowShouldClose(window)) {
+        glfwTerminate();
+        exit(0);
+    }
+
     // Convert from PS1 to GLM
     vec3 position = {
         (float)(camera_transform->position.vx >> 12),
@@ -280,6 +290,7 @@ void renderer_begin_frame(Transform* camera_transform) {
 }
 
 void renderer_end_frame() {
+    debug_layer_update();
     // Flip buffers
     glfwSwapBuffers(window);
     glfwPollEvents();

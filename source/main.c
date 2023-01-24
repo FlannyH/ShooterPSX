@@ -61,10 +61,7 @@ int main() {
         renderer_draw_mesh_shaded(m_level, t_level);
         FntPrint(-1, "Frame: %i\n", frame_index++);
         FntPrint(-1, "Delta Time (hblank): %i\n", delta_time);
-        FntPrint(-1, "Est. FPS: %i\n", 15625/delta_time);
-        FntPrint(-1, "Left stick: %i\n", input_left_stick_x(0));
-        FntPrint(-1, "Right stick: %i\n", input_left_stick_x(0));
-        FntPrint(-1, "Triangles (rendered/total): %i / %i\n", renderer_get_n_rendered_triangles(), renderer_get_n_total_triangles());
+        FntPrint(-1, "Est. FPS: %i\n", 1000/delta_time);
         FntFlush(-1);
         renderer_end_frame();
     }
