@@ -34,7 +34,7 @@ int main() {
     // Load model
     Mesh* m_cube = mesh_load("\\ASSETS\\CUBETEST.MSH;1");
     Mesh* m_level = mesh_load("\\ASSETS\\LEVEL.MSH;1");
-    Transform t_cube1 = { 
+    Transform t_cube1 = {
         {0, 0, 500},
         {-2048, 0, 0},
         {0, 0, 0}
@@ -46,7 +46,7 @@ int main() {
     };
 
     // Play music
-    //music_play_file("\\MUSIC.XA");
+    music_play_file("\\ASSETS\\MUSIC.XA;1");
 
     int delta_time = 300;
     int frame_counter = 0;

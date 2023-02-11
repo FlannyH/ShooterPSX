@@ -14,7 +14,7 @@ typedef struct _vertex_3d {
 } Vertex3D;
 
 typedef struct _mesh {
-    uint16_t n_vertices; // The number of vertices in this mesh
+    uint32_t n_vertices; // The number of vertices in this mesh
     Vertex3D vertices[65536]; // Accessing elements with index >= n_vertices will cause a buffer overflow
 } Mesh;
 

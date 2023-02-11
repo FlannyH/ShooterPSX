@@ -65,9 +65,9 @@
             <file name="MAIN.EXE"	type="data" source="main.exe" />
             <file name="SYSTEM.CNF"		type="data" source="${PROJECT_SOURCE_DIR}/system.cnf" />
             <dir name="ASSETS">
-			    <file name="CUBETEST.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/cubetest.msh" />
+			    <file name="CUBETEST.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/rat.msh" />
 			    <file name="LEVEL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/level.msh" />
-			    <!--file name="MUSIC.XA" type="mixed" source="${PROJECT_SOURCE_DIR}/assets/music.xa"/>-->
+			    <file name="MUSIC.XA" type="mixed" source="${PROJECT_SOURCE_DIR}/assets/music.xa"/>
 			    <!--
 				    This file is only required if you are using dynamic linking
 				    (see the system/dynlink example). It contains the executable's

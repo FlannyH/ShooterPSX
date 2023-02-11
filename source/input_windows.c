@@ -17,15 +17,18 @@ void input_update() {
     int count = 0;
     const float* axes_1 = glfwGetJoystickAxes(0, &count);
     const float* axes_2 = glfwGetJoystickAxes(0, &count);
-
-    left_stick_x[0] = (int8_t)(axes_1[0] * 127.f);
-    left_stick_y[0] = (int8_t)(axes_1[1] * 127.f);
-    right_stick_x[0] = (int8_t)(axes_1[2] * 127.f);
-    right_stick_y[0] = (int8_t)(axes_1[3] * 127.f);
-    left_stick_x[1] = (int8_t)(axes_2[0] * 127.f);
-    left_stick_y[1] = (int8_t)(axes_2[1] * 127.f);
-    right_stick_x[1] = (int8_t)(axes_2[2] * 127.f);
-    right_stick_y[1] = (int8_t)(axes_2[3] * 127.f);
+    if (axes_1) {
+        left_stick_x[0] = (int8_t)(axes_1[0] * 127.f);
+        left_stick_y[0] = (int8_t)(axes_1[1] * 127.f);
+        right_stick_x[0] = (int8_t)(axes_1[2] * 127.f);
+        right_stick_y[0] = (int8_t)(axes_1[3] * 127.f);
+    }
+    if (axes_2) {
+        left_stick_x[1] = (int8_t)(axes_2[0] * 127.f);
+        left_stick_y[1] = (int8_t)(axes_2[1] * 127.f);
+        right_stick_x[1] = (int8_t)(axes_2[2] * 127.f);
+        right_stick_y[1] = (int8_t)(axes_2[3] * 127.f);
+    }
 
     return;
 }

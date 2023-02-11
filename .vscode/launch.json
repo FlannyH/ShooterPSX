@@ -35,7 +35,7 @@
             "target": "localhost:3333",
             "remote": true,
             "stopAtConnect": true,
-            "executable": "D:/Programming/PS1/HelloCube/build/main.elf",
+            "executable": "D:/Library/Documents/GitHub/ShooterPSX/build/psx/main.elf",
             "gdbpath": "/usr/bin/gdb-multiarch",
             "windows": {
                 "gdbpath": "D:/Library/Downloads/gdb-multiarch-12.1/bin/gdb.exe",
@@ -44,7 +44,7 @@
             "autorun": [
                 "set substitute-path /project .",
                 "monitor reset shellhalt",
-                "load D:/Programming/PS1/HelloCube/build/main.elf",
+                "load D:/Library/Documents/GitHub/ShooterPSX/build/psx/main.elf",
                 "tbreak main",
                 "continue",
             ],
