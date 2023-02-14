@@ -20,9 +20,11 @@ char primitive_buffer[2][32768 << 3];
 char* next_primitive;
 MATRIX view_matrix;
 RECT	screen_clip;
-int vsync_enable = 0;
-
+int vsync_enable = 1;
 int frame_counter = 0;
+
+RECT textures[256];
+RECT palettes[256];
 
 void renderer_init() {
     // Reset GPU and enable interrupts
@@ -146,7 +148,7 @@ void renderer_begin_frame(Transform* camera_transform) {
     n_total_triangles = 0;
 }
 
-void renderer_draw_mesh_shaded(Mesh* mesh, Transform model_transform) {
+void renderer_draw_mesh_shaded(Mesh* mesh, Transform* model_transform) {
     if (!mesh) {
         printf("renderer_draw_mesh_shaded: mesh was null!\n");
         return;
@@ -154,8 +156,8 @@ void renderer_draw_mesh_shaded(Mesh* mesh, Transform model_transform) {
 
     // Set rotation and translation matrix
     MATRIX model_matrix;
-    HiRotMatrix(&model_transform.rotation, &model_matrix);
-    TransMatrix(&model_matrix, &model_transform.position);
+    HiRotMatrix(&model_transform->rotation, &model_matrix);
+    TransMatrix(&model_matrix, &model_transform->position);
     CompMatrixLV(&view_matrix, &model_matrix, &model_matrix);
 
     // Send it to the GTE
@@ -164,6 +166,7 @@ void renderer_draw_mesh_shaded(Mesh* mesh, Transform model_transform) {
     gte_SetTransMatrix(&model_matrix);
 
     n_total_triangles += mesh->n_vertices / 3;
+    uint8_t tex_id = mesh->vertices[0].tex_id;
 
     // Loop over each triangle
     for (size_t i = 0; i < mesh->n_vertices; i += 3) {
@@ -195,11 +198,8 @@ void renderer_draw_mesh_shaded(Mesh* mesh, Transform model_transform) {
             continue;
 
         // Create primitive
-        POLY_G3* new_triangle = (POLY_G3*)next_primitive;
-        next_primitive += sizeof(POLY_G3);
-
-        // Initialize the entry in the render queue
-        setPolyG3(new_triangle);
+        POLY_GT3* new_triangle = (POLY_GT3*)next_primitive;
+        next_primitive += sizeof(POLY_GT3);
 
         // Set the vertex positions of the triangle
         gte_stsxy0( &new_triangle->x0 );
@@ -226,11 +226,37 @@ void renderer_draw_mesh_shaded(Mesh* mesh, Transform model_transform) {
             mesh->vertices[i + 2].b
         );
 
+        // Bind texture
+        new_triangle->clut = getClut(palettes[tex_id].x, palettes[tex_id].y);
+        new_triangle->tpage = getTPage(0, 0, textures[tex_id].x, textures[tex_id].y);
+
+        // Transform UVs to texture space
+        setUV3(new_triangle,
+            ((uint16_t)(mesh->vertices[i + 0].u) * textures[tex_id].w) >> 6, // 6 because UVs do happen to be 4-bit pixel coordinates instead of 16-bit
+            ((uint16_t)(mesh->vertices[i + 0].v) * textures[tex_id].h) >> 8,
+            ((uint16_t)(mesh->vertices[i + 1].u) * textures[tex_id].w) >> 6,
+            ((uint16_t)(mesh->vertices[i + 1].v) * textures[tex_id].h) >> 8,
+            ((uint16_t)(mesh->vertices[i + 2].u) * textures[tex_id].w) >> 6,
+            ((uint16_t)(mesh->vertices[i + 2].v) * textures[tex_id].h) >> 8
+        );
+
+        // Initialize the entry in the render queue
+        setPolyGT3(new_triangle);
+
         // Add the triangle to the draw queue
         addPrim(ord_tbl[drawbuffer] + (p>>2), new_triangle);
         ++n_rendered_triangles;
     }
+
 	PopMatrix();
+
+    // Set texture page
+}
+
+void renderer_draw_model_shaded(Model* model, Transform* model_transform) {
+    for (size_t i = 0; i < model->n_meshes; ++i) {
+        renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+    }
 }
 
 void renderer_draw_triangles_shaded_2d(Vertex2D* vertex_buffer, uint16_t n_verts, int16_t x, int16_t y) {
@@ -270,6 +296,33 @@ void renderer_draw_triangles_shaded_2d(Vertex2D* vertex_buffer, uint16_t n_verts
         // Add the triangle to the draw queue
         addPrim(ord_tbl[drawbuffer], new_triangle);
     }
+}
+
+void renderer_upload_texture(const TextureCPU* texture, uint8_t index) {
+    // Load texture pixels to VRAM - starting from 320,0, spanning 512x512 VRAM pixels, stored in 16x64 blocks (for 64x64 texture)
+    RECT rect_tex = {
+        320 + ((uint16_t)index) * 16,
+        0 + (((uint16_t)index) / 128),
+        (uint16_t)texture->width / 4,
+        (uint16_t)texture->height
+    };
+    LoadImage(&rect_tex, texture->data);
+    DrawSync(0);
+    textures[index] = rect_tex;
+
+    // Load palette to VRAM - starting from 832,0, spanning 128x32 VRAM pixels, stored in 16x1 blocks (for 16-bit 16-color palettes)
+    RECT rect_palette = {
+        832 + ((uint16_t)index) * 16,
+        0 + (((uint16_t)index) / 8),
+        16,
+        1
+    };
+    LoadImage(&rect_palette, texture->palette);
+    DrawSync(0);
+    palettes[index] = rect_palette;
+
+    printf("Texture: {%d, %d} - {%d, %d}\n", rect_tex.x, rect_tex.y, rect_tex.x + rect_tex.w, rect_tex.y + rect_tex.h);
+    printf("Palette: {%d, %d} - {%d, %d}\n", rect_palette.x, rect_palette.y, rect_palette.x + rect_palette.w, rect_palette.y + rect_palette.h);
 }
 
 void renderer_end_frame() {

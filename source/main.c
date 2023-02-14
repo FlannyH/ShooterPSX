@@ -26,11 +26,11 @@ int main() {
 
     // Camera transform
     Transform camera_transform;
-    camera_transform.position.vx = 0;
-    camera_transform.position.vy = 0;
-    camera_transform.position.vz = 0;
-    camera_transform.rotation.vx = 0;
-    camera_transform.rotation.vy = 0;
+    camera_transform.position.vx = -11558322;
+    camera_transform.position.vy = 14423348;
+    camera_transform.position.vz = 6231602;
+    camera_transform.rotation.vx = 23793;
+    camera_transform.rotation.vy = 196707;
     camera_transform.rotation.vz = 0;
 
     // Stick deadzone
@@ -74,9 +74,7 @@ int main() {
         renderer_draw_model_shaded(m_level, &t_level);
         FntPrint(-1, "Frame: %i\n", frame_index++);
         FntPrint(-1, "Delta Time (hblank): %i\n", delta_time);
-        FntPrint(-1, "Est. FPS: %i\n", 15625/delta_time);
-        FntPrint(-1, "Left stick: %i\n", input_left_stick_x(0));
-        FntPrint(-1, "Right stick: %i\n", input_left_stick_x(0));
+        FntPrint(-1, "Est. FPS: %i\n", 1000/delta_time);
         FntPrint(-1, "Triangles (rendered/total): %i / %i\n", renderer_get_n_rendered_triangles(), renderer_get_n_total_triangles());
         FntFlush(-1);
         renderer_end_frame();

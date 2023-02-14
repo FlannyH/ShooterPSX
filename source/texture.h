@@ -42,6 +42,6 @@ typedef struct {
     uint8_t height;
 } TextureCPU;
 
-int texture_collection_load(const char* path, TextureCPU* out_textures);
+int texture_collection_load(const char* path, TextureCPU** out_textures);
 
 #endif
