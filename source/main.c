@@ -15,6 +15,8 @@
 #include "camera.h"
 #include <stdio.h>
 
+#include "texture.h"
+
 int main() {
     renderer_init();
     input_init();
@@ -31,9 +33,20 @@ int main() {
     camera_transform.rotation.vy = 0;
     camera_transform.rotation.vz = 0;
 
+    // Stick deadzone
+    input_set_stick_deadzone(36);
+
     // Load model
-    Mesh* m_cube = mesh_load("\\ASSETS\\CUBETEST.MSH;1");
-    Mesh* m_level = mesh_load("\\ASSETS\\LEVEL.MSH;1");
+    Model* m_cube = model_load("\\ASSETS\\CUBETEST.MSH;1");
+    Model* m_level = model_load("\\ASSETS\\LEVEL.MSH;1");
+
+    TextureCPU* tex_level;
+    const int n_textures = texture_collection_load("\\ASSETS\\LEVEL.TXC;1", &tex_level);
+
+    for (int i = 0;i < n_textures; ++i) {
+        renderer_upload_texture(&tex_level[i], i);
+    }
+
     Transform t_cube1 = {
         {0, 0, 500},
         {-2048, 0, 0},
@@ -57,8 +70,8 @@ int main() {
         input_update();
         camera_update_flycam(&camera_transform, delta_time);
         t_cube1.rotation.vy += 64 * delta_time;
-        renderer_draw_mesh_shaded(m_cube, t_cube1);
-        renderer_draw_mesh_shaded(m_level, t_level);
+        //renderer_draw_mesh_shaded(m_cube, t_cube1);
+        renderer_draw_model_shaded(m_level, &t_level);
         FntPrint(-1, "Frame: %i\n", frame_index++);
         FntPrint(-1, "Delta Time (hblank): %i\n", delta_time);
         FntPrint(-1, "Est. FPS: %i\n", 15625/delta_time);

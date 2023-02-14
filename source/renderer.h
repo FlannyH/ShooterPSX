@@ -10,6 +10,7 @@
 #include <stdlib.h>	
 #include "mesh.h"
 #include "common.h"
+#include "texture.h"
 
 #define ORD_TBL_LENGTH 4096
 #define RES_X 320
@@ -31,8 +32,10 @@ typedef struct _transform {
 void renderer_init(); // Initializes the renderer by configuring the GPU, setting the video mode, and preparing the drawing environment
 void renderer_begin_frame(Transform* camera_transform); // Applies the camera transform to the renderer, preparing it for a new frame
 void renderer_end_frame(); // Draws the render queue, swaps the drawbuffer, clears the render queue, and applies the display environments
-void renderer_draw_mesh_shaded(Mesh* mesh, Transform model_transform); // Draws a 3D mesh at a given transform using shaded triangle primitives
+void renderer_draw_model_shaded(Model* model, Transform* model_transform); // Draws a 3D model at a given transform using shaded triangle primitives
+void renderer_draw_mesh_shaded(Mesh* mesh, Transform* model_transform); // Draws a 3D mesh at a given transform using shaded triangle primitives
 void renderer_draw_triangles_shaded_2d(Vertex2D* vertex_buffer, uint16_t n_verts, int16_t x, int16_t y);
+void renderer_upload_texture(const TextureCPU* texture, uint8_t index);
 int renderer_get_delta_time_raw();
 int renderer_get_delta_time_ms();
 int renderer_get_n_rendered_triangles();

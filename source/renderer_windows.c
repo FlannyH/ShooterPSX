@@ -9,6 +9,7 @@
 #include <cglm/affine.h>
 
 #include "file.h"
+#include "texture.h"
 #define PI 3.14159265358979f
 
 #define RESOLUTION_SCALING 4
@@ -19,6 +20,8 @@ GLuint shader;
 GLuint vao;
 GLuint vbo;
 clock_t dt_clock;
+GLuint textures[256];
+float tex_res[512];
 
 typedef enum _shader_type{
     vertex,
@@ -247,6 +250,9 @@ void renderer_init() {
 
     // Initialize delta time clock
     dt_clock = clock();
+
+    // Zero init textures
+    memset(textures, 0, sizeof(textures));
 }
 
 void renderer_begin_frame(Transform* camera_transform) {
@@ -285,7 +291,13 @@ void renderer_end_frame() {
     glfwPollEvents();
 }
 
-void renderer_draw_mesh_shaded(Mesh* mesh, Transform model_transform) {
+void renderer_draw_model_shaded(Model* model, Transform* model_transform) {
+    for (size_t i = 0; i < model->n_meshes; ++i) {
+        renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+    }
+}
+
+void renderer_draw_mesh_shaded(Mesh* mesh, Transform* model_transform) {
     // Calculate model matrix
     mat4 model_matrix;
     glm_mat4_identity(model_matrix);
@@ -295,17 +307,20 @@ void renderer_draw_mesh_shaded(Mesh* mesh, Transform model_transform) {
     // Apply rotation
     // Apply translation
     vec3 position = {
-        (float)model_transform.position.vx,
-        (float)model_transform.position.vy,
-        (float)model_transform.position.vz,
+        (float)model_transform->position.vx,
+        (float)model_transform->position.vy,
+        (float)model_transform->position.vz,
     };
     glm_translate(model_matrix, position);
-    glm_rotate_x(model_matrix, (float)model_transform.rotation.vx * 2 * PI / 131072.0f, model_matrix);
-    glm_rotate_y(model_matrix, (float)model_transform.rotation.vy * 2 * PI / 131072.0f, model_matrix);
-    glm_rotate_z(model_matrix, (float)model_transform.rotation.vz * 2 * PI / 131072.0f, model_matrix);
+    glm_rotate_x(model_matrix, (float)model_transform->rotation.vx * 2 * PI / 131072.0f, model_matrix);
+    glm_rotate_y(model_matrix, (float)model_transform->rotation.vy * 2 * PI / 131072.0f, model_matrix);
+    glm_rotate_z(model_matrix, (float)model_transform->rotation.vz * 2 * PI / 131072.0f, model_matrix);
 
     // Bind shader
     glUseProgram(shader);
+
+    // Bind texture
+    glBindTexture(GL_TEXTURE_2D, textures[mesh->vertices[0].tex_id]);
 
     // Bind vertex buffers
     glBindVertexArray(vao);
@@ -328,6 +343,53 @@ void renderer_draw_mesh_shaded(Mesh* mesh, Transform model_transform) {
 
 void renderer_draw_triangles_shaded_2d(Vertex2D* vertex_buffer, uint16_t n_verts, int16_t x, int16_t y) {
 
+}
+
+void renderer_upload_texture(const TextureCPU* texture, const uint8_t index) {
+    // This is where all the pixels will be stored
+    Pixel32* pixels = malloc((size_t)texture->width * (size_t)texture->height * 4);
+    
+    // The texture is stored in 4bpp format, so each byte in the texture is 2 pixels horizontally - Convert to 32-bit color
+    for (size_t i = 0; i < (texture->width * texture->height / 2); ++i) {
+        // Get indices from texture
+        const uint8_t color_index_left = (texture->data[i] >> 4) & 0x0F;
+        const uint8_t color_index_right = (texture->data[i] >> 0) & 0x0F;
+
+        // Get 16-bit color values from palette
+        const Pixel16 pixel_left = texture->palette[color_index_left];
+        const Pixel16 pixel_right = texture->palette[color_index_right];
+        
+        // Expand to 32-bit color
+        pixels[i * 2 + 0].r = pixel_left.r << 3;
+        pixels[i * 2 + 0].g = pixel_left.g << 3;
+        pixels[i * 2 + 0].b = pixel_left.b << 3;
+        pixels[i * 2 + 0].a = pixel_left.a << 7;
+        
+        // And on the right side as well
+        pixels[i * 2 + 1].r = pixel_right.r << 3;
+        pixels[i * 2 + 1].g = pixel_right.g << 3;
+        pixels[i * 2 + 1].b = pixel_right.b << 3;
+        pixels[i * 2 + 1].a = pixel_right.a << 7;
+    }
+
+    // Generate texture if necessary
+    if (textures[index] == 0)
+        glGenTextures(1, &textures[index]);
+
+    // Upload texture
+    glBindTexture(GL_TEXTURE_2D, textures[index]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texture->width, texture->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Store texture resolution
+    tex_res[(size_t)index * 2 + 0] = (float)texture->width;
+    tex_res[(size_t)index * 2 + 1] = (float)texture->height;
+
+    // Clean up after we're done
+    free(pixels);
 }
 
 int renderer_get_delta_time_raw() {

@@ -14,7 +14,7 @@ int file_read(const char* path, char** destination, size_t* size) {
     new_path[length - 2] = 0;
 
     // Open file
-    fopen_s(&file, new_path, "r");
+    fopen_s(&file, new_path, "rb");
     if (file == NULL) {
         printf("[ERROR] Failed to load file %s\n", new_path);
         return 0;
@@ -29,8 +29,11 @@ int file_read(const char* path, char** destination, size_t* size) {
     *destination = (char*)malloc((*size) + 1);
     memset(*destination, 0, (*size) + 1);
 
-    // Read the data
-    fread_s(*destination, *size, sizeof(char), *size, file);
+    // Read the data - in 2048 byte segments because for some reason there's a limit
+    for (size_t offset = 0; offset < *size; offset += 2048) {
+        auto n_b_read = fread_s(*destination + offset, 2048, sizeof(char), 2048, file);
+        printf("%i bytes read into %p\n", n_b_read, *destination + offset);
+    }
     (*destination)[(*size)] = 0;
     printf("[INFO] Loaded file %s\n", new_path);
     return 1;

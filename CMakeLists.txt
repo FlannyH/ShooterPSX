@@ -35,6 +35,7 @@ else()
         source/input_windows.c 
         source/renderer_windows.c 
         source/music_windows.c
+        source/texture_windows.c
         source/main.c 
         source/mesh.c 
         source/camera.c
