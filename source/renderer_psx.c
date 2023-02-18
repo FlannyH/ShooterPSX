@@ -23,7 +23,7 @@ RECT	screen_clip;
 int vsync_enable = 0;
 int frame_counter = 0;
 
-Pixel32 textures_avg_colors[256];
+pixel32_t textures_avg_colors[256];
 RECT textures[256];
 RECT palettes[256];
 
@@ -133,7 +133,7 @@ int tri_clip(RECT *clip, const DVECTOR *v0, const DVECTOR *v1, const DVECTOR *v2
 	return 1;
 }
 
-void renderer_begin_frame(Transform* camera_transform) {
+void renderer_begin_frame(transform_t* camera_transform) {
     // Apply camera transform
     HiRotMatrix(&camera_transform->rotation, &view_matrix);
     VECTOR position = camera_transform->position;
@@ -149,7 +149,7 @@ void renderer_begin_frame(Transform* camera_transform) {
     n_total_triangles = 0;
 }
 
-void renderer_draw_mesh_shaded(const Mesh* mesh, Transform* model_transform) {
+void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform) {
     if (!mesh) {
         printf("renderer_draw_mesh_shaded: mesh was null!\n");
         return;
@@ -267,7 +267,7 @@ void renderer_draw_mesh_shaded(const Mesh* mesh, Transform* model_transform) {
 
             // Calculate vertex colors of the triangle - multiply the vertex colors by the average color of the texture
             // so that from a distance it looks close enough to the texture
-            Pixel32 vert_colors[3];
+            pixel32_t vert_colors[3];
             for (size_t ci = 0; ci < 3; ++ci) {
                 const uint16_t r = ((((uint16_t)mesh->vertices[i + ci].r) * ((uint16_t)textures_avg_colors[tex_id].r)) >> 7);
                 const uint16_t g = ((((uint16_t)mesh->vertices[i + ci].g) * ((uint16_t)textures_avg_colors[tex_id].g)) >> 7);
@@ -308,13 +308,13 @@ void renderer_draw_mesh_shaded(const Mesh* mesh, Transform* model_transform) {
     // Set texture page
 }
 
-void renderer_draw_model_shaded(const Model* model, Transform* model_transform) {
+void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform) {
     for (size_t i = 0; i < model->n_meshes; ++i) {
         renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
     }
 }
 
-void renderer_draw_triangles_shaded_2d(const Vertex2D* vertex_buffer, const uint16_t n_verts, const int16_t x, const int16_t y) {
+void renderer_draw_triangles_shaded_2d(const vertex_2d_t* vertex_buffer, const uint16_t n_verts, const int16_t x, const int16_t y) {
     // Loop over each triangle
     for (size_t i = 0; i < n_verts; i += 3) {
         // Allocate a triangle in the render queue
@@ -353,7 +353,7 @@ void renderer_draw_triangles_shaded_2d(const Vertex2D* vertex_buffer, const uint
     }
 }
 
-void renderer_upload_texture(const TextureCPU* texture, const uint8_t index) {
+void renderer_upload_texture(const texture_cpu_t* texture, const uint8_t index) {
     // Load texture pixels to VRAM - starting from 320,0, spanning 512x512 VRAM pixels, stored in 16x64 blocks (for 64x64 texture)
     const RECT rect_tex = {
         320 + ((int16_t)index) * 16,
@@ -451,4 +451,9 @@ uint32_t renderer_get_n_rendered_triangles(void) {
 uint32_t renderer_get_n_total_triangles(void) {
     return n_total_triangles;
 }
+
+int renderer_should_close() {
+    return 0;
+}
+
 #endif
