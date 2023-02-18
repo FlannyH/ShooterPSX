@@ -1,8 +1,8 @@
 #version 430 core
 precision mediump float;
 
-in noperspective vec3 out_color;
-in noperspective vec2 out_texcoord;
+in vec3 out_color;
+in vec2 out_texcoord;
 out vec4 frag_color;
 
 uniform sampler2D tex;
