@@ -12,21 +12,22 @@ DRAWENV draw[2];
 int drawbuffer;
 int delta_time_raw_curr = 0;
 int delta_time_raw_prev = 0;
-int n_total_triangles = 0;
+uint32_t n_total_triangles = 0;
 int n_rendered_triangles = 0;
 
-u_long ord_tbl[2][ORD_TBL_LENGTH];
-char primitive_buffer[2][32768 << 3];
-char* next_primitive;
+uint32_t ord_tbl[2][ORD_TBL_LENGTH];
+uint32_t primitive_buffer[2][(32768 << 3) / sizeof(uint32_t)];
+uint32_t* next_primitive;
 MATRIX view_matrix;
 RECT	screen_clip;
-int vsync_enable = 1;
+int vsync_enable = 0;
 int frame_counter = 0;
 
+Pixel32 textures_avg_colors[256];
 RECT textures[256];
 RECT palettes[256];
 
-void renderer_init() {
+void renderer_init(void) {
     // Reset GPU and enable interrupts
     ResetGraph(0);
 
@@ -86,11 +87,11 @@ void renderer_init() {
 #define CLIP_TOP	4
 #define CLIP_BOTTOM	8
 
-int test_clip(RECT *clip, short x, short y) {
+short test_clip(const RECT *clip, const short x, const short y) {
 	
 	// Tests which corners of the screen a point lies outside of
 	
-	int result = 0;
+	short result = 0;
 
 	if ( x < clip->x ) {
 		result |= CLIP_LEFT;
@@ -112,7 +113,7 @@ int test_clip(RECT *clip, short x, short y) {
 	
 }
 
-int tri_clip(RECT *clip, DVECTOR *v0, DVECTOR *v1, DVECTOR *v2) {
+int tri_clip(RECT *clip, const DVECTOR *v0, const DVECTOR *v1, const DVECTOR *v2) {
 	
 	// Returns non-zero if a triangle is outside the screen boundaries
 	
@@ -148,7 +149,7 @@ void renderer_begin_frame(Transform* camera_transform) {
     n_total_triangles = 0;
 }
 
-void renderer_draw_mesh_shaded(Mesh* mesh, Transform* model_transform) {
+void renderer_draw_mesh_shaded(const Mesh* mesh, Transform* model_transform) {
     if (!mesh) {
         printf("renderer_draw_mesh_shaded: mesh was null!\n");
         return;
@@ -166,7 +167,8 @@ void renderer_draw_mesh_shaded(Mesh* mesh, Transform* model_transform) {
     gte_SetTransMatrix(&model_matrix);
 
     n_total_triangles += mesh->n_vertices / 3;
-    uint8_t tex_id = mesh->vertices[0].tex_id;
+    const uint8_t tex_id = mesh->vertices[0].tex_id;
+    const uint16_t tex_offset_x = (tex_id % 4) * 64;
 
     // Loop over each triangle
     for (size_t i = 0; i < mesh->n_vertices; i += 3) {
@@ -197,55 +199,108 @@ void renderer_draw_mesh_shaded(Mesh* mesh, Transform* model_transform) {
         if ((p>>2) > ORD_TBL_LENGTH || ((p >> 2) <= 0))
             continue;
 
-        // Create primitive
-        POLY_GT3* new_triangle = (POLY_GT3*)next_primitive;
-        next_primitive += sizeof(POLY_GT3);
+        // If the depth is below a certain distance, draw as textured triangle
+        if (p < 400) {
+            // Create primitive
+            POLY_GT3* new_triangle = (POLY_GT3*)next_primitive;
+            next_primitive += sizeof(POLY_GT3);
 
-        // Set the vertex positions of the triangle
-        gte_stsxy0( &new_triangle->x0 );
-        gte_stsxy1( &new_triangle->x1 );
-        gte_stsxy2( &new_triangle->x2 );
-        if( tri_clip( &screen_clip, 
-            (DVECTOR*)&new_triangle->x0, (DVECTOR*)&new_triangle->x1, (DVECTOR*)&new_triangle->x2) )
+            // Set the vertex positions of the triangle
+            gte_stsxy0(&new_triangle->x0);
+            gte_stsxy1(&new_triangle->x1);
+            gte_stsxy2(&new_triangle->x2);
+            if (tri_clip(&screen_clip,
+                (DVECTOR*)&new_triangle->x0, (DVECTOR*)&new_triangle->x1, (DVECTOR*)&new_triangle->x2))
                 continue;
 
-        // Set the vertex colors of the triangle
-        setRGB0(new_triangle,
-            mesh->vertices[i + 0].r,
-            mesh->vertices[i + 0].g,
-            mesh->vertices[i + 0].b
-        );
-        setRGB1(new_triangle,
-            mesh->vertices[i + 1].r,
-            mesh->vertices[i + 1].g,
-            mesh->vertices[i + 1].b
-        );
-        setRGB2(new_triangle,
-            mesh->vertices[i + 2].r,
-            mesh->vertices[i + 2].g,
-            mesh->vertices[i + 2].b
-        );
+            // Set the vertex colors of the triangle
+            setRGB0(new_triangle,
+                mesh->vertices[i + 0].r,
+                mesh->vertices[i + 0].g,
+                mesh->vertices[i + 0].b
+            );
+            setRGB1(new_triangle,
+                mesh->vertices[i + 1].r,
+                mesh->vertices[i + 1].g,
+                mesh->vertices[i + 1].b
+            );
+            setRGB2(new_triangle,
+                mesh->vertices[i + 2].r,
+                mesh->vertices[i + 2].g,
+                mesh->vertices[i + 2].b
+            );
 
-        // Bind texture
-        new_triangle->clut = getClut(palettes[tex_id].x, palettes[tex_id].y);
-        new_triangle->tpage = getTPage(0, 0, textures[tex_id].x, textures[tex_id].y);
+            // Bind texture
+            new_triangle->clut = getClut(palettes[tex_id].x, palettes[tex_id].y);
+            new_triangle->tpage = getTPage(0, 0, textures[tex_id].x, textures[tex_id].y);
 
-        // Transform UVs to texture space
-        setUV3(new_triangle,
-            ((uint16_t)(mesh->vertices[i + 0].u) * textures[tex_id].w) >> 6, // 6 because UVs do happen to be 4-bit pixel coordinates instead of 16-bit
-            ((uint16_t)(mesh->vertices[i + 0].v) * textures[tex_id].h) >> 8,
-            ((uint16_t)(mesh->vertices[i + 1].u) * textures[tex_id].w) >> 6,
-            ((uint16_t)(mesh->vertices[i + 1].v) * textures[tex_id].h) >> 8,
-            ((uint16_t)(mesh->vertices[i + 2].u) * textures[tex_id].w) >> 6,
-            ((uint16_t)(mesh->vertices[i + 2].v) * textures[tex_id].h) >> 8
-        );
+            // Transform UVs to texture space
+            setUV3(new_triangle,
+                (((uint16_t)(mesh->vertices[i + 0].u) * textures[tex_id].w) >> 6) + tex_offset_x, // 6 because UVs do happen to be 4-bit pixel coordinates instead of 16-bit
+                (((uint16_t)(mesh->vertices[i + 0].v) * textures[tex_id].h) >> 8),
+                (((uint16_t)(mesh->vertices[i + 1].u) * textures[tex_id].w) >> 6) + tex_offset_x, // also + offset because apparently texture pages are 256x256 in 4-bit
+                (((uint16_t)(mesh->vertices[i + 1].v) * textures[tex_id].h) >> 8),
+                (((uint16_t)(mesh->vertices[i + 2].u) * textures[tex_id].w) >> 6) + tex_offset_x,
+                (((uint16_t)(mesh->vertices[i + 2].v) * textures[tex_id].h) >> 8)
+            );
 
-        // Initialize the entry in the render queue
-        setPolyGT3(new_triangle);
+            // Initialize the entry in the render queue
+            setPolyGT3(new_triangle);
 
-        // Add the triangle to the draw queue
-        addPrim(ord_tbl[drawbuffer] + (p>>2), new_triangle);
-        ++n_rendered_triangles;
+            // Add the triangle to the draw queue
+            addPrim(ord_tbl[drawbuffer] + (p >> 2), new_triangle);
+            ++n_rendered_triangles;
+        }
+        // Otherwise, draw as untextured triangle
+        else {
+            // Create primitive
+            POLY_G3* new_triangle = (POLY_G3*)next_primitive;
+            next_primitive += sizeof(POLY_G3);
+
+            // Set the vertex positions of the triangle
+            gte_stsxy0(&new_triangle->x0);
+            gte_stsxy1(&new_triangle->x1);
+            gte_stsxy2(&new_triangle->x2);
+            if (tri_clip(&screen_clip,
+                (DVECTOR*)&new_triangle->x0, (DVECTOR*)&new_triangle->x1, (DVECTOR*)&new_triangle->x2))
+                continue;
+
+            // Calculate vertex colors of the triangle - multiply the vertex colors by the average color of the texture
+            // so that from a distance it looks close enough to the texture
+            Pixel32 vert_colors[3];
+            for (size_t ci = 0; ci < 3; ++ci) {
+                const uint16_t r = ((((uint16_t)mesh->vertices[i + ci].r) * ((uint16_t)textures_avg_colors[tex_id].r)) >> 7);
+                const uint16_t g = ((((uint16_t)mesh->vertices[i + ci].g) * ((uint16_t)textures_avg_colors[tex_id].g)) >> 7);
+                const uint16_t b = ((((uint16_t)mesh->vertices[i + ci].b) * ((uint16_t)textures_avg_colors[tex_id].b)) >> 7);
+                vert_colors[ci].r = (r > 255) ? 255 : r;
+                vert_colors[ci].g = (g > 255) ? 255 : g;
+                vert_colors[ci].b = (b > 255) ? 255 : b;
+            }
+
+            // Set the vertex colors of the triangle
+            setRGB0(new_triangle,
+                vert_colors[0].r,
+                vert_colors[0].g,
+                vert_colors[0].b
+            );
+            setRGB1(new_triangle,
+                vert_colors[1].r,
+                vert_colors[1].g,
+                vert_colors[1].b
+            );
+            setRGB2(new_triangle,
+                vert_colors[2].r,
+                vert_colors[2].g,
+                vert_colors[2].b
+            );
+
+            // Initialize the entry in the render queue
+            setPolyG3(new_triangle);
+
+            // Add the triangle to the draw queue
+            addPrim(ord_tbl[drawbuffer] + (p >> 2), new_triangle);
+            ++n_rendered_triangles;
+        }
     }
 
 	PopMatrix();
@@ -253,13 +308,13 @@ void renderer_draw_mesh_shaded(Mesh* mesh, Transform* model_transform) {
     // Set texture page
 }
 
-void renderer_draw_model_shaded(Model* model, Transform* model_transform) {
+void renderer_draw_model_shaded(const Model* model, Transform* model_transform) {
     for (size_t i = 0; i < model->n_meshes; ++i) {
         renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
     }
 }
 
-void renderer_draw_triangles_shaded_2d(Vertex2D* vertex_buffer, uint16_t n_verts, int16_t x, int16_t y) {
+void renderer_draw_triangles_shaded_2d(const Vertex2D* vertex_buffer, const uint16_t n_verts, const int16_t x, const int16_t y) {
     // Loop over each triangle
     for (size_t i = 0; i < n_verts; i += 3) {
         // Allocate a triangle in the render queue
@@ -298,26 +353,27 @@ void renderer_draw_triangles_shaded_2d(Vertex2D* vertex_buffer, uint16_t n_verts
     }
 }
 
-void renderer_upload_texture(const TextureCPU* texture, uint8_t index) {
+void renderer_upload_texture(const TextureCPU* texture, const uint8_t index) {
     // Load texture pixels to VRAM - starting from 320,0, spanning 512x512 VRAM pixels, stored in 16x64 blocks (for 64x64 texture)
-    RECT rect_tex = {
-        320 + ((uint16_t)index) * 16,
-        0 + (((uint16_t)index) / 128),
-        (uint16_t)texture->width / 4,
-        (uint16_t)texture->height
+    const RECT rect_tex = {
+        320 + ((int16_t)index) * 16,
+        0 + (((int16_t)index) / 128),
+        (int16_t)texture->width / 4,
+        (int16_t)texture->height
     };
-    LoadImage(&rect_tex, texture->data);
+    LoadImage(&rect_tex, (uint32_t*)texture->data);
     DrawSync(0);
     textures[index] = rect_tex;
+    textures_avg_colors[index] = texture->avg_color;
 
     // Load palette to VRAM - starting from 832,0, spanning 128x32 VRAM pixels, stored in 16x1 blocks (for 16-bit 16-color palettes)
     RECT rect_palette = {
-        832 + ((uint16_t)index) * 16,
-        0 + (((uint16_t)index) / 8),
+        832 + ((int16_t)index) * 16,
+        0 + (((int16_t)index) / 8),
         16,
         1
     };
-    LoadImage(&rect_palette, texture->palette);
+    LoadImage(&rect_palette, (uint32_t*)texture->palette);
     DrawSync(0);
     palettes[index] = rect_palette;
 
@@ -325,7 +381,7 @@ void renderer_upload_texture(const TextureCPU* texture, uint8_t index) {
     printf("Palette: {%d, %d} - {%d, %d}\n", rect_palette.x, rect_palette.y, rect_palette.x + rect_palette.w, rect_palette.y + rect_palette.h);
 }
 
-void renderer_end_frame() {
+void renderer_end_frame(void) {
     // Wait for GPU to finish drawing and V-blank
     DrawSync(0);
 
@@ -356,7 +412,7 @@ void renderer_end_frame() {
     DrawOTag(ord_tbl[1-drawbuffer] + ORD_TBL_LENGTH - 1);
 }
 
-int renderer_get_delta_time_raw() {
+int renderer_get_delta_time_raw(void) {
     if (vsync_enable) {
         delta_time_raw_prev = delta_time_raw_curr;
         delta_time_raw_curr = VSync(-1);
@@ -369,9 +425,9 @@ int renderer_get_delta_time_raw() {
     }
 }
 
-int renderer_get_delta_time_ms() {
+int renderer_get_delta_time_ms(void) {
     int dt_raw = renderer_get_delta_time_raw();
-    int dt_ms = 0;
+    int dt_ms;
     if (vsync_enable) {
 #ifdef PAL
         dt_ms = 20 * dt_raw;
@@ -388,11 +444,11 @@ int renderer_get_delta_time_ms() {
     return dt_ms;
 }
 
-int renderer_get_n_rendered_triangles() {
+uint32_t renderer_get_n_rendered_triangles(void) {
     return n_rendered_triangles;
 }
 
-int renderer_get_n_total_triangles() {
+uint32_t renderer_get_n_total_triangles(void) {
     return n_total_triangles;
 }
 #endif

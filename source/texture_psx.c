@@ -5,9 +5,9 @@
 #include "file.h"
 #include "texture.h"
 
-int texture_collection_load(const char* path, TextureCPU** out_textures) { // returns number of textures loaded
+uint32_t texture_collection_load(const char* path, TextureCPU** out_textures) { // returns number of textures loaded
     // Read the file
-    char* file_data;
+    uint32_t* file_data;
     size_t size;
     file_read(path, &file_data, &size);
 
@@ -24,10 +24,10 @@ int texture_collection_load(const char* path, TextureCPU** out_textures) { // re
     *out_textures = malloc(sizeof(TextureCPU) * tex_col_hdr->n_texture_cell);
 
     // Find the data sections
-    void* binary_section = &tex_col_hdr[1];
-    TextureCellDesc* texture_cell_descs = ((intptr_t)binary_section + tex_col_hdr->offset_texture_cell_descs);
-    Pixel16* palette_data = ((intptr_t)binary_section + tex_col_hdr->offset_palettes);
-    uint8_t* texture_data = ((intptr_t)binary_section + tex_col_hdr->offset_textures);
+    const void* binary_section = &tex_col_hdr[1];
+    const TextureCellDesc* texture_cell_descs = (TextureCellDesc*)((intptr_t)binary_section + tex_col_hdr->offset_texture_cell_descs);
+    Pixel16* palette_data = (Pixel16*)((intptr_t)binary_section + tex_col_hdr->offset_palettes);
+    uint8_t* texture_data = (uint8_t*)((intptr_t)binary_section + tex_col_hdr->offset_textures);
 
     // Create a TextureCPU object for each
     for (size_t i = 0; i < tex_col_hdr->n_texture_cell; ++i) {
@@ -39,6 +39,7 @@ int texture_collection_load(const char* path, TextureCPU** out_textures) { // re
         texture_cpu->data = &texture_data[(size_t)tex_cell_desc->sector_offset_texture * 2048];
         texture_cpu->width = tex_cell_desc->texture_width;
         texture_cpu->height = tex_cell_desc->texture_height;
+        texture_cpu->avg_color = tex_cell_desc->avg_color;
     }
 
     return tex_col_hdr->n_texture_cell;

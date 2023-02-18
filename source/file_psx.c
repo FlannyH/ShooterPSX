@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <psxcd.h> // Disc IO
 
-int file_read(const char* path, char** destination, size_t* size) {
+int file_read(const char* path, uint32_t** destination, size_t* size) {
     // Search for the file on disc - return false if it does not exist
     CdlFILE file;
     if (!CdSearchFile(&file, path)) {
@@ -19,11 +19,11 @@ int file_read(const char* path, char** destination, size_t* size) {
     *size = file.size;
 
     // Allocate enough bytes for the destination buffer
-    *destination = (char*)malloc(file_size);
+    *destination = (uint32_t*)malloc(file_size);
 
     // Seek to the file and read it
     CdControl(CdlSetloc, &file.pos, 0);
-    CdRead(file.size / 2048, (uint32_t*)(*destination), CdlModeSpeed);
+    CdRead(file.size / 2048, *destination, CdlModeSpeed);
 
     // Wait for it to finish reading
     CdReadSync(0, 0);

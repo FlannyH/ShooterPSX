@@ -12,14 +12,6 @@ typedef struct {
     uint32_t offset_name_table;        // Offset to an array of offsets into the binary section. The offsets point to null-terminated strings. The names are stored in the same order as the texture cells, so the same index can be used for both arrays. Used for debugging, and this value should be 0xFFFFFFFF if the table is not included in the file.
 } TextureCollectionHeader;
 
-// TextureCellDesc
-typedef struct {
-    uint8_t sector_offset_texture;     // Offset into raw texture data section.
-    uint8_t palette_index;             // Palette index.
-    uint8_t texture_width;             // Texture width in pixels.
-    uint8_t texture_height;            // Texture height in pixels.
-} TextureCellDesc;
-
 typedef struct {
     uint8_t r;
     uint8_t g;
@@ -27,7 +19,8 @@ typedef struct {
     uint8_t a;
 } Pixel32;
 
-#pragma pack(1)
+#pragma pack(push)
+#pragma pack(4)
 typedef struct {
     uint16_t r : 5;
     uint16_t g : 5;
@@ -35,13 +28,24 @@ typedef struct {
     uint16_t a : 1;
 } Pixel16;
 
+// TextureCellDesc
+typedef struct {
+    uint8_t sector_offset_texture;     // Offset into raw texture data section.
+    uint8_t palette_index;             // Palette index.
+    uint8_t texture_width;             // Texture width in pixels.
+    uint8_t texture_height;            // Texture height in pixels.
+    Pixel32 avg_color;
+} TextureCellDesc;
+
 typedef struct {
     Pixel16* palette;
     uint8_t* data;
     uint8_t width;
     uint8_t height;
+    Pixel32 avg_color;
 } TextureCPU;
+#pragma pack(pop)
 
-int texture_collection_load(const char* path, TextureCPU** out_textures);
+uint32_t texture_collection_load(const char* path, TextureCPU** out_textures);
 
 #endif

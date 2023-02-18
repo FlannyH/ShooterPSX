@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-int file_read(const char* path, char** destination, size_t* size) {
+int file_read(const char* path, uint32_t** destination, size_t* size) {
     FILE* file;
 
     // Modify file name to not be CD based
-    size_t length = strlen(path) + 1; // Include the null terminator
+    const size_t length = strlen(path) + 1; // Include the null terminator
     char* new_path = malloc(length + 1 - 2); // Length from strlen + 1 for the period at the start, -2 for the ;1 at the end, and +1 for the null terminator
     new_path[0] = '.';
     memcpy_s(&new_path[1], length - 2, path, length - 2);
@@ -23,18 +23,17 @@ int file_read(const char* path, char** destination, size_t* size) {
     // Get file size
     fseek(file, 0, SEEK_END);
     *size = ftell(file);
+    *size = ((*size) + 3) & ~0x03; // align to 4 bytes
     fseek(file, 0, SEEK_SET);
 
     // Allocate memory for the data
-    *destination = (char*)malloc((*size) + 1);
+    *destination = (uint32_t*)malloc((*size) + 1);
     memset(*destination, 0, (*size) + 1);
 
-    // Read the data - in 2048 byte segments because for some reason there's a limit
+    // Read the data - in 2048 byte segments because for some reason reading the whole file did not work. typical
     for (size_t offset = 0; offset < *size; offset += 2048) {
-        auto n_b_read = fread_s(*destination + offset, 2048, sizeof(char), 2048, file);
-        printf("%i bytes read into %p\n", n_b_read, *destination + offset);
+        fread_s(*destination + (offset / 4), 2048, sizeof(char), 2048, file);
     }
-    (*destination)[(*size)] = 0;
     printf("[INFO] Loaded file %s\n", new_path);
     return 1;
 }

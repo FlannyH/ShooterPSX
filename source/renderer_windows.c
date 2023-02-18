@@ -23,7 +23,7 @@ clock_t dt_clock;
 GLuint textures[256];
 float tex_res[512];
 
-typedef enum _shader_type{
+typedef enum {
     vertex,
     pixel,
     geometry,
@@ -130,11 +130,11 @@ static void DebugCallbackFunc(
     }
     }
 
-    printf("GL Debug Callback:\n source: %i:%s \n type: %i:%s \n id: %i \n severity: &i:%s \n  message: &s", source, sourceString, type, typeString, id, severity, severityString, message);
+    printf("GL Debug Callback:\n source: %i:%s \n type: %i:%s \n id: %i \n severity: %i:%s \n  message: %s", source, sourceString, type, typeString, id, severity, severityString, message);
 }
 
 
-bool load_shader_part(char* path, ShaderType type, GLuint* program)
+bool load_shader_part(char* path, const ShaderType type, const GLuint* program)
 {
     const int shader_types[4] = 
     {
@@ -146,7 +146,7 @@ bool load_shader_part(char* path, ShaderType type, GLuint* program)
 
     //Read shader source file
     size_t shader_size = 0;
-    char* shader_data = NULL;
+    uint32_t* shader_data = NULL;
 
     if (file_read(path, &shader_data, &shader_size) == 0)
     {
@@ -163,7 +163,8 @@ bool load_shader_part(char* path, ShaderType type, GLuint* program)
     const GLuint shader = glCreateShader(type_to_create);
 
     //Compile shader source
-    glShaderSource(shader, 1, &shader_data, &shader_size);
+    const GLint shader_size_gl = (GLint)shader_size;
+    glShaderSource(shader, 1, (const GLchar* const*)&shader_data, &shader_size_gl);
     glCompileShader(shader);
 
     //Error checking
@@ -243,9 +244,9 @@ void renderer_init() {
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(Vertex3D), offsetof(Vertex3D, x));
-    glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex3D), offsetof(Vertex3D, r));
-    glVertexAttribPointer(2, 2, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(Vertex3D), offsetof(Vertex3D, u));
+    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(Vertex3D), (const void*)offsetof(Vertex3D, x));
+    glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex3D), (const void*)offsetof(Vertex3D, r));
+    glVertexAttribPointer(2, 2, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(Vertex3D), (const void*)offsetof(Vertex3D, u));
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Initialize delta time clock
@@ -262,7 +263,7 @@ void renderer_begin_frame(Transform* camera_transform) {
         (float)(camera_transform->position.vy >> 12),
         (float)(camera_transform->position.vz >> 12)
     };
-    vec3 rotation = {
+    const vec3 rotation = {
         (float)camera_transform->rotation.vx * (2*PI / 131072.0f),
         -(float)camera_transform->rotation.vy * (2*PI / 131072.0f) + PI,
         (float)camera_transform->rotation.vz * (2*PI / 131072.0f) + PI
@@ -291,13 +292,13 @@ void renderer_end_frame() {
     glfwPollEvents();
 }
 
-void renderer_draw_model_shaded(Model* model, Transform* model_transform) {
+void renderer_draw_model_shaded(const Model* model, Transform* model_transform) {
     for (size_t i = 0; i < model->n_meshes; ++i) {
         renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
     }
 }
 
-void renderer_draw_mesh_shaded(Mesh* mesh, Transform* model_transform) {
+void renderer_draw_mesh_shaded(const Mesh* mesh, Transform* model_transform) {
     // Calculate model matrix
     mat4 model_matrix;
     glm_mat4_identity(model_matrix);
@@ -341,7 +342,7 @@ void renderer_draw_mesh_shaded(Mesh* mesh, Transform* model_transform) {
     glDrawArrays(GL_TRIANGLES, 0, mesh->n_vertices);
 }
 
-void renderer_draw_triangles_shaded_2d(Vertex2D* vertex_buffer, uint16_t n_verts, int16_t x, int16_t y) {
+void renderer_draw_triangles_shaded_2d(const Vertex2D* vertex_buffer, uint16_t n_verts, int16_t x, int16_t y) {
 
 }
 
@@ -388,6 +389,8 @@ void renderer_upload_texture(const TextureCPU* texture, const uint8_t index) {
     tex_res[(size_t)index * 2 + 0] = (float)texture->width;
     tex_res[(size_t)index * 2 + 1] = (float)texture->height;
 
+    printf("texture %d has avg color: %d, %d, %d\n", index, texture->avg_color.r, texture->avg_color.g, texture->avg_color.b);
+
     // Clean up after we're done
     free(pixels);
 }
@@ -397,16 +400,16 @@ int renderer_get_delta_time_raw() {
 }
 
 int renderer_get_delta_time_ms() {
-    int new_dt = clock();
-    int dt = (new_dt - dt_clock) * 1000 / CLOCKS_PER_SEC;
+    const int new_dt = clock();
+    const int dt = (new_dt - dt_clock) * 1000 / CLOCKS_PER_SEC;
     dt_clock = new_dt;
     return dt;
 }
 
-int renderer_get_n_rendered_triangles() {
+uint32_t renderer_get_n_rendered_triangles() {
     return 0;
 }
 
-int renderer_get_n_total_triangles() {
+uint32_t renderer_get_n_total_triangles() {
     return 0;
 }
