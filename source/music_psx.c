@@ -2,15 +2,7 @@
 #include "music.h"
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <psxetc.h>
-#include <psxgte.h>
-#include <psxgpu.h>
 #include <psxapi.h>
-#include <psxpad.h>
-#include <psxsio.h>
-#include <psxspu.h>
 #include <psxcd.h>
 
 CdlFILE xa_file;
@@ -20,24 +12,22 @@ char xa_sector_buffer[2048];
 volatile int num_loops=0;
 volatile int xa_play_channel;
 
-typedef struct SECTOR_HEAD
-{
+typedef struct {
 	uint16_t id;
 	uint16_t chan;
 	uint8_t  pad[28];
-} SECTOR_HEAD;
+} SectorHead;
 
-void xa_callback(CdlIntrResult intr, unsigned char *result)
+void xa_callback(const CdlIntrResult intr, unsigned char *result)
 {
-	SECTOR_HEAD *sec;
 
-	// We want this callback to respond to data ready events
+    // We want this callback to respond to data ready events
 	if (intr == CdlDataReady)
 	{
 		// Get data sector
 		CdGetSector(&xa_sector_buffer, 512);
 		/* Check if sector belongs to the currently playing channel */
-		sec = (SECTOR_HEAD*)xa_sector_buffer;
+		SectorHead* sec = (SectorHead*)xa_sector_buffer;
 		
 		if( sec->id == 352 )
 		{
@@ -77,7 +67,7 @@ void music_play_file(const char* path) {
 	ExitCriticalSection();
 
     // Set flags for CD for XA streaming
-	int flags = CdlModeSpeed|CdlModeRT|CdlModeSF;
+    const int flags = CdlModeSpeed|CdlModeRT|CdlModeSF;
 	CdControl(CdlSetmode, &flags, 0);
 
     // Select file 1

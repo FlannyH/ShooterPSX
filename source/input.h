@@ -2,8 +2,8 @@
 #define INPUT_H
 #include <stdint.h>
 
-void input_init();
-void input_update();
+void input_init(void);
+void input_update(void);
 void input_set_stick_deadzone(int8_t new_deadzone);
 int input_has_analog(int player_id);
 int input_is_connected(int player_id);

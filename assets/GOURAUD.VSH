@@ -5,8 +5,8 @@ in layout (location = 0) vec3 in_position;
 in layout (location = 1) vec3 in_color;
 in layout (location = 2) vec3 in_texcoord;
 
-out noperspective vec3 out_color;
-out noperspective vec2 out_texcoord;
+out vec3 out_color;
+out vec2 out_texcoord;
 
 uniform mat4 proj_matrix;
 uniform mat4 view_matrix;

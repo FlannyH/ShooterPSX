@@ -4,7 +4,7 @@
 // This entire document is a duct tape fix for the Windows debug version
 #ifdef _WINDOWS
 #include <stdint.h>
-typedef struct _VECTOR {
+typedef struct {
     int32_t vx, vy, vz;
 } VECTOR;
 

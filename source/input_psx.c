@@ -3,21 +3,21 @@
 #include <psxapi.h>     // API header, has InitPAD() and StartPAD() defs
 #include <psxpad.h>
 
-char pad_buff[2][34];
+uint8_t pad_buff[2][34];
 uint16_t button_prev[2] = {0, 0};
 uint16_t button_curr[2] = {0, 0};
-uint8_t left_stick_x_curr[2] = {128, 128};
-uint8_t left_stick_y_curr[2] = {128, 128};
-uint8_t right_stick_x_curr[2] = {128, 128};
-uint8_t right_stick_y_curr[2] = {128, 128};
-uint8_t left_stick_x_prev[2] = {128, 128};
-uint8_t left_stick_y_prev[2] = {128, 128};
-uint8_t right_stick_x_prev[2] = {128, 128};
-uint8_t right_stick_y_prev[2] = {128, 128};
+int8_t left_stick_x_curr[2] = {0, 0};
+int8_t left_stick_y_curr[2] = {0, 0};
+int8_t right_stick_x_curr[2] = {0, 0};
+int8_t right_stick_y_curr[2] = {0, 0};
+int8_t left_stick_x_prev[2] = {0, 0};
+int8_t left_stick_y_prev[2] = {0, 0};
+int8_t right_stick_x_prev[2] = {0, 0};
+int8_t right_stick_y_prev[2] = {0, 0};
 int8_t deadzone = 16;
 PADTYPE* pad[2] = {0, 0};
 
-void input_init() {
+void input_init(void) {
     // Init controller
 	InitPAD(&pad_buff[0][0], 34, &pad_buff[1][0], 34);
 	StartPAD();
@@ -26,7 +26,7 @@ void input_init() {
     pad[1] = ((PADTYPE*)pad_buff[1]);
 }
 
-void input_update() {
+void input_update(void) {
     for (int i = 0; i < 2; ++i) {
         // Pass current to previous
         button_prev[i] = button_curr[i];
@@ -62,52 +62,52 @@ int input_is_connected(int player_id) {
 }
 
 // Returns non-zero if held
-int input_held(uint16_t button_mask, int player_id) {
-    uint16_t all_button = button_curr[player_id];
+int input_held(const uint16_t button_mask, const int player_id) {
+    const uint16_t all_button = button_curr[player_id];
     return (all_button & button_mask);
 }
 
 // Returns non-zero if pressed this frame
-int input_pressed(uint16_t button_mask, int player_id) {
-    uint16_t all_button = (button_curr[player_id] ^ button_prev[player_id]) & button_curr[player_id];
+int input_pressed(const uint16_t button_mask, const int player_id) {
+    const uint16_t all_button = (button_curr[player_id] ^ button_prev[player_id]) & button_curr[player_id];
     return (all_button & button_mask);
 }
 
 // Returns non-zero if released this frame
-int input_released(uint16_t button_mask, int player_id) {
-    uint16_t all_button = (button_curr[player_id] ^ button_prev[player_id]) & button_prev[player_id];
+int input_released(const uint16_t button_mask, const int player_id) {
+    const uint16_t all_button = (button_curr[player_id] ^ button_prev[player_id]) & button_prev[player_id];
     return (all_button & button_mask);
 }
 
-int8_t input_left_stick_x(int player_id) {
+int8_t input_left_stick_x(const int player_id) {
     return left_stick_x_curr[player_id];
 }
 
-int8_t input_left_stick_x_relative(int player_id) {
+int8_t input_left_stick_x_relative(const int player_id) {
     return left_stick_x_curr[player_id] - left_stick_x_prev[player_id];
 }
 
-int8_t input_left_stick_y(int player_id) {
+int8_t input_left_stick_y(const int player_id) {
     return left_stick_y_curr[player_id];
 }
 
-int8_t input_left_stick_y_relative(int player_id) {
+int8_t input_left_stick_y_relative(const int player_id) {
     return left_stick_y_curr[player_id] - left_stick_y_prev[player_id];
 }
 
-int8_t input_right_stick_x(int player_id) {
+int8_t input_right_stick_x(const int player_id) {
     return right_stick_x_curr[player_id];
 }
 
-int8_t input_right_stick_x_relative(int player_id) {
+int8_t input_right_stick_x_relative(const int player_id) {
     return right_stick_x_curr[player_id] - left_stick_x_prev[player_id];
 }
 
-int8_t input_right_stick_y(int player_id) {
+int8_t input_right_stick_y(const int player_id) {
     return right_stick_y_curr[player_id];
 }
 
-int8_t input_right_stick_y_relative(int player_id) {
+int8_t input_right_stick_y_relative(const int player_id) {
     return right_stick_y_curr[player_id] - left_stick_y_prev[player_id];
 }
 #endif

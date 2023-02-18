@@ -18,6 +18,7 @@ if (DEFINED PSN00BSDK_TARGET)
         source/input_psx.c 
         source/renderer_psx.c 
         source/music_psx.c
+        source/texture_psx.c
         source/main.c 
         source/mesh.c 
         source/camera.c)
@@ -35,6 +36,7 @@ else()
         source/input_windows.c 
         source/renderer_windows.c 
         source/music_windows.c
+        source/texture_windows.c
         source/main.c 
         source/mesh.c 
         source/camera.c
