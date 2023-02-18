@@ -14,7 +14,7 @@
 #define STICK_SENSITIVITY 5000
 #define MOVEMENT_SPEED 96
 
-void camera_update_flycam(Transform* camera_transform, int dt_ms) {
+void camera_update_flycam(transform_t* camera_transform, int dt_ms) {
     if (input_is_connected(0))
     {
         // For dual-analog and dual-shock (analog input)

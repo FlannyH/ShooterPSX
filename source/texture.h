@@ -10,14 +10,14 @@ typedef struct {
     uint32_t offset_palettes;          // Offset to the color palettes section, relative to the end of this header. Each color is a 16-bit depth color.
     uint32_t offset_textures;          // Offset to the raw texture data section.
     uint32_t offset_name_table;        // Offset to an array of offsets into the binary section. The offsets point to null-terminated strings. The names are stored in the same order as the texture cells, so the same index can be used for both arrays. Used for debugging, and this value should be 0xFFFFFFFF if the table is not included in the file.
-} TextureCollectionHeader;
+} tex_col_header_t;
 
 typedef struct {
     uint8_t r;
     uint8_t g;
     uint8_t b;
     uint8_t a;
-} Pixel32;
+} pixel32_t;
 
 #pragma pack(push)
 #pragma pack(4)
@@ -26,7 +26,7 @@ typedef struct {
     uint16_t g : 5;
     uint16_t b : 5;
     uint16_t a : 1;
-} Pixel16;
+} pixel16_t;
 
 // TextureCellDesc
 typedef struct {
@@ -34,18 +34,18 @@ typedef struct {
     uint8_t palette_index;             // Palette index.
     uint8_t texture_width;             // Texture width in pixels.
     uint8_t texture_height;            // Texture height in pixels.
-    Pixel32 avg_color;
-} TextureCellDesc;
+    pixel32_t avg_color;
+} texture_cell_desc_t;
 
 typedef struct {
-    Pixel16* palette;
+    pixel16_t* palette;
     uint8_t* data;
     uint8_t width;
     uint8_t height;
-    Pixel32 avg_color;
-} TextureCPU;
+    pixel32_t avg_color;
+} texture_cpu_t;
 #pragma pack(pop)
 
-uint32_t texture_collection_load(const char* path, TextureCPU** out_textures);
+uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures);
 
 #endif

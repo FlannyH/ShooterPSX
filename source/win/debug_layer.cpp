@@ -32,6 +32,8 @@ void debug_layer_update() {
     ImGui::Begin("DebugInfo");
     ImGui::Text("Frametime: %f ms", dt_smooth);
     ImGui::Text("FPS: %f", 1.0 / dt_smooth);
+    ImGui::Text("Triangles: %i\n",
+        renderer_get_n_total_triangles());
     ImGui::End();
 
     // Render

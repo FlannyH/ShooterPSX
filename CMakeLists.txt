@@ -21,7 +21,10 @@ if (DEFINED PSN00BSDK_TARGET)
         source/texture_psx.c
         source/main.c 
         source/mesh.c 
-        source/camera.c)
+        source/camera.c
+        source/collision.c
+        source/fixed_point.c
+    )
 
     psn00bsdk_add_cd_image(
 	    iso      # Target name
@@ -41,6 +44,8 @@ else()
         source/main.c 
         source/mesh.c 
         source/camera.c
+        source/collision.c
+        source/fixed_point.c
         source/win/psx.c
         source/win/debug_layer.cpp
         external/source/GL/gl3w.c
