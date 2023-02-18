@@ -24,6 +24,7 @@ GLuint vbo;
 clock_t dt_clock;
 GLuint textures[256];
 float tex_res[512];
+int dt = 0;
 
 typedef enum { vertex, pixel, geometry, compute } ShaderType;
 
@@ -126,6 +127,12 @@ static void DebugCallbackFunc(GLenum source, GLenum type, GLuint id,
          "severity: %i:%s \n  message: %s",
          source, sourceString, type, typeString, id, severity, severityString,
          message);
+}
+
+void update_delta_time_ms(void) {
+    const int new_dt = clock();
+    dt = (new_dt - dt_clock) * 1000 / CLOCKS_PER_SEC;
+    dt_clock = new_dt;
 }
 
 bool load_shader_part(char *path, const ShaderType type,
@@ -295,10 +302,11 @@ void renderer_begin_frame(Transform *camera_transform) {
 }
 
 void renderer_end_frame() {
-  debug_layer_update();
-  // Flip buffers
-  glfwSwapBuffers(window);
-  glfwPollEvents();
+    update_delta_time_ms();
+    debug_layer_update();
+    // Flip buffers
+    glfwSwapBuffers(window);
+    glfwPollEvents();
 }
 
 void renderer_draw_model_shaded(const Model *model,
@@ -423,12 +431,13 @@ void renderer_upload_texture(const TextureCPU *texture, const uint8_t index) {
 int renderer_get_delta_time_raw() { return 0; }
 
 int renderer_get_delta_time_ms() {
-  const int new_dt = clock();
-  const int dt = (new_dt - dt_clock) * 1000 / CLOCKS_PER_SEC;
-  dt_clock = new_dt;
-  return dt;
+    return dt;
 }
 
 uint32_t renderer_get_n_rendered_triangles() { return 0; }
 
 uint32_t renderer_get_n_total_triangles() { return 0; }
+
+int renderer_should_close() {
+    return glfwWindowShouldClose(window);
+}

@@ -31,6 +31,7 @@ if (DEFINED PSN00BSDK_TARGET)
     )
 else()
     project ("ShooterPSX")
+    set(CMAKE_CXX_STANDARD 17)
     add_executable (ShooterPSX
         source/file_windows.c 
         source/input_windows.c 

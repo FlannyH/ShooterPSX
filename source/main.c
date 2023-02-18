@@ -11,6 +11,7 @@
 
 #else
 #include "win/psx.h"
+#include "win/debug_layer.h"
 #endif
 #include "camera.h"
 
@@ -54,7 +55,7 @@ int main(void) {
   music_play_file("\\ASSETS\\MUSIC.XA;1");
 
   int frame_counter = 0;
-  while (1) {
+  while (!renderer_should_close()) {
     const int delta_time = renderer_get_delta_time_ms();
     renderer_begin_frame(&camera_transform);
     input_update();
@@ -73,6 +74,7 @@ int main(void) {
 #endif
     renderer_end_frame();
   }
+  debug_layer_close();
 }
 
 void init(void) {

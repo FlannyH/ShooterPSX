@@ -451,4 +451,9 @@ uint32_t renderer_get_n_rendered_triangles(void) {
 uint32_t renderer_get_n_total_triangles(void) {
     return n_total_triangles;
 }
+
+int renderer_should_close() {
+    return 0;
+}
+
 #endif

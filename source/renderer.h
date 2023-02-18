@@ -1,5 +1,10 @@
 #ifndef RENDERER_H
 #define RENDERER_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef _PSX
 #include <psxgte.h>
 #else
@@ -39,4 +44,8 @@ int renderer_get_delta_time_raw(void);
 int renderer_get_delta_time_ms(void);
 uint32_t renderer_get_n_rendered_triangles(void);
 uint32_t renderer_get_n_total_triangles(void);
+int renderer_should_close(void);
+#ifdef __cplusplus
+}
+#endif
 #endif
