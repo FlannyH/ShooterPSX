@@ -8,11 +8,13 @@
 #include <psxgpu.h>
 #include <psxgte.h>
 #include <psxspu.h>
+#include <psxpad.h>
 
 #else
 #include "win/psx.h"
 #include "win/debug_layer.h"
 #endif
+
 #include "camera.h"
 #include "fixed_point.h"
 
@@ -64,6 +66,7 @@ int main(void) {
 
 	int frame_counter = 0;
     int bvh_depth = 0;
+    ray_t ray = {0};
     while (!renderer_should_close()) {
         const int delta_time = renderer_get_delta_time_ms();
         renderer_begin_frame(&camera_transform);
@@ -73,18 +76,40 @@ int main(void) {
         // renderer_draw_mesh_shaded(m_cube, t_cube1);
         renderer_draw_model_shaded(m_level, &t_level);
         //renderer_debug_draw_aabb(&m_level->meshes[0].bounds, white, &t_level);
-        for (uint32_t x = 2; x < 3; x++) {
-            uint32_t color =
-                ((((x + 1) & 0x01) * 0xFF) << 0) |
-                ((((x + 1) & 0x02) * 0xFF) << 7) |
-                ((((x + 1) & 0x04) * 0xFF) << 14);
-
-            bvh_debug_draw(&bvh_level[x], bvh_depth, bvh_depth, *(pixel32_t*)&color);
-        }
         frame_counter += delta_time;
-        if (frame_counter > 240) {
+        rayhit_t hit = { 0 };
+        for (int i = 0; i < m_level->n_meshes; ++i) {
+            bvh_intersect(&bvh_level[i], ray, &hit);
+        }
+        vertex_3d_t start = { ray.position.x.raw, ray.position.y.raw, ray.position.z.raw, 255, 255, 0, 0, 0, 255 };
+        vertex_3d_t end = { ray.position.x.raw + ray.direction.x.raw * 10, ray.position.y.raw + ray.direction.y.raw * 10, ray.position.z.raw + ray.direction.z.raw * 10, 255, 255, 0, 0, 0, 255 };
+        line_3d_t line = { start, end };
+        renderer_debug_draw_line(line, white, &t_level);
+        if (input_pressed(PAD_CIRCLE, 0)) {
             bvh_depth = (bvh_depth+1) % 16;
-            frame_counter -= 240;
+
+            ray.position.x.raw = -camera_transform.position.vx >> 12;
+            ray.position.y.raw = -camera_transform.position.vy >> 12;
+            ray.position.z.raw = -camera_transform.position.vz >> 12;
+            ray.direction = renderer_get_forward_vector();
+            ray.direction.x.raw += ray.direction.x.raw == 0;
+            ray.direction.y.raw += ray.direction.y.raw == 0;
+            ray.direction.z.raw += ray.direction.z.raw == 0;
+            ray.inv_direction = vec3_div(vec3_from_int16s(64, 64, 64), ray.direction);
+            printf("%f, %f, %f\n",
+                ((float)ray.direction.x.raw) / 256.0f,
+                ((float)ray.direction.y.raw) / 256.0f,
+                ((float)ray.direction.z.raw) / 256.0f
+            );
+
+            for (uint32_t x = 0; x < m_level->n_meshes; x++) {
+                //uint32_t color =
+                //    ((((x + 1) & 0x01) * 0xFF) << 0) |
+                //    ((((x + 1) & 0x02) * 0xFF) << 7) |
+                //    ((((x + 1) & 0x04) * 0xFF) << 14);
+                //
+                //bvh_debug_draw(&bvh_level[x], bvh_depth, bvh_depth, *(pixel32_t*)&color);
+            }
         }
     #ifdef _PSX
 	    FntPrint(-1, "Frame: %i\n", frame_index++);

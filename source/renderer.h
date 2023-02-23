@@ -47,6 +47,7 @@ int renderer_get_delta_time_ms(void);
 uint32_t renderer_get_n_rendered_triangles(void);
 uint32_t renderer_get_n_total_triangles(void);
 int renderer_should_close(void);
+vec3_t renderer_get_forward_vector(void);
 #ifdef __cplusplus
 }
 #endif

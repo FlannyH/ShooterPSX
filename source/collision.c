@@ -1,6 +1,7 @@
 #include "collision.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "mesh.h"
 #include "renderer.h"
@@ -116,6 +117,57 @@ void bvh_subdivide(bvh_t* self, bvh_node_t* node, const int recursion_depth) {
     node->is_leaf = 0;
 }
 
+void handle_node_intersection(bvh_t* self, bvh_node_t* current_node, ray_t ray, rayhit_t* hit, int rec_depth) {
+    //Intersect current node
+    //if (current_node->bounds.Intersect(ray))
+    int intersect = aabb_intersect(&current_node->bounds, ray);
+    if (intersect)
+    {
+        pixel32_t c = {
+            255,
+            rec_depth * 32,
+            rec_depth * 32,
+        };
+        transform_t id_transform = { 0,0,0,0,0,0 };
+        //If it's a leaf
+        if (current_node->is_leaf)
+        {
+            renderer_debug_draw_aabb(&current_node->bounds, c, &id_transform);
+            return;
+            //Intersect all triangles attached to it
+            /*
+            rayhit_t sub_hit;
+            for (int i = current_node->left_first; i < current_node->left_first + current_node->primitive_count; i++)
+            {
+                triangle_intersect(self->primitives[self->indices[i]], ray, sub_hit);
+                self->primitives[self->indices[i]].Intersect(ray, sub_hit);
+                if (sub_hit.distance.raw < hit->distance.raw && sub_hit.distance.raw >= 0)
+                {
+                    memcpy_s(hit, sizeof(hit), &sub_hit, sizeof(sub_hit));
+                    hit->triangle = &self->primitives[self->indices[i]];
+                }
+            }
+            */
+            return;
+        }
+        //Otherwise
+        else
+        {
+            //Intersect child nodes
+            handle_node_intersection(self, &self->nodes[current_node->left_first + 0], ray, hit, rec_depth + 1);
+            handle_node_intersection(self, &self->nodes[current_node->left_first + 1], ray, hit, rec_depth + 1);
+        }
+    }
+    else
+    {
+        return;
+    }
+}
+
+void bvh_intersect(bvh_t* self, const ray_t ray, rayhit_t* hit) {
+    handle_node_intersection(self, self->root, ray, hit, 0);
+}
+
 void bvh_swap_primitives(uint16_t* a, uint16_t* b) {
     const int tmp = *a;
     *a = *b;
@@ -173,4 +225,29 @@ void debug_draw(const bvh_t* self, bvh_node_t* node, int min_depth, int max_dept
 
 void bvh_debug_draw(const bvh_t* self, int min_depth, int max_depth, pixel32_t color) {
     debug_draw(self, self->root, min_depth, max_depth, 0, color);
+}
+
+int aabb_intersect(const aabb_t* self, ray_t ray) {
+    scalar_t tx1 = scalar_mul(scalar_sub(self->min.x, ray.position.x), ray.inv_direction.x);
+    scalar_t tx2 = scalar_mul(scalar_sub(self->max.x, ray.position.x), ray.inv_direction.x);
+
+    scalar_t tmin = scalar_min(tx1, tx2);
+    scalar_t tmax = scalar_max(tx1, tx2);
+
+    scalar_t ty1 = scalar_mul(scalar_sub(self->min.y, ray.position.y), ray.inv_direction.y);
+    scalar_t ty2 = scalar_mul(scalar_sub(self->max.y, ray.position.y), ray.inv_direction.y);
+
+    tmin = scalar_max(scalar_min(ty1, ty2), tmin);
+    tmax = scalar_min(scalar_max(ty1, ty2), tmax);
+
+    scalar_t tz1 = scalar_mul(scalar_sub(self->min.z, ray.position.z), ray.inv_direction.z);
+    scalar_t tz2 = scalar_mul(scalar_sub(self->max.z, ray.position.z), ray.inv_direction.z);
+
+    tmin = scalar_max(scalar_min(tz1, tz2), tmin);
+    tmax = scalar_min(scalar_max(tz1, tz2), tmax);
+    
+    return tmax.raw >= tmin.raw;
+}
+
+int triangle_intersect(const triangle_3d_t self, ray_t ray, rayhit_t* hit) {
 }

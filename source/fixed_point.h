@@ -23,8 +23,7 @@ typedef struct {
 // Let's hope and pray that this will be compile-time evaluated
 inline fixed8_8_t scalar_from_float(const float a) {
     fixed8_8_t result;
-    result.integer = (int8_t)a;
-    result.fraction = (uint8_t)(a * 256.0f);
+    result.raw = (int16_t)(a * 256.0f);
     return result;
 }
 
@@ -43,6 +42,8 @@ fixed8_8_t scalar_add(fixed8_8_t a, fixed8_8_t b);
 fixed8_8_t scalar_sub(fixed8_8_t a, fixed8_8_t b);
 fixed8_8_t scalar_mul(fixed8_8_t a, fixed8_8_t b);
 fixed8_8_t scalar_div(fixed8_8_t a, fixed8_8_t b);
+fixed8_8_t scalar_min(fixed8_8_t a, fixed8_8_t b);
+fixed8_8_t scalar_max(fixed8_8_t a, fixed8_8_t b);
 vec3_t vec3_from_scalar(scalar_t a);
 vec3_t vec3_from_scalars(scalar_t x, scalar_t y, scalar_t z);
 vec3_t vec3_from_int16s(int16_t x, int16_t y, int16_t z);

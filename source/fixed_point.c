@@ -1,5 +1,7 @@
 #include "fixed_point.h"
 
+#include <stdlib.h>
+
 fixed8_8_t scalar_from_int16(const int16_t raw) {
     fixed8_8_t result;
     result.raw = raw;
@@ -19,7 +21,14 @@ fixed8_8_t scalar_sub(const fixed8_8_t a, const fixed8_8_t b) {
 }
 
 fixed8_8_t scalar_mul(const fixed8_8_t a, const fixed8_8_t b) {
-    const int32_t result32 = a.raw * b.raw;
+    int32_t result32 = a.raw * b.raw;
+    // overflow check
+    if (result32 > 8388607) {
+        result32 = 8388607;
+    }
+    else if (result32 < -8388607) {
+        result32 = -8388607;
+    }
     fixed8_8_t result;
     result.raw = (int16_t)(result32 >> 8);
     return result;
@@ -27,10 +36,22 @@ fixed8_8_t scalar_mul(const fixed8_8_t a, const fixed8_8_t b) {
 
 fixed8_8_t scalar_div(const fixed8_8_t a, const fixed8_8_t b) {
     int32_t result32 = (int32_t)a.raw << 8;
-    result32 /= b.raw;
+    if (b.raw != 0) {
+        result32 /= b.raw;
+    } else {
+        result32 |= INT16_MAX;
+    }
     fixed8_8_t result;
     result.raw = (int16_t)result32;
     return result;
+}
+
+fixed8_8_t scalar_min(const fixed8_8_t a, const fixed8_8_t b) {
+    return (a.raw < b.raw) ? a : b;
+}
+
+fixed8_8_t scalar_max(const fixed8_8_t a, const fixed8_8_t b) {
+    return (a.raw > b.raw) ? a : b;
 }
 
 vec3_t vec3_from_scalar(const scalar_t a) {

@@ -469,7 +469,7 @@ void renderer_debug_draw_line(const line_3d_t line, const pixel32_t color, trans
         &line, GL_STATIC_DRAW);
 
     // Enable depth and draw
-    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
     glDrawArrays(GL_LINES, 0, 2);
@@ -577,3 +577,11 @@ uint32_t renderer_get_n_rendered_triangles() { return 0; }
 uint32_t renderer_get_n_total_triangles() { return n_total_triangles; }
 
 int renderer_should_close() { return glfwWindowShouldClose(window); }
+
+vec3_t renderer_get_forward_vector() {
+    return vec3_from_floats(
+        -view_matrix_normal[0][2],
+        -view_matrix_normal[1][2],
+        -view_matrix_normal[2][2]
+    );
+}

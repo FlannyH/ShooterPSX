@@ -17,6 +17,7 @@ typedef struct {
 typedef struct {
     vec3_t position;
     vec3_t direction;
+    vec3_t inv_direction;
 } ray_t;
 
 typedef enum {
@@ -81,4 +82,16 @@ typedef struct {
     uint16_t n_primitives;
     uint16_t node_pointer;
 } bvh_t;
+
+typedef enum {
+    none,
+} col_mat_t;
+
+typedef struct {
+    vec3_t position;
+    vec3_t normal;
+    scalar_t distance;
+    col_mat_t collision_material;
+    triangle_3d_t* triangle;
+} rayhit_t;
 #endif // STRUCTS_H
