@@ -353,6 +353,98 @@ void renderer_draw_triangles_shaded_2d(const vertex_2d_t* vertex_buffer, const u
     }
 }
 
+void renderer_debug_draw_line(const line_3d_t line, const pixel32_t color, transform_t* model_transform) {
+    // Set rotation and translation matrix
+    MATRIX model_matrix;
+    HiRotMatrix(&model_transform->rotation, &model_matrix);
+    TransMatrix(&model_matrix, &model_transform->position);
+    CompMatrixLV(&view_matrix, &model_matrix, &model_matrix);
+
+    // Send it to the GTE
+    PushMatrix();
+    gte_SetRotMatrix(&model_matrix);
+    gte_SetTransMatrix(&model_matrix);
+
+    // Load a line's vertices into the GTE
+    gte_ldv3(
+        &line.v0.x,
+        &line.v1.x,
+        &line.v1.x
+        );
+
+    // Apply transformations
+    gte_rtpt();
+
+    // Calculate average depth of the line
+    int p;
+    gte_avsz3();
+    gte_stotz(&p);
+
+    // Depth clipping
+    if ((p >> 2) > ORD_TBL_LENGTH || ((p >> 2) <= 0))
+        return;
+
+    LINE_F2* new_line = (LINE_F2*)next_primitive;
+    next_primitive += sizeof(LINE_F2);
+
+    // Set the vertex positions of the line
+    gte_stsxy0(&new_line->x0);
+    gte_stsxy1(&new_line->x1);
+
+    // Set the vertex colors of the line
+    setRGB0(new_line,
+        color.r,
+        color.g,
+        color.b
+    );
+
+    // Initialize the entry in the render queue
+    setLineF2(new_line);
+
+    // Add the line to the draw queue
+    addPrim(ord_tbl[drawbuffer] + (p >> 2), new_line);
+}
+
+void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, transform_t* model_transform) {
+    // Create 8 vertices
+    vertex_3d_t vertex000 = { box->min.x.raw, box->min.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255 };
+    vertex_3d_t vertex001 = { box->min.x.raw, box->min.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255 };
+    vertex_3d_t vertex010 = { box->min.x.raw, box->max.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255 };
+    vertex_3d_t vertex011 = { box->min.x.raw, box->max.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255 };
+    vertex_3d_t vertex100 = { box->max.x.raw, box->min.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255 };
+    vertex_3d_t vertex101 = { box->max.x.raw, box->min.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255 };
+    vertex_3d_t vertex110 = { box->max.x.raw, box->max.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255 };
+    vertex_3d_t vertex111 = { box->max.x.raw, box->max.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255 };
+
+    // Create 12 lines
+    line_3d_t line_a = { vertex000, vertex100 };
+    line_3d_t line_b = { vertex100, vertex101 };
+    line_3d_t line_c = { vertex101, vertex001 };
+    line_3d_t line_d = { vertex001, vertex000 };
+    line_3d_t line_e = { vertex010, vertex110 };
+    line_3d_t line_f = { vertex110, vertex111 };
+    line_3d_t line_g = { vertex111, vertex011 };
+    line_3d_t line_h = { vertex011, vertex010 };
+    line_3d_t line_i = { vertex000, vertex010 };
+    line_3d_t line_j = { vertex100, vertex110 };
+    line_3d_t line_k = { vertex101, vertex111 };
+    line_3d_t line_l = { vertex001, vertex011 };
+
+    // Draw the lines
+    renderer_debug_draw_line(line_a, color, model_transform);
+    renderer_debug_draw_line(line_b, color, model_transform);
+    renderer_debug_draw_line(line_c, color, model_transform);
+    renderer_debug_draw_line(line_d, color, model_transform);
+    renderer_debug_draw_line(line_e, color, model_transform);
+    renderer_debug_draw_line(line_f, color, model_transform);
+    renderer_debug_draw_line(line_g, color, model_transform);
+    renderer_debug_draw_line(line_h, color, model_transform);
+    renderer_debug_draw_line(line_i, color, model_transform);
+    renderer_debug_draw_line(line_j, color, model_transform);
+    renderer_debug_draw_line(line_k, color, model_transform);
+    renderer_debug_draw_line(line_l, color, model_transform);
+}
+
 void renderer_upload_texture(const texture_cpu_t* texture, const uint8_t index) {
     // Load texture pixels to VRAM - starting from 320,0, spanning 512x512 VRAM pixels, stored in 16x64 blocks (for 64x64 texture)
     const RECT rect_tex = {

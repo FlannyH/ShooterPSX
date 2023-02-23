@@ -92,11 +92,27 @@ scalar_t vec3_dot(const vec3_t a, const vec3_t b) {
     return result;
 }
 
-vec3_t vec3_cross(vec3_t a, vec3_t b) {
+vec3_t vec3_cross(const vec3_t a, const vec3_t b) {
     vec3_t result;
     result.x = scalar_sub(scalar_mul(a.y, b.z), scalar_mul(a.z, b.y));
     result.y = scalar_sub(scalar_mul(a.z, b.x), scalar_mul(a.x, b.z));
     result.z = scalar_sub(scalar_mul(a.x, b.y), scalar_mul(a.y, b.x));
+    return result;
+}
+
+vec3_t vec3_min(const vec3_t a, const vec3_t b) {
+    vec3_t result;
+    result.x = (a.x.raw < b.x.raw) ? a.x : b.x;
+    result.y = (a.y.raw < b.y.raw) ? a.y : b.y;
+    result.z = (a.z.raw < b.z.raw) ? a.z : b.z;
+    return result;
+}
+
+vec3_t vec3_max(const vec3_t a, const vec3_t b) {
+    vec3_t result;
+    result.x = (a.x.raw > b.x.raw) ? a.x : b.x;
+    result.y = (a.y.raw > b.y.raw) ? a.y : b.y;
+    result.z = (a.z.raw > b.z.raw) ? a.z : b.z;
     return result;
 }
 

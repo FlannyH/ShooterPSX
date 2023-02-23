@@ -289,7 +289,7 @@ void renderer_begin_frame(transform_t *camera_transform) {
 	glViewport(0, 0, w, h);
 
 	if (w != prev_w || h != prev_h) {
-		glm_perspective(glm_rad(90.0f), w/2.0f / h, 0.1f, 10000.f,
+		glm_perspective(glm_rad(90.0f), (float)w / (float)h, 0.1f, 10000.f,
 										perspective_matrix);
 	}
 
@@ -300,7 +300,8 @@ void renderer_begin_frame(transform_t *camera_transform) {
 	const vec3 rotation = {
 			(float)camera_transform->rotation.vx * (2 * PI / 131072.0f),
 			-(float)camera_transform->rotation.vy * (2 * PI / 131072.0f) + PI,
-			(float)camera_transform->rotation.vz * (2 * PI / 131072.0f) + PI};
+			(float)camera_transform->rotation.vz * (2 * PI / 131072.0f) + PI
+	};
 
 	// Set view matrix
 	glm_mat4_identity(view_matrix_normal);
@@ -339,13 +340,8 @@ void renderer_end_frame() {
 }
 
 void renderer_draw_model_shaded(const model_t *model, transform_t *model_transform) {
-    glViewport(0, 0, w / 2, h);
+    glViewport(0, 0, w, h);
     memcpy_s(view_matrix, sizeof(view_matrix), view_matrix_normal, sizeof(view_matrix_normal));
-    for (size_t i = 0; i < model->n_meshes; ++i) {
-        renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-    }
-    glViewport(w/2, 0, w / 2, h);
-    memcpy_s(view_matrix, sizeof(view_matrix), view_matrix_topdown, sizeof(view_matrix_topdown));
     for (size_t i = 0; i < model->n_meshes; ++i) {
         renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
     }
@@ -377,47 +373,6 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
 							 (float)model_transform->rotation.vz * 2 * PI / 131072.0f,
 							 model_matrix);
 
-    // Check if the camera is inside this mesh
-    // todo: this should eventually be a function in the collision code
-    {
-        const int16_t mesh_min_x = model_transform->position.vx + mesh->x_min;
-        const int16_t mesh_min_y = model_transform->position.vy + mesh->y_min;
-        const int16_t mesh_min_z = model_transform->position.vz + mesh->z_min;
-        const int16_t mesh_max_x = model_transform->position.vx + mesh->x_max;
-        const int16_t mesh_max_y = model_transform->position.vy + mesh->y_max;
-        const int16_t mesh_max_z = model_transform->position.vz + mesh->z_max;
-        const int16_t camera_x = -cam_transform->position.vx >> 12;
-        const int16_t camera_y = -cam_transform->position.vy >> 12;
-        const int16_t camera_z = -cam_transform->position.vz >> 12;
-        if (!(
-            (camera_x >= mesh_min_x) &&
-            (camera_x <= mesh_max_x) &&
-            (camera_y >= mesh_min_y) &&
-            (camera_y <= mesh_max_y) &&
-            (camera_z >= mesh_min_z) &&
-            (camera_z <= mesh_max_z)
-            )) {
-            // Calculate dot product between camera forward vector and player-to-bound-center vector
-            const int16_t mesh_center_x = (mesh_min_x + mesh_max_x) >> 1;
-            const int16_t mesh_center_y = (mesh_min_y + mesh_max_y) >> 1;
-            const int16_t mesh_center_z = (mesh_min_z + mesh_max_z) >> 1;
-            const int32_t camera_to_mesh_x = mesh_center_x - camera_x;
-            const int32_t camera_to_mesh_y = mesh_center_y - camera_y;
-            const int32_t camera_to_mesh_z = mesh_center_z - camera_z;
-            const int32_t camera_forward_x = (int16_t)(view_matrix_normal[0][2] * 256.0f);
-            const int32_t camera_forward_y = (int16_t)(view_matrix_normal[1][2] * 256.0f);
-            const int32_t camera_forward_z = (int16_t)(view_matrix_normal[2][2] * 256.0f);
-            const int32_t dot = (camera_forward_x * camera_to_mesh_x) + (camera_forward_y * camera_to_mesh_y) + (camera_forward_z * camera_to_mesh_z);
-
-            if (dot > 250000) {
-                if (dot > max_dot_value)
-                    max_dot_value = dot;
-                return;
-            }
-            printf("%d\n", max_dot_value);
-        }
-    }
-
 	// Bind shader
 	glUseProgram(shader);
 
@@ -436,6 +391,9 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
 	glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE,
 										 &model_matrix[0][0]);
 
+    // If no texture is bound, don't use it in the shader
+    glUniform1i(glGetUniformLocation(shader, "texture_bound"), !(mesh->vertices[0].tex_id == 255) && !(textures[mesh->vertices[0].tex_id] == 0));
+
 	// Copy data into it
 	glBufferData(GL_ARRAY_BUFFER, mesh->n_vertices * sizeof(vertex_3d_t),
 							 mesh->vertices, GL_STATIC_DRAW);
@@ -449,9 +407,103 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
 	n_total_triangles += mesh->n_vertices / 3;
 }
 
-void renderer_draw_triangles_shaded_2d(const vertex_2d_t *vertex_buffer,
-																			 uint16_t n_verts, int16_t x, int16_t y) {
+void renderer_draw_triangles_shaded_2d(const vertex_2d_t *vertex_buffer, uint16_t n_verts, int16_t x, int16_t y) {
 
+}
+
+void renderer_debug_draw_line(const line_3d_t line, const pixel32_t color, transform_t* model_transform) {
+    // Calculate model matrix
+    mat4 model_matrix;
+    glm_mat4_identity(model_matrix);
+
+    // todo: add scale
+
+    // Apply rotation
+    // Apply translation
+    vec3 position = {
+            (float)model_transform->position.vx,
+            (float)model_transform->position.vy,
+            (float)model_transform->position.vz,
+    };
+    glm_translate(model_matrix, position);
+    glm_rotate_x(model_matrix,
+        (float)model_transform->rotation.vx * 2 * PI / 131072.0f,
+        model_matrix);
+    glm_rotate_y(model_matrix,
+        (float)model_transform->rotation.vy * 2 * PI / 131072.0f,
+        model_matrix);
+    glm_rotate_z(model_matrix,
+        (float)model_transform->rotation.vz * 2 * PI / 131072.0f,
+        model_matrix);
+
+    // Bind shader
+    glUseProgram(shader);
+
+    // Bind texture
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glUniform1i(glGetUniformLocation(shader, "texture_bound"), 0);
+
+    // Bind vertex buffers
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+    // Set matrices
+    glUniformMatrix4fv(glGetUniformLocation(shader, "proj_matrix"), 1, GL_FALSE,
+        &perspective_matrix[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE,
+        &view_matrix[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE,
+        &model_matrix[0][0]);
+
+    // Copy data into it
+    glBufferData(GL_ARRAY_BUFFER, sizeof(line_3d_t),
+        &line, GL_STATIC_DRAW);
+
+    // Enable depth and draw
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+    glDrawArrays(GL_LINES, 0, 2);
+}
+
+void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, transform_t* model_transform) {
+    // Create 8 vertices
+    vertex_3d_t vertex000 = { box->min.x.raw, box->min.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255};
+    vertex_3d_t vertex001 = { box->min.x.raw, box->min.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255};
+    vertex_3d_t vertex010 = { box->min.x.raw, box->max.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255};
+    vertex_3d_t vertex011 = { box->min.x.raw, box->max.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255};
+    vertex_3d_t vertex100 = { box->max.x.raw, box->min.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255};
+    vertex_3d_t vertex101 = { box->max.x.raw, box->min.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255};
+    vertex_3d_t vertex110 = { box->max.x.raw, box->max.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255};
+    vertex_3d_t vertex111 = { box->max.x.raw, box->max.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255};
+
+    // Create 12 lines
+    line_3d_t line_a = { vertex000, vertex100 };
+    line_3d_t line_b = { vertex100, vertex101 };
+    line_3d_t line_c = { vertex101, vertex001 };
+    line_3d_t line_d = { vertex001, vertex000 };
+    line_3d_t line_e = { vertex010, vertex110 };
+    line_3d_t line_f = { vertex110, vertex111 };
+    line_3d_t line_g = { vertex111, vertex011 };
+    line_3d_t line_h = { vertex011, vertex010 };
+    line_3d_t line_i = { vertex000, vertex010 };
+    line_3d_t line_j = { vertex100, vertex110 };
+    line_3d_t line_k = { vertex101, vertex111 };
+    line_3d_t line_l = { vertex001, vertex011 };
+
+    // Draw the lines
+    renderer_debug_draw_line(line_a, color, model_transform);
+    renderer_debug_draw_line(line_b, color, model_transform);
+    renderer_debug_draw_line(line_c, color, model_transform);
+    renderer_debug_draw_line(line_d, color, model_transform);
+    renderer_debug_draw_line(line_e, color, model_transform);
+    renderer_debug_draw_line(line_f, color, model_transform);
+    renderer_debug_draw_line(line_g, color, model_transform);
+    renderer_debug_draw_line(line_h, color, model_transform);
+    renderer_debug_draw_line(line_i, color, model_transform);
+    renderer_debug_draw_line(line_j, color, model_transform);
+    renderer_debug_draw_line(line_k, color, model_transform);
+    renderer_debug_draw_line(line_l, color, model_transform);
 }
 
 void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) {

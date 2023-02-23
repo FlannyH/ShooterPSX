@@ -48,6 +48,18 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
             }
+        },
+        {
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            },
+            "displayName": "Windows Release (OpenGL)",
+            "inherits": "windows-base",
+            "name": "windows-x64-release"
         }
     ]
 }

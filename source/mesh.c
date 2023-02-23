@@ -35,13 +35,32 @@ model_t* model_load(const char* path) {
         // Create a mesh object
         model->meshes[i].n_vertices = mesh_descriptions[i].n_vertices;
         model->meshes[i].vertices = &vertex_data[mesh_descriptions[i].vertex_start];
-        model->meshes[i].x_min = mesh_descriptions[i].x_min;
-        model->meshes[i].x_max = mesh_descriptions[i].x_max;
-        model->meshes[i].y_min = mesh_descriptions[i].y_min;
-        model->meshes[i].y_max = mesh_descriptions[i].y_max;
-        model->meshes[i].z_min = mesh_descriptions[i].z_min;
-        model->meshes[i].z_max = mesh_descriptions[i].z_max;
+        model->meshes[i].bounds.min.x.raw = mesh_descriptions[i].x_min;
+        model->meshes[i].bounds.max.x.raw = mesh_descriptions[i].x_max;
+        model->meshes[i].bounds.min.y.raw = mesh_descriptions[i].y_min;
+        model->meshes[i].bounds.max.y.raw = mesh_descriptions[i].y_max;
+        model->meshes[i].bounds.min.z.raw = mesh_descriptions[i].z_min;
+        model->meshes[i].bounds.max.z.raw = mesh_descriptions[i].z_max;
     }
 
     return model;
+}
+
+aabb_t triangle_get_bounds(triangle_3d_t* self) {
+    aabb_t result;
+    result.min = vec3_min(
+        vec3_min(
+            vec3_from_int16s(self->v0.x, self->v0.y, self->v0.z),
+            vec3_from_int16s(self->v1.x, self->v1.y, self->v1.z)
+        ),
+        vec3_from_int16s(self->v2.x, self->v2.y, self->v2.z)
+    );
+    result.max = vec3_max(
+        vec3_max(
+            vec3_from_int16s(self->v0.x, self->v0.y, self->v0.z),
+            vec3_from_int16s(self->v1.x, self->v1.y, self->v1.z)
+        ),
+        vec3_from_int16s(self->v2.x, self->v2.y, self->v2.z)
+    );
+    return result;
 }

@@ -21,7 +21,7 @@ typedef struct {
 } vec3_t;
 
 // Let's hope and pray that this will be compile-time evaluated
-inline fixed8_8_t scalar(const float a) {
+inline fixed8_8_t scalar_from_float(const float a) {
     fixed8_8_t result;
     result.integer = (int8_t)a;
     result.fraction = (uint8_t)(a * 256.0f);
@@ -31,9 +31,9 @@ inline fixed8_8_t scalar(const float a) {
 // Let's hope and cry that this will be compile-time evaluated
 inline vec3_t vec3_from_floats(const float x, const float y, const float z) {
     vec3_t result;
-    result.x = scalar(x);
-    result.y = scalar(y);
-    result.z = scalar(z);
+    result.x = scalar_from_float(x);
+    result.y = scalar_from_float(y);
+    result.z = scalar_from_float(z);
     return result;
 }
 
@@ -51,6 +51,8 @@ vec3_t vec3_sub(vec3_t a, vec3_t b);
 vec3_t vec3_mul(vec3_t a, vec3_t b);
 vec3_t vec3_div(vec3_t a, vec3_t b);
 vec3_t vec3_cross(vec3_t a, vec3_t b);
+vec3_t vec3_min(vec3_t a, vec3_t b);
+vec3_t vec3_max(vec3_t a, vec3_t b);
 scalar_t vec3_dot(vec3_t a, vec3_t b);
 scalar_t vec3_magnitude_squared(vec3_t a);
 scalar_t vec3_angle(vec3_t a, vec3_t b);

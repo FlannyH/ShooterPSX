@@ -50,30 +50,52 @@ int main(void) {
 	}
 
 	transform_t t_cube1 = {{0, 0, 500}, {-2048, 0, 0}, {0, 0, 0}};
-	transform_t t_level = {{0, 0, 0}, {-2048, 0, 0}, {0, 0, 0}};
+	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+
+    // Construct BVH for level
+    bvh_t bvh_level[16];
+    for (uint32_t x = 0; x < m_level->n_meshes; x++) {
+        bvh_from_mesh(&bvh_level[x], &m_level->meshes[x]);
+    }
 
 	// Play music
 	music_play_file("\\ASSETS\\MUSIC.XA;1");
+    const pixel32_t white = { 255, 255, 255, 255 };
 
 	int frame_counter = 0;
-	while (!renderer_should_close()) {
-	const int delta_time = renderer_get_delta_time_ms();
-	renderer_begin_frame(&camera_transform);
-	input_update();
-	camera_update_flycam(&camera_transform, delta_time);
-	t_cube1.rotation.vy += 64 * delta_time;
-	// renderer_draw_mesh_shaded(m_cube, t_cube1);
-	renderer_draw_model_shaded(m_level, &t_level);
-#ifdef _PSX
-	FntPrint(-1, "Frame: %i\n", frame_index++);
-	FntPrint(-1, "Delta Time (hblank): %i\n", delta_time);
-	FntPrint(-1, "Est. FPS: %i\n", 1000 / delta_time);
-	FntPrint(-1, "Triangles (rendered/total): %i / %i\n",
-			 renderer_get_n_rendered_triangles(),
-			 renderer_get_n_total_triangles());
-	FntFlush(-1);
-#endif
-	renderer_end_frame();
+    int bvh_depth = 0;
+    while (!renderer_should_close()) {
+        const int delta_time = renderer_get_delta_time_ms();
+        renderer_begin_frame(&camera_transform);
+        input_update();
+        camera_update_flycam(&camera_transform, delta_time);
+        t_cube1.rotation.vy += 64 * delta_time;
+        // renderer_draw_mesh_shaded(m_cube, t_cube1);
+        renderer_draw_model_shaded(m_level, &t_level);
+        //renderer_debug_draw_aabb(&m_level->meshes[0].bounds, white, &t_level);
+        for (uint32_t x = 2; x < 3; x++) {
+            uint32_t color =
+                ((((x + 1) & 0x01) * 0xFF) << 0) |
+                ((((x + 1) & 0x02) * 0xFF) << 7) |
+                ((((x + 1) & 0x04) * 0xFF) << 14);
+
+            bvh_debug_draw(&bvh_level[x], bvh_depth, bvh_depth, *(pixel32_t*)&color);
+        }
+        frame_counter += delta_time;
+        if (frame_counter > 240) {
+            bvh_depth = (bvh_depth+1) % 16;
+            frame_counter -= 240;
+        }
+    #ifdef _PSX
+	    FntPrint(-1, "Frame: %i\n", frame_index++);
+	    FntPrint(-1, "Delta Time (hblank): %i\n", delta_time);
+	    FntPrint(-1, "Est. FPS: %i\n", 1000 / delta_time);
+	    FntPrint(-1, "Triangles (rendered/total): %i / %i\n",
+			     renderer_get_n_rendered_triangles(),
+			     renderer_get_n_total_triangles());
+	    FntFlush(-1);
+    #endif
+	    renderer_end_frame();
 	}
 #ifndef _PSX
 	debug_layer_close();

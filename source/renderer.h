@@ -39,6 +39,8 @@ void renderer_end_frame(void); // Draws the render queue, swaps the drawbuffer, 
 void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform); // Draws a 3D model at a given transform using shaded triangle primitives
 void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform); // Draws a 3D mesh at a given transform using shaded triangle primitives
 void renderer_draw_triangles_shaded_2d(const vertex_2d_t* vertex_buffer, uint16_t n_verts, int16_t x, int16_t y);
+void renderer_debug_draw_line(const line_3d_t line, const pixel32_t color, transform_t* model_transform);
+void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, transform_t* model_transform);
 void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index);
 int renderer_get_delta_time_raw(void);
 int renderer_get_delta_time_ms(void);
