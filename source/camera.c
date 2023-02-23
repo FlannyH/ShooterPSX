@@ -11,8 +11,8 @@
 #include "renderer.h"
 
 // These are in 20.12 fixed point
-#define STICK_SENSITIVITY 5000
-#define MOVEMENT_SPEED 96
+#define STICK_SENSITIVITY 2000
+#define MOVEMENT_SPEED 64
 
 void camera_update_flycam(transform_t* camera_transform, int dt_ms) {
     if (input_is_connected(0))
