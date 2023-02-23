@@ -19,6 +19,8 @@
 #include <cglm/types.h>
 #include <cglm/vec3.h>
 #include <cglm/affine.h>
+
+#include "input.h"
 #define PI 3.14159265358979f
 
 #define RESOLUTION_SCALING 4
@@ -328,6 +330,14 @@ void renderer_begin_frame(transform_t *camera_transform) {
 	glClearDepth(1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    if (input_held(PAD_SQUARE, 0)) {
+        memcpy_s(view_matrix, sizeof(view_matrix), view_matrix_topdown, sizeof(view_matrix_topdown));
+    }
+    else
+    {
+        memcpy_s(view_matrix, sizeof(view_matrix), view_matrix_normal, sizeof(view_matrix_normal));
+    }
+
 	n_total_triangles = 0;
 }
 
@@ -341,7 +351,6 @@ void renderer_end_frame() {
 
 void renderer_draw_model_shaded(const model_t *model, transform_t *model_transform) {
     glViewport(0, 0, w, h);
-    memcpy_s(view_matrix, sizeof(view_matrix), view_matrix_normal, sizeof(view_matrix_normal));
     for (size_t i = 0; i < model->n_meshes; ++i) {
         renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
     }
