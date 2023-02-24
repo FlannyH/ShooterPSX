@@ -376,9 +376,7 @@ void renderer_debug_draw_line(const line_3d_t line, const pixel32_t color, trans
     gte_rtpt();
 
     // Calculate average depth of the line
-    int p;
-    gte_avsz3();
-    gte_stotz(&p);
+    int p = 4;
 
     // Depth clipping
     if ((p >> 2) > ORD_TBL_LENGTH || ((p >> 2) <= 0))

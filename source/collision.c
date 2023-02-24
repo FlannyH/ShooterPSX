@@ -61,21 +61,24 @@ void bvh_subdivide(bvh_t* self, bvh_node_t* node, const int recursion_depth) {
         && size.x.raw > size.z.raw)
     {
         split_axis = axis_x;
-        split_pos = scalar_mul(scalar_from_float(0.5f), scalar_add(node->bounds.max.x, node->bounds.min.x));
+        split_pos = scalar_add(node->bounds.max.x, node->bounds.min.x);
+        split_pos.raw = split_pos.raw >> 1;
     }
 
     if (size.y.raw > size.x.raw
         && size.y.raw > size.z.raw)
     {
         split_axis = axis_y;
-        split_pos = scalar_mul(scalar_from_float(0.5f), scalar_add(node->bounds.max.y, node->bounds.min.y));
+        split_pos = scalar_add(node->bounds.max.y, node->bounds.min.y);
+        split_pos.raw = split_pos.raw >> 1;
     }
 
     if (size.z.raw > size.x.raw
         && size.z.raw > size.y.raw)
     {
         split_axis = axis_z;
-        split_pos = scalar_mul(scalar_from_float(0.5f), scalar_add(node->bounds.max.z, node->bounds.min.z));
+        split_pos = scalar_add(node->bounds.max.z, node->bounds.min.z);
+        split_pos.raw = split_pos.raw >> 1;
     }
 
     //Partition the index array, and get the split position
@@ -194,7 +197,10 @@ void bvh_partition(const bvh_t* self, const axis_t axis, scalar_t pivot, const u
         const aabb_t bounds = triangle_get_bounds(&self->primitives[self->indices[j]]);
 
         // Get center
-        vec3_t center = vec3_mul(vec3_add(bounds.min, bounds.max), vec3_from_int32s(128, 128, 128)); // 128 = 0.5 (0x00.80)
+        vec3_t center = vec3_add(bounds.min, bounds.max);
+        center.x.raw = center.x.raw >> 1;
+        center.y.raw = center.y.raw >> 1;
+        center.z.raw = center.z.raw >> 1;
         const scalar_t* center_points = (scalar_t*)&center;
 
         // If the current primitive's center's <axis>-component is greated than the pivot's <axis>-component
@@ -212,6 +218,28 @@ void bvh_from_mesh(bvh_t* self, const mesh_t* mesh) {
     bvh_construct(self, (triangle_3d_t*)mesh->vertices, (uint16_t)mesh->n_vertices / 3);
 }
 
+void bvh_from_model(bvh_t* self, const model_t* mesh) {
+    // Get total number of vertices
+    uint32_t n_verts = 0;
+    for (uint32_t i = 0; i < mesh->n_meshes; ++i) {
+        n_verts += mesh->meshes[i].n_vertices;
+    }
+
+    // Allocate a buffer for the vertices
+    triangle_3d_t* triangles = malloc(n_verts / 3 * sizeof(triangle_3d_t));
+
+    // Copy all the meshes into it sequentially
+    size_t offset = 0;
+    for (uint32_t i = 0; i < mesh->n_meshes; ++i) {
+        const size_t bytes_to_copy = mesh->meshes[i].n_vertices * sizeof(vertex_3d_t);
+        const size_t verts_to_copy = mesh->meshes[i].n_vertices / 3;
+        memcpy(triangles + offset, mesh->meshes[i].vertices, bytes_to_copy);
+        offset += verts_to_copy;
+    }
+
+    // Construct the BVH
+    bvh_construct(self, triangles, n_verts / 3);
+}
 
 void debug_draw(const bvh_t* self, bvh_node_t* node, int min_depth, int max_depth, int curr_depth, pixel32_t color) {
     const transform_t trans = { 0, 0, 0, 0, 0, 0 };

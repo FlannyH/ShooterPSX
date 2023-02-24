@@ -29,11 +29,11 @@ int main(void) {
 
 	// Camera transform
 	transform_t camera_transform;
-	camera_transform.position.vx = -11558322;
-	camera_transform.position.vy = 14423348;
-	camera_transform.position.vz = 6231602;
-	camera_transform.rotation.vx = 0;
-	camera_transform.rotation.vy = 0;
+	camera_transform.position.vx = -11705653;
+	camera_transform.position.vy = 12413985;
+	camera_transform.position.vz = 2112866;
+	camera_transform.rotation.vx = 5853;
+	camera_transform.rotation.vy = -63752;
 	camera_transform.rotation.vz = 0;
 
 	// Stick deadzone
@@ -53,12 +53,9 @@ int main(void) {
 
 	transform_t t_cube1 = {{0, 0, 500}, {-2048, 0, 0}, {0, 0, 0}};
 	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
-
-    // Construct BVH for level
-    bvh_t bvh_level[16];
-    for (uint32_t x = 0; x < m_level->n_meshes; x++) {
-        bvh_from_mesh(&bvh_level[x], &m_level->meshes[x]);
-    }
+    
+    bvh_t bvh_level_model;
+    bvh_from_model(&bvh_level_model, m_level);
 
 	// Play music
 	music_play_file("\\ASSETS\\MUSIC.XA;1");
@@ -78,17 +75,20 @@ int main(void) {
         //renderer_debug_draw_aabb(&m_level->meshes[0].bounds, white, &t_level);
         frame_counter += delta_time;
         rayhit_t hit = { 0 };
-        for (int j = 0; j < 10; j++) {
-            for (int i = 0; i < m_level->n_meshes; ++i) {
-                bvh_intersect(&bvh_level[i], ray, &hit);
-            }
-        }
+        
+        //for (uint32_t j = 0; j < 1; j++) {
+        //    for (uint32_t i = 0; i < m_level->n_meshes; ++i) {
+        //        bvh_intersect(&bvh_level[i], ray, &hit);
+        //    }
+        //}
+        bvh_intersect(&bvh_level_model, ray, &hit);
         vertex_3d_t start = { ray.position.x.raw, ray.position.y.raw, ray.position.z.raw, 255, 255, 0, 0, 0, 255 };
         vertex_3d_t end = { ray.position.x.raw + ray.direction.x.raw * 10, ray.position.y.raw + ray.direction.y.raw * 10, ray.position.z.raw + ray.direction.z.raw * 10, 255, 255, 0, 0, 0, 255 };
         line_3d_t line = { start, end };
         renderer_debug_draw_line(line, white, &t_level);
         if (input_held(PAD_CIRCLE, 0)) {
-            bvh_depth = (bvh_depth+1) % 16;
+            if (frame_counter % 100 == 0)
+                bvh_depth = (bvh_depth+1) % 16;
 
             ray.position.x.raw = -camera_transform.position.vx >> 12;
             ray.position.y.raw = -camera_transform.position.vy >> 12;
@@ -104,14 +104,12 @@ int main(void) {
             //    ((float)ray.direction.z.raw) / 256.0f
             //);
 
-            for (uint32_t x = 0; x < m_level->n_meshes; x++) {
-                //uint32_t color =
-                //    ((((x + 1) & 0x01) * 0xFF) << 0) |
-                //    ((((x + 1) & 0x02) * 0xFF) << 7) |
-                //    ((((x + 1) & 0x04) * 0xFF) << 14);
-                //
-                //bvh_debug_draw(&bvh_level[x], bvh_depth, bvh_depth, *(pixel32_t*)&color);
-            }
+            uint32_t color =
+               0xFF00FFFF|
+               0xFF00FFFF|
+               0xFF00FFFF;
+            
+            //bvh_debug_draw(&bvh_level_model, bvh_depth, bvh_depth, *(pixel32_t*)&color);
         }
     #ifdef _PSX
 	    FntPrint(-1, "Frame: %i\n", frame_index++);
