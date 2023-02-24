@@ -1,57 +1,72 @@
 #include "fixed_point.h"
 
+#ifdef _PSX
+#include <psxgte.h>
+#else
+#include <corecrt_math.h>
+#endif
 #include <stdlib.h>
 
-fixed8_8_t scalar_from_int16(const int16_t raw) {
-    fixed8_8_t result;
+
+fixed24_8_t scalar_from_int32(int32_t raw) {
+    fixed24_8_t result;
     result.raw = raw;
     return result;
 }
 
-fixed8_8_t scalar_add(const fixed8_8_t a, const fixed8_8_t b) {
-    fixed8_8_t result;
+fixed24_8_t scalar_add(const fixed24_8_t a, const fixed24_8_t b) {
+    fixed24_8_t result;
     result.raw = a.raw + b.raw;
     return result;
 }
 
-fixed8_8_t scalar_sub(const fixed8_8_t a, const fixed8_8_t b) {
-    fixed8_8_t result;
+fixed24_8_t scalar_sub(const fixed24_8_t a, const fixed24_8_t b) {
+    fixed24_8_t result;
     result.raw = a.raw - b.raw;
     return result;
 }
 
-fixed8_8_t scalar_mul(const fixed8_8_t a, const fixed8_8_t b) {
-    int32_t result32 = a.raw * b.raw;
+fixed24_8_t scalar_mul(const fixed24_8_t a, const fixed24_8_t b) {
+    // todo: optimize this, maybe use compiler intrinsics?
+    int64_t result32 = ((int64_t)a.raw * (int64_t)b.raw) >> 8;
     // overflow check
-    if (result32 > 8388607) {
-        result32 = 8388607;
+    if (result32 > INT32_MAX) {
+        result32 = INT32_MAX;
     }
-    else if (result32 < -8388607) {
-        result32 = -8388607;
+    else if (result32 < -INT32_MAX) {
+        result32 = -INT32_MAX;
     }
-    fixed8_8_t result;
-    result.raw = (int16_t)(result32 >> 8);
+    fixed24_8_t result;
+    result.raw = (int32_t)(result32);
     return result;
 }
 
-fixed8_8_t scalar_div(const fixed8_8_t a, const fixed8_8_t b) {
-    int32_t result32 = (int32_t)a.raw << 8;
+fixed24_8_t scalar_div(const fixed24_8_t a, const fixed24_8_t b) {
+    int64_t result32 = (int64_t)a.raw << 8;
     if (b.raw != 0) {
         result32 /= b.raw;
     } else {
-        result32 |= INT16_MAX;
+        result32 |= INT32_MAX;
     }
-    fixed8_8_t result;
-    result.raw = (int16_t)result32;
+    fixed24_8_t result;
+    result.raw = (int32_t)result32;
     return result;
 }
 
-fixed8_8_t scalar_min(const fixed8_8_t a, const fixed8_8_t b) {
+fixed24_8_t scalar_min(const fixed24_8_t a, const fixed24_8_t b) {
     return (a.raw < b.raw) ? a : b;
 }
 
-fixed8_8_t scalar_max(const fixed8_8_t a, const fixed8_8_t b) {
+fixed24_8_t scalar_max(const fixed24_8_t a, const fixed24_8_t b) {
     return (a.raw > b.raw) ? a : b;
+}
+
+fixed24_8_t scalar_sqrt(fixed24_8_t a) {
+#ifdef _PSX
+    return scalar_from_int32(SquareRoot12(a.raw << 4) >> 4);
+#else
+    return scalar_from_float(sqrtf((float)a.raw / 256.0f));
+#endif
 }
 
 vec3_t vec3_from_scalar(const scalar_t a) {
@@ -64,7 +79,7 @@ vec3_t vec3_from_scalars(const scalar_t x, const scalar_t y, const scalar_t z) {
     return result;
 }
 
-vec3_t vec3_from_int16s(const int16_t x, const int16_t y, const int16_t z) {
+vec3_t vec3_from_int32s(int32_t x, int32_t y, int32_t z) {
     vec3_t result;
     result.x.raw = x;
     result.y.raw = y;
@@ -135,6 +150,16 @@ vec3_t vec3_max(const vec3_t a, const vec3_t b) {
     result.y = (a.y.raw > b.y.raw) ? a.y : b.y;
     result.z = (a.z.raw > b.z.raw) ? a.z : b.z;
     return result;
+}
+
+vec3_t vec3_normalize(vec3_t a) {
+    const scalar_t magnitude_squared = vec3_magnitude_squared(a);
+    const scalar_t magnitude = scalar_sqrt(magnitude_squared);
+    if (magnitude.raw == 0) {
+        return vec3_from_int32s(0, 0, 0);
+    }
+    const vec3_t a_normalized = vec3_div(a, vec3_from_scalar(magnitude));
+    return a_normalized;
 }
 
 scalar_t vec3_magnitude_squared(const vec3_t a) {

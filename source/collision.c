@@ -29,8 +29,8 @@ void bvh_construct(bvh_t* self, triangle_3d_t* primitives, uint16_t n_primitives
 aabb_t bvh_get_bounds(const bvh_t* self, const uint16_t first, const uint16_t count)
 {
     aabb_t result;
-    result.max = vec3_from_int16s(INT16_MIN, INT16_MIN, INT16_MIN);
-    result.min = vec3_from_int16s(INT16_MAX, INT16_MAX, INT16_MAX);
+    result.max = vec3_from_int32s(INT32_MIN, INT32_MIN, INT32_MIN);
+    result.min = vec3_from_int32s(INT32_MAX, INT32_MAX, INT32_MAX);
     for (int i = 0; i < count; i++)
     {
         const aabb_t curr_primitive_bounds = triangle_get_bounds(&self->primitives[self->indices[first + i]]);
@@ -53,7 +53,7 @@ void bvh_subdivide(bvh_t* self, bvh_node_t* node, const int recursion_depth) {
 
     //Determine split axis - choose biggest axis
     axis_t split_axis = axis_x;
-    scalar_t split_pos = scalar_from_int16(0);
+    scalar_t split_pos = scalar_from_int32(0);
 
     const vec3_t size = vec3_sub(node->bounds.max, node->bounds.min);
 
@@ -118,10 +118,8 @@ void bvh_subdivide(bvh_t* self, bvh_node_t* node, const int recursion_depth) {
 }
 
 void handle_node_intersection(bvh_t* self, bvh_node_t* current_node, ray_t ray, rayhit_t* hit, int rec_depth) {
-    //Intersect current node
-    //if (current_node->bounds.Intersect(ray))
-    int intersect = aabb_intersect(&current_node->bounds, ray);
-    if (intersect)
+    // Intersect current node
+    if (ray_aabb_intersect(&current_node->bounds, ray))
     {
         pixel32_t c = {
             255,
@@ -129,25 +127,38 @@ void handle_node_intersection(bvh_t* self, bvh_node_t* current_node, ray_t ray, 
             rec_depth * 32,
         };
         transform_t id_transform = { 0,0,0,0,0,0 };
-        //If it's a leaf
+        // If it's a leaf
         if (current_node->is_leaf)
         {
-            renderer_debug_draw_aabb(&current_node->bounds, c, &id_transform);
-            return;
-            //Intersect all triangles attached to it
-            /*
-            rayhit_t sub_hit;
+            // Intersect all triangles attached to it
+            rayhit_t sub_hit = {0};
+            sub_hit.distance.raw = 0;
             for (int i = current_node->left_first; i < current_node->left_first + current_node->primitive_count; i++)
             {
-                triangle_intersect(self->primitives[self->indices[i]], ray, sub_hit);
-                self->primitives[self->indices[i]].Intersect(ray, sub_hit);
-                if (sub_hit.distance.raw < hit->distance.raw && sub_hit.distance.raw >= 0)
-                {
-                    memcpy_s(hit, sizeof(hit), &sub_hit, sizeof(sub_hit));
-                    hit->triangle = &self->primitives[self->indices[i]];
+                // If hit
+                if (ray_triangle_intersect(&self->primitives[self->indices[i]], ray, &sub_hit)) {
+                    // If lowest distance
+                    if (sub_hit.distance.raw < hit->distance.raw && sub_hit.distance.raw >= 0)
+                    {
+                        // Copy the hit info into the output hit for the BVH traversal
+#ifdef _PSX
+                        memcpy(hit, &sub_hit, sizeof(rayhit_t));
+#else
+                        memcpy_s(hit, sizeof(rayhit_t), &sub_hit, sizeof(rayhit_t));
+#endif
+                        hit->triangle = &self->primitives[self->indices[i]];
+                    }
                 }
             }
-            */
+            // Highlight the triangle
+            if (hit->triangle) {
+                const line_3d_t l0 = { hit->triangle->v0, hit->triangle->v1 };
+                const line_3d_t l1 = { hit->triangle->v1, hit->triangle->v2 };
+                const line_3d_t l2 = { hit->triangle->v2, hit->triangle->v0 };
+                renderer_debug_draw_line(l0, c, &id_transform);
+                renderer_debug_draw_line(l1, c, &id_transform);
+                renderer_debug_draw_line(l2, c, &id_transform);
+            }
             return;
         }
         //Otherwise
@@ -165,6 +176,7 @@ void handle_node_intersection(bvh_t* self, bvh_node_t* current_node, ray_t ray, 
 }
 
 void bvh_intersect(bvh_t* self, const ray_t ray, rayhit_t* hit) {
+    hit->distance = scalar_from_int32(INT32_MAX);
     handle_node_intersection(self, self->root, ray, hit, 0);
 }
 
@@ -182,7 +194,7 @@ void bvh_partition(const bvh_t* self, const axis_t axis, scalar_t pivot, const u
         const aabb_t bounds = triangle_get_bounds(&self->primitives[self->indices[j]]);
 
         // Get center
-        vec3_t center = vec3_mul(vec3_add(bounds.min, bounds.max), vec3_from_int16s(128, 128, 128)); // 128 = 0.5 (0x00.80)
+        vec3_t center = vec3_mul(vec3_add(bounds.min, bounds.max), vec3_from_int32s(128, 128, 128)); // 128 = 0.5 (0x00.80)
         const scalar_t* center_points = (scalar_t*)&center;
 
         // If the current primitive's center's <axis>-component is greated than the pivot's <axis>-component
@@ -227,7 +239,7 @@ void bvh_debug_draw(const bvh_t* self, int min_depth, int max_depth, pixel32_t c
     debug_draw(self, self->root, min_depth, max_depth, 0, color);
 }
 
-int aabb_intersect(const aabb_t* self, ray_t ray) {
+int ray_aabb_intersect(const aabb_t* self, ray_t ray) {
     scalar_t tx1 = scalar_mul(scalar_sub(self->min.x, ray.position.x), ray.inv_direction.x);
     scalar_t tx2 = scalar_mul(scalar_sub(self->max.x, ray.position.x), ray.inv_direction.x);
 
@@ -249,5 +261,67 @@ int aabb_intersect(const aabb_t* self, ray_t ray) {
     return tmax.raw >= tmin.raw;
 }
 
-int triangle_intersect(const triangle_3d_t self, ray_t ray, rayhit_t* hit) {
+int ray_triangle_intersect(const triangle_3d_t* self, ray_t ray, rayhit_t* hit) {
+    //Get vectors
+    vec3_t vtx1 = vec3_from_int32s(self->v0.x, self->v0.y, self->v0.z);
+    vec3_t vtx2 = vec3_from_int32s(self->v1.x, self->v1.y, self->v1.z);
+    vec3_t vtx3 = vec3_from_int32s(self->v2.x, self->v2.y, self->v2.z);
+    vec3_t c = vec3_sub(vtx3, vtx1);
+    vec3_t b = vec3_sub(vtx2, vtx1);
+
+    // calculate normal
+    const vec3_t normal_normalized = vec3_normalize(vec3_cross(c, b));
+    const scalar_t dot_dir_nrm = vec3_dot(ray.direction, normal_normalized);
+
+    // If the ray is perfectly parallel to the triangle, we did not hit it
+    if (dot_dir_nrm.raw == 0)
+    {
+        hit->distance.raw = INT32_MAX;
+        return 0;
+    }
+
+    //Get distance to intersection point
+    vec3_t temp = vec3_sub(vtx1, ray.position);
+    scalar_t distance = vec3_dot(temp, normal_normalized);
+    distance = scalar_div(distance, dot_dir_nrm);
+
+    // If the distance is negative, the triangle is behind the ray origin, so we did not hit it
+    if (distance.raw < 0) {
+        hit->distance.raw = INT32_MAX;
+        return 0;
+    }
+
+    //Get position
+    vec3_t position = vec3_add(ray.position, vec3_mul(ray.direction, vec3_from_scalar(distance)));
+
+    // Get more vectors
+    vec3_t p = vec3_sub(position, vtx1);
+
+    //Get dots
+    const scalar_t cc = vec3_dot(c, c);
+    const scalar_t bc = vec3_dot(b, c);
+    const scalar_t pc = vec3_dot(c, p);
+    const scalar_t bb = vec3_dot(b, b);
+    const scalar_t pb = vec3_dot(b, p);
+
+    //Get barycentric coordinates
+    const scalar_t cc_bb = scalar_mul(cc, bb);
+    const scalar_t bc_bc = scalar_mul(bc, bc);
+    const scalar_t bb_pc = scalar_mul(bb, pc);
+    const scalar_t bc_pb = scalar_mul(bc, pb);
+    const scalar_t cc_pb = scalar_mul(cc, pb);
+    const scalar_t bc_pc = scalar_mul(bc, pc);
+    const scalar_t d = scalar_sub(cc_bb, bc_bc);
+    scalar_t u = scalar_sub(bb_pc, bc_pb);
+    scalar_t v = scalar_sub(cc_pb, bc_pc);
+    u = scalar_div(u, d);
+    v = scalar_div(v, d);
+
+    if ((u.raw >= 0) && (v.raw >= 0) && ((u.raw + v.raw) <= 256))
+    {
+        hit->distance = distance;
+        hit->position = position;
+        return 1;
+    }
+    return 0;
 }

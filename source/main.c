@@ -78,14 +78,16 @@ int main(void) {
         //renderer_debug_draw_aabb(&m_level->meshes[0].bounds, white, &t_level);
         frame_counter += delta_time;
         rayhit_t hit = { 0 };
-        for (int i = 0; i < m_level->n_meshes; ++i) {
-            bvh_intersect(&bvh_level[i], ray, &hit);
+        for (int j = 0; j < 10; j++) {
+            for (int i = 0; i < m_level->n_meshes; ++i) {
+                bvh_intersect(&bvh_level[i], ray, &hit);
+            }
         }
         vertex_3d_t start = { ray.position.x.raw, ray.position.y.raw, ray.position.z.raw, 255, 255, 0, 0, 0, 255 };
         vertex_3d_t end = { ray.position.x.raw + ray.direction.x.raw * 10, ray.position.y.raw + ray.direction.y.raw * 10, ray.position.z.raw + ray.direction.z.raw * 10, 255, 255, 0, 0, 0, 255 };
         line_3d_t line = { start, end };
         renderer_debug_draw_line(line, white, &t_level);
-        if (input_pressed(PAD_CIRCLE, 0)) {
+        if (input_held(PAD_CIRCLE, 0)) {
             bvh_depth = (bvh_depth+1) % 16;
 
             ray.position.x.raw = -camera_transform.position.vx >> 12;
@@ -95,12 +97,12 @@ int main(void) {
             ray.direction.x.raw += ray.direction.x.raw == 0;
             ray.direction.y.raw += ray.direction.y.raw == 0;
             ray.direction.z.raw += ray.direction.z.raw == 0;
-            ray.inv_direction = vec3_div(vec3_from_int16s(64, 64, 64), ray.direction);
-            printf("%f, %f, %f\n",
-                ((float)ray.direction.x.raw) / 256.0f,
-                ((float)ray.direction.y.raw) / 256.0f,
-                ((float)ray.direction.z.raw) / 256.0f
-            );
+            ray.inv_direction = vec3_div(vec3_from_int32s(64, 64, 64), ray.direction);
+            //printf("%f, %f, %f\n",
+            //    ((float)ray.direction.x.raw) / 256.0f,
+            //    ((float)ray.direction.y.raw) / 256.0f,
+            //    ((float)ray.direction.z.raw) / 256.0f
+            //);
 
             for (uint32_t x = 0; x < m_level->n_meshes; x++) {
                 //uint32_t color =

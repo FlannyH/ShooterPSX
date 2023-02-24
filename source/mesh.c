@@ -50,17 +50,17 @@ aabb_t triangle_get_bounds(triangle_3d_t* self) {
     aabb_t result;
     result.min = vec3_min(
         vec3_min(
-            vec3_from_int16s(self->v0.x, self->v0.y, self->v0.z),
-            vec3_from_int16s(self->v1.x, self->v1.y, self->v1.z)
+            vec3_from_int32s(self->v0.x, self->v0.y, self->v0.z),
+            vec3_from_int32s(self->v1.x, self->v1.y, self->v1.z)
         ),
-        vec3_from_int16s(self->v2.x, self->v2.y, self->v2.z)
+        vec3_from_int32s(self->v2.x, self->v2.y, self->v2.z)
     );
     result.max = vec3_max(
         vec3_max(
-            vec3_from_int16s(self->v0.x, self->v0.y, self->v0.z),
-            vec3_from_int16s(self->v1.x, self->v1.y, self->v1.z)
+            vec3_from_int32s(self->v0.x, self->v0.y, self->v0.z),
+            vec3_from_int32s(self->v1.x, self->v1.y, self->v1.z)
         ),
-        vec3_from_int16s(self->v2.x, self->v2.y, self->v2.z)
+        vec3_from_int32s(self->v2.x, self->v2.y, self->v2.z)
     );
     return result;
 }

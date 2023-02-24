@@ -14,7 +14,7 @@ void bvh_swap_primitives(uint16_t* a, uint16_t* b);
 void bvh_partition(const bvh_t* self, axis_t axis, scalar_t pivot, uint16_t start, uint16_t count, uint16_t* split_index);
 void bvh_from_mesh(bvh_t* self, const mesh_t* mesh);
 void bvh_debug_draw(const bvh_t* self, int min_depth, int max_depth, pixel32_t color);
-int aabb_intersect(const aabb_t* self, ray_t ray);
-int triangle_intersect(const triangle_3d_t self, ray_t ray, rayhit_t* hit);
+int ray_aabb_intersect(const aabb_t* self, ray_t ray);
+int ray_triangle_intersect(const triangle_3d_t* self, ray_t ray, rayhit_t* hit);
 
 #endif // COLLISION_H

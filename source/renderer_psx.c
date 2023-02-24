@@ -548,4 +548,12 @@ int renderer_should_close() {
     return 0;
 }
 
+vec3_t renderer_get_forward_vector() {
+    vec3_t result;
+    result.x.raw = (int32_t)view_matrix.m[2][0] >> 4;
+    result.y.raw = (int32_t)view_matrix.m[2][1] >> 4;
+    result.z.raw = (int32_t)view_matrix.m[2][2] >> 4;
+    return result;
+}
+
 #endif
