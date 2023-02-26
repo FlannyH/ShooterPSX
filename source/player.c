@@ -7,17 +7,17 @@
 #include "input.h"
 
 const int32_t eye_height = 56 << 12;
-const int32_t player_radius = 35;
+const int32_t player_radius = 20 << 12;
 const int32_t step_height = 20 << 12;
 const int32_t terminal_velocity_down = -2000;
 const int32_t terminal_velocity_up = 8000;
 const int32_t gravity = -11;
 const int32_t walking_acceleration = 15;
-const int32_t walking_max_speed = 1800;
+const int32_t walking_max_speed = 1600;
 const int32_t stick_sensitivity = 6000;
-const int32_t walking_drag = 30;
+const int32_t walking_drag = 10;
 const int32_t initial_jump_velocity = 3200;
-const int32_t jump_ground_threshold = 1024;
+const int32_t jump_ground_threshold = 4000;
 
 const pixel32_t white = { 255, 255, 255, 255 };
 transform_t t_level = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };
@@ -134,17 +134,51 @@ void handle_jump(player_t* self) {
 }
 
 void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
-    // Where are we headed this frame?
-    vec3_t velocity;
-    velocity.x.raw = self->velocity.x.raw * dt_ms;
-    velocity.y.raw = self->velocity.y.raw * dt_ms;
-    velocity.z.raw = self->velocity.z.raw * dt_ms;
+    for (int i = 0; i < 4; ++i) {
+        // Where are we headed this frame?
+        vec3_t velocity;
+        velocity.x.raw = (i * self->velocity.x.raw / 4) * dt_ms;
+        velocity.y.raw = 0;
+        velocity.z.raw = (i * self->velocity.z.raw / 4) * dt_ms;
 
-    // Calculate the target position based on that
-    const vec3_t target_position = vec3_add(self->position, velocity);
+        // Calculate the target position based on velocity
+        vec3_t target_position = vec3_add(self->position, velocity);
 
-    // For now just set it, don't check
-    self->position = target_position;
+        // First we cast a regular old ray towards it
+        rayhit_t hit = { 0 };
+        //ray_t ray;
+        //ray.position = vec3_sub(self->position, vec3_from_int32s(0, eye_height - step_height, 0));
+        //ray.direction = vec3_normalize(velocity);
+        //ray.inv_direction = vec3_div(vec3_from_scalar(scalar_from_int32(4096)), ray.direction);
+        ////bvh_intersect_ray(level_bvh, ray, &hit);
+
+        // If the ray hit something, move towards the hit position
+        //if (scalar_mul(hit.distance, hit.distance).raw < vec3_magnitude_squared(velocity).raw) {
+        //    //target_position = vec3_add(hit.position, vec3_from_int32s(0, eye_height - step_height, 0));
+        //}
+
+        // Create a collision sphere - we should make sure we dont clip inside walls
+        sphere_t player_collider;
+        player_collider.center = target_position;
+        player_collider.center.y.raw -= eye_height - step_height;
+        player_collider.radius.raw = player_radius;
+        player_collider.radius_squared.raw = (int32_t)(((int64_t)player_radius * (int64_t)player_radius) >> 12);
+
+        // Intersect with the geometry twice times
+        int x = 2;
+        while (x--) {
+            bvh_intersect_sphere(level_bvh, player_collider, &hit);
+            if (hit.distance.raw == INT32_MAX) {
+                break;
+            }
+            target_position = vec3_add(hit.position, vec3_mul(hit.normal, vec3_from_int32s(player_radius, player_radius, player_radius)));
+        }
+
+        // Set the position
+        self->position.x = target_position.x;
+        self->position.z = target_position.z;
+    }
+    self->position.y.raw += self->velocity.y.raw * dt_ms; // we do this one separately to save the hassle
 }
 
 void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms) {

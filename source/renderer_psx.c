@@ -75,7 +75,7 @@ void renderer_init(void) {
     gte_SetGeomOffset(CENTER_X, CENTER_Y);
 
     // Set screen depth (which according to example code is kinda like FOV apparently)
-    gte_SetGeomScreen(120);
+    gte_SetGeomScreen(160);
 
     // Set screen side clip
 	setRECT( &screen_clip, 0, 0, RES_X, RES_Y );

@@ -11,6 +11,7 @@ void bvh_construct(bvh_t* self, const triangle_3d_t* primitives, uint16_t n_prim
 void bvh_subdivide(bvh_t* self, bvh_node_t* node, int recursion_depth);
 void bvh_intersect_ray(bvh_t* self, ray_t ray, rayhit_t* hit);
 void bvh_intersect_sphere(bvh_t* self, sphere_t ray, rayhit_t* hit);
+int bvh_intersect_spheres(bvh_t* self, sphere_t ray, rayhit_t* hit, int n_hits);
 void bvh_swap_primitives(uint16_t* a, uint16_t* b);
 void bvh_partition(const bvh_t* self, axis_t axis, scalar_t pivot, uint16_t start, uint16_t count, uint16_t* split_index);
 void bvh_from_mesh(bvh_t* self, const mesh_t* mesh);

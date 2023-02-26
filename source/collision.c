@@ -216,13 +216,65 @@ void handle_node_intersection_sphere(bvh_t* self, bvh_node_t* current_node, sphe
     }
 }
 
+int curr_hit_index = 0;
+void handle_node_intersection_spheres(bvh_t* self, bvh_node_t* current_node, sphere_t sphere, rayhit_t* hit, int rec_depth) {
+    // Intersect current node
+    if (sphere_aabb_intersect(&current_node->bounds, sphere))
+    {
+        pixel32_t c = {
+            255,
+            rec_depth * 32,
+            rec_depth * 32,
+            255
+        };
+        transform_t id_transform = { {0,0,0},{0,0,0}, {4096, 4096, 4096} };
+        // If it's a leaf
+        if (current_node->is_leaf)
+        {
+            // Intersect all triangles attached to it
+            rayhit_t sub_hit = { 0 };
+            sub_hit.distance.raw = 0;
+            for (int i = current_node->left_first; i < current_node->left_first + current_node->primitive_count; i++)
+            {
+                // If hit
+                if (sphere_triangle_intersect(&self->primitives[self->indices[i]], sphere, &sub_hit)) {
+                    // If lowest distance
+                    if (sub_hit.distance.raw >= 0)
+                    {
+                        // Copy the hit info into the output hit for the BVH traversal
+                        memcpy(&hit[curr_hit_index], &sub_hit, sizeof(rayhit_t));
+                        hit[curr_hit_index].triangle = &self->primitives[self->indices[i]];
+                        curr_hit_index++;
+                        printf("hit!\n");
+                    }
+                }
+            }
+            return;
+        }
+
+        //Otherwise, intersect child nodes
+        handle_node_intersection_spheres(self, &self->nodes[current_node->left_first + 0], sphere, hit, rec_depth + 1);
+        handle_node_intersection_spheres(self, &self->nodes[current_node->left_first + 1], sphere, hit, rec_depth + 1);
+    }
+}
+
 void bvh_intersect_ray(bvh_t* self, const ray_t ray, rayhit_t* hit) {
     hit->distance = scalar_from_int32(INT32_MAX);
     handle_node_intersection_ray(self, self->root, ray, hit, 0);
 }
 
 void bvh_intersect_sphere(bvh_t* self, sphere_t ray, rayhit_t* hit) {
+    hit->distance = scalar_from_int32(INT32_MAX);
+    handle_node_intersection_sphere(self, self->root, ray, hit, 0);
+}
 
+int bvh_intersect_spheres(bvh_t* self, sphere_t ray, rayhit_t* hit, int n_max_hits) {
+    curr_hit_index = 0;
+    for (int i = 0; i < n_max_hits; i++) {
+        hit[i].distance = scalar_from_int32(INT32_MAX);
+    }
+    handle_node_intersection_spheres(self, self->root, ray, hit, 0);
+    return curr_hit_index;
 }
 
 void bvh_swap_primitives(uint16_t* a, uint16_t* b) {
@@ -413,6 +465,18 @@ int ray_triangle_intersect(const collision_triangle_3d_t* self, ray_t ray, rayhi
 }
 
 int sphere_aabb_intersect(const aabb_t* self, sphere_t sphere) {
+    // First check if the center is inside the AABB
+    if (
+        sphere.center.x.raw >= self->min.x.raw && 
+        sphere.center.x.raw <= self->max.x.raw && 
+        sphere.center.y.raw >= self->min.y.raw && 
+        sphere.center.y.raw <= self->max.y.raw && 
+        sphere.center.z.raw >= self->min.z.raw && 
+        sphere.center.z.raw <= self->max.z.raw
+    ) {
+        return 1;
+    }
+
     // Find the point on the AABB that's closest to the sphere's center
     const vec3_t closest_point = {
         scalar_max(self->min.x, scalar_min(sphere.center.x, self->max.x)),
@@ -421,11 +485,23 @@ int sphere_aabb_intersect(const aabb_t* self, sphere_t sphere) {
     };
 
     // Get the distance from that point to the sphere
-    const vec3_t sphere_center_to_closest_point = vec3_sub(closest_point, sphere.center);
+    const vec3_t sphere_center_to_closest_point = vec3_sub(sphere.center, closest_point);
     const scalar_t distance_squared = vec3_magnitude_squared(sphere_center_to_closest_point);
     return distance_squared.raw <= sphere.radius_squared.raw;
 }
 
 int sphere_triangle_intersect(const collision_triangle_3d_t* self, sphere_t sphere, rayhit_t* hit) {
+    // Get the vector from triangle to sphere center, and project it onto the normal vector to get the distance
+    const vec3_t triangle_to_center = vec3_sub(sphere.center, self->v0);
+    const scalar_t distance = vec3_dot(triangle_to_center, self->normal);
 
+    // Check if the distance is lower than the sphere radius, if so, we are colliding
+    if (distance.raw < sphere.radius.raw) {
+        hit->distance = distance;
+        hit->position = vec3_sub(sphere.center, vec3_mul(vec3_from_scalar(distance), self->normal));
+        hit->triangle = self;
+        hit->normal = self->normal;
+        return 1;
+    }
+    return 0;
 }
