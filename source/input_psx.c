@@ -37,7 +37,7 @@ void input_update(void) {
 
         // Update current
         if (!input_is_connected(i)) return;
-        button_curr[i] = pad[i]->btn;
+        button_curr[i] = ~pad[i]->btn;
 
         // If we have analog sticks, update those, taking deadzone into account
         if (input_has_analog(i)) {

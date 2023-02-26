@@ -46,7 +46,7 @@ model_t* model_load(const char* path) {
     return model;
 }
 
-aabb_t triangle_get_bounds(triangle_3d_t* self) {
+aabb_t triangle_get_bounds(const triangle_3d_t* self) {
     aabb_t result;
     result.min = vec3_min(
         vec3_min(
@@ -61,6 +61,25 @@ aabb_t triangle_get_bounds(triangle_3d_t* self) {
             vec3_from_int32s(self->v1.x, self->v1.y, self->v1.z)
         ),
         vec3_from_int32s(self->v2.x, self->v2.y, self->v2.z)
+    );
+    return result;
+}
+
+aabb_t collision_triangle_get_bounds(const collision_triangle_3d_t* self) {
+    aabb_t result;
+    result.min = vec3_min(
+        vec3_min(
+            self->v0,
+            self->v1
+        ),
+        self->v2
+    );
+    result.max = vec3_max(
+        vec3_max(
+            self->v0,
+            self->v1
+        ),
+        self->v2
     );
     return result;
 }

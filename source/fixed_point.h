@@ -7,24 +7,23 @@
 typedef struct {
     union {
         struct {
-            uint8_t fraction;
-            int8_t integer_low;
-            int16_t integer_high;
+            uint32_t fraction : 12;
+            int32_t integer : 20;
         };
         int32_t raw;
     };
-} fixed24_8_t;
+} fixed20_12_t;
 
-typedef fixed24_8_t scalar_t;
+typedef fixed20_12_t scalar_t;
 
 typedef struct {
-    fixed24_8_t x, y, z;
+    fixed20_12_t x, y, z;
 } vec3_t;
 
 // Let's hope and pray that this will be compile-time evaluated
-static inline fixed24_8_t scalar_from_float(const float a) {
-    fixed24_8_t result;
-    result.raw = (int32_t)(a * 256.0f);
+static inline fixed20_12_t scalar_from_float(const float a) {
+    fixed20_12_t result;
+    result.raw = (int32_t)(a * 4096.0f);
     return result;
 }
 
@@ -37,39 +36,13 @@ static inline vec3_t vec3_from_floats(const float x, const float y, const float 
     return result;
 }
 
-// Otherwise just use these
-/*
-fixed24_8_t scalar_from_int32(int32_t raw);
-fixed24_8_t scalar_add(fixed24_8_t a, fixed24_8_t b);
-fixed24_8_t scalar_sub(fixed24_8_t a, fixed24_8_t b);
-fixed24_8_t scalar_mul(fixed24_8_t a, fixed24_8_t b);
-fixed24_8_t scalar_div(fixed24_8_t a, fixed24_8_t b);
-fixed24_8_t scalar_min(fixed24_8_t a, fixed24_8_t b);
-fixed24_8_t scalar_max(fixed24_8_t a, fixed24_8_t b);
-fixed24_8_t scalar_sqrt(fixed24_8_t a);
-vec3_t vec3_from_scalar(scalar_t a);
-vec3_t vec3_from_scalars(scalar_t x, scalar_t y, scalar_t z);
-vec3_t vec3_from_int32s(int32_t x, int32_t y, int32_t z);
-vec3_t vec3_add(vec3_t a, vec3_t b);
-vec3_t vec3_sub(vec3_t a, vec3_t b);
-vec3_t vec3_mul(vec3_t a, vec3_t b);
-vec3_t vec3_div(vec3_t a, vec3_t b);
-vec3_t vec3_cross(vec3_t a, vec3_t b);
-vec3_t vec3_min(vec3_t a, vec3_t b);
-vec3_t vec3_max(vec3_t a, vec3_t b);
-vec3_t vec3_normalize(vec3_t a);
-scalar_t vec3_dot(vec3_t a, vec3_t b);
-scalar_t vec3_magnitude_squared(vec3_t a);
-scalar_t vec3_angle(vec3_t a, vec3_t b);
-*/
-
 // Debug
-static inline void vec3_debug(vec3_t a) {
-    printf("%0.3f, %0.3f, %0.3f\n", ((float)a.x.raw) / 256.0f, ((float)a.y.raw) / 256.0f, ((float)a.z.raw) / 256.0f);
+static inline void vec3_debug(const vec3_t a) {
+    printf("%0.3f, %0.3f, %0.3f\n", ((float)a.x.raw) / 4096.0f, ((float)a.y.raw) / 4096.0f, ((float)a.z.raw) / 4096.0f);
 }
 
-static inline void scalar_debug(scalar_t a) {
-    printf("%0.3f\n", ((float)a.raw) / 256.0f);
+static inline void scalar_debug(const scalar_t a) {
+    printf("%0.3f\n", ((float)a.raw) / 4096.0f);
 }
 
 
@@ -82,26 +55,32 @@ static inline void scalar_debug(scalar_t a) {
 #include <stdlib.h>
 
 
-static inline fixed24_8_t scalar_from_int32(int32_t raw) {
-    fixed24_8_t result;
+static inline fixed20_12_t scalar_from_int32(const int32_t raw) {
+    fixed20_12_t result;
     result.raw = raw;
     return result;
 }
 
-static inline fixed24_8_t scalar_add(const fixed24_8_t a, const fixed24_8_t b) {
-    fixed24_8_t result;
+static inline fixed20_12_t scalar_neg(const fixed20_12_t a) {
+    fixed20_12_t result = a;
+    result.raw = -result.raw;
+    return result;
+}
+
+static inline fixed20_12_t scalar_add(const fixed20_12_t a, const fixed20_12_t b) {
+    fixed20_12_t result;
     result.raw = a.raw + b.raw;
     return result;
 }
 
-static inline fixed24_8_t scalar_sub(const fixed24_8_t a, const fixed24_8_t b) {
-    fixed24_8_t result;
+static inline fixed20_12_t scalar_sub(const fixed20_12_t a, const fixed20_12_t b) {
+    fixed20_12_t result;
     result.raw = a.raw - b.raw;
     return result;
 }
 
-static inline fixed24_8_t scalar_mul(const fixed24_8_t a, const fixed24_8_t b) {
-    int64_t result32 = ((int64_t)a.raw * (int64_t)b.raw) >> 8;
+static inline fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
+    int64_t result32 = ((int64_t)a.raw * (int64_t)b.raw) >> 12;
 
     // overflow check
     if (result32 > INT32_MAX) {
@@ -113,32 +92,32 @@ static inline fixed24_8_t scalar_mul(const fixed24_8_t a, const fixed24_8_t b) {
     return scalar_from_int32((int32_t)result32);
 }
 
-static inline fixed24_8_t scalar_div(const fixed24_8_t a, const fixed24_8_t b) {
-    int64_t result32 = (int64_t)a.raw << 8;
+static inline fixed20_12_t scalar_div(const fixed20_12_t a, const fixed20_12_t b) {
+    int64_t result32 = (int64_t)a.raw << 12;
     if (b.raw != 0) {
         result32 /= b.raw;
     }
     else {
         result32 |= INT32_MAX;
     }
-    fixed24_8_t result;
+    fixed20_12_t result;
     result.raw = (int32_t)result32;
     return result;
 }
 
-static inline fixed24_8_t scalar_min(const fixed24_8_t a, const fixed24_8_t b) {
+static inline fixed20_12_t scalar_min(const fixed20_12_t a, const fixed20_12_t b) {
     return (a.raw < b.raw) ? a : b;
 }
 
-static inline fixed24_8_t scalar_max(const fixed24_8_t a, const fixed24_8_t b) {
+static inline fixed20_12_t scalar_max(const fixed20_12_t a, const fixed20_12_t b) {
     return (a.raw > b.raw) ? a : b;
 }
 
-static inline fixed24_8_t scalar_sqrt(fixed24_8_t a) {
+static inline fixed20_12_t scalar_sqrt(fixed20_12_t a) {
 #ifdef _PSX
-    return scalar_from_int32(SquareRoot12(a.raw << 4) >> 4);
+    return scalar_from_int32(SquareRoot12(a.raw));
 #else
-    return scalar_from_float(sqrtf((float)a.raw / 256.0f));
+    return scalar_from_float(sqrtf((float)a.raw / 4096.0f));
 #endif
 }
 
@@ -200,12 +179,11 @@ static inline scalar_t vec3_dot(const vec3_t a, const vec3_t b) {
     result = scalar_add(result, scalar_mul(a.z, b.z));
     return result;
 }
-
-static inline vec3_t vec3_cross(const vec3_t a, const vec3_t b) {
+static inline vec3_t vec3_scale(const vec3_t a, const scalar_t b) {
     vec3_t result;
-    result.x = scalar_sub(scalar_mul(a.y, b.z), scalar_mul(a.z, b.y));
-    result.y = scalar_sub(scalar_mul(a.z, b.x), scalar_mul(a.x, b.z));
-    result.z = scalar_sub(scalar_mul(a.x, b.y), scalar_mul(a.y, b.x));
+    result.x = scalar_mul(a.x, b);
+    result.y = scalar_mul(a.y, b);
+    result.z = scalar_mul(a.z, b);
     return result;
 }
 
@@ -232,7 +210,7 @@ static inline scalar_t vec3_magnitude_squared(const vec3_t a) {
     return length_squared;
 }
 
-static inline vec3_t vec3_normalize(vec3_t a) {
+static inline vec3_t vec3_normalize(const vec3_t a) {
     const scalar_t magnitude_squared = vec3_magnitude_squared(a);
     const scalar_t magnitude = scalar_sqrt(magnitude_squared);
     if (magnitude.raw == 0) {
@@ -242,4 +220,27 @@ static inline vec3_t vec3_normalize(vec3_t a) {
     return a_normalized;
 }
 
+static inline vec3_t vec3_cross(vec3_t a, vec3_t b) {
+    vec3_t result;
+    result.x = scalar_sub(scalar_mul(a.y, b.z), scalar_mul(a.z, b.y));
+    result.y = scalar_sub(scalar_mul(a.z, b.x), scalar_mul(a.x, b.z));
+    result.z = scalar_sub(scalar_mul(a.x, b.y), scalar_mul(a.y, b.x));
+    return result;
+}
+
+static inline vec3_t vec3_shift_right(vec3_t a, int amount) {
+    vec3_t result = a;
+    result.x.raw >>= amount;
+    result.y.raw >>= amount;
+    result.z.raw >>= amount;
+    return result;
+}
+
+static inline vec3_t vec3_neg(vec3_t a) {
+    vec3_t result = a;
+    result.x.raw = -result.x.raw;
+    result.y.raw = -result.y.raw;
+    result.z.raw = -result.z.raw;
+    return result;
+}
 #endif // FIXED_POINT_H

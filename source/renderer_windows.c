@@ -251,7 +251,7 @@ void renderer_init() {
 	glViewport(0, 0, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING);
 
 	// Set perspective matrix
-	glm_perspective(glm_rad(90.0f), 4.0f / 3.0f, 0.1f, 10000.f,
+	glm_perspective(glm_rad(90.0f), 4.0f / 3.0f, 0.1f, 100000.f,
 									perspective_matrix);
 
 	// Load shaders
@@ -296,11 +296,13 @@ void renderer_begin_frame(transform_t *camera_transform) {
 	}
 
 	// Convert from PS1 to GLM
-	vec3 position = {(float)(camera_transform->position.vx >> 12),
-									 (float)(camera_transform->position.vy >> 12),
-									 (float)(camera_transform->position.vz >> 12)};
+    vec3 position = {
+        -(float)(camera_transform->position.vx >> 12),
+        -(float)(camera_transform->position.vy >> 12),
+        -(float)(camera_transform->position.vz >> 12)
+    };
 	const vec3 rotation = {
-			(float)camera_transform->rotation.vx * (2 * PI / 131072.0f),
+			-(float)camera_transform->rotation.vx * (2 * PI / 131072.0f),
 			-(float)camera_transform->rotation.vy * (2 * PI / 131072.0f) + PI,
 			(float)camera_transform->rotation.vz * (2 * PI / 131072.0f) + PI
 	};
@@ -362,16 +364,21 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
 	mat4 model_matrix;
 	glm_mat4_identity(model_matrix);
 
-	// todo: add scale
-
 	// Apply rotation
 	// Apply translation
-	vec3 position = {
-			(float)model_transform->position.vx,
-			(float)model_transform->position.vy,
-			(float)model_transform->position.vz,
-	};
+	// Apply scale
+    vec3 position = {
+            (float)model_transform->position.vx,
+            (float)model_transform->position.vy,
+            (float)model_transform->position.vz,
+    };
+    vec3 scale = {
+            (float)model_transform->scale.vx / 4096.0f,
+            (float)model_transform->scale.vy / 4096.0f,
+            (float)model_transform->scale.vz / 4096.0f,
+    };
 	glm_translate(model_matrix, position);
+    glm_scale(model_matrix, scale);
 	glm_rotate_x(model_matrix,
 							 (float)model_transform->rotation.vx * 2 * PI / 131072.0f,
 							 model_matrix);
@@ -420,21 +427,26 @@ void renderer_draw_triangles_shaded_2d(const vertex_2d_t *vertex_buffer, uint16_
 
 }
 
-void renderer_debug_draw_line(const line_3d_t line, const pixel32_t color, transform_t* model_transform) {
+void renderer_debug_draw_line(vec3_t v0, vec3_t v1, const pixel32_t color, transform_t* model_transform) {
     // Calculate model matrix
     mat4 model_matrix;
     glm_mat4_identity(model_matrix);
 
-    // todo: add scale
-
     // Apply rotation
     // Apply translation
+    // Apply scale
     vec3 position = {
             (float)model_transform->position.vx,
             (float)model_transform->position.vy,
             (float)model_transform->position.vz,
     };
+    vec3 scale = {
+            (float)model_transform->scale.vx / 4096.0f,
+            (float)model_transform->scale.vy / 4096.0f,
+            (float)model_transform->scale.vz / 4096.0f,
+    };
     glm_translate(model_matrix, position);
+    glm_scale(model_matrix, scale);
     glm_rotate_x(model_matrix,
         (float)model_transform->rotation.vx * 2 * PI / 131072.0f,
         model_matrix);
@@ -465,6 +477,19 @@ void renderer_debug_draw_line(const line_3d_t line, const pixel32_t color, trans
         &model_matrix[0][0]);
 
     // Copy data into it
+    line_3d_t line;
+    line.v0.x = v0.x.raw >> 12;
+    line.v0.y = v0.y.raw >> 12;
+    line.v0.z = v0.z.raw >> 12;
+    line.v1.x = v1.x.raw >> 12;
+    line.v1.y = v1.y.raw >> 12;
+    line.v1.z = v1.z.raw >> 12;
+    line.v0.r = color.r;
+    line.v0.g = color.g;
+    line.v0.b = color.b;
+    line.v1.r = color.r;
+    line.v1.g = color.g;
+    line.v1.b = color.b;
     glBufferData(GL_ARRAY_BUFFER, sizeof(line_3d_t),
         &line, GL_STATIC_DRAW);
 
@@ -477,42 +502,28 @@ void renderer_debug_draw_line(const line_3d_t line, const pixel32_t color, trans
 
 void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, transform_t* model_transform) {
     // Create 8 vertices
-    vertex_3d_t vertex000 = { box->min.x.raw, box->min.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255};
-    vertex_3d_t vertex001 = { box->min.x.raw, box->min.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255};
-    vertex_3d_t vertex010 = { box->min.x.raw, box->max.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255};
-    vertex_3d_t vertex011 = { box->min.x.raw, box->max.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255};
-    vertex_3d_t vertex100 = { box->max.x.raw, box->min.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255};
-    vertex_3d_t vertex101 = { box->max.x.raw, box->min.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255};
-    vertex_3d_t vertex110 = { box->max.x.raw, box->max.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255};
-    vertex_3d_t vertex111 = { box->max.x.raw, box->max.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255};
-
-    // Create 12 lines
-    line_3d_t line_a = { vertex000, vertex100 };
-    line_3d_t line_b = { vertex100, vertex101 };
-    line_3d_t line_c = { vertex101, vertex001 };
-    line_3d_t line_d = { vertex001, vertex000 };
-    line_3d_t line_e = { vertex010, vertex110 };
-    line_3d_t line_f = { vertex110, vertex111 };
-    line_3d_t line_g = { vertex111, vertex011 };
-    line_3d_t line_h = { vertex011, vertex010 };
-    line_3d_t line_i = { vertex000, vertex010 };
-    line_3d_t line_j = { vertex100, vertex110 };
-    line_3d_t line_k = { vertex101, vertex111 };
-    line_3d_t line_l = { vertex001, vertex011 };
+    vec3_t vertex000 = {box->min.x, box->min.y, box->min.z};
+    vec3_t vertex001 = {box->min.x, box->min.y, box->max.z};
+    vec3_t vertex010 = {box->min.x, box->max.y, box->min.z};
+    vec3_t vertex011 = {box->min.x, box->max.y, box->max.z};
+    vec3_t vertex100 = {box->max.x, box->min.y, box->min.z};
+    vec3_t vertex101 = {box->max.x, box->min.y, box->max.z};
+    vec3_t vertex110 = {box->max.x, box->max.y, box->min.z};
+    vec3_t vertex111 = {box->max.x, box->max.y, box->max.z};
 
     // Draw the lines
-    renderer_debug_draw_line(line_a, color, model_transform);
-    renderer_debug_draw_line(line_b, color, model_transform);
-    renderer_debug_draw_line(line_c, color, model_transform);
-    renderer_debug_draw_line(line_d, color, model_transform);
-    renderer_debug_draw_line(line_e, color, model_transform);
-    renderer_debug_draw_line(line_f, color, model_transform);
-    renderer_debug_draw_line(line_g, color, model_transform);
-    renderer_debug_draw_line(line_h, color, model_transform);
-    renderer_debug_draw_line(line_i, color, model_transform);
-    renderer_debug_draw_line(line_j, color, model_transform);
-    renderer_debug_draw_line(line_k, color, model_transform);
-    renderer_debug_draw_line(line_l, color, model_transform);
+    renderer_debug_draw_line(vertex000, vertex100, color, model_transform);
+    renderer_debug_draw_line(vertex100, vertex101, color, model_transform);
+    renderer_debug_draw_line(vertex101, vertex001, color, model_transform);
+    renderer_debug_draw_line(vertex001, vertex000, color, model_transform);
+    renderer_debug_draw_line(vertex010, vertex110, color, model_transform);
+    renderer_debug_draw_line(vertex110, vertex111, color, model_transform);
+    renderer_debug_draw_line(vertex111, vertex011, color, model_transform);
+    renderer_debug_draw_line(vertex011, vertex010, color, model_transform);
+    renderer_debug_draw_line(vertex000, vertex010, color, model_transform);
+    renderer_debug_draw_line(vertex100, vertex110, color, model_transform);
+    renderer_debug_draw_line(vertex101, vertex111, color, model_transform);
+    renderer_debug_draw_line(vertex001, vertex011, color, model_transform);
 }
 
 void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) {

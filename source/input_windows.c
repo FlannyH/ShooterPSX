@@ -18,8 +18,8 @@ void input_init() {
 
 void input_update() {
     // Reset buttons
-    button_prev[0] = 0;
-    button_prev[1] = 0;
+    button_prev[0] = button_curr[0];
+    button_prev[1] = button_curr[1];
     button_curr[0] = 0;
     button_curr[1] = 0;
 
@@ -41,7 +41,7 @@ void input_update() {
         left_stick_y[1] = (int8_t)(axes_2[1] * 127.f);
         right_stick_x[1] = (int8_t)(axes_2[2] * 127.f);
         right_stick_y[1] = (int8_t)(axes_2[3] * 127.f);
-        button_curr[1] |= (PAD_L2)*axes_1[4] > 0.5f ? 1 : 0;
+        button_curr[1] |= (PAD_L2)*axes_2[4] > 0.5f ? 1 : 0;
     }
 
     // Update buttons

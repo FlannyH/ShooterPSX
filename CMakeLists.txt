@@ -24,6 +24,7 @@ if (DEFINED PSN00BSDK_TARGET)
         source/camera.c
         source/collision.c
         source/fixed_point.c
+        source/player.c
     )
 
     psn00bsdk_add_cd_image(
@@ -46,6 +47,7 @@ else()
         source/camera.c
         source/collision.c
         source/fixed_point.c
+        source/player.c
         source/win/psx.c
         source/win/debug_layer.cpp
         external/source/GL/gl3w.c

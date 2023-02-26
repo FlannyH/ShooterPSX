@@ -17,6 +17,7 @@
 
 #include "camera.h"
 #include "fixed_point.h"
+#include "player.h"
 
 #include "texture.h"
 
@@ -27,11 +28,14 @@ int main(void) {
 
 	uint32_t frame_index = 0;
 
+    // Init player
+    player_t player = { 0 };
+
 	// Camera transform
 	transform_t camera_transform;
-	camera_transform.position.vx = -11705653;
-	camera_transform.position.vy = 12413985;
-	camera_transform.position.vz = 2112866;
+    player.position.x.raw = -11705653;
+    player.position.y.raw = 12413985;
+    player.position.z.raw = 2112866;
 	camera_transform.rotation.vx = 5853;
 	camera_transform.rotation.vy = -63752;
 	camera_transform.rotation.vz = 0;
@@ -52,7 +56,7 @@ int main(void) {
 	}
 
 	transform_t t_cube1 = {{0, 0, 500}, {-2048, 0, 0}, {0, 0, 0}};
-	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}};
     
     bvh_t bvh_level_model;
     bvh_from_model(&bvh_level_model, m_level);
@@ -65,52 +69,16 @@ int main(void) {
     int bvh_depth = 0;
     ray_t ray = {0};
     while (!renderer_should_close()) {
-        const int delta_time = renderer_get_delta_time_ms();
-        renderer_begin_frame(&camera_transform);
-        input_update();
-        camera_update_flycam(&camera_transform, delta_time);
-        t_cube1.rotation.vy += 64 * delta_time;
-        // renderer_draw_mesh_shaded(m_cube, t_cube1);
-        renderer_draw_model_shaded(m_level, &t_level);
-        //renderer_debug_draw_aabb(&m_level->meshes[0].bounds, white, &t_level);
-        frame_counter += delta_time;
-        rayhit_t hit = { 0 };
-        
-        //for (uint32_t j = 0; j < 1; j++) {
-        //    for (uint32_t i = 0; i < m_level->n_meshes; ++i) {
-        //        bvh_intersect(&bvh_level[i], ray, &hit);
-        //    }
-        //}
-        bvh_intersect(&bvh_level_model, ray, &hit);
-        vertex_3d_t start = { ray.position.x.raw, ray.position.y.raw, ray.position.z.raw, 255, 255, 0, 0, 0, 255 };
-        vertex_3d_t end = { ray.position.x.raw + ray.direction.x.raw * 10, ray.position.y.raw + ray.direction.y.raw * 10, ray.position.z.raw + ray.direction.z.raw * 10, 255, 255, 0, 0, 0, 255 };
-        line_3d_t line = { start, end };
-        renderer_debug_draw_line(line, white, &t_level);
-        if (input_held(PAD_CIRCLE, 0)) {
-            if (frame_counter % 100 == 0)
-                bvh_depth = (bvh_depth+1) % 16;
-
-            ray.position.x.raw = -camera_transform.position.vx >> 12;
-            ray.position.y.raw = -camera_transform.position.vy >> 12;
-            ray.position.z.raw = -camera_transform.position.vz >> 12;
-            ray.direction = renderer_get_forward_vector();
-            ray.direction.x.raw += ray.direction.x.raw == 0;
-            ray.direction.y.raw += ray.direction.y.raw == 0;
-            ray.direction.z.raw += ray.direction.z.raw == 0;
-            ray.inv_direction = vec3_div(vec3_from_int32s(64, 64, 64), ray.direction);
-            //printf("%f, %f, %f\n",
-            //    ((float)ray.direction.x.raw) / 256.0f,
-            //    ((float)ray.direction.y.raw) / 256.0f,
-            //    ((float)ray.direction.z.raw) / 256.0f
-            //);
-
-            uint32_t color =
-               0xFF00FFFF|
-               0xFF00FFFF|
-               0xFF00FFFF;
-            
-            //bvh_debug_draw(&bvh_level_model, bvh_depth, bvh_depth, *(pixel32_t*)&color);
+        int delta_time = renderer_get_delta_time_ms();
+        if (delta_time > 40) {
+            delta_time = 40;
         }
+        renderer_begin_frame(&player.transform);
+        input_update();
+        renderer_draw_model_shaded(m_level, &t_level);
+        player_update(&player, &bvh_level_model, delta_time);
+        frame_counter += delta_time;
+        
     #ifdef _PSX
 	    FntPrint(-1, "Frame: %i\n", frame_index++);
 	    FntPrint(-1, "Delta Time (hblank): %i\n", delta_time);

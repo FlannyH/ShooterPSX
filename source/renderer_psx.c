@@ -20,7 +20,7 @@ uint32_t primitive_buffer[2][(32768 << 3) / sizeof(uint32_t)];
 uint32_t* next_primitive;
 MATRIX view_matrix;
 RECT	screen_clip;
-int vsync_enable = 0;
+int vsync_enable = 2;
 int frame_counter = 0;
 
 pixel32_t textures_avg_colors[256];
@@ -75,7 +75,7 @@ void renderer_init(void) {
     gte_SetGeomOffset(CENTER_X, CENTER_Y);
 
     // Set screen depth (which according to example code is kinda like FOV apparently)
-    gte_SetGeomScreen(CENTER_X);
+    gte_SetGeomScreen(120);
 
     // Set screen side clip
 	setRECT( &screen_clip, 0, 0, RES_X, RES_Y );
@@ -113,7 +113,7 @@ short test_clip(const RECT *clip, const short x, const short y) {
 	
 }
 
-int tri_clip(RECT *clip, const DVECTOR *v0, const DVECTOR *v1, const DVECTOR *v2) {
+int tri_clip(const RECT *clip, const DVECTOR *v0, const DVECTOR *v1, const DVECTOR *v2) {
 	
 	// Returns non-zero if a triangle is outside the screen boundaries
 	
@@ -137,9 +137,9 @@ void renderer_begin_frame(transform_t* camera_transform) {
     // Apply camera transform
     HiRotMatrix(&camera_transform->rotation, &view_matrix);
     VECTOR position = camera_transform->position;
-    position.vx >>= 12;
-    position.vy >>= 12;
-    position.vz >>= 12;
+    position.vx = -position.vx >> 12;
+    position.vy = -position.vy >> 12;
+    position.vz = -position.vz >> 12;
     ApplyMatrixLV(&view_matrix, &position, &position);
     TransMatrix(&view_matrix, &position);
     gte_SetRotMatrix(&view_matrix);
@@ -353,7 +353,7 @@ void renderer_draw_triangles_shaded_2d(const vertex_2d_t* vertex_buffer, const u
     }
 }
 
-void renderer_debug_draw_line(const line_3d_t line, const pixel32_t color, transform_t* model_transform) {
+void renderer_debug_draw_line(vec3_t v0, vec3_t v1, const pixel32_t color, transform_t* model_transform) {
     // Set rotation and translation matrix
     MATRIX model_matrix;
     HiRotMatrix(&model_transform->rotation, &model_matrix);
@@ -366,10 +366,12 @@ void renderer_debug_draw_line(const line_3d_t line, const pixel32_t color, trans
     gte_SetTransMatrix(&model_matrix);
 
     // Load a line's vertices into the GTE
+    SVECTOR sv0 = { v0.x.integer, v0.y.integer, v0.z.integer };
+    SVECTOR sv1 = { v1.x.integer, v1.y.integer, v1.z.integer };
     gte_ldv3(
-        &line.v0.x,
-        &line.v1.x,
-        &line.v1.x
+        &sv0.vx,
+        &sv1.vx,
+        &sv1.vx
         );
 
     // Apply transformations
@@ -405,42 +407,28 @@ void renderer_debug_draw_line(const line_3d_t line, const pixel32_t color, trans
 
 void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, transform_t* model_transform) {
     // Create 8 vertices
-    vertex_3d_t vertex000 = { box->min.x.raw, box->min.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255 };
-    vertex_3d_t vertex001 = { box->min.x.raw, box->min.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255 };
-    vertex_3d_t vertex010 = { box->min.x.raw, box->max.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255 };
-    vertex_3d_t vertex011 = { box->min.x.raw, box->max.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255 };
-    vertex_3d_t vertex100 = { box->max.x.raw, box->min.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255 };
-    vertex_3d_t vertex101 = { box->max.x.raw, box->min.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255 };
-    vertex_3d_t vertex110 = { box->max.x.raw, box->max.y.raw, box->min.z.raw, color.r, color.g, color.b, 0, 0, 255 };
-    vertex_3d_t vertex111 = { box->max.x.raw, box->max.y.raw, box->max.z.raw, color.r, color.g, color.b, 0, 0, 255 };
-
-    // Create 12 lines
-    line_3d_t line_a = { vertex000, vertex100 };
-    line_3d_t line_b = { vertex100, vertex101 };
-    line_3d_t line_c = { vertex101, vertex001 };
-    line_3d_t line_d = { vertex001, vertex000 };
-    line_3d_t line_e = { vertex010, vertex110 };
-    line_3d_t line_f = { vertex110, vertex111 };
-    line_3d_t line_g = { vertex111, vertex011 };
-    line_3d_t line_h = { vertex011, vertex010 };
-    line_3d_t line_i = { vertex000, vertex010 };
-    line_3d_t line_j = { vertex100, vertex110 };
-    line_3d_t line_k = { vertex101, vertex111 };
-    line_3d_t line_l = { vertex001, vertex011 };
+    vec3_t vertex000 = { box->min.x, box->min.y, box->min.z };
+    vec3_t vertex001 = { box->min.x, box->min.y, box->max.z };
+    vec3_t vertex010 = { box->min.x, box->max.y, box->min.z };
+    vec3_t vertex011 = { box->min.x, box->max.y, box->max.z };
+    vec3_t vertex100 = { box->max.x, box->min.y, box->min.z };
+    vec3_t vertex101 = { box->max.x, box->min.y, box->max.z };
+    vec3_t vertex110 = { box->max.x, box->max.y, box->min.z };
+    vec3_t vertex111 = { box->max.x, box->max.y, box->max.z };
 
     // Draw the lines
-    renderer_debug_draw_line(line_a, color, model_transform);
-    renderer_debug_draw_line(line_b, color, model_transform);
-    renderer_debug_draw_line(line_c, color, model_transform);
-    renderer_debug_draw_line(line_d, color, model_transform);
-    renderer_debug_draw_line(line_e, color, model_transform);
-    renderer_debug_draw_line(line_f, color, model_transform);
-    renderer_debug_draw_line(line_g, color, model_transform);
-    renderer_debug_draw_line(line_h, color, model_transform);
-    renderer_debug_draw_line(line_i, color, model_transform);
-    renderer_debug_draw_line(line_j, color, model_transform);
-    renderer_debug_draw_line(line_k, color, model_transform);
-    renderer_debug_draw_line(line_l, color, model_transform);
+    renderer_debug_draw_line(vertex000, vertex100, color, model_transform);
+    renderer_debug_draw_line(vertex100, vertex101, color, model_transform);
+    renderer_debug_draw_line(vertex101, vertex001, color, model_transform);
+    renderer_debug_draw_line(vertex001, vertex000, color, model_transform);
+    renderer_debug_draw_line(vertex010, vertex110, color, model_transform);
+    renderer_debug_draw_line(vertex110, vertex111, color, model_transform);
+    renderer_debug_draw_line(vertex111, vertex011, color, model_transform);
+    renderer_debug_draw_line(vertex011, vertex010, color, model_transform);
+    renderer_debug_draw_line(vertex000, vertex010, color, model_transform);
+    renderer_debug_draw_line(vertex100, vertex110, color, model_transform);
+    renderer_debug_draw_line(vertex101, vertex111, color, model_transform);
+    renderer_debug_draw_line(vertex001, vertex011, color, model_transform);
 }
 
 void renderer_upload_texture(const texture_cpu_t* texture, const uint8_t index) {
@@ -466,9 +454,6 @@ void renderer_upload_texture(const texture_cpu_t* texture, const uint8_t index) 
     LoadImage(&rect_palette, (uint32_t*)texture->palette);
     DrawSync(0);
     palettes[index] = rect_palette;
-
-    printf("Texture: {%d, %d} - {%d, %d}\n", rect_tex.x, rect_tex.y, rect_tex.x + rect_tex.w, rect_tex.y + rect_tex.h);
-    printf("Palette: {%d, %d} - {%d, %d}\n", rect_palette.x, rect_palette.y, rect_palette.x + rect_palette.w, rect_palette.y + rect_palette.h);
 }
 
 void renderer_end_frame(void) {

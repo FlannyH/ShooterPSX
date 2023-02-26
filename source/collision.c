@@ -6,9 +6,32 @@
 #include "mesh.h"
 #include "renderer.h"
 
-void bvh_construct(bvh_t* self, triangle_3d_t* primitives, uint16_t n_primitives) {
-    self->primitives = primitives;
+void bvh_construct(bvh_t* self, const triangle_3d_t* primitives, const uint16_t n_primitives) {
+    // Convert triangles from the model into collision triangles
+    // todo: maybe store this mesh in the file? not sure if it's worth implementing but could be nice
+    self->primitives = malloc(sizeof(collision_triangle_3d_t) * n_primitives);
     self->n_primitives = n_primitives;
+
+    for (size_t i = 0; i < n_primitives; ++i) {
+        // Set position
+        self->primitives[i].v0 = vec3_from_int32s(-(int32_t)primitives[i].v0.x << 12, -(int32_t)primitives[i].v0.y << 12, -(int32_t)primitives[i].v0.z << 12);
+        self->primitives[i].v1 = vec3_from_int32s(-(int32_t)primitives[i].v1.x << 12, -(int32_t)primitives[i].v1.y << 12, -(int32_t)primitives[i].v1.z << 12);
+        self->primitives[i].v2 = vec3_from_int32s(-(int32_t)primitives[i].v2.x << 12, -(int32_t)primitives[i].v2.y << 12, -(int32_t)primitives[i].v2.z << 12);
+
+        // Calculate normal
+        // todo: maybe check whether this normal is pointing the right way
+        const vec3_t ac = vec3_sub(vec3_shift_right(self->primitives[i].v1, 4), vec3_shift_right(self->primitives[i].v0, 4));
+        const vec3_t ab = vec3_sub(vec3_shift_right(self->primitives[i].v2, 4), vec3_shift_right(self->primitives[i].v0, 4));
+        self->primitives[i].normal = vec3_cross(ac, ab);
+        self->primitives[i].normal = vec3_normalize(self->primitives[i].normal);
+
+        // Calculate center
+        self->primitives[i].center = self->primitives[i].v0;
+        self->primitives[i].center = vec3_add(self->primitives[i].center, self->primitives[i].v1);
+        self->primitives[i].center = vec3_add(self->primitives[i].center, self->primitives[i].v2);
+        self->primitives[i].center = vec3_mul(self->primitives[i].center, vec3_from_scalar(scalar_from_int32(1365)));
+    }
+
 
     // Create index array
     self->indices = malloc(sizeof(uint16_t) * n_primitives);
@@ -33,7 +56,7 @@ aabb_t bvh_get_bounds(const bvh_t* self, const uint16_t first, const uint16_t co
     result.min = vec3_from_int32s(INT32_MAX, INT32_MAX, INT32_MAX);
     for (int i = 0; i < count; i++)
     {
-        const aabb_t curr_primitive_bounds = triangle_get_bounds(&self->primitives[self->indices[first + i]]);
+        const aabb_t curr_primitive_bounds = collision_triangle_get_bounds(&self->primitives[self->indices[first + i]]);
 
         result.min = vec3_min(result.min, curr_primitive_bounds.min);
         result.max = vec3_max(result.max, curr_primitive_bounds.max);
@@ -120,16 +143,12 @@ void bvh_subdivide(bvh_t* self, bvh_node_t* node, const int recursion_depth) {
     node->is_leaf = 0;
 }
 
-void handle_node_intersection(bvh_t* self, bvh_node_t* current_node, ray_t ray, rayhit_t* hit, int rec_depth) {
+void handle_node_intersection_ray(bvh_t* self, bvh_node_t* current_node, ray_t ray, rayhit_t* hit, int rec_depth) {
     // Intersect current node
     if (ray_aabb_intersect(&current_node->bounds, ray))
     {
-        pixel32_t c = {
-            255,
-            rec_depth * 32,
-            rec_depth * 32,
-        };
-        transform_t id_transform = { 0,0,0,0,0,0 };
+        pixel32_t red = { 255,0,0,255 };
+        transform_t id_transform = { {0,0,0},{0,0,0}, {-4096, -4096, -4096} };
         // If it's a leaf
         if (current_node->is_leaf)
         {
@@ -144,43 +163,66 @@ void handle_node_intersection(bvh_t* self, bvh_node_t* current_node, ray_t ray, 
                     if (sub_hit.distance.raw < hit->distance.raw && sub_hit.distance.raw >= 0)
                     {
                         // Copy the hit info into the output hit for the BVH traversal
-#ifdef _PSX
                         memcpy(hit, &sub_hit, sizeof(rayhit_t));
-#else
-                        memcpy_s(hit, sizeof(rayhit_t), &sub_hit, sizeof(rayhit_t));
-#endif
                         hit->triangle = &self->primitives[self->indices[i]];
                     }
                 }
             }
-            // Highlight the triangle
-            if (hit->triangle) {
-                const line_3d_t l0 = { hit->triangle->v0, hit->triangle->v1 };
-                const line_3d_t l1 = { hit->triangle->v1, hit->triangle->v2 };
-                const line_3d_t l2 = { hit->triangle->v2, hit->triangle->v0 };
-                renderer_debug_draw_line(l0, c, &id_transform);
-                renderer_debug_draw_line(l1, c, &id_transform);
-                renderer_debug_draw_line(l2, c, &id_transform);
-            }
             return;
         }
-        //Otherwise
-        else
-        {
-            //Intersect child nodes
-            handle_node_intersection(self, &self->nodes[current_node->left_first + 0], ray, hit, rec_depth + 1);
-            handle_node_intersection(self, &self->nodes[current_node->left_first + 1], ray, hit, rec_depth + 1);
-        }
-    }
-    else
-    {
-        return;
+
+        //Otherwise, intersect child nodes
+        handle_node_intersection_ray(self, &self->nodes[current_node->left_first + 0], ray, hit, rec_depth + 1);
+        handle_node_intersection_ray(self, &self->nodes[current_node->left_first + 1], ray, hit, rec_depth + 1);
     }
 }
 
-void bvh_intersect(bvh_t* self, const ray_t ray, rayhit_t* hit) {
+void handle_node_intersection_sphere(bvh_t* self, bvh_node_t* current_node, sphere_t sphere, rayhit_t* hit, int rec_depth) {
+    // Intersect current node
+    if (sphere_aabb_intersect(&current_node->bounds, sphere))
+    {
+        pixel32_t c = {
+            255,
+            rec_depth * 32,
+            rec_depth * 32,
+            255
+        };
+        transform_t id_transform = { {0,0,0},{0,0,0}, {4096, 4096, 4096} };
+        // If it's a leaf
+        if (current_node->is_leaf)
+        {
+            // Intersect all triangles attached to it
+            rayhit_t sub_hit = { 0 };
+            sub_hit.distance.raw = 0;
+            for (int i = current_node->left_first; i < current_node->left_first + current_node->primitive_count; i++)
+            {
+                // If hit
+                if (sphere_triangle_intersect(&self->primitives[self->indices[i]], sphere, &sub_hit)) {
+                    // If lowest distance
+                    if (sub_hit.distance.raw < hit->distance.raw && sub_hit.distance.raw >= 0)
+                    {
+                        // Copy the hit info into the output hit for the BVH traversal
+                        memcpy(hit, &sub_hit, sizeof(rayhit_t));
+                        hit->triangle = &self->primitives[self->indices[i]];
+                    }
+                }
+            }
+            return;
+        }
+
+        //Otherwise, intersect child nodes
+        handle_node_intersection_sphere(self, &self->nodes[current_node->left_first + 0], sphere, hit, rec_depth + 1);
+        handle_node_intersection_sphere(self, &self->nodes[current_node->left_first + 1], sphere, hit, rec_depth + 1);
+    }
+}
+
+void bvh_intersect_ray(bvh_t* self, const ray_t ray, rayhit_t* hit) {
     hit->distance = scalar_from_int32(INT32_MAX);
-    handle_node_intersection(self, self->root, ray, hit, 0);
+    handle_node_intersection_ray(self, self->root, ray, hit, 0);
+}
+
+void bvh_intersect_sphere(bvh_t* self, sphere_t ray, rayhit_t* hit) {
+
 }
 
 void bvh_swap_primitives(uint16_t* a, uint16_t* b) {
@@ -194,7 +236,7 @@ void bvh_partition(const bvh_t* self, const axis_t axis, scalar_t pivot, const u
     for (int j = start; j < start + count; j++)
     {
         // Get min and max of the axis we want
-        const aabb_t bounds = triangle_get_bounds(&self->primitives[self->indices[j]]);
+        const aabb_t bounds = collision_triangle_get_bounds(&self->primitives[self->indices[j]]);
 
         // Get center
         vec3_t center = vec3_add(bounds.min, bounds.max);
@@ -229,7 +271,7 @@ void bvh_from_model(bvh_t* self, const model_t* mesh) {
     triangle_3d_t* triangles = malloc(n_verts / 3 * sizeof(triangle_3d_t));
 
     // Copy all the meshes into it sequentially
-    size_t offset = 0;
+    unsigned long long offset = 0;
     for (uint32_t i = 0; i < mesh->n_meshes; ++i) {
         const size_t bytes_to_copy = mesh->meshes[i].n_vertices * sizeof(vertex_3d_t);
         const size_t verts_to_copy = mesh->meshes[i].n_vertices / 3;
@@ -241,8 +283,8 @@ void bvh_from_model(bvh_t* self, const model_t* mesh) {
     bvh_construct(self, triangles, n_verts / 3);
 }
 
-void debug_draw(const bvh_t* self, bvh_node_t* node, int min_depth, int max_depth, int curr_depth, pixel32_t color) {
-    const transform_t trans = { 0, 0, 0, 0, 0, 0 };
+void debug_draw(const bvh_t* self, const bvh_node_t* node, const int min_depth, const int max_depth, const int curr_depth, const pixel32_t color) {
+    transform_t trans = { {0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096} };
 
     // Draw box of this node - only if within the depth bounds
     if (curr_depth > max_depth) {
@@ -263,7 +305,7 @@ void debug_draw(const bvh_t* self, bvh_node_t* node, int min_depth, int max_dept
     debug_draw(self, &self->nodes[node->left_first + 1], min_depth, max_depth, curr_depth + 1, color);
 }
 
-void bvh_debug_draw(const bvh_t* self, int min_depth, int max_depth, pixel32_t color) {
+void bvh_debug_draw(const bvh_t* self, const int min_depth, const int max_depth, const pixel32_t color) {
     debug_draw(self, self->root, min_depth, max_depth, 0, color);
 }
 
@@ -289,16 +331,29 @@ int ray_aabb_intersect(const aabb_t* self, ray_t ray) {
     return tmax.raw >= tmin.raw;
 }
 
-int ray_triangle_intersect(const triangle_3d_t* self, ray_t ray, rayhit_t* hit) {
+int ray_triangle_intersect(const collision_triangle_3d_t* self, ray_t ray, rayhit_t* hit) {
     //Get vectors
-    vec3_t vtx1 = vec3_from_int32s(self->v0.x, self->v0.y, self->v0.z);
-    vec3_t vtx2 = vec3_from_int32s(self->v1.x, self->v1.y, self->v1.z);
-    vec3_t vtx3 = vec3_from_int32s(self->v2.x, self->v2.y, self->v2.z);
-    vec3_t c = vec3_sub(vtx3, vtx1);
-    vec3_t b = vec3_sub(vtx2, vtx1);
+    vec3_t v0 = self->v0;
+    vec3_t v1 = self->v1;
+    vec3_t v2 = self->v2;
+
+    // Shift it to the right by 4 - to avoid overflow with bigger triangles at the cost of some precision
+    v0.x.raw >>= 4;
+    v0.y.raw >>= 4;
+    v0.z.raw >>= 4;
+    v1.x.raw >>= 4;
+    v1.y.raw >>= 4;
+    v1.z.raw >>= 4;
+    v2.x.raw >>= 4;
+    v2.y.raw >>= 4;
+    v2.z.raw >>= 4;
+
+    // Get edges
+    vec3_t c = vec3_sub(v2, v0);
+    vec3_t b = vec3_sub(v1, v0);
 
     // calculate normal
-    const vec3_t normal_normalized = vec3_normalize(vec3_cross(c, b));
+    const vec3_t normal_normalized = vec3_neg(self->normal);
     const scalar_t dot_dir_nrm = vec3_dot(ray.direction, normal_normalized);
 
     // If the ray is perfectly parallel to the triangle, we did not hit it
@@ -309,7 +364,7 @@ int ray_triangle_intersect(const triangle_3d_t* self, ray_t ray, rayhit_t* hit) 
     }
 
     //Get distance to intersection point
-    vec3_t temp = vec3_sub(vtx1, ray.position);
+    vec3_t temp = vec3_sub(self->center, ray.position);
     scalar_t distance = vec3_dot(temp, normal_normalized);
     distance = scalar_div(distance, dot_dir_nrm);
 
@@ -323,7 +378,7 @@ int ray_triangle_intersect(const triangle_3d_t* self, ray_t ray, rayhit_t* hit) 
     vec3_t position = vec3_add(ray.position, vec3_mul(ray.direction, vec3_from_scalar(distance)));
 
     // Get more vectors
-    vec3_t p = vec3_sub(position, vtx1);
+    vec3_t p = vec3_sub(position, self->v0);
 
     //Get dots
     const scalar_t cc = vec3_dot(c, c);
@@ -345,11 +400,32 @@ int ray_triangle_intersect(const triangle_3d_t* self, ray_t ray, rayhit_t* hit) 
     u = scalar_div(u, d);
     v = scalar_div(v, d);
 
-    if ((u.raw >= 0) && (v.raw >= 0) && ((u.raw + v.raw) <= 256))
+    // If the point is inside the triangle, store the this result - we shift the 4 bits back out here too
+    if ((u.raw >= 0) && (v.raw >= 0) && ((u.raw + v.raw) <= 4096 << 4))
     {
         hit->distance = distance;
         hit->position = position;
+        hit->normal = normal_normalized;
+        hit->triangle = self;
         return 1;
     }
     return 0;
+}
+
+int sphere_aabb_intersect(const aabb_t* self, sphere_t sphere) {
+    // Find the point on the AABB that's closest to the sphere's center
+    const vec3_t closest_point = {
+        scalar_max(self->min.x, scalar_min(sphere.center.x, self->max.x)),
+        scalar_max(self->min.y, scalar_min(sphere.center.y, self->max.y)),
+        scalar_max(self->min.z, scalar_min(sphere.center.z, self->max.z))
+    };
+
+    // Get the distance from that point to the sphere
+    const vec3_t sphere_center_to_closest_point = vec3_sub(closest_point, sphere.center);
+    const scalar_t distance_squared = vec3_magnitude_squared(sphere_center_to_closest_point);
+    return distance_squared.raw <= sphere.radius_squared.raw;
+}
+
+int sphere_triangle_intersect(const collision_triangle_3d_t* self, sphere_t sphere, rayhit_t* hit) {
+
 }

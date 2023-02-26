@@ -20,6 +20,12 @@ typedef struct {
     vec3_t inv_direction;
 } ray_t;
 
+typedef struct {
+    vec3_t center;
+    scalar_t radius;
+    scalar_t radius_squared;
+} sphere_t;
+
 typedef enum {
     axis_x,
     axis_y,
@@ -44,6 +50,12 @@ typedef struct {
 typedef struct {
     vertex_3d_t v0, v1, v2;
 } triangle_3d_t;
+
+typedef struct {
+    vec3_t v0, v1, v2;
+    vec3_t normal;
+    vec3_t center;
+} collision_triangle_3d_t;
 
 typedef struct {
     uint32_t n_vertices;
@@ -75,7 +87,7 @@ typedef struct {
 } model_t;
 
 typedef struct {
-    triangle_3d_t* primitives;
+    collision_triangle_3d_t* primitives;
     uint16_t* indices;
     bvh_node_t* nodes;
     bvh_node_t* root;
@@ -92,6 +104,6 @@ typedef struct {
     vec3_t normal;
     scalar_t distance;
     col_mat_t collision_material;
-    triangle_3d_t* triangle;
+    collision_triangle_3d_t* triangle;
 } rayhit_t;
 #endif // STRUCTS_H
