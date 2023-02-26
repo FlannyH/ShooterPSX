@@ -302,7 +302,7 @@ void renderer_begin_frame(transform_t *camera_transform) {
         -(float)(camera_transform->position.vz >> 12)
     };
 	const vec3 rotation = {
-			-(float)camera_transform->rotation.vx * (2 * PI / 131072.0f),
+			(float)camera_transform->rotation.vx * (2 * PI / 131072.0f),
 			-(float)camera_transform->rotation.vy * (2 * PI / 131072.0f) + PI,
 			(float)camera_transform->rotation.vz * (2 * PI / 131072.0f) + PI
 	};
