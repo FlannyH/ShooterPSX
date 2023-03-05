@@ -1,6 +1,7 @@
 
 #ifndef STRUCTS_H
 #define STRUCTS_H
+#include "vec3.h"
 
 typedef struct {
     vec3_t min;
@@ -18,6 +19,7 @@ typedef struct {
     vec3_t position;
     vec3_t direction;
     vec3_t inv_direction;
+    scalar_t length;
 } ray_t;
 
 typedef struct {
@@ -25,6 +27,13 @@ typedef struct {
     scalar_t radius;
     scalar_t radius_squared;
 } sphere_t;
+
+typedef struct {
+    vec3_t bottom;
+    scalar_t radius;
+    scalar_t radius_squared;
+    scalar_t height;
+} vertical_cylinder_t;
 
 typedef enum {
     axis_x,

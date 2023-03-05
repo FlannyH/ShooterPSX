@@ -31,6 +31,7 @@ typedef struct {
     VECTOR rotation; // Angles in fixed-point format (4194304 = 360 degrees)
     VECTOR scale; // Scale (4096 = 1.0)
 } transform_t;
+const static transform_t id_transform = { {0,0,0},{0,0,0}, {-4096, -4096, -4096} };
 
 // Functions
 void renderer_init(void); // Initializes the renderer by configuring the GPU, setting the video mode, and preparing the drawing environment
@@ -41,6 +42,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
 void renderer_draw_triangles_shaded_2d(const vertex_2d_t* vertex_buffer, uint16_t n_verts, int16_t x, int16_t y);
 void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t* model_transform);
 void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, transform_t* model_transform);
+void renderer_debug_draw_sphere(const sphere_t sphere);
 void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index);
 int renderer_get_delta_time_raw(void);
 int renderer_get_delta_time_ms(void);

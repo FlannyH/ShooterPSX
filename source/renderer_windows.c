@@ -21,6 +21,7 @@
 #include <cglm/affine.h>
 
 #include "input.h"
+#include "vec3.h"
 #define PI 3.14159265358979f
 
 #define RESOLUTION_SCALING 4
@@ -28,6 +29,7 @@ GLFWwindow *window;
 mat4 perspective_matrix;
 mat4 view_matrix;
 mat4 view_matrix_topdown;
+mat4 view_matrix_third_person;
 mat4 view_matrix_normal;
 GLuint shader;
 GLuint vao;
@@ -321,11 +323,25 @@ void renderer_begin_frame(transform_t *camera_transform) {
 	glm_translate(view_matrix_normal, position);
 
     // Set view matrix for top down debug
-    vec3 top_down_position = { position[0], 7500, position[2]};
+    vec3 top_down_position = { position[0], 3000, position[2] };
     glm_mat4_identity(view_matrix_topdown);
     glm_rotate_x(view_matrix_topdown, PI / 2.0f, view_matrix_topdown);
     glm_rotate_z(view_matrix_topdown, PI, view_matrix_topdown);
     glm_translate(view_matrix_topdown, top_down_position);
+
+    glm_mat4_identity(view_matrix_third_person);
+    vec3 distance = { 0, 0, -400 };
+    glm_translate(view_matrix_third_person, distance);
+
+    // Apply rotation
+    glm_rotate_x(view_matrix_third_person, rotation[0], view_matrix_third_person);
+    glm_rotate_y(view_matrix_third_person, rotation[1], view_matrix_third_person);
+    glm_rotate_z(view_matrix_third_person, rotation[2], view_matrix_third_person);
+
+    //printf("position:\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\n", position[0], position[1], position[2], rotation[0], rotation[1], rotation[2]);
+
+    // Apply translation
+    glm_translate(view_matrix_third_person, position);
 
 	// Clear screen
 	glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
@@ -334,6 +350,9 @@ void renderer_begin_frame(transform_t *camera_transform) {
 
     if (input_held(PAD_SQUARE, 0)) {
         memcpy_s(view_matrix, sizeof(view_matrix), view_matrix_topdown, sizeof(view_matrix_topdown));
+    }
+    else if (input_held(PAD_TRIANGLE, 0)) {
+        memcpy_s(view_matrix, sizeof(view_matrix), view_matrix_third_person, sizeof(view_matrix_third_person));
     }
     else
     {
@@ -524,6 +543,19 @@ void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, transfor
     renderer_debug_draw_line(vertex100, vertex110, color, model_transform);
     renderer_debug_draw_line(vertex101, vertex111, color, model_transform);
     renderer_debug_draw_line(vertex001, vertex011, color, model_transform);
+}
+
+void renderer_debug_draw_sphere(const sphere_t sphere) {
+    pixel32_t white = { 255, 0, 255, 255 };
+    transform_t id_transform = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(sphere.radius.raw, 0, 0)), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(-sphere.radius.raw, 0, 0)), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(0, 0, sphere.radius.raw)), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(0, 0, -sphere.radius.raw)), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(+sphere.radius.raw, 0, +sphere.radius.raw), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(+sphere.radius.raw, 0, -sphere.radius.raw), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(-sphere.radius.raw, 0, +sphere.radius.raw), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(-sphere.radius.raw, 0, -sphere.radius.raw), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
 }
 
 void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) {
