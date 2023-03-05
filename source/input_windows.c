@@ -117,9 +117,9 @@ int input_released(const uint16_t button_mask, const int player_id) {
 
 int8_t input_left_stick_x(const int player_id) {
     const int8_t value = left_stick_x[player_id];
-    if (value < deadzone && value > -deadzone)
-        return 0;
-    return value;
+    if (value < deadzone && value > -deadzone) return 0;
+    if (value < -deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)deadzone) / (127 - (int16_t)deadzone));
+    if (value > deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)deadzone) / (127 - (int16_t)deadzone));
 }
 
 int8_t input_left_stick_x_relative(int player_id) {
@@ -128,9 +128,9 @@ int8_t input_left_stick_x_relative(int player_id) {
 
 int8_t input_left_stick_y(const int player_id) {
     const int8_t value = left_stick_y[player_id];
-    if (value < deadzone && value > -deadzone)
-        return 0;
-    return value;
+    if (value < deadzone && value > -deadzone) return 0;
+    if (value < -deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)deadzone) / (127 - (int16_t)deadzone));
+    if (value > deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)deadzone) / (127 - (int16_t)deadzone));
 }
 
 int8_t input_left_stick_y_relative(int player_id) {
@@ -139,9 +139,9 @@ int8_t input_left_stick_y_relative(int player_id) {
 
 int8_t input_right_stick_x(const int player_id) {
     const int8_t value = right_stick_x[player_id];
-    if (value < deadzone && value > -deadzone)
-        return 0;
-    return value;
+    if (value < deadzone && value > -deadzone) return 0;
+    if(value < -deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)deadzone) / (127 - (int16_t)deadzone));
+    if(value > deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)deadzone) / (127 - (int16_t)deadzone));
 }
 
 int8_t input_right_stick_x_relative(int player_id) {
@@ -150,9 +150,9 @@ int8_t input_right_stick_x_relative(int player_id) {
 
 int8_t input_right_stick_y(const int player_id) {
     const int8_t value = right_stick_y[player_id];
-    if (value < deadzone && value > -deadzone)
-        return 0;
-    return value;
+    if (value < deadzone && value > -deadzone) return 0;
+    if (value < -deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)deadzone) / (127 - (int16_t)deadzone));
+    if (value > deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)deadzone) / (127 - (int16_t)deadzone));
 }
 
 int8_t input_right_stick_y_relative(int player_id) {
