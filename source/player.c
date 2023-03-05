@@ -27,13 +27,15 @@ void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
 
     // Cast a sphere at the player's feet
     rayhit_t hit = { 0 };
-    const sphere_t player = {
-        .center = vec3_sub(self->position, vec3_from_int32s(0, eye_height - step_height, 0)),
+    const vertical_cylinder_t player = {
+        .bottom = vec3_sub(self->position, vec3_from_int32s(0, eye_height, 0)),
+        .height.raw = step_height,
         .radius.raw = player_radius,
         .radius_squared = player_radius_squared
     };
 
-    bvh_intersect_sphere(level_bvh, player, &hit);
+    bvh_intersect_vertical_cylinder(level_bvh, player, &hit);
+
     if (hit.distance.raw != INT32_MAX) {
         // Set speed to 0
         self->velocity.y.raw = 0;
@@ -117,6 +119,12 @@ void handle_jump(player_t* self) {
         if (self->distance_from_ground.raw - eye_height < jump_ground_threshold) {
             self->velocity.y.raw = initial_jump_velocity;
         }
+    }
+    if (input_held(PAD_UP, 0)) {
+        self->position.y.raw += 4096;
+    }
+    if (input_held(PAD_DOWN, 0)) {
+        self->position.y.raw -= 4096;
     }
 }
 

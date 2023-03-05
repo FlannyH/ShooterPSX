@@ -8,56 +8,56 @@
 #include "vec3.h"
 #include "vec2.h"
 
-void bvh_construct(bvh_t* self, const triangle_3d_t* primitives, const uint16_t n_primitives) {
+void bvh_construct(bvh_t* bvh, const triangle_3d_t* primitives, const uint16_t n_primitives) {
     // Convert triangles from the model into collision triangles
     // todo: maybe store this mesh in the file? not sure if it's worth implementing but could be nice
-    self->primitives = malloc(sizeof(collision_triangle_3d_t) * n_primitives);
-    self->n_primitives = n_primitives;
+    bvh->primitives = malloc(sizeof(collision_triangle_3d_t) * n_primitives);
+    bvh->n_primitives = n_primitives;
 
     for (size_t i = 0; i < n_primitives; ++i) {
         // Set position
-        self->primitives[i].v0 = vec3_from_int32s(-(int32_t)primitives[i].v0.x << 12, -(int32_t)primitives[i].v0.y << 12, -(int32_t)primitives[i].v0.z << 12);
-        self->primitives[i].v1 = vec3_from_int32s(-(int32_t)primitives[i].v1.x << 12, -(int32_t)primitives[i].v1.y << 12, -(int32_t)primitives[i].v1.z << 12);
-        self->primitives[i].v2 = vec3_from_int32s(-(int32_t)primitives[i].v2.x << 12, -(int32_t)primitives[i].v2.y << 12, -(int32_t)primitives[i].v2.z << 12);
+        bvh->primitives[i].v0 = vec3_from_int32s(-(int32_t)primitives[i].v0.x << 12, -(int32_t)primitives[i].v0.y << 12, -(int32_t)primitives[i].v0.z << 12);
+        bvh->primitives[i].v1 = vec3_from_int32s(-(int32_t)primitives[i].v1.x << 12, -(int32_t)primitives[i].v1.y << 12, -(int32_t)primitives[i].v1.z << 12);
+        bvh->primitives[i].v2 = vec3_from_int32s(-(int32_t)primitives[i].v2.x << 12, -(int32_t)primitives[i].v2.y << 12, -(int32_t)primitives[i].v2.z << 12);
 
         // Calculate normal
-        const vec3_t ac = vec3_sub(vec3_shift_right(self->primitives[i].v1, 4), vec3_shift_right(self->primitives[i].v0, 4));
-        const vec3_t ab = vec3_sub(vec3_shift_right(self->primitives[i].v2, 4), vec3_shift_right(self->primitives[i].v0, 4));
-        self->primitives[i].normal = vec3_cross(ac, ab);
-        self->primitives[i].normal = vec3_normalize(self->primitives[i].normal);
+        const vec3_t ac = vec3_sub(vec3_shift_right(bvh->primitives[i].v1, 4), vec3_shift_right(bvh->primitives[i].v0, 4));
+        const vec3_t ab = vec3_sub(vec3_shift_right(bvh->primitives[i].v2, 4), vec3_shift_right(bvh->primitives[i].v0, 4));
+        bvh->primitives[i].normal = vec3_cross(ac, ab);
+        bvh->primitives[i].normal = vec3_normalize(bvh->primitives[i].normal);
 
         // Calculate center
-        self->primitives[i].center = self->primitives[i].v0;
-        self->primitives[i].center = vec3_add(self->primitives[i].center, self->primitives[i].v1);
-        self->primitives[i].center = vec3_add(self->primitives[i].center, self->primitives[i].v2);
-        self->primitives[i].center = vec3_mul(self->primitives[i].center, vec3_from_scalar(scalar_from_int32(1365)));
+        bvh->primitives[i].center = bvh->primitives[i].v0;
+        bvh->primitives[i].center = vec3_add(bvh->primitives[i].center, bvh->primitives[i].v1);
+        bvh->primitives[i].center = vec3_add(bvh->primitives[i].center, bvh->primitives[i].v2);
+        bvh->primitives[i].center = vec3_mul(bvh->primitives[i].center, vec3_from_scalar(scalar_from_int32(1365)));
     }
 
 
     // Create index array
-    self->indices = malloc(sizeof(uint16_t) * n_primitives);
+    bvh->indices = malloc(sizeof(uint16_t) * n_primitives);
     for (int i = 0; i < n_primitives; i++)
     {
-        self->indices[i] = i;
+        bvh->indices[i] = i;
     }
 
     // Create root node
-    self->nodes = malloc(sizeof(bvh_node_t) * n_primitives * 2);
-    self->node_pointer = 2;
-    self->root = &self->nodes[0]; // todo: maybe we can just hard code the root to be index 0 and skip this indirection?
-    self->root->left_first = 0;
-    self->root->primitive_count = n_primitives;
-    bvh_subdivide(self, self->root, 0);
+    bvh->nodes = malloc(sizeof(bvh_node_t) * n_primitives * 2);
+    bvh->node_pointer = 2;
+    bvh->root = &bvh->nodes[0]; // todo: maybe we can just hard code the root to be index 0 and skip this indirection?
+    bvh->root->left_first = 0;
+    bvh->root->primitive_count = n_primitives;
+    bvh_subdivide(bvh, bvh->root, 0);
 }
 
-aabb_t bvh_get_bounds(const bvh_t* self, const uint16_t first, const uint16_t count)
+aabb_t bvh_get_bounds(const bvh_t* bvh, const uint16_t first, const uint16_t count)
 {
     aabb_t result;
     result.max = vec3_from_int32s(INT32_MIN, INT32_MIN, INT32_MIN);
     result.min = vec3_from_int32s(INT32_MAX, INT32_MAX, INT32_MAX);
     for (int i = 0; i < count; i++)
     {
-        const aabb_t curr_primitive_bounds = collision_triangle_get_bounds(&self->primitives[self->indices[first + i]]);
+        const aabb_t curr_primitive_bounds = collision_triangle_get_bounds(&bvh->primitives[bvh->indices[first + i]]);
 
         result.min = vec3_min(result.min, curr_primitive_bounds.min);
         result.max = vec3_max(result.max, curr_primitive_bounds.max);
@@ -65,9 +65,9 @@ aabb_t bvh_get_bounds(const bvh_t* self, const uint16_t first, const uint16_t co
     return result;
 }
 
-void bvh_subdivide(bvh_t* self, bvh_node_t* node, const int recursion_depth) {
+void bvh_subdivide(bvh_t* bvh, bvh_node_t* node, const int recursion_depth) {
     //Determine AABB for primitives in array
-    node->bounds = bvh_get_bounds(self, node->left_first, node->primitive_count);
+    node->bounds = bvh_get_bounds(bvh, node->left_first, node->primitive_count);
 
     if (node->primitive_count < 3)
     {
@@ -107,7 +107,7 @@ void bvh_subdivide(bvh_t* self, bvh_node_t* node, const int recursion_depth) {
 
     //Partition the index array, and get the split position
     uint16_t split_index = 0;
-    bvh_partition(self, split_axis, split_pos, node->left_first, node->primitive_count, &split_index);
+    bvh_partition(bvh, split_axis, split_pos, node->left_first, node->primitive_count, &split_index);
 
     //If splitIndex and node count are the same, we've reached a dead end, so stop here
     if (split_index == node->primitive_count)
@@ -127,19 +127,19 @@ void bvh_subdivide(bvh_t* self, bvh_node_t* node, const int recursion_depth) {
     const int start_index = node->left_first;
 
     //Create child nodes
-    node->left_first = self->node_pointer;
-    self->node_pointer += 2;
+    node->left_first = bvh->node_pointer;
+    bvh->node_pointer += 2;
 
     //Start
-    self->nodes[node->left_first + 0].left_first = start_index;
-    self->nodes[node->left_first + 1].left_first = split_index;
+    bvh->nodes[node->left_first + 0].left_first = start_index;
+    bvh->nodes[node->left_first + 1].left_first = split_index;
 
     //Count
-    self->nodes[node->left_first + 0].primitive_count = split_index - start_index;
-    self->nodes[node->left_first + 1].primitive_count = start_index + node->primitive_count - split_index;
+    bvh->nodes[node->left_first + 0].primitive_count = split_index - start_index;
+    bvh->nodes[node->left_first + 1].primitive_count = start_index + node->primitive_count - split_index;
 
-    bvh_subdivide(self, &self->nodes[node->left_first + 0], recursion_depth + 1);
-    bvh_subdivide(self, &self->nodes[node->left_first + 1], recursion_depth + 1);
+    bvh_subdivide(bvh, &bvh->nodes[node->left_first + 0], recursion_depth + 1);
+    bvh_subdivide(bvh, &bvh->nodes[node->left_first + 1], recursion_depth + 1);
 
     node->is_leaf = 0;
 }
@@ -208,14 +208,52 @@ void handle_node_intersection_sphere(bvh_t* self, const bvh_node_t* current_node
     }
 }
 
-void bvh_intersect_ray(bvh_t* self, const ray_t ray, rayhit_t* hit) {
+void handle_node_intersection_vertical_cylinder(bvh_t* self, const bvh_node_t* current_node, const vertical_cylinder_t vertical_cylinder, rayhit_t* hit, const int rec_depth) {
+    // Intersect current node
+    if (vertical_cylinder_aabb_intersect(&current_node->bounds, vertical_cylinder))
+    {
+        // If it's a leaf
+        if (current_node->is_leaf)
+        {
+            // Intersect all triangles attached to it
+            rayhit_t sub_hit = { 0 };
+            sub_hit.distance.raw = 0;
+            for (int i = current_node->left_first; i < current_node->left_first + current_node->primitive_count; i++)
+            {
+                // If hit
+                if (vertical_cylinder_triangle_intersect(&self->primitives[self->indices[i]], vertical_cylinder, &sub_hit)) {
+                    // If lowest distance
+                    if (sub_hit.distance.raw < hit->distance.raw && sub_hit.distance.raw >= 0)
+                    {
+                        // Copy the hit info into the output hit for the BVH traversal
+                        memcpy(hit, &sub_hit, sizeof(rayhit_t));
+                        hit->triangle = &self->primitives[self->indices[i]];
+                    }
+                }
+            }
+            return;
+        }
+
+        //Otherwise, intersect child nodes
+        handle_node_intersection_vertical_cylinder(self, &self->nodes[current_node->left_first + 0], vertical_cylinder, hit, rec_depth + 1);
+        handle_node_intersection_vertical_cylinder(self, &self->nodes[current_node->left_first + 1], vertical_cylinder, hit, rec_depth + 1);
+    }
+}
+
+
+int bvh_intersect_ray(bvh_t* self, const ray_t ray, rayhit_t* hit) {
     hit->distance = scalar_from_int32(INT32_MAX);
     handle_node_intersection_ray(self, self->root, ray, hit, 0);
 }
 
-void bvh_intersect_sphere(bvh_t* self, const sphere_t ray, rayhit_t* hit) {
+void bvh_intersect_sphere(bvh_t* bvh, const sphere_t ray, rayhit_t* hit) {
     hit->distance = scalar_from_int32(INT32_MAX);
-    handle_node_intersection_sphere(self, self->root, ray, hit, 0);
+    handle_node_intersection_sphere(bvh, bvh->root, ray, hit, 0);
+}
+
+void bvh_intersect_vertical_cylinder(bvh_t* bvh, vertical_cylinder_t ray, rayhit_t* hit) {
+    hit->distance = scalar_from_int32(INT32_MAX);
+    handle_node_intersection_vertical_cylinder(bvh, bvh->root, ray, hit, 0);
 }
 
 void bvh_swap_primitives(uint16_t* a, uint16_t* b) {
@@ -224,12 +262,12 @@ void bvh_swap_primitives(uint16_t* a, uint16_t* b) {
     *b = tmp;
 }
 
-void bvh_partition(const bvh_t* self, const axis_t axis, const scalar_t pivot, const uint16_t start, const uint16_t count, uint16_t* split_index) {
+void bvh_partition(const bvh_t* bvh, const axis_t axis, const scalar_t pivot, const uint16_t start, const uint16_t count, uint16_t* split_index) {
     int i = start;
     for (int j = start; j < start + count; j++)
     {
         // Get min and max of the axis we want
-        const aabb_t bounds = collision_triangle_get_bounds(&self->primitives[self->indices[j]]);
+        const aabb_t bounds = collision_triangle_get_bounds(&bvh->primitives[bvh->indices[j]]);
 
         // Get center
         vec3_t center = vec3_add(bounds.min, bounds.max);
@@ -242,18 +280,18 @@ void bvh_partition(const bvh_t* self, const axis_t axis, const scalar_t pivot, c
         if (center_points[(size_t)axis].raw > pivot.raw && (j != i))
         {
             // Move the primitive's index to the first partition of this node
-            bvh_swap_primitives(&self->indices[i], &self->indices[j]);
+            bvh_swap_primitives(&bvh->indices[i], &bvh->indices[j]);
             i++;
         }
     }
     *split_index = i;
 }
 
-void bvh_from_mesh(bvh_t* self, const mesh_t* mesh) {
-    bvh_construct(self, (triangle_3d_t*)mesh->vertices, (uint16_t)mesh->n_vertices / 3);
+void bvh_from_mesh(bvh_t* bvh, const mesh_t* mesh) {
+    bvh_construct(bvh, (triangle_3d_t*)mesh->vertices, (uint16_t)mesh->n_vertices / 3);
 }
 
-void bvh_from_model(bvh_t* self, const model_t* mesh) {
+void bvh_from_model(bvh_t* bvh, const model_t* mesh) {
     // Get total number of vertices
     uint32_t n_verts = 0;
     for (uint32_t i = 0; i < mesh->n_meshes; ++i) {
@@ -273,7 +311,7 @@ void bvh_from_model(bvh_t* self, const model_t* mesh) {
     }
 
     // Construct the BVH
-    bvh_construct(self, triangles, n_verts / 3);
+    bvh_construct(bvh, triangles, n_verts / 3);
 }
 
 void debug_draw(const bvh_t* self, const bvh_node_t* node, const int min_depth, const int max_depth, const int curr_depth, const pixel32_t color) {
@@ -298,25 +336,25 @@ void debug_draw(const bvh_t* self, const bvh_node_t* node, const int min_depth, 
     debug_draw(self, &self->nodes[node->left_first + 1], min_depth, max_depth, curr_depth + 1, color);
 }
 
-void bvh_debug_draw(const bvh_t* self, const int min_depth, const int max_depth, const pixel32_t color) {
-    debug_draw(self, self->root, min_depth, max_depth, 0, color);
+void bvh_debug_draw(const bvh_t* bvh, const int min_depth, const int max_depth, const pixel32_t color) {
+    debug_draw(bvh, bvh->root, min_depth, max_depth, 0, color);
 }
 
-int ray_aabb_intersect(const aabb_t* self, ray_t ray) {
-    scalar_t tx1 = scalar_mul(scalar_sub(self->min.x, ray.position.x), ray.inv_direction.x);
-    scalar_t tx2 = scalar_mul(scalar_sub(self->max.x, ray.position.x), ray.inv_direction.x);
+int ray_aabb_intersect(const aabb_t* aabb, ray_t ray) {
+    scalar_t tx1 = scalar_mul(scalar_sub(aabb->min.x, ray.position.x), ray.inv_direction.x);
+    scalar_t tx2 = scalar_mul(scalar_sub(aabb->max.x, ray.position.x), ray.inv_direction.x);
 
     scalar_t tmin = scalar_min(tx1, tx2);
     scalar_t tmax = scalar_max(tx1, tx2);
 
-    scalar_t ty1 = scalar_mul(scalar_sub(self->min.y, ray.position.y), ray.inv_direction.y);
-    scalar_t ty2 = scalar_mul(scalar_sub(self->max.y, ray.position.y), ray.inv_direction.y);
+    scalar_t ty1 = scalar_mul(scalar_sub(aabb->min.y, ray.position.y), ray.inv_direction.y);
+    scalar_t ty2 = scalar_mul(scalar_sub(aabb->max.y, ray.position.y), ray.inv_direction.y);
 
     tmin = scalar_max(scalar_min(ty1, ty2), tmin);
     tmax = scalar_min(scalar_max(ty1, ty2), tmax);
 
-    scalar_t tz1 = scalar_mul(scalar_sub(self->min.z, ray.position.z), ray.inv_direction.z);
-    scalar_t tz2 = scalar_mul(scalar_sub(self->max.z, ray.position.z), ray.inv_direction.z);
+    scalar_t tz1 = scalar_mul(scalar_sub(aabb->min.z, ray.position.z), ray.inv_direction.z);
+    scalar_t tz2 = scalar_mul(scalar_sub(aabb->max.z, ray.position.z), ray.inv_direction.z);
 
     tmin = scalar_max(scalar_min(tz1, tz2), tmin);
     tmax = scalar_min(scalar_max(tz1, tz2), tmax);
@@ -413,30 +451,156 @@ int ray_triangle_intersect(collision_triangle_3d_t* self, ray_t ray, rayhit_t* h
     return 0;
 }
 
-int sphere_aabb_intersect(const aabb_t* self, const sphere_t sphere) {
+int sphere_aabb_intersect(const aabb_t* aabb, const sphere_t sphere) {
     // First check if the center is inside the AABB
     if (
-        sphere.center.x.raw >= self->min.x.raw && 
-        sphere.center.x.raw <= self->max.x.raw && 
-        sphere.center.y.raw >= self->min.y.raw && 
-        sphere.center.y.raw <= self->max.y.raw && 
-        sphere.center.z.raw >= self->min.z.raw && 
-        sphere.center.z.raw <= self->max.z.raw
+        sphere.center.x.raw >= aabb->min.x.raw && 
+        sphere.center.x.raw <= aabb->max.x.raw && 
+        sphere.center.y.raw >= aabb->min.y.raw && 
+        sphere.center.y.raw <= aabb->max.y.raw && 
+        sphere.center.z.raw >= aabb->min.z.raw && 
+        sphere.center.z.raw <= aabb->max.z.raw
     ) {
         return 1;
     }
 
     // Find the point on the AABB that's closest to the sphere's center
     const vec3_t closest_point = {
-        scalar_max(self->min.x, scalar_min(sphere.center.x, self->max.x)),
-        scalar_max(self->min.y, scalar_min(sphere.center.y, self->max.y)),
-        scalar_max(self->min.z, scalar_min(sphere.center.z, self->max.z))
+        scalar_max(aabb->min.x, scalar_min(sphere.center.x, aabb->max.x)),
+        scalar_max(aabb->min.y, scalar_min(sphere.center.y, aabb->max.y)),
+        scalar_max(aabb->min.z, scalar_min(sphere.center.z, aabb->max.z))
     };
 
     // Get the distance from that point to the sphere
     const vec3_t sphere_center_to_closest_point = vec3_sub(sphere.center, closest_point);
     const scalar_t distance_squared = vec3_magnitude_squared(sphere_center_to_closest_point);
     return distance_squared.raw <= sphere.radius_squared.raw;
+}
+
+int vertical_cylinder_aabb_intersect(const aabb_t* aabb, const vertical_cylinder_t vertical_cylinder) {
+    // Check if the Y-coordinate ranges overlap
+    if (aabb->max.y.raw < vertical_cylinder.bottom.y.raw || aabb->min.y.raw > vertical_cylinder.bottom.y.raw + vertical_cylinder.height.raw) {
+        return 0;
+    }
+
+    // The rest can be done in 2D
+    // Find the point on the AABB that's closest to the circle's center
+    const vec2_t closest_point = {
+        scalar_max(aabb->min.x, scalar_min(vertical_cylinder.bottom.x, aabb->max.x)),
+        scalar_max(aabb->min.z, scalar_min(vertical_cylinder.bottom.z, aabb->max.z))
+    };
+    const vec2_t circle_center = { vertical_cylinder.bottom.x,vertical_cylinder.bottom.z };
+
+    // Get the distance from that point to the sphere
+    const vec2_t sphere_center_to_closest_point = vec2_sub(circle_center, closest_point);
+    const scalar_t distance_squared = vec2_magnitude_squared(sphere_center_to_closest_point);
+    return distance_squared.raw <= vertical_cylinder.radius_squared.raw;
+}
+
+scalar_t edge_function(const vec2_t a, const vec2_t b, const vec2_t p) {
+    const vec2_t a_p = vec2_sub(p, a);
+    const vec2_t a_b = vec2_sub(b, a);
+    return vec2_cross(a_p, a_b);
+}
+
+int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vertical_cylinder_t vertical_cylinder, rayhit_t* hit) {
+    // Project everything into 2D top-down
+    const vec2_t v0 = { triangle->v0.x, triangle->v0.z };
+    const vec2_t v1 = { triangle->v1.x, triangle->v1.z };
+    const vec2_t v2 = { triangle->v2.x, triangle->v2.z };
+    const vec2_t position = { vertical_cylinder.bottom.x, vertical_cylinder.bottom.z };
+
+    // Calculate barycentric coordinates
+    const scalar_t area = edge_function(v0, v1, v2);
+    const scalar_t edge0 = edge_function(v1, v2, position);
+    const scalar_t edge1 = edge_function(v2, v0, position);
+    const scalar_t edge2 = edge_function(v0, v1, position);
+
+    // If the point is inside the triangle, store this result
+    vec2_t closest_pos_on_triangle;
+    vec3_t new_bary;
+    if ((edge0.raw >= 0) && (edge1.raw >= 0) && (edge2.raw >= 0))
+    {
+        closest_pos_on_triangle = position;
+        new_bary.x = scalar_div(edge0, area);
+        new_bary.y = scalar_div(edge1, area);
+        new_bary.z = scalar_div(edge2, area);
+    }
+
+    // If the closest point to the triangle from the ray hit is on an edge (which means that the XOR of all the values' sign bits is negative
+    else if (edge0.raw ^ edge1.raw ^ edge2.raw >= 0) {
+        // Figure out which edge it is
+        vec2_t vert0, vert1;
+        if (edge0.raw <= 0) {
+            vert0 = v1;
+            vert1 = v2;
+        }
+        else if (edge1.raw <= 0) {
+            vert0 = v2;
+            vert1 = v0;
+        }
+        else /*if (edge2.raw <= 0)*/ {
+            vert0 = v0;
+            vert1 = v1;
+        }
+
+        // Project the point onto that edge
+        const vec2_t v0_to_v1_normal = vec2_sub(vert1, vert0);
+        const vec2_t v0_to_v1 = v0_to_v1_normal;
+        const vec2_t v0_to_p = vec2_sub(position, vert0);
+        const scalar_t distance_along_edge_squared = vec2_dot(v0_to_v1, v0_to_p);
+        const scalar_t t = scalar_div(distance_along_edge_squared, vec2_magnitude_squared(v0_to_v1));
+        closest_pos_on_triangle = vec2_add(vert0, vec2_mul(v0_to_v1_normal, vec2_from_scalar(t)));
+
+        // Calculate new barycentric coordinates
+        new_bary.x = scalar_div(edge_function(v1, v2, closest_pos_on_triangle), area);
+        new_bary.y = scalar_div(edge_function(v2, v0, closest_pos_on_triangle), area);
+        new_bary.z = scalar_div(edge_function(v0, v1, closest_pos_on_triangle), area);
+    }
+
+    // Otherwise the closest point is one of the points itself
+    else {
+        if (edge0.raw >= 0) {
+            closest_pos_on_triangle = v2;
+            new_bary = vec3_from_int32s(0, 0, 4096);
+        }
+        else if (edge1.raw >= 0) {
+            closest_pos_on_triangle = v0;
+            new_bary = vec3_from_int32s(4096, 0, 0);
+        }
+        else /*if (edge2.raw >= 0)*/ {
+            closest_pos_on_triangle = v1;
+            new_bary = vec3_from_int32s(0, 4096, 0);
+        }
+    }
+
+    // We found the closest point! Does the circle intersect it?
+    scalar_t distance_to_closest_point = vec2_magnitude_squared(vec2_sub(position, closest_pos_on_triangle));
+    if (distance_to_closest_point.raw >= vertical_cylinder.radius_squared.raw) {
+        hit->distance.raw = INT32_MAX;
+        return 0;
+    }
+
+    // It does! calculate the Y coordinate
+    vec3_t closest_pos_3d;
+    closest_pos_3d.x = closest_pos_on_triangle.x;
+    closest_pos_3d.z = closest_pos_on_triangle.y;
+    closest_pos_3d.y = scalar_mul(new_bary.x, triangle->v0.y);
+    closest_pos_3d.y = scalar_add(closest_pos_3d.y, scalar_mul(new_bary.y, triangle->v1.y));
+    closest_pos_3d.y = scalar_add(closest_pos_3d.y, scalar_mul(new_bary.z, triangle->v2.y));
+
+    // Is this Y coordinate within the cylinder's range?
+    if (closest_pos_3d.y.raw < vertical_cylinder.bottom.y.raw || closest_pos_3d.y.raw > vertical_cylinder.bottom.y.raw + vertical_cylinder.height.raw) {
+        hit->distance.raw = INT32_MAX;
+        return 0;
+    }
+
+    // Return this point
+    hit->position = closest_pos_3d;
+    hit->normal = triangle->normal;
+    hit->triangle = triangle;
+    hit->distance = scalar_sqrt(vec2_magnitude_squared(vec2_sub(closest_pos_on_triangle, position)));
+    return 1;
 }
 
 int sphere_triangle_intersect(collision_triangle_3d_t* self, sphere_t sphere, rayhit_t* hit) {

@@ -34,7 +34,8 @@ int main(void) {
 	// Camera transform
 	transform_t camera_transform;
     player.position.x.raw = -11705653;
-    player.position.y.raw = 12413985;
+    //player.position.y.raw = 12413985;
+    player.position.y.raw = 11413985;
     player.position.z.raw = 2112866;
 	camera_transform.rotation.vx = 5853;
 	camera_transform.rotation.vy = -63752;
