@@ -209,48 +209,6 @@ void handle_node_intersection_sphere(bvh_t* self, bvh_node_t* current_node, sphe
     }
 }
 
-int curr_hit_index = 0;
-
-void handle_node_intersection_spheres(bvh_t* self, bvh_node_t* current_node, sphere_t sphere, rayhit_t* hit, int rec_depth) {
-    // Intersect current node
-    if (sphere_aabb_intersect(&current_node->bounds, sphere))
-    {
-        pixel32_t c = {
-            255,
-            rec_depth * 32,
-            rec_depth * 32,
-            255
-        };
-        transform_t id_transform = { {0,0,0},{0,0,0}, {4096, 4096, 4096} };
-        // If it's a leaf
-        if (current_node->is_leaf)
-        {
-            // Intersect all triangles attached to it
-            rayhit_t sub_hit = { 0 };
-            sub_hit.distance.raw = 0;
-            for (int i = current_node->left_first; i < current_node->left_first + current_node->primitive_count; i++)
-            {
-                // If hit
-                if (sphere_triangle_intersect(&self->primitives[self->indices[i]], sphere, &sub_hit)) {
-                    // If lowest distance
-                    if (sub_hit.distance.raw >= 0)
-                    {
-                        // Copy the hit info into the output hit for the BVH traversal
-                        memcpy(&hit[curr_hit_index], &sub_hit, sizeof(rayhit_t));
-                        hit[curr_hit_index].triangle = &self->primitives[self->indices[i]];
-                        curr_hit_index++;
-                    }
-                }
-            }
-            return;
-        }
-
-        //Otherwise, intersect child nodes
-        handle_node_intersection_spheres(self, &self->nodes[current_node->left_first + 0], sphere, hit, rec_depth + 1);
-        handle_node_intersection_spheres(self, &self->nodes[current_node->left_first + 1], sphere, hit, rec_depth + 1);
-    }
-}
-
 void bvh_intersect_ray(bvh_t* self, const ray_t ray, rayhit_t* hit) {
     hit->distance = scalar_from_int32(INT32_MAX);
     handle_node_intersection_ray(self, self->root, ray, hit, 0);
@@ -259,15 +217,6 @@ void bvh_intersect_ray(bvh_t* self, const ray_t ray, rayhit_t* hit) {
 void bvh_intersect_sphere(bvh_t* self, sphere_t ray, rayhit_t* hit) {
     hit->distance = scalar_from_int32(INT32_MAX);
     handle_node_intersection_sphere(self, self->root, ray, hit, 0);
-}
-
-int bvh_intersect_spheres(bvh_t* self, sphere_t ray, rayhit_t* hit, int n_max_hits) {
-    curr_hit_index = 0;
-    for (int i = 0; i < n_max_hits; i++) {
-        hit[i].distance = scalar_from_int32(INT32_MAX);
-    }
-    handle_node_intersection_spheres(self, self->root, ray, hit, 0);
-    return curr_hit_index;
 }
 
 void bvh_swap_primitives(uint16_t* a, uint16_t* b) {
