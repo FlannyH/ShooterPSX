@@ -21,7 +21,6 @@ void bvh_construct(bvh_t* self, const triangle_3d_t* primitives, const uint16_t 
         self->primitives[i].v2 = vec3_from_int32s(-(int32_t)primitives[i].v2.x << 12, -(int32_t)primitives[i].v2.y << 12, -(int32_t)primitives[i].v2.z << 12);
 
         // Calculate normal
-        // todo: maybe check whether this normal is pointing the right way
         const vec3_t ac = vec3_sub(vec3_shift_right(self->primitives[i].v1, 4), vec3_shift_right(self->primitives[i].v0, 4));
         const vec3_t ab = vec3_sub(vec3_shift_right(self->primitives[i].v2, 4), vec3_shift_right(self->primitives[i].v0, 4));
         self->primitives[i].normal = vec3_cross(ac, ab);
@@ -177,7 +176,7 @@ void handle_node_intersection_ray(bvh_t* self, bvh_node_t* current_node, ray_t r
     }
 }
 
-void handle_node_intersection_sphere(bvh_t* self, bvh_node_t* current_node, sphere_t sphere, rayhit_t* hit, int rec_depth) {
+void handle_node_intersection_sphere(bvh_t* self, const bvh_node_t* current_node, const sphere_t sphere, rayhit_t* hit, const int rec_depth) {
     // Intersect current node
     if (sphere_aabb_intersect(&current_node->bounds, sphere))
     {
@@ -214,7 +213,7 @@ void bvh_intersect_ray(bvh_t* self, const ray_t ray, rayhit_t* hit) {
     handle_node_intersection_ray(self, self->root, ray, hit, 0);
 }
 
-void bvh_intersect_sphere(bvh_t* self, sphere_t ray, rayhit_t* hit) {
+void bvh_intersect_sphere(bvh_t* self, const sphere_t ray, rayhit_t* hit) {
     hit->distance = scalar_from_int32(INT32_MAX);
     handle_node_intersection_sphere(self, self->root, ray, hit, 0);
 }
@@ -225,7 +224,7 @@ void bvh_swap_primitives(uint16_t* a, uint16_t* b) {
     *b = tmp;
 }
 
-void bvh_partition(const bvh_t* self, const axis_t axis, scalar_t pivot, const uint16_t start, const uint16_t count, uint16_t* split_index) {
+void bvh_partition(const bvh_t* self, const axis_t axis, const scalar_t pivot, const uint16_t start, const uint16_t count, uint16_t* split_index) {
     int i = start;
     for (int j = start; j < start + count; j++)
     {
@@ -325,7 +324,7 @@ int ray_aabb_intersect(const aabb_t* self, ray_t ray) {
     return tmax.raw >= tmin.raw && tmax.raw >= 0;
 }
 
-int ray_triangle_intersect(const collision_triangle_3d_t* self, ray_t ray, rayhit_t* hit) {
+int ray_triangle_intersect(collision_triangle_3d_t* self, ray_t ray, rayhit_t* hit) {
     //Get vectors
     vec3_t v0 = self->v0;
     vec3_t v1 = self->v1;
@@ -414,7 +413,7 @@ int ray_triangle_intersect(const collision_triangle_3d_t* self, ray_t ray, rayhi
     return 0;
 }
 
-int sphere_aabb_intersect(const aabb_t* self, sphere_t sphere) {
+int sphere_aabb_intersect(const aabb_t* self, const sphere_t sphere) {
     // First check if the center is inside the AABB
     if (
         sphere.center.x.raw >= self->min.x.raw && 
@@ -440,7 +439,7 @@ int sphere_aabb_intersect(const aabb_t* self, sphere_t sphere) {
     return distance_squared.raw <= sphere.radius_squared.raw;
 }
 
-int sphere_triangle_intersect(const collision_triangle_3d_t* self, sphere_t sphere, rayhit_t* hit) {
+int sphere_triangle_intersect(collision_triangle_3d_t* self, sphere_t sphere, rayhit_t* hit) {
     // Find the closest point from the sphere to the triangle
     const vec3_t triangle_to_center = vec3_sub(sphere.center, self->v0);
     const scalar_t distance = vec3_dot(triangle_to_center, self->normal);
@@ -500,8 +499,8 @@ int sphere_triangle_intersect(const collision_triangle_3d_t* self, sphere_t sphe
             vert1 = v0;
         }
         else /*if (w.raw <= 0)*/ {
-            vert0 = v2;
-            vert1 = v0;
+            vert0 = v0;
+            vert1 = v1;
         }
 
         // Project the point onto that edge

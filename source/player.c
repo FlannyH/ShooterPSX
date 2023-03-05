@@ -20,42 +20,10 @@ const int32_t initial_jump_velocity = 3200;
 const int32_t jump_ground_threshold = 4000;
 static scalar_t player_radius_squared = { .raw = 0 };
 
-const pixel32_t white = { 255, 255, 255, 255 };
 transform_t t_level = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };
 
 void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
-    //// Cast a ray to the ground
-    //rayhit_t hit = { 0 };
-    //ray_t ray;
-    //ray.position = self->position;
-    //ray.position.x.raw = ray.position.x.raw;
-    //ray.position.y.raw = ray.position.y.raw;
-    //ray.position.z.raw = ray.position.z.raw;
-    //ray.direction = vec3_from_int32s(0, -4096, 0);
-    //ray.inv_direction = vec3_div(vec3_from_int32s(4096, 4096, 4096), ray.direction);
-    //ray.length.raw = abs(terminal_velocity_down) * 2;
-    //bvh_intersect_ray(level_bvh, ray, &hit);
-    //self->distance_from_ground = hit.distance;
-
-    //// If the ray hit nothing, return
-    //if (hit.distance.raw == INT32_MAX) {
-    //    return;
-    //}
-
-    //if (self->velocity.y.raw > 0) {
-    //    return;
-    //}
-
-    //// If we did hit something
-    //if (
-    //    self->distance_from_ground.raw <= eye_height &&
-    //    self->position.y.raw > hit.position.y.raw + step_height
-    //) {
-    //    // Set speed to 0
-    //    self->velocity.y.raw = 0;
-    //    // Set player camera height to eye_height units above the ground
-    //    self->position.y.raw = (hit.position.y.raw + eye_height);
-    //}
+    WARN_IF("player radius squared was not computed, and is equal to 0", player_radius_squared.raw == 0);
 
     // Cast a sphere at the player's feet
     rayhit_t hit = { 0 };
@@ -64,9 +32,6 @@ void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
         .radius.raw = player_radius,
         .radius_squared = player_radius_squared
     };
-    renderer_debug_draw_sphere(player);
-
-    WARN_IF("player radius squared was not computed, and is equal to 0", player_radius_squared.raw == 0);
 
     bvh_intersect_sphere(level_bvh, player, &hit);
     if (hit.distance.raw != INT32_MAX) {
@@ -196,7 +161,6 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
                 .radius_squared = player_radius_squared
             };
 
-            rayhit_t hit;
             bvh_intersect_sphere(level_bvh, sphere, &hit);
 
             // If the ray hit something, move towards the hit position

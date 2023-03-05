@@ -1,3 +1,5 @@
+#ifndef VEC2_H
+#define VEC2_H
 #include "fixed_point.h"
 
 typedef struct {
@@ -119,3 +121,4 @@ static vec2_t vec2_neg(vec2_t a) {
 static void vec2_debug(const vec2_t a) {
     printf("%0.3f, %0.3f\n", ((float)a.x.raw) / 4096.0f, ((float)a.y.raw) / 4096.0f);
 }
+#endif // VEC2_H

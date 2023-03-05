@@ -378,7 +378,7 @@ void renderer_draw_model_shaded(const model_t *model, transform_t *model_transfo
 }
 
 int32_t max_dot_value = 0;
-void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform) {
+void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_transform) {
 	// Calculate model matrix
 	mat4 model_matrix;
 	glm_mat4_identity(model_matrix);
@@ -446,7 +446,7 @@ void renderer_draw_triangles_shaded_2d(const vertex_2d_t *vertex_buffer, uint16_
 
 }
 
-void renderer_debug_draw_line(vec3_t v0, vec3_t v1, const pixel32_t color, transform_t* model_transform) {
+void renderer_debug_draw_line(const vec3_t v0, const vec3_t v1, const pixel32_t color, const transform_t* model_transform) {
     // Calculate model matrix
     mat4 model_matrix;
     glm_mat4_identity(model_matrix);
@@ -497,12 +497,12 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, const pixel32_t color, trans
 
     // Copy data into it
     line_3d_t line;
-    line.v0.x = v0.x.raw >> 12;
-    line.v0.y = v0.y.raw >> 12;
-    line.v0.z = v0.z.raw >> 12;
-    line.v1.x = v1.x.raw >> 12;
-    line.v1.y = v1.y.raw >> 12;
-    line.v1.z = v1.z.raw >> 12;
+    line.v0.x = (int16_t)(v0.x.raw >> 12);
+    line.v0.y = (int16_t)(v0.y.raw >> 12);
+    line.v0.z = (int16_t)(v0.z.raw >> 12);
+    line.v1.x = (int16_t)(v1.x.raw >> 12);
+    line.v1.y = (int16_t)(v1.y.raw >> 12);
+    line.v1.z = (int16_t)(v1.z.raw >> 12);
     line.v0.r = color.r;
     line.v0.g = color.g;
     line.v0.b = color.b;
@@ -546,8 +546,6 @@ void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, transfor
 }
 
 void renderer_debug_draw_sphere(const sphere_t sphere) {
-    pixel32_t white = { 255, 0, 255, 255 };
-    transform_t id_transform = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };
     renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(sphere.radius.raw, 0, 0)), white, &id_transform);
     renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(-sphere.radius.raw, 0, 0)), white, &id_transform);
     renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(0, 0, sphere.radius.raw)), white, &id_transform);
