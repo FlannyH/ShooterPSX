@@ -109,4 +109,11 @@ static fixed20_12_t scalar_sqrt(fixed20_12_t a) {
     return scalar_from_float(sqrtf((float)a.raw / 4096.0f));
 #endif
 }
+
+static fixed20_12_t scalar_shift_right(const fixed20_12_t a, const int shift) {
+    fixed20_12_t ret;
+    ret.raw = a.raw >> shift;
+    return ret;
+}
+
 #endif // FIXED_POINT_H

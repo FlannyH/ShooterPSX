@@ -20,7 +20,7 @@ uint32_t primitive_buffer[2][(32768 << 3) / sizeof(uint32_t)];
 uint32_t* next_primitive;
 MATRIX view_matrix;
 RECT	screen_clip;
-int vsync_enable = 2;
+int vsync_enable = 0;
 int frame_counter = 0;
 
 pixel32_t textures_avg_colors[256];
@@ -75,10 +75,10 @@ void renderer_init(void) {
     gte_SetGeomOffset(CENTER_X, CENTER_Y);
 
     // Set screen depth (which according to example code is kinda like FOV apparently)
-    gte_SetGeomScreen(160);
+    gte_SetGeomScreen(120);
 
     // Set screen side clip
-	setRECT( &screen_clip, 0, 0, RES_X, RES_Y );
+	setRECT( &screen_clip, 0, 0, RES_X, RES_Y);
     next_primitive = primitive_buffer[0];
 }
 
@@ -149,6 +149,75 @@ void renderer_begin_frame(transform_t* camera_transform) {
     n_total_triangles = 0;
 }
 
+void draw_triangle_shaded(vertex_3d_t v0, vertex_3d_t v1, vertex_3d_t v2, uint8_t tex_id, uint16_t tex_offset_x, int p) {
+    // Create primitive
+    POLY_GT3* new_triangle = (POLY_GT3*)next_primitive;
+    next_primitive += sizeof(POLY_GT3);
+
+    // Set the vertex positions of the triangle
+    setXY3(
+        new_triangle,
+        v0.x, v0.y,
+        v1.x, v1.y,
+        v2.x, v2.y
+    );
+    if (tri_clip(&screen_clip,
+        (DVECTOR*)&new_triangle->x0, (DVECTOR*)&new_triangle->x1, (DVECTOR*)&new_triangle->x2))
+        return;
+
+    // Set the vertex colors of the triangle
+    setRGB0(new_triangle,
+        v0.r,
+        v0.g,
+        v0.b
+    );
+    setRGB1(new_triangle,
+        v1.r,
+        v1.g,
+        v1.b
+    );
+    setRGB2(new_triangle,
+        v2.r,
+        v2.g,
+        v2.b
+    );
+
+    // Bind texture
+    new_triangle->clut = getClut(palettes[tex_id].x, palettes[tex_id].y);
+    new_triangle->tpage = getTPage(0, 0, textures[tex_id].x, textures[tex_id].y);
+
+    // Transform UVs to texture space
+    setUV3(new_triangle,
+        (((uint16_t)(v0.u) * textures[tex_id].w) >> 6) + tex_offset_x, // 6 because UVs do happen to be 4-bit pixel coordinates instead of 16-bit
+        (((uint16_t)(v0.v) * textures[tex_id].h) >> 8),
+        (((uint16_t)(v1.u) * textures[tex_id].w) >> 6) + tex_offset_x, // also + offset because apparently texture pages are 256x256 in 4-bit
+        (((uint16_t)(v1.v) * textures[tex_id].h) >> 8),
+        (((uint16_t)(v2.u) * textures[tex_id].w) >> 6) + tex_offset_x,
+        (((uint16_t)(v2.v) * textures[tex_id].h) >> 8)
+    );
+
+    // Initialize the entry in the render queue
+    setPolyGT3(new_triangle);
+
+    // Add the triangle to the draw queue
+    addPrim(ord_tbl[drawbuffer] + (p >> 2), new_triangle);
+    ++n_rendered_triangles;
+}
+
+vertex_3d_t get_halfway_point(const vertex_3d_t v0, const vertex_3d_t v1) {
+    const vertex_3d_t return_value = {
+        .x = v0.x + ((v1.x - v0.x) >> 1),
+        .y = v0.y + ((v1.y - v0.y) >> 1),
+        .z = v0.z + ((v1.z - v0.z) >> 1),
+        .r = v0.r + ((v1.r - v0.r) >> 1),
+        .g = v0.g + ((v1.g - v0.g) >> 1),
+        .b = v0.b + ((v1.b - v0.b) >> 1),
+        .u = v0.u + ((v1.u - v0.u) >> 1),
+        .v = v0.v + ((v1.v - v0.v) >> 1),
+    };
+    return return_value;
+}
+
 void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform) {
     if (!mesh) {
         printf("renderer_draw_mesh_shaded: mesh was null!\n");
@@ -199,57 +268,50 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
         if ((p>>2) > ORD_TBL_LENGTH || ((p >> 2) <= 0))
             continue;
 
-        // If the depth is below a certain distance, draw as textured triangle
-        if (p < 400) {
-            // Create primitive
-            POLY_GT3* new_triangle = (POLY_GT3*)next_primitive;
-            next_primitive += sizeof(POLY_GT3);
+        // So when triangles are very close to the camera, they tend to distort a lot because lmao PS1 texture mapping
+        // Let's subdivide them
+        if (p < 0) {
+            // Subdivide edges
+            vertex_3d_t v0 = mesh->vertices[i + 0];
+            vertex_3d_t v1 = mesh->vertices[i + 1];
+            vertex_3d_t v2 = mesh->vertices[i + 2];
+            vertex_3d_t v01 = get_halfway_point(v0, v1);
+            vertex_3d_t v12 = get_halfway_point(v1, v2);
+            vertex_3d_t v20 = get_halfway_point(v2, v0);
 
-            // Set the vertex positions of the triangle
-            gte_stsxy0(&new_triangle->x0);
-            gte_stsxy1(&new_triangle->x1);
-            gte_stsxy2(&new_triangle->x2);
-            if (tri_clip(&screen_clip,
-                (DVECTOR*)&new_triangle->x0, (DVECTOR*)&new_triangle->x1, (DVECTOR*)&new_triangle->x2))
-                continue;
+            // So the GTE still has the 3 original vertices, let's store those into the original triangles
+            gte_stsxy0(&v0.x);
+            gte_stsxy1(&v1.x);
+            gte_stsxy2(&v2.x);
 
-            // Set the vertex colors of the triangle
-            setRGB0(new_triangle,
-                mesh->vertices[i + 0].r,
-                mesh->vertices[i + 0].g,
-                mesh->vertices[i + 0].b
+            // Now transform the edge middles
+            gte_ldv3(
+                &v01.x,
+                &v12.x,
+                &v20.x
             );
-            setRGB1(new_triangle,
-                mesh->vertices[i + 1].r,
-                mesh->vertices[i + 1].g,
-                mesh->vertices[i + 1].b
-            );
-            setRGB2(new_triangle,
-                mesh->vertices[i + 2].r,
-                mesh->vertices[i + 2].g,
-                mesh->vertices[i + 2].b
-            );
+            gte_rtpt();
+            gte_stsxy0(&v01.x);
+            gte_stsxy1(&v12.x);
+            gte_stsxy2(&v20.x);
+            
+            draw_triangle_shaded(v0, v01, v20, tex_id, tex_offset_x, p);
+            draw_triangle_shaded(v01, v1, v12, tex_id, tex_offset_x, p);
+            draw_triangle_shaded(v20, v12, v2, tex_id, tex_offset_x, p);
+            draw_triangle_shaded(v20, v01, v12, tex_id, tex_offset_x, p);
 
-            // Bind texture
-            new_triangle->clut = getClut(palettes[tex_id].x, palettes[tex_id].y);
-            new_triangle->tpage = getTPage(0, 0, textures[tex_id].x, textures[tex_id].y);
 
-            // Transform UVs to texture space
-            setUV3(new_triangle,
-                (((uint16_t)(mesh->vertices[i + 0].u) * textures[tex_id].w) >> 6) + tex_offset_x, // 6 because UVs do happen to be 4-bit pixel coordinates instead of 16-bit
-                (((uint16_t)(mesh->vertices[i + 0].v) * textures[tex_id].h) >> 8),
-                (((uint16_t)(mesh->vertices[i + 1].u) * textures[tex_id].w) >> 6) + tex_offset_x, // also + offset because apparently texture pages are 256x256 in 4-bit
-                (((uint16_t)(mesh->vertices[i + 1].v) * textures[tex_id].h) >> 8),
-                (((uint16_t)(mesh->vertices[i + 2].u) * textures[tex_id].w) >> 6) + tex_offset_x,
-                (((uint16_t)(mesh->vertices[i + 2].v) * textures[tex_id].h) >> 8)
-            );
-
-            // Initialize the entry in the render queue
-            setPolyGT3(new_triangle);
-
-            // Add the triangle to the draw queue
-            addPrim(ord_tbl[drawbuffer] + (p >> 2), new_triangle);
-            ++n_rendered_triangles;
+            //draw_triangle_shaded(&mesh->vertices[i], tex_id, tex_offset_x, p);
+        }
+        else if (p < 320) {
+            // So the GTE still has the 3 original vertices, let's store those into the original triangles
+            vertex_3d_t v0 = mesh->vertices[i + 0];
+            vertex_3d_t v1 = mesh->vertices[i + 1];
+            vertex_3d_t v2 = mesh->vertices[i + 2];
+            gte_stsxy0(&v0.x);
+            gte_stsxy1(&v1.x);
+            gte_stsxy2(&v2.x);
+            draw_triangle_shaded(v0, v1, v2, tex_id, tex_offset_x, p);
         }
         // Otherwise, draw as untextured triangle
         else {

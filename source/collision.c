@@ -8,6 +8,13 @@
 #include "vec3.h"
 #include "vec2.h"
 
+int n_ray_aabb_intersects = 0;
+int n_ray_triangle_intersects = 0;
+int n_sphere_aabb_intersects = 0;
+int n_sphere_triangle_intersects = 0;
+int n_vertical_cylinder_aabb_intersects = 0;
+int n_vertical_cylinder_triangle_intersects = 0;
+
 void bvh_construct(bvh_t* bvh, const triangle_3d_t* primitives, const uint16_t n_primitives) {
     // Convert triangles from the model into collision triangles
     // todo: maybe store this mesh in the file? not sure if it's worth implementing but could be nice
@@ -24,6 +31,7 @@ void bvh_construct(bvh_t* bvh, const triangle_3d_t* primitives, const uint16_t n
         const vec3_t ac = vec3_sub(vec3_shift_right(bvh->primitives[i].v1, 4), vec3_shift_right(bvh->primitives[i].v0, 4));
         const vec3_t ab = vec3_sub(vec3_shift_right(bvh->primitives[i].v2, 4), vec3_shift_right(bvh->primitives[i].v0, 4));
         bvh->primitives[i].normal = vec3_cross(ac, ab);
+        WARN_IF("bvh normal calculation return infinity", (bvh->primitives[i].normal.x.raw | bvh->primitives[i].normal.y.raw | bvh->primitives[i].normal.z.raw) == INT32_MAX);
         bvh->primitives[i].normal = vec3_normalize(bvh->primitives[i].normal);
 
         // Calculate center
@@ -341,6 +349,7 @@ void bvh_debug_draw(const bvh_t* bvh, const int min_depth, const int max_depth, 
 }
 
 int ray_aabb_intersect(const aabb_t* aabb, ray_t ray) {
+    n_ray_aabb_intersects++;
     scalar_t tx1 = scalar_mul(scalar_sub(aabb->min.x, ray.position.x), ray.inv_direction.x);
     scalar_t tx2 = scalar_mul(scalar_sub(aabb->max.x, ray.position.x), ray.inv_direction.x);
 
@@ -362,11 +371,12 @@ int ray_aabb_intersect(const aabb_t* aabb, ray_t ray) {
     return tmax.raw >= tmin.raw && tmax.raw >= 0;
 }
 
-int ray_triangle_intersect(collision_triangle_3d_t* self, ray_t ray, rayhit_t* hit) {
+int ray_triangle_intersect(const collision_triangle_3d_t* triangle, ray_t ray, rayhit_t* hit) {
+    n_ray_triangle_intersects++;
     //Get vectors
-    vec3_t v0 = self->v0;
-    vec3_t v1 = self->v1;
-    vec3_t v2 = self->v2;
+    vec3_t v0 = triangle->v0;
+    vec3_t v1 = triangle->v1;
+    vec3_t v2 = triangle->v2;
 
     // Get distance to each point
     const scalar_t distance_p_v0 = vec3_magnitude_squared(vec3_sub(v0, ray.position));
@@ -383,7 +393,7 @@ int ray_triangle_intersect(collision_triangle_3d_t* self, ray_t ray, rayhit_t* h
 
 
     // Calculate normal
-    const vec3_t normal_normalized = vec3_neg(self->normal);
+    const vec3_t normal_normalized = vec3_neg(triangle->normal);
     const scalar_t dot_dir_nrm = vec3_dot(ray.direction, normal_normalized);
 
     // If the ray is perfectly parallel to the plane, we did not hit it
@@ -394,7 +404,7 @@ int ray_triangle_intersect(collision_triangle_3d_t* self, ray_t ray, rayhit_t* h
     }
 
     //Get distance to intersection point
-    vec3_t temp = vec3_sub(self->center, ray.position);
+    vec3_t temp = vec3_sub(triangle->center, ray.position);
     scalar_t distance = vec3_dot(temp, normal_normalized);
     distance = scalar_div(distance, dot_dir_nrm);
 
@@ -417,22 +427,22 @@ int ray_triangle_intersect(collision_triangle_3d_t* self, ray_t ray, rayhit_t* h
     vec3_t b = vec3_sub(v1, v0);
 
     // Get more vectors
-    vec3_t p = vec3_sub(position, self->v0);
+    vec3_t p = vec3_sub(position, triangle->v0);
 
     //Get dots
-    const scalar_t cc = vec3_dot(c, c);
-    const scalar_t bc = vec3_dot(b, c);
-    const scalar_t pc = vec3_dot(c, p);
-    const scalar_t bb = vec3_dot(b, b);
-    const scalar_t pb = vec3_dot(b, p);
+    const scalar_t cc = scalar_shift_right(vec3_dot(c, c), 6);
+    const scalar_t bc = scalar_shift_right(vec3_dot(b, c), 6);
+    const scalar_t pc = scalar_shift_right(vec3_dot(c, p), 6);
+    const scalar_t bb = scalar_shift_right(vec3_dot(b, b), 6);
+    const scalar_t pb = scalar_shift_right(vec3_dot(b, p), 6);
 
     //Get barycentric coordinates
-    const scalar_t cc_bb = scalar_mul(cc, bb);
-    const scalar_t bc_bc = scalar_mul(bc, bc);
-    const scalar_t bb_pc = scalar_mul(bb, pc);
-    const scalar_t bc_pb = scalar_mul(bc, pb);
-    const scalar_t cc_pb = scalar_mul(cc, pb);
-    const scalar_t bc_pc = scalar_mul(bc, pc);
+    const scalar_t cc_bb = scalar_mul(cc, bb); WARN_IF("cc_bb overflowed", cc_bb.raw == INT32_MAX || cc_bb.raw == -INT32_MAX);
+    const scalar_t bc_bc = scalar_mul(bc, bc); WARN_IF("bc_bc overflowed", bc_bc.raw == INT32_MAX || bc_bc.raw == -INT32_MAX);
+    const scalar_t bb_pc = scalar_mul(bb, pc); WARN_IF("bb_pc overflowed", bb_pc.raw == INT32_MAX || bb_pc.raw == -INT32_MAX);
+    const scalar_t bc_pb = scalar_mul(bc, pb); WARN_IF("bc_pb overflowed", bc_pb.raw == INT32_MAX || bc_pb.raw == -INT32_MAX);
+    const scalar_t cc_pb = scalar_mul(cc, pb); WARN_IF("cc_pb overflowed", cc_pb.raw == INT32_MAX || cc_pb.raw == -INT32_MAX);
+    const scalar_t bc_pc = scalar_mul(bc, pc); WARN_IF("bc_pc overflowed", bc_pc.raw == INT32_MAX || bc_pc.raw == -INT32_MAX);
     const scalar_t d = scalar_sub(cc_bb, bc_bc);
     scalar_t u = scalar_sub(bb_pc, bc_pb);
     scalar_t v = scalar_sub(cc_pb, bc_pc);
@@ -444,14 +454,15 @@ int ray_triangle_intersect(collision_triangle_3d_t* self, ray_t ray, rayhit_t* h
     {
         hit->distance = distance;
         hit->position = position;
-        hit->normal = self->normal;
-        hit->triangle = self;
+        hit->normal = triangle->normal;
+        hit->triangle = triangle;
         return 1;
     }
     return 0;
 }
 
 int sphere_aabb_intersect(const aabb_t* aabb, const sphere_t sphere) {
+    n_sphere_aabb_intersects++;
     // First check if the center is inside the AABB
     if (
         sphere.center.x.raw >= aabb->min.x.raw && 
@@ -478,6 +489,7 @@ int sphere_aabb_intersect(const aabb_t* aabb, const sphere_t sphere) {
 }
 
 int vertical_cylinder_aabb_intersect(const aabb_t* aabb, const vertical_cylinder_t vertical_cylinder) {
+    n_vertical_cylinder_aabb_intersects++;
     // Check if the Y-coordinate ranges overlap
     if (aabb->max.y.raw < vertical_cylinder.bottom.y.raw || aabb->min.y.raw > vertical_cylinder.bottom.y.raw + vertical_cylinder.height.raw) {
         return 0;
@@ -504,6 +516,7 @@ scalar_t edge_function(const vec2_t a, const vec2_t b, const vec2_t p) {
 }
 
 int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vertical_cylinder_t vertical_cylinder, rayhit_t* hit) {
+    n_vertical_cylinder_triangle_intersects++;
     // Project everything into 2D top-down
     const vec2_t v0 = { triangle->v0.x, triangle->v0.z };
     const vec2_t v1 = { triangle->v1.x, triangle->v1.z };
@@ -603,16 +616,26 @@ int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vert
     return 1;
 }
 
-int sphere_triangle_intersect(collision_triangle_3d_t* self, sphere_t sphere, rayhit_t* hit) {
+void collision_clear_stats() {
+    n_ray_aabb_intersects = 0;
+    n_ray_triangle_intersects = 0;
+    n_sphere_aabb_intersects = 0;
+    n_sphere_triangle_intersects = 0;
+    n_vertical_cylinder_aabb_intersects = 0;
+    n_vertical_cylinder_triangle_intersects = 0;
+}
+
+int sphere_triangle_intersect(const collision_triangle_3d_t* triangle, sphere_t sphere, rayhit_t* hit) {
+    n_sphere_triangle_intersects++;
     // Find the closest point from the sphere to the triangle
-    const vec3_t triangle_to_center = vec3_sub(sphere.center, self->v0);
-    const scalar_t distance = vec3_dot(triangle_to_center, self->normal);
-    vec3_t position = vec3_sub(sphere.center, vec3_mul(self->normal, vec3_from_scalar(distance)));
+    const vec3_t triangle_to_center = vec3_sub(sphere.center, triangle->v0);
+    const scalar_t distance = vec3_dot(triangle_to_center, triangle->normal);
+    vec3_t position = vec3_sub(sphere.center, vec3_mul(triangle->normal, vec3_from_scalar(distance)));
 
     // Shift it to the right by 4 - to avoid overflow with bigger triangles at the cost of some precision
-    vec3_t v0 = vec3_shift_right(self->v0, 4);
-    vec3_t v1 = vec3_shift_right(self->v1, 4);
-    vec3_t v2 = vec3_shift_right(self->v2, 4);
+    vec3_t v0 = vec3_shift_right(triangle->v0, 4);
+    vec3_t v1 = vec3_shift_right(triangle->v1, 4);
+    vec3_t v2 = vec3_shift_right(triangle->v2, 4);
     position = vec3_shift_right(position, 4);
 
     // Get edges
@@ -622,20 +645,20 @@ int sphere_triangle_intersect(collision_triangle_3d_t* self, sphere_t sphere, ra
     // Get more vectors
     vec3_t p = vec3_sub(position, v0);
 
-    //Get dots
-    const scalar_t cc = vec3_dot(c, c);
-    const scalar_t bc = vec3_dot(b, c);
-    const scalar_t pc = vec3_dot(c, p);
-    const scalar_t bb = vec3_dot(b, b);
-    const scalar_t pb = vec3_dot(b, p);
+    //Get dots - shifted right because otherwise overflow is 100% happening
+    const scalar_t cc = scalar_shift_right(vec3_dot(c, c), 4);
+    const scalar_t bc = scalar_shift_right(vec3_dot(b, c), 4);
+    const scalar_t pc = scalar_shift_right(vec3_dot(c, p), 4);
+    const scalar_t bb = scalar_shift_right(vec3_dot(b, b), 4);
+    const scalar_t pb = scalar_shift_right(vec3_dot(b, p), 4);
 
     //Get barycentric coordinates
-    const scalar_t cc_bb = scalar_mul(cc, bb);
-    const scalar_t bc_bc = scalar_mul(bc, bc);
-    const scalar_t bb_pc = scalar_mul(bb, pc);
-    const scalar_t bc_pb = scalar_mul(bc, pb);
-    const scalar_t cc_pb = scalar_mul(cc, pb);
-    const scalar_t bc_pc = scalar_mul(bc, pc);
+    const scalar_t cc_bb = scalar_mul(cc, bb); WARN_IF("cc_bb overflowed", cc_bb.raw == INT32_MAX || cc_bb.raw == -INT32_MAX);
+    const scalar_t bc_bc = scalar_mul(bc, bc); WARN_IF("bc_bc overflowed", bc_bc.raw == INT32_MAX || bc_bc.raw == -INT32_MAX);
+    const scalar_t bb_pc = scalar_mul(bb, pc); WARN_IF("bb_pc overflowed", bb_pc.raw == INT32_MAX || bb_pc.raw == -INT32_MAX);
+    const scalar_t bc_pb = scalar_mul(bc, pb); WARN_IF("bc_pb overflowed", bc_pb.raw == INT32_MAX || bc_pb.raw == -INT32_MAX);
+    const scalar_t cc_pb = scalar_mul(cc, pb); WARN_IF("cc_pb overflowed", cc_pb.raw == INT32_MAX || cc_pb.raw == -INT32_MAX);
+    const scalar_t bc_pc = scalar_mul(bc, pc); WARN_IF("bc_pc overflowed", bc_pc.raw == INT32_MAX || bc_pc.raw == -INT32_MAX);
     const scalar_t d = scalar_sub(cc_bb, bc_bc);
     scalar_t u = scalar_sub(bb_pc, bc_pb);
     scalar_t v = scalar_sub(cc_pb, bc_pc);
@@ -705,8 +728,8 @@ int sphere_triangle_intersect(collision_triangle_3d_t* self, sphere_t sphere, ra
 
     hit->position = closest_pos_on_triangle;
     hit->distance = scalar_sqrt(distance_from_hit_squared);
-    hit->normal = self->normal;
-    hit->triangle = self;
+    hit->normal = triangle->normal;
+    hit->triangle = triangle;
     return 1;
 
 }

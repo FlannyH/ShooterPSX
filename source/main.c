@@ -47,6 +47,7 @@ int main(void) {
 	// Load model
 	model_t *m_cube = model_load("\\ASSETS\\CUBETEST.MSH;1");
 	const model_t *m_level = model_load("\\ASSETS\\LEVEL.MSH;1");
+	const model_t *m_level_collision = model_load("\\ASSETS\\LEVELCOL.MSH;1");
 
 	texture_cpu_t *tex_level;
 	const uint32_t n_textures =
@@ -60,7 +61,7 @@ int main(void) {
 	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}};
     
     bvh_t bvh_level_model;
-    bvh_from_model(&bvh_level_model, m_level);
+    bvh_from_model(&bvh_level_model, m_level_collision);
 
 	// Play music
 	music_play_file("\\ASSETS\\MUSIC.XA;1");
