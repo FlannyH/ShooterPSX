@@ -1,7 +1,5 @@
 #include "debug_layer.h"
 
-#include <corecrt_math.h>
-
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"

@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "psx.h": "c",
+        "vec3.h": "c",
+        "fixed_point.h": "c"
+    }
+}

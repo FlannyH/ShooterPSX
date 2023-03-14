@@ -58,24 +58,34 @@ else()
         external/include/imgui/imgui_impl_glfw.cpp
         external/include/imgui/imgui_impl_opengl3.cpp
     )
-    target_link_libraries(
-        ShooterPSX 
-        ${CMAKE_CURRENT_SOURCE_DIR}/external/libraries/glfw3.lib
-        ${CMAKE_CURRENT_SOURCE_DIR}/external/libraries/cimgui.lib
-    )
+    if(WIN32)
+        target_link_libraries(
+            ShooterPSX 
+            ${CMAKE_CURRENT_SOURCE_DIR}/external/libraries/glfw3.lib
+            ${CMAKE_CURRENT_SOURCE_DIR}/external/libraries/cimgui.lib
+        )
+    else()
+        target_link_libraries(
+            ShooterPSX 
+            ${CMAKE_CURRENT_SOURCE_DIR}/external/libraries/glfw3.a
+        )
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lm -lstdc++")
+    endif()
     include_directories(external/include/)
     include_directories(external/include/imgui)
     
-    add_custom_command(
-        TARGET ShooterPSX POST_BUILD
-        COMMAND robocopy /e /xx
-                ${CMAKE_CURRENT_SOURCE_DIR}/assets/
-                ${CMAKE_CURRENT_BINARY_DIR}/assets/
-                || (exit 0)
-        COMMAND robocopy /e /xx
-                ${CMAKE_CURRENT_SOURCE_DIR}/external/dll/
-                ${CMAKE_CURRENT_BINARY_DIR}/
-                || (exit 0)
+    add_custom_target(game_copy_assets ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/ASSETS
+        ${CMAKE_CURRENT_BINARY_DIR}/ASSETS/
+        COMMENT "Copying asset folder to output"
     )
+    add_custom_target(game_copy_dll ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/dll/
+        ${CMAKE_CURRENT_BINARY_DIR}/
+        COMMENT "Copying dll folder to output"
+    )
+
     add_compile_definitions(_WINDOWS)
 endif()

@@ -20,7 +20,7 @@
             },
             "warnings": {
                 "dev": false
-            },
+            }
         },
         {
             "name": "windows-base",
@@ -29,12 +29,27 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "cl.exe",
-                "CMAKE_CXX_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe"
             },
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",
                 "rhs": "Windows"
+            }
+        },
+        {
+            "name": "linux-base",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "gcc"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
             }
         },
         {
@@ -60,6 +75,30 @@
             "displayName": "Windows Release (OpenGL)",
             "inherits": "windows-base",
             "name": "windows-x64-release"
+        },
+        {
+            "name": "linux-x64-debug",
+            "displayName": "Linux Debug (OpenGL)",
+            "inherits": "linux-base",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            },
+            "displayName": "Linux Release (OpenGL)",
+            "inherits": "linux-base",
+            "name": "linux-x64-release"
         }
     ]
 }

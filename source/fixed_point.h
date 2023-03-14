@@ -32,7 +32,7 @@ static void scalar_debug(const scalar_t a) {
 #ifdef _PSX
 #include <psxgte.h>
 #else
-#include <corecrt_math.h>
+#include "math.h"
 #endif
 #include <stdlib.h>
 

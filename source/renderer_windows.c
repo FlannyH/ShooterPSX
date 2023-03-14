@@ -9,7 +9,7 @@
 #include <GL/gl3w.h>
 #include <cglm/affine.h>
 #include <cglm/cam.h>
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 
 
 #include "file.h"
@@ -349,14 +349,14 @@ void renderer_begin_frame(transform_t *camera_transform) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (input_held(PAD_SQUARE, 0)) {
-        memcpy_s(view_matrix, sizeof(view_matrix), view_matrix_topdown, sizeof(view_matrix_topdown));
+        memcpy(view_matrix, view_matrix_topdown, sizeof(view_matrix_topdown));
     }
     else if (input_held(PAD_TRIANGLE, 0)) {
-        memcpy_s(view_matrix, sizeof(view_matrix), view_matrix_third_person, sizeof(view_matrix_third_person));
+        memcpy(view_matrix, view_matrix_third_person, sizeof(view_matrix_third_person));
     }
     else
     {
-        memcpy_s(view_matrix, sizeof(view_matrix), view_matrix_normal, sizeof(view_matrix_normal));
+        memcpy(view_matrix, view_matrix_normal, sizeof(view_matrix_normal));
     }
 
 	n_total_triangles = 0;
@@ -378,7 +378,7 @@ void renderer_draw_model_shaded(const model_t *model, transform_t *model_transfo
 }
 
 int32_t max_dot_value = 0;
-void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_transform) {
+void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform) {
 	// Calculate model matrix
 	mat4 model_matrix;
 	glm_mat4_identity(model_matrix);
@@ -446,7 +446,7 @@ void renderer_draw_triangles_shaded_2d(const vertex_2d_t *vertex_buffer, uint16_
 
 }
 
-void renderer_debug_draw_line(const vec3_t v0, const vec3_t v1, const pixel32_t color, const transform_t* model_transform) {
+void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t* model_transform) {
     // Calculate model matrix
     mat4 model_matrix;
     glm_mat4_identity(model_matrix);

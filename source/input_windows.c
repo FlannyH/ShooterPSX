@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "input.h"
-#include "glfw/glfw3.h"
+#include "GLFW/glfw3.h"
 #include "win/psx.h"
 
 extern GLFWwindow* window;
