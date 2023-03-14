@@ -33,10 +33,10 @@ int main(void) {
 
 	// Camera transform
 	transform_t camera_transform;
-    player.position.x.raw = -11705653;
+    player.position.x.raw = 0;// -11705653;
     //player.position.y.raw = 12413985;
-    player.position.y.raw = 11413985;
-    player.position.z.raw = 2112866;
+    player.position.y.raw = 200000;// 11413985;
+    player.position.z.raw = 0;// 2112866;
 	camera_transform.rotation.vx = 5853;
 	camera_transform.rotation.vy = -63752;
 	camera_transform.rotation.vz = 0;
@@ -47,7 +47,7 @@ int main(void) {
 	// Load model
 	model_t *m_cube = model_load("\\ASSETS\\CUBETEST.MSH;1");
 	const model_t *m_level = model_load("\\ASSETS\\LEVEL.MSH;1");
-	const model_t *m_level_collision = model_load("\\ASSETS\\LEVELCOL.MSH;1");
+	const model_t *m_level_collision = model_load("\\ASSETS\\LEVEL.MSH;1");
 
 	texture_cpu_t *tex_level;
 	const uint32_t n_textures =

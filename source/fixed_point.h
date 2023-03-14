@@ -116,4 +116,14 @@ static fixed20_12_t scalar_shift_right(const fixed20_12_t a, const int shift) {
     return ret;
 }
 
+static fixed20_12_t scalar_shift_left(const fixed20_12_t a, const int shift) {
+    fixed20_12_t ret;
+    ret.raw = a.raw << shift;
+    return ret;
+}
+
+static int is_infinity(const fixed20_12_t a) {
+    return (a.raw == INT32_MAX || a.raw == -INT32_MAX);
+}
+
 #endif // FIXED_POINT_H

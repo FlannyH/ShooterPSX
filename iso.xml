@@ -67,7 +67,9 @@
             <dir name="ASSETS">
 			    <file name="CUBETEST.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/rat.msh" />
 			    <file name="LEVEL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/level.msh" />
+			    <file name="LEVELCOL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/levelcol.txc" />
 			    <file name="LEVELCOL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/levelcol.msh" />
+			    <file name="TESTLVL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/testlvl.msh" />
 			    <file name="LEVEL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/level.txc" />
 			    <file name="MUSIC.XA" type="mixed" source="${PROJECT_SOURCE_DIR}/assets/music.xa"/>
 			    <!--

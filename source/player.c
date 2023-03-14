@@ -169,13 +169,16 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
                 .radius_squared = player_radius_squared
             };
 
-            bvh_intersect_sphere(level_bvh, sphere, &hit);
+            //bvh_intersect_sphere(level_bvh, sphere, &hit);
 
             // If the ray hit something, move towards the hit position
             if (hit.distance.raw != INT32_MAX) {
                 if (vec3_dot(velocity, vec3_sub(hit.position, target_position)).raw > 0) {
-                    target_position = vec3_add(hit.position, vec3_mul(hit.normal, vec3_from_scalar(sphere.radius)));
-                    target_position.y = self->position.y;
+                    //vec3_debug(target_position);
+                    //vec3_debug(hit.position);
+                    //vec3_debug(hit.normal);
+                    //target_position = vec3_add(hit.position, vec3_mul(hit.normal, vec3_from_scalar(sphere.radius)));
+                    //target_position.y = self->position.y;
                 }
             }
             else {
