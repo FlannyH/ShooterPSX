@@ -64,6 +64,17 @@ else()
             ${CMAKE_CURRENT_SOURCE_DIR}/external/libraries/glfw3.lib
             ${CMAKE_CURRENT_SOURCE_DIR}/external/libraries/cimgui.lib
         )
+        add_custom_command(
+            TARGET ShooterPSX POST_BUILD
+            COMMAND robocopy /e /xx
+                    ${CMAKE_CURRENT_SOURCE_DIR}/assets/
+                    ${CMAKE_CURRENT_BINARY_DIR}/assets/
+                    || (exit 0)
+            COMMAND robocopy /e /xx
+                    ${CMAKE_CURRENT_SOURCE_DIR}/external/dll/
+                    ${CMAKE_CURRENT_BINARY_DIR}/
+                    || (exit 0)
+        )
     else()
         target_link_libraries(
             ShooterPSX 
