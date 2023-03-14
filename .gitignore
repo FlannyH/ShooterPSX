@@ -3,3 +3,5 @@
 build/
 license_data.dat
 .vs/
+.vscode/settings.json
+.vscode/launch.json

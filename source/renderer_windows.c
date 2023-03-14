@@ -37,7 +37,7 @@ GLuint vbo;
 clock_t dt_clock;
 GLuint textures[256];
 float tex_res[512];
-int dt = 0;
+clock_t dt = 0;
 uint32_t n_total_triangles = 0;
 int w, h;
 int prev_w = 0;
@@ -148,9 +148,12 @@ static void DebugCallbackFunc(GLenum source, GLenum type, GLuint id,
 }
 
 void update_delta_time_ms(void) {
-	const int new_dt = clock();
-	dt = (new_dt - dt_clock) * 1000 / CLOCKS_PER_SEC;
-	dt_clock = new_dt;
+	clock_t new_dt;
+	do {
+		new_dt = clock();
+		dt = ((new_dt - dt_clock) * 1000) / CLOCKS_PER_SEC;
+	} while  (dt < 4);
+	dt_clock = new_dt; 
 }
 
 bool load_shader_part(char *path, const ShaderType type,
