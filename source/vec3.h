@@ -104,9 +104,20 @@ static vec3_t vec3_max(const vec3_t a, const vec3_t b) {
 }
 
 static scalar_t vec3_magnitude_squared(const vec3_t a) {
+    int overflow = 0;
     scalar_t length_squared = scalar_mul(a.x, a.x);
+    overflow |= operator_flags.overflow;
     length_squared = scalar_add(length_squared, scalar_mul(a.y, a.y));
+    overflow |= operator_flags.overflow;
     length_squared = scalar_add(length_squared, scalar_mul(a.z, a.z));
+    overflow |= operator_flags.overflow;
+    if (overflow) {
+        length_squared.raw = INT32_MAX;
+    }
+    if (length_squared.raw < 0) {
+        length_squared.raw = INT32_MAX;
+    }
+    WARN_IF("magnitude overflowed and became int32_max", length_squared.raw == INT32_MAX);
     return length_squared;
 }
 

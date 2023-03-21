@@ -249,8 +249,11 @@ void handle_node_intersection_sphere(bvh_t* self, const bvh_node_t* current_node
             {
                 // If hit
                 if (sphere_triangle_intersect(&self->primitives[self->indices[i]], sphere, &sub_hit)) {
-                    // If lowest distance
-                    if (sub_hit.distance.raw < hit->distance.raw && sub_hit.distance.raw >= 0)
+                    // When colliding with a surface, you would want 
+                    const vec3_t player_to_surface = vec3_sub(sphere.center, sub_hit.position);
+                    sub_hit.distance_along_normal = vec3_dot(sub_hit.normal, player_to_surface);
+
+                    if (sub_hit.distance_along_normal.raw <= sphere.radius.raw)
                     {
                         // Copy the hit info into the output hit for the BVH traversal
                         memcpy(hit, &sub_hit, sizeof(rayhit_t));
@@ -441,7 +444,6 @@ int ray_triangle_intersect(const collision_triangle_3d_t* triangle, ray_t ray, r
         hit->distance.raw = INT32_MAX;
         return 0;
     }
-
 
     // Calculate normal
     const vec3_t normal_normalized = vec3_neg(triangle->normal);
@@ -736,27 +738,24 @@ int sphere_triangle_intersect(const collision_triangle_3d_t* triangle, sphere_t 
     const vec3_t triangle_to_center = vec3_sub(sphere.center, triangle->v0);
     const scalar_t distance = vec3_dot(triangle_to_center, triangle->normal); WARN_IF("distance overflowed", is_infinity(distance));
     vec3_t position = vec3_sub(sphere.center, vec3_mul(triangle->normal, vec3_from_scalar(distance)));
+
+    // If the closest point from the sphere on the plane is too far, don't bother with all the expensive math, we will never intersect
+    if (distance.raw > sphere.radius.raw && distance.raw < -sphere.radius.raw) {
+        hit->distance.raw = INT32_MAX;
+        return 0;
+    }
 ;
-    // Shift it to the right by 4 - to avoid overflow with bigger triangles at the cost of some precision
-    vec3_t v0 = vec3_shift_right(triangle->v0, 4);
-    vec3_t v1 = vec3_shift_right(triangle->v1, 4);
-    vec3_t v2 = vec3_shift_right(triangle->v2, 4);
-    position = vec3_shift_right(position, 4);
+    // Shift it to the right by 3 - to avoid overflow with bigger triangles at the cost of some precision
+    vec3_t v0 = vec3_shift_right(triangle->v0, 3);
+    vec3_t v1 = vec3_shift_right(triangle->v1, 3);
+    vec3_t v2 = vec3_shift_right(triangle->v2, 3);
+    position = vec3_shift_right(position, 3);
 
-    vec3_t closest_pos_on_triangle = find_closest_point_on_triangle_3d(v0, v1, v2, sphere.center, 0, 0);
-
+    vec3_t closest_pos_on_triangle = find_closest_point_on_triangle_3d(v0, v1, v2, position, 0, 0);
 
     // Shift it back
-    closest_pos_on_triangle = vec3_shift_left(closest_pos_on_triangle, 4);
-    position = vec3_shift_left(position, 4);
-
-    sphere_t test2 = {
-    .center = sphere.center, .radius.raw = 40096 };
-    renderer_debug_draw_sphere(test2);
-
-    sphere_t test = {
-    .center = closest_pos_on_triangle, .radius.raw = 4096 };
-    renderer_debug_draw_sphere(test);
+    closest_pos_on_triangle = vec3_shift_left(closest_pos_on_triangle, 3);
+    position = vec3_shift_left(position, 3);
 
     // Is the hit position close enough to the plane hit? (is it within the sphere?)
     const scalar_t distance_from_hit_squared = vec3_magnitude_squared(vec3_sub(sphere.center, closest_pos_on_triangle)); WARN_IF("distance_from_hit_squared overflowed", is_infinity(distance_from_hit_squared));
@@ -771,9 +770,6 @@ int sphere_triangle_intersect(const collision_triangle_3d_t* triangle, sphere_t 
     hit->distance = scalar_sqrt(distance_from_hit_squared);
     hit->normal = triangle->normal;
     hit->triangle = triangle;
-    renderer_debug_draw_line(triangle->v0, triangle->v1, red, &id_transform);
-    renderer_debug_draw_line(triangle->v1, triangle->v2, red, &id_transform);
-    renderer_debug_draw_line(triangle->v2, triangle->v0, red, &id_transform);
     return 1;
 
 }

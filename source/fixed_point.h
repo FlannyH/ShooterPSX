@@ -26,6 +26,14 @@ static fixed20_12_t scalar_from_float(const float a) {
 }
 
 static void scalar_debug(const scalar_t a) {
+    if (a.raw == INT32_MAX) {
+        printf("+inf\n");
+        return;
+    }
+    if (a.raw == -INT32_MAX) {
+        printf("-inf\n");
+        return;
+    }
     printf("%0.3f\n", ((float)a.raw) / 4096.0f);
 }
 
@@ -35,6 +43,10 @@ static void scalar_debug(const scalar_t a) {
 #include "math.h"
 #endif
 #include <stdlib.h>
+
+static struct {
+    int overflow : 1;
+} operator_flags;
 
 static fixed20_12_t scalar_from_int32(const int32_t raw) {
     fixed20_12_t result;
@@ -65,15 +77,18 @@ static fixed20_12_t scalar_sub(const fixed20_12_t a, const fixed20_12_t b) {
 }
 
 static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
-    int64_t result32 = ((int64_t)a.raw * (int64_t)b.raw) >> 12;
+    int64_t result32 = ((int64_t)(a.raw >> 6) * ((int64_t)b.raw >> 6));
 
     // overflow check
+    operator_flags.overflow = 0;
     if (result32 > INT32_MAX) {
         result32 = INT32_MAX;
+        operator_flags.overflow = 1;
         //WARN_IF("overflow occured during scalar_mul", 1);
     }
     else if (result32 < -INT32_MAX) {
         result32 = -INT32_MAX;
+        operator_flags.overflow = 1;
         //WARN_IF("overflow occured during scalar_mul", 1);
     }
     return scalar_from_int32((int32_t)result32);
@@ -120,6 +135,13 @@ static fixed20_12_t scalar_shift_left(const fixed20_12_t a, const int shift) {
     fixed20_12_t ret;
     ret.raw = a.raw << shift;
     return ret;
+}
+
+static fixed20_12_t scalar_abs(fixed20_12_t a) {
+    if (a.raw < 0) {
+        a.raw = -a.raw;
+    }
+    return a;
 }
 
 static int is_infinity(const fixed20_12_t a) {

@@ -33,12 +33,20 @@ void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
         .radius.raw = player_radius,
         .radius_squared = player_radius_squared
     };
+    const sphere_t player_s = {
+        .center = vec3_sub(self->position, vec3_from_int32s(0, eye_height, 0)),
+        .radius.raw = player_radius >> 1,
+        .radius_squared.raw = player_radius_squared.raw >> 2
+    };
 
-    bvh_intersect_vertical_cylinder(level_bvh, player, &hit);
+    //bvh_intersect_vertical_cylinder(level_bvh, player, &hit);
+    bvh_intersect_sphere(level_bvh, player_s, &hit);
+    scalar_debug(hit.distance);
 
     if (hit.distance.raw != INT32_MAX) {
         // Set speed to 0
-        self->velocity.y.raw = 0;
+        if (self->velocity.y.raw < 0)
+            self->velocity.y.raw = 0;
 
         // Set player camera height to eye_height units above the ground
         self->position.y.raw = (hit.position.y.raw + eye_height);
@@ -155,10 +163,10 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
 
         // If the ray hit something, move towards the hit position
         if (scalar_mul(hit.distance, hit.distance).raw < vec3_magnitude_squared(velocity).raw + player_radius_squared.raw) {
-            target_position = vec3_sub(hit.position, ray.direction);
+            //target_position = vec3_sub(hit.position, ray.direction);
             target_position.y = self->position.y;
-            self->velocity.x.raw = 0;
-            self->velocity.z.raw = 0;
+            //self->velocity.x.raw = 0;
+            //self->velocity.z.raw = 0;
         }
 
         for (int j = 0; j < 4; ++j) {
@@ -169,16 +177,15 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
                 .radius_squared = player_radius_squared
             };
 
-            //bvh_intersect_sphere(level_bvh, sphere, &hit);
+            bvh_intersect_sphere(level_bvh, sphere, &hit);
 
-            // If the ray hit something, move towards the hit position
+            // If the sphere intersection hit something, move towards the hit position
             if (hit.distance.raw != INT32_MAX) {
                 if (vec3_dot(velocity, vec3_sub(hit.position, target_position)).raw > 0) {
-                    //vec3_debug(target_position);
-                    //vec3_debug(hit.position);
-                    //vec3_debug(hit.normal);
-                    //target_position = vec3_add(hit.position, vec3_mul(hit.normal, vec3_from_scalar(sphere.radius)));
-                    //target_position.y = self->position.y;
+                    const scalar_t separation_distance = scalar_sub(sphere.radius, scalar_abs(hit.distance_along_normal));
+                    const vec3_t separation_vector = vec3_mul(hit.normal, vec3_from_scalar(separation_distance));
+                    target_position = vec3_add(target_position, separation_vector);
+                    target_position.y = self->position.y;
                 }
             }
             else {

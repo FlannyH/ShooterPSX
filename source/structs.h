@@ -121,6 +121,7 @@ typedef struct {
     vec3_t position;
     vec3_t normal;
     scalar_t distance;
+    scalar_t distance_along_normal;
     col_mat_t collision_material;
     collision_triangle_3d_t* triangle;
 } rayhit_t;
