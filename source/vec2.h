@@ -118,7 +118,13 @@ static vec2_t vec2_neg(vec2_t a) {
     return result;
 }
 
+static scalar_t vec2_magnitude(const vec2_t a) {
+    const scalar_t mag2 = vec2_magnitude_squared(a);
+    return scalar_sqrt(mag2);
+}
+
 static void vec2_debug(const vec2_t a) {
     printf("%0.3f, %0.3f\n", ((float)a.x.raw) / 4096.0f, ((float)a.y.raw) / 4096.0f);
 }
+
 #endif // VEC2_H

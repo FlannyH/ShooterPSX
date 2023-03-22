@@ -544,9 +544,9 @@ int sphere_aabb_intersect(const aabb_t* aabb, const sphere_t sphere) {
 
 int vertical_cylinder_aabb_intersect(const aabb_t* aabb, const vertical_cylinder_t vertical_cylinder) {
     n_vertical_cylinder_aabb_intersects++;
-    // Check if the Y-coordinate ranges overlap
-    if (aabb->max.y.raw < vertical_cylinder.bottom.y.raw || aabb->min.y.raw > vertical_cylinder.bottom.y.raw + vertical_cylinder.height.raw) {
-        return 0;
+    // Exit early if the AABB and vertical cylinder do not overlap on the Y-axis
+    if (aabb->max.y.raw < vertical_cylinder.bottom.y.raw - vertical_cylinder.height.raw || aabb->min.y.raw > vertical_cylinder.bottom.y.raw) {
+        //return 0;
     }
 
     // The rest can be done in 2D
@@ -569,58 +569,89 @@ scalar_t edge_function(const vec2_t a, const vec2_t b, const vec2_t p) {
     return vec2_cross(a_p, a_b);
 }
 
-// thank you! https://stackoverflow.com/questions/2924795/fastest-way-to-compute-point-to-triangle-distance-in-3d
-vec2_t find_closest_point_on_triangle_2d(vec2_t a, vec2_t b, vec2_t c, vec2_t p, scalar_t* v_out, scalar_t* w_out) {
-    // Calculate vectors
+scalar_t get_progress_of_p_on_ab(vec2_t a, vec2_t b, vec2_t p) {
+    // Calculate progress along the edge
     const vec2_t ab = vec2_sub(b, a);
-    const vec2_t ac = vec2_sub(c, a);
-
-    // A's dorito zone - closest point is A
     const vec2_t ap = vec2_sub(p, a);
-    const scalar_t d1 = vec2_dot(ab, ap);
-    const scalar_t d2 = vec2_dot(ac, ap);
-    if (d1.raw <= 0 && d2.raw <= 0) return a;
+    const scalar_t ap_dot_ab = vec2_dot(ap, ab);
+    const scalar_t length_ab = vec2_magnitude(ab);
+    scalar_t progress_along_edge = scalar_div(ap_dot_ab, length_ab);
 
-    // B's dorito zone - closest point is B
-    const vec2_t bp = vec2_sub(p, b);
-    const scalar_t d3 = vec2_dot(ab, bp);
-    const scalar_t d4 = vec2_dot(ac, bp);
-    if (d3.raw > 0 && d4.raw <= d3.raw) return b;
+    // Clamp it between 0.0 and 1.0
+    progress_along_edge.raw = int32_clamp(progress_along_edge.raw, 0, 4096);
+    return progress_along_edge;
+}
 
-    // C's dorito zone - closest point is C
-    const vec2_t cp = vec2_sub(p, c);
-    const scalar_t d5 = vec2_dot(ab, cp);
-    const scalar_t d6 = vec2_dot(ac, cp);
-    if (d6.raw > 0 && d5.raw <= d6.raw) return b;
+// for some reason the function used for the 3d triangles doesn't work in 2d? so i made my own instead
+// u_out is 1.0 p lies on v0, and v_out is 1.0 if p lies on v1
+vec2_t find_closest_point_on_triangle_2d(vec2_t v0, vec2_t v1, vec2_t v2, vec2_t p, scalar_t* u_out, scalar_t* v_out) {
+    // This is what we hope to return after this
+    vec2_t closest_point;
 
-    // AB's chonko zone - closest point is on edge AB
-    const scalar_t vc = scalar_sub(scalar_mul(d1, d4), scalar_mul(d3, d2));
-    if (vc.raw <= 0 && d1.raw >= 0 && d3.raw <= 0) {
-        const scalar_t v = scalar_div(d1, scalar_sub(d1, d3));
-        return vec2_add(a, vec2_mul(vec2_from_scalar(v), ab));
+    // Calculate edge0
+    vec2_t v1_p = vec2_sub(p, v1);
+    vec2_t v1_v2 = vec2_sub(v2, v1);
+    scalar_t edge0 = vec2_cross(v1_p, v1_v2);
+
+    // Calculate edge1
+    vec2_t v2_p = vec2_sub(p, v2);
+    vec2_t v2_v0 = vec2_sub(v0, v2);
+    scalar_t edge1 = vec2_cross(v2_p, v2_v0);
+
+    // Calculate edge2
+    vec2_t v0_p = vec2_sub(p, v0);
+    vec2_t v0_v1 = vec2_sub(v1, v0);
+    scalar_t edge2 = vec2_cross(v0_p, v0_v1);
+
+    // Are we inside triangle?
+    if (edge0.raw >= 0 && edge1.raw >= 0 && edge2.raw >= 0) {
+        // Normalize barycoords
+        vec2_t v1_v0 = vec2_sub(v0, v1);
+        vec2_t v1_v2 = vec2_sub(v2, v1);
+        scalar_t area = vec2_cross(v1_v0, v1_v2);
+        *u_out = scalar_div(edge0, area);
+        *v_out = scalar_div(edge1, area);
+
+        // Return P as is
+        return p;
     }
 
-    // AC's chonko zone - closest point is on edge AC
-    const scalar_t vb = scalar_sub(scalar_mul(d5, d2), scalar_mul(d1, d6));
-    if (vb.raw <= 0 && d2.raw >= 0 && d6.raw <= 0) {
-        const scalar_t v = scalar_div(d2, scalar_sub(d2, d6));
-        return vec2_add(a, vec2_mul(vec2_from_scalar(v), ac));
+    //It's impossible for all the numbers to be negative
+    WARN_IF("all barycentric coordinates ended up negative! this should be impossible", (edge0.raw < 0 && edge1.raw < 0 && edge2.raw < 0));
+    if ((edge0.raw < 0 && edge1.raw < 0 && edge2.raw < 0)) {
+        vec2_t error;
+        error.x.raw = INT32_MAX;
+        error.y.raw = 1;
     }
 
-    // BC's chonko zone - closest point is on edge BC
-    const scalar_t va = scalar_sub(scalar_mul(d3, d6), scalar_mul(d5, d4));
-    if (va.raw <= 0 && scalar_sub(d4, d3).raw >= 0 && scalar_sub(d5, d6).raw >= 0) {
-        const scalar_t v = scalar_div(scalar_sub(d4, d3), scalar_add(scalar_sub(d4, d3), scalar_sub(d5, d6)));
-        return vec2_add(a, vec2_mul(vec2_from_scalar(v), vec2_sub(c, b)));
+    // Otherwise, project onto the first negative edge we find
+    scalar_t progress;
+
+    // A = v1, B = v2
+    if (edge0.raw < 0) {
+        progress = get_progress_of_p_on_ab(v1, v2, p);
+        closest_point = vec2_add(v1, vec2_mul(vec2_sub(v2, v1), vec2_from_scalar(progress)));
+        u_out->raw = 0;
+        v_out->raw = 4096 - progress.raw;
+
+    }
+    // A = v2, B = v0
+    else if (edge1.raw < 0) {
+        progress = get_progress_of_p_on_ab(v2, v0, p);
+        closest_point = vec2_add(v2, vec2_mul(vec2_sub(v0, v2), vec2_from_scalar(progress)));
+        u_out->raw = progress.raw;
+        v_out->raw = 0;
+    }
+    // A = v0, B = v1
+    else /*if (edge2.raw < 0)*/ {
+        progress = get_progress_of_p_on_ab(v0, v1, p);
+        closest_point = vec2_add(v0, vec2_mul(vec2_sub(v1, v0), vec2_from_scalar(progress)));
+        u_out->raw = 4096 - progress.raw;
+        v_out->raw = progress.raw;
     }
 
-    // Otherwise the point is inside the triangle
-    const scalar_t va_vb_vc = { .raw = va.raw + vb.raw + vc.raw };
-    const scalar_t v = scalar_div(vb, va_vb_vc);
-    const scalar_t w = scalar_div(vc, va_vb_vc);
-    if (v_out) *v_out = v;
-    if (w_out) *w_out = w;
-    return vec2_add(vec2_add(a, vec2_mul(vec2_from_scalar(v), ab)), vec2_mul(vec2_from_scalar(w), ac));
+    // Calculate the point and return it
+    return closest_point;
 }
 
 vec3_t find_closest_point_on_triangle_3d(vec3_t a, vec3_t b, vec3_t c, vec3_t p, scalar_t* v_out, scalar_t* w_out) {
@@ -684,15 +715,21 @@ int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vert
     vec2_t v2 = { triangle->v2.x, triangle->v2.z };
     vec2_t position = { vertical_cylinder.bottom.x, vertical_cylinder.bottom.z };
 
-    // Shift to the right by 4 to avoid overflows
-    v0 = vec2_shift_right(v0, 4);
-    v1 = vec2_shift_right(v1, 4);
-    v2 = vec2_shift_right(v2, 4);
-    position = vec2_shift_right(position, 4);
+    // Shift to the right by 3 to avoid overflows
+    v0 = vec2_shift_right(v0, 2);
+    v1 = vec2_shift_right(v1, 2);
+    v2 = vec2_shift_right(v2, 2);
+    position = vec2_shift_right(position, 2);
 
     // Find closest point
-    scalar_t v, w;
-    vec2_t closest_pos_on_triangle = find_closest_point_on_triangle_2d(v0, v1, v2, position, &v, &w);
+    scalar_t u, v, w;
+    vec2_t closest_pos_on_triangle = find_closest_point_on_triangle_2d(v0, v1, v2, position, &u, &v);
+    // If closest point returned a faulty value, ignore it
+    if (closest_pos_on_triangle.x.raw == INT32_MAX) {
+        hit->distance.raw = INT32_MAX;
+        return 0;
+    }
+    w.raw = 4096 - u.raw - v.raw;
 
     // We found the closest point! Does the circle intersect it?
     scalar_t distance_to_closest_point = vec2_magnitude_squared(vec2_sub(position, closest_pos_on_triangle));
@@ -703,24 +740,27 @@ int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vert
 
     // It does! calculate the Y coordinate
     vec3_t closest_pos_3d;
-    closest_pos_3d.x = scalar_shift_left(closest_pos_on_triangle.x, 4);
-    closest_pos_3d.z = scalar_shift_left(closest_pos_on_triangle.y, 4);
+    closest_pos_3d.x = scalar_shift_left(closest_pos_on_triangle.x, 2);
+    closest_pos_3d.z = scalar_shift_left(closest_pos_on_triangle.y, 2);
     closest_pos_3d.y = triangle->v0.y;
-    closest_pos_3d.y = scalar_add(closest_pos_3d.y, scalar_mul(v, triangle->v1.y));
-    closest_pos_3d.y = scalar_add(closest_pos_3d.y, scalar_mul(w, triangle->v2.y));
+    closest_pos_3d.y = scalar_add(closest_pos_3d.y, scalar_mul(v, scalar_sub(triangle->v1.y, triangle->v0.y)));
+    closest_pos_3d.y = scalar_add(closest_pos_3d.y, scalar_mul(w, scalar_sub(triangle->v2.y, triangle->v0.y)));
 
     // Is this Y coordinate within the cylinder's range?
-    if (closest_pos_3d.y.raw < vertical_cylinder.bottom.y.raw || closest_pos_3d.y.raw > vertical_cylinder.bottom.y.raw + vertical_cylinder.height.raw) {
-        hit->distance.raw = INT32_MAX;
-        return 0;
+    scalar_t offset = scalar_sub(closest_pos_3d.y, vertical_cylinder.bottom.y);
+    scalar_t min = vertical_cylinder.bottom.y;
+    scalar_t max = scalar_add(min, vertical_cylinder.height);
+    if (closest_pos_3d.y.raw >= min.raw && closest_pos_3d.y.raw <= max.raw) {
+        // Return this point
+        hit->position = closest_pos_3d;
+        hit->normal = triangle->normal;
+        hit->triangle = triangle;
+        hit->distance = scalar_sqrt(vec2_magnitude_squared(vec2_sub(closest_pos_on_triangle, position)));
+        return 1;
     }
 
-    // Return this point
-    hit->position = closest_pos_3d;
-    hit->normal = triangle->normal;
-    hit->triangle = triangle;
-    hit->distance = scalar_sqrt(vec2_magnitude_squared(vec2_sub(closest_pos_on_triangle, position)));
-    return 1;
+    hit->distance.raw = INT32_MAX;
+    return 0;
 }
 
 void collision_clear_stats() {
@@ -758,7 +798,7 @@ int sphere_triangle_intersect(const collision_triangle_3d_t* triangle, sphere_t 
     position = vec3_shift_left(position, 3);
 
     // Is the hit position close enough to the plane hit? (is it within the sphere?)
-    const scalar_t distance_from_hit_squared = vec3_magnitude_squared(vec3_sub(sphere.center, closest_pos_on_triangle)); WARN_IF("distance_from_hit_squared overflowed", is_infinity(distance_from_hit_squared));
+    const scalar_t distance_from_hit_squared = vec3_magnitude_squared(vec3_sub(sphere.center, closest_pos_on_triangle)); //WARN_IF("distance_from_hit_squared overflowed", is_infinity(distance_from_hit_squared));
 
     if (distance_from_hit_squared.raw >= sphere.radius_squared.raw)
     {

@@ -117,7 +117,7 @@ static scalar_t vec3_magnitude_squared(const vec3_t a) {
     if (length_squared.raw < 0) {
         length_squared.raw = INT32_MAX;
     }
-    WARN_IF("magnitude overflowed and became int32_max", length_squared.raw == INT32_MAX);
+    //WARN_IF("magnitude overflowed and became int32_max", length_squared.raw == INT32_MAX);
     return length_squared;
 }
 

@@ -143,6 +143,14 @@ static fixed20_12_t scalar_abs(fixed20_12_t a) {
     }
     return a;
 }
+static int32_t int32_clamp(int32_t a, const int32_t min, const int32_t max) {
+    if (a < min) {
+        a = min;
+    } else if (a > max) {
+        a = max;
+    }
+    return a;
+}
 
 static int is_infinity(const fixed20_12_t a) {
     return (a.raw == INT32_MAX || a.raw == -INT32_MAX);

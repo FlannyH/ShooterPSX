@@ -35,13 +35,17 @@ void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     };
     const sphere_t player_s = {
         .center = vec3_sub(self->position, vec3_from_int32s(0, eye_height, 0)),
-        .radius.raw = player_radius >> 1,
-        .radius_squared.raw = player_radius_squared.raw >> 2
+        .radius.raw = player_radius,
+        .radius_squared = player_radius_squared
     };
 
-    //bvh_intersect_vertical_cylinder(level_bvh, player, &hit);
-    bvh_intersect_sphere(level_bvh, player_s, &hit);
-    scalar_debug(hit.distance);
+    bvh_intersect_vertical_cylinder(level_bvh, player, &hit);
+    const sphere_t dbg = {
+        .center = hit.position,
+        .radius.raw = player_radius,
+        .radius_squared = player_radius_squared
+    };
+    //bvh_intersect_sphere(level_bvh, player_s, &hit);
 
     if (hit.distance.raw != INT32_MAX) {
         // Set speed to 0
