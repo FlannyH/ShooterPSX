@@ -714,21 +714,22 @@ vec3_t find_closest_point_on_triangle_3d(vec3_t a, vec3_t b, vec3_t c, vec3_t p,
 
 int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vertical_cylinder_t vertical_cylinder, rayhit_t* hit) {
     n_vertical_cylinder_triangle_intersects++;
+    // Since this is only used for ground collisions, we can ignore surfaces that don't face up
+    if (triangle->normal.y.raw <= 0) {
+        hit->distance.raw = INT32_MAX;
+        return 0;
+    }
+
     // Project everything into 2D top-down
     vec2_t v0 = { triangle->v0.x, triangle->v0.z };
     vec2_t v1 = { triangle->v1.x, triangle->v1.z };
     vec2_t v2 = { triangle->v2.x, triangle->v2.z };
     vec2_t position = { vertical_cylinder.bottom.x, vertical_cylinder.bottom.z };
 
-    // Shift to the right by 3 to avoid overflows
-    v0 = vec2_shift_right(v0, 2);
-    v1 = vec2_shift_right(v1, 2);
-    v2 = vec2_shift_right(v2, 2);
-    position = vec2_shift_right(position, 2);
-
     // Find closest point
     scalar_t u, v, w;
-    vec2_t closest_pos_on_triangle = find_closest_point_on_triangle_2d(v0, v1, v2, position, &u, &v);
+    const vec2_t closest_pos_on_triangle = find_closest_point_on_triangle_2d(v0, v1, v2, position, &u, &v);
+
     // If closest point returned a faulty value, ignore it
     if (closest_pos_on_triangle.x.raw == INT32_MAX) {
         hit->distance.raw = INT32_MAX;
@@ -745,28 +746,21 @@ int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vert
 
     // It does! calculate the Y coordinate
     vec3_t closest_pos_3d;
-    closest_pos_3d.x = scalar_shift_left(closest_pos_on_triangle.x, 2);
-    closest_pos_3d.z = scalar_shift_left(closest_pos_on_triangle.y, 2);
+    closest_pos_3d.x = closest_pos_on_triangle.x;
+    closest_pos_3d.z = closest_pos_on_triangle.y;
     closest_pos_3d.y = triangle->v0.y;
     closest_pos_3d.y = scalar_add(closest_pos_3d.y, scalar_mul(v, scalar_sub(triangle->v1.y, triangle->v0.y)));
     closest_pos_3d.y = scalar_add(closest_pos_3d.y, scalar_mul(w, scalar_sub(triangle->v2.y, triangle->v0.y)));
 
-    renderer_debug_draw_sphere((sphere_t) { .center = closest_pos_3d, .radius = vertical_cylinder.radius });
-    renderer_debug_draw_sphere((sphere_t) { .center = vertical_cylinder.bottom, .radius.raw = vertical_cylinder.radius.raw / 2 });
-    renderer_debug_draw_line(triangle->v0, triangle->v1, blue, &id_transform);
-    renderer_debug_draw_line(triangle->v1, triangle->v2, red, &id_transform);
-    renderer_debug_draw_line(triangle->v2, triangle->v0, green, &id_transform);
-
     // Is this Y coordinate within the cylinder's range?
-    scalar_t offset = scalar_sub(closest_pos_3d.y, vertical_cylinder.bottom.y);
-    scalar_t min = vertical_cylinder.bottom.y;
-    scalar_t max = scalar_add(min, vertical_cylinder.height);
+    const scalar_t min = vertical_cylinder.bottom.y;
+    const scalar_t max = scalar_add(min, vertical_cylinder.height);
     if (closest_pos_3d.y.raw >= min.raw && closest_pos_3d.y.raw <= max.raw) {
         // Return this point
         hit->position = closest_pos_3d;
         hit->normal = triangle->normal;
         hit->triangle = triangle;
-        hit->distance = scalar_sqrt(vec2_magnitude_squared(vec2_sub(closest_pos_on_triangle, position)));
+        hit->distance = scalar_sqrt(distance_to_closest_point);
         return 1;
     }
 

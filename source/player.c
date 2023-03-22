@@ -9,11 +9,11 @@
 const int32_t eye_height = 56 << 12;
 const int32_t player_radius = 20 << 12;
 const int32_t step_height = 20 << 12;
-const int32_t terminal_velocity_down = -2000;
+const int32_t terminal_velocity_down = -2600;
 const int32_t terminal_velocity_up = 8000;
-const int32_t gravity = 0;// -11;
+const int32_t gravity = -13;
 const int32_t walking_acceleration = 15;
-const int32_t walking_max_speed = 300;
+const int32_t walking_max_speed = 1150;
 const int32_t stick_sensitivity = 6000;
 const int32_t walking_drag = 30;
 const int32_t initial_jump_velocity = 3200;
@@ -25,29 +25,28 @@ transform_t t_level = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };
 void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     WARN_IF("player radius squared was not computed, and is equal to 0", player_radius_squared.raw == 0);
 
-    // Cast a sphere at the player's feet
+    // Cast a cylinder from the player's feet + step height, down to the ground
+    int32_t distance_to_check = 8000000;
     rayhit_t hit = { 0 };
     const vertical_cylinder_t player = {
-        .bottom = vec3_sub(self->position, vec3_from_int32s(0, eye_height, 0)),
-        .height.raw = step_height,
+        .bottom = vec3_sub(self->position, vec3_from_int32s(0, distance_to_check, 0)),
+        .height.raw = distance_to_check + step_height,
         .radius.raw = player_radius,
         .radius_squared = player_radius_squared
     };
-    const sphere_t player_s = {
-        .center = vec3_sub(self->position, vec3_from_int32s(0, eye_height, 0)),
-        .radius.raw = player_radius,
-        .radius_squared = player_radius_squared
-    };
-
     bvh_intersect_vertical_cylinder(level_bvh, player, &hit);
-    const sphere_t dbg = {
-        .center = hit.position,
-        .radius.raw = player_radius,
-        .radius_squared = player_radius_squared
-    };
-    //bvh_intersect_sphere(level_bvh, player_s, &hit);
 
-    if (hit.distance.raw != INT32_MAX) {
+    // If nothing was hit, there is no ground below the player. Ignore the rest of this function
+    if (hit.distance.raw == INT32_MAX)
+        return;
+
+    // Check the Y distance from the ground to the player's feet
+    scalar_t distance = { .raw = self->position.y.raw - eye_height - hit.position.y.raw };
+    printf("distance: ");
+    scalar_debug(distance);
+    printf("self->velocity.y: ");
+    scalar_debug(self->velocity.y);
+    if (distance.raw <= (-self->velocity.y.raw * dt_ms)) {
         // Set speed to 0
         if (self->velocity.y.raw < 0)
             self->velocity.y.raw = 0;
