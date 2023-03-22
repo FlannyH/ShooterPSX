@@ -156,8 +156,7 @@ void update_delta_time_ms(void) {
 	dt_clock = new_dt; 
 }
 
-bool load_shader_part(char *path, const ShaderType type,
-											const GLuint *program) {
+bool load_shader_part(char *path, const ShaderType type, const GLuint *program) {
 	const int shader_types[4] = {
 			GL_VERTEX_SHADER,
 			GL_FRAGMENT_SHADER,
@@ -184,8 +183,7 @@ bool load_shader_part(char *path, const ShaderType type,
 
 	// Compile shader source
 	const GLint shader_size_gl = (GLint)shader_size;
-	glShaderSource(shader, 1, (const GLchar *const *)&shader_data,
-								 &shader_size_gl);
+	glShaderSource(shader, 1, (const GLchar *const *)&shader_data, &shader_size_gl);
 	glCompileShader(shader);
 
 	// Error checking
