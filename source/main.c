@@ -22,35 +22,6 @@
 #include "texture.h"
 
 int main(void) {
-    {
-        scalar_t x;
-        vec3_t y;
-        y.x.raw = 4096;
-        y.y.raw = 0;
-        y.z.raw = 0;
-        x = vec3_magnitude_squared(y);
-        vec3_debug(y); scalar_debug(x);
-        y.x.raw = 888;
-        y.y.raw = 888;
-        y.z.raw = 888;
-        x = vec3_magnitude_squared(y);
-        vec3_debug(y); scalar_debug(x);
-        y.x.raw = 26750;
-        y.y.raw = 26750;
-        y.z.raw = 26750;
-        x = vec3_magnitude_squared(y);
-        vec3_debug(y); scalar_debug(x);
-        y.x.raw = 26755;
-        y.y.raw = 26755;
-        y.z.raw = 26755;
-        x = vec3_magnitude_squared(y);
-        vec3_debug(y); scalar_debug(x);
-        y.x.raw = 28500000;
-        y.y.raw = 28500000;
-        y.z.raw = 28500000;
-        x = vec3_magnitude_squared(y);
-        vec3_debug(y); scalar_debug(x);
-    }
 	renderer_init();
 	input_init();
 	init();
@@ -65,10 +36,13 @@ int main(void) {
 
 	// Camera transform
 	transform_t camera_transform;
-    player.position.x.raw = -11705653;
-    //player.position.y.raw = -229376;
-    player.position.y.raw = 11413985;
-    player.position.z.raw = 2112866;
+
+    //player.position.x.raw = -11705653;
+   	//player.position.y.raw = 11413985;
+    //player.position.z.raw = 2112866;
+	player.position.x.raw = 0;
+	player.position.y.raw = -229376;
+	player.position.z.raw = 0;
 	camera_transform.rotation.vx = 5853;
 	camera_transform.rotation.vy = -63752;
 	camera_transform.rotation.vz = 0;
@@ -78,12 +52,12 @@ int main(void) {
 
 	// Load model
 	model_t *m_cube = model_load("\\ASSETS\\CUBETEST.MSH;1");
-	const model_t *m_level = model_load("\\ASSETS\\LEVEL.MSH;1");
-	const model_t *m_level_collision = model_load("\\ASSETS\\LEVELCOL.MSH;1");
+	const model_t *m_level = model_load("\\ASSETS\\TESTLVL.MSH;1");
+	const model_t *m_level_collision = model_load("\\ASSETS\\TESTLVL.MSH;1");
 
 	texture_cpu_t *tex_level;
 	const uint32_t n_textures =
-		texture_collection_load("\\ASSETS\\LEVEL.TXC;1", &tex_level);
+		texture_collection_load("\\ASSETS\\TESTLVL.TXC;1", &tex_level);
 
 	for (uint8_t i = 0; i < n_textures; ++i) {
 	renderer_upload_texture(&tex_level[i], i);

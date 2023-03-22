@@ -542,6 +542,7 @@ int sphere_aabb_intersect(const aabb_t* aabb, const sphere_t sphere) {
     return distance_squared.raw <= sphere.radius_squared.raw;
 }
 
+// Approximation!
 int vertical_cylinder_aabb_intersect(const aabb_t* aabb, const vertical_cylinder_t vertical_cylinder) {
     n_vertical_cylinder_aabb_intersects++;
     // Exit early if the AABB and vertical cylinder do not overlap on the Y-axis
@@ -550,17 +551,21 @@ int vertical_cylinder_aabb_intersect(const aabb_t* aabb, const vertical_cylinder
     }
 
     // The rest can be done in 2D
-    // Find the point on the AABB that's closest to the circle's center
-    const vec2_t closest_point = {
-        scalar_max(aabb->min.x, scalar_min(vertical_cylinder.bottom.x, aabb->max.x)),
-        scalar_max(aabb->min.z, scalar_min(vertical_cylinder.bottom.z, aabb->max.z))
-    };
-    const vec2_t circle_center = { vertical_cylinder.bottom.x,vertical_cylinder.bottom.z };
+    // Create a new AABB that's extended by the cylinder's radius. This is an approximation, but we use AABB's for BVH traversal only so it's fine
+    const scalar_t min_x = scalar_sub(aabb->min.x, vertical_cylinder.radius);
+    const scalar_t max_x = scalar_add(aabb->max.x, vertical_cylinder.radius);
+    const scalar_t min_z = scalar_sub(aabb->min.z, vertical_cylinder.radius);
+    const scalar_t max_z = scalar_add(aabb->max.z, vertical_cylinder.radius);
+    const scalar_t point_x = vertical_cylinder.bottom.x;
+    const scalar_t point_z = vertical_cylinder.bottom.z;
 
-    // Get the distance from that point to the sphere
-    const vec2_t sphere_center_to_closest_point = vec2_sub(circle_center, closest_point);
-    const scalar_t distance_squared = vec2_magnitude_squared(sphere_center_to_closest_point);
-    return distance_squared.raw <= vertical_cylinder.radius_squared.raw;
+    // Check if it's inside
+    return(
+        point_x.raw >= min_x.raw &&
+        point_x.raw <= max_x.raw &&
+        point_z.raw >= min_z.raw &&
+        point_z.raw <= max_z.raw
+    );
 }
 
 scalar_t edge_function(const vec2_t a, const vec2_t b, const vec2_t p) {
@@ -574,7 +579,7 @@ scalar_t get_progress_of_p_on_ab(vec2_t a, vec2_t b, vec2_t p) {
     const vec2_t ab = vec2_sub(b, a);
     const vec2_t ap = vec2_sub(p, a);
     const scalar_t ap_dot_ab = vec2_dot(ap, ab);
-    const scalar_t length_ab = vec2_magnitude(ab);
+    const scalar_t length_ab = vec2_magnitude_squared(ab);
     scalar_t progress_along_edge = scalar_div(ap_dot_ab, length_ab);
 
     // Clamp it between 0.0 and 1.0
@@ -745,6 +750,12 @@ int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vert
     closest_pos_3d.y = triangle->v0.y;
     closest_pos_3d.y = scalar_add(closest_pos_3d.y, scalar_mul(v, scalar_sub(triangle->v1.y, triangle->v0.y)));
     closest_pos_3d.y = scalar_add(closest_pos_3d.y, scalar_mul(w, scalar_sub(triangle->v2.y, triangle->v0.y)));
+
+    renderer_debug_draw_sphere((sphere_t) { .center = closest_pos_3d, .radius = vertical_cylinder.radius });
+    renderer_debug_draw_sphere((sphere_t) { .center = vertical_cylinder.bottom, .radius.raw = vertical_cylinder.radius.raw / 2 });
+    renderer_debug_draw_line(triangle->v0, triangle->v1, blue, &id_transform);
+    renderer_debug_draw_line(triangle->v1, triangle->v2, red, &id_transform);
+    renderer_debug_draw_line(triangle->v2, triangle->v0, green, &id_transform);
 
     // Is this Y coordinate within the cylinder's range?
     scalar_t offset = scalar_sub(closest_pos_3d.y, vertical_cylinder.bottom.y);

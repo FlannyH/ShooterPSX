@@ -143,6 +143,17 @@ static fixed20_12_t scalar_abs(fixed20_12_t a) {
     }
     return a;
 }
+
+static fixed20_12_t scalar_clamp(fixed20_12_t a, const fixed20_12_t min, const fixed20_12_t max) {
+    if (a.raw < min.raw) {
+        a.raw = min.raw;
+    }
+    else if (a.raw > max.raw) {
+        a.raw = max.raw;
+    }
+    return a;
+}
+
 static int32_t int32_clamp(int32_t a, const int32_t min, const int32_t max) {
     if (a < min) {
         a = min;
