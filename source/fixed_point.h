@@ -103,15 +103,6 @@ static fixed20_12_t scalar_clamp(fixed20_12_t a, const fixed20_12_t min, const f
     return a;
 }
 
-static int32_t int32_clamp(int32_t a, const int32_t min, const int32_t max) {
-    if (a < min) {
-        a = min;
-    } else if (a > max) {
-        a = max;
-    }
-    return a;
-}
-
 static int is_infinity(const fixed20_12_t a) {
     return (a == INT32_MAX || a == -INT32_MAX);
 }

@@ -583,7 +583,7 @@ scalar_t get_progress_of_p_on_ab(vec2_t a, vec2_t b, vec2_t p) {
     scalar_t progress_along_edge = scalar_div(ap_dot_ab, length_ab);
 
     // Clamp it between 0.0 and 1.0
-    progress_along_edge = int32_clamp(progress_along_edge, 0, 4096);
+    progress_along_edge = scalar_clamp(progress_along_edge, 0, 4096);
     return progress_along_edge;
 }
 
