@@ -498,12 +498,12 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
 
     // Copy data into it
     line_3d_t line;
-    line.v0.x = (int16_t)(v0.x.raw >> 12);
-    line.v0.y = (int16_t)(v0.y.raw >> 12);
-    line.v0.z = (int16_t)(v0.z.raw >> 12);
-    line.v1.x = (int16_t)(v1.x.raw >> 12);
-    line.v1.y = (int16_t)(v1.y.raw >> 12);
-    line.v1.z = (int16_t)(v1.z.raw >> 12);
+    line.v0.x = (int16_t)(v0.x >> 12);
+    line.v0.y = (int16_t)(v0.y >> 12);
+    line.v0.z = (int16_t)(v0.z >> 12);
+    line.v1.x = (int16_t)(v1.x >> 12);
+    line.v1.y = (int16_t)(v1.y >> 12);
+    line.v1.z = (int16_t)(v1.z >> 12);
     line.v0.r = color.r;
     line.v0.g = color.g;
     line.v0.b = color.b;
@@ -547,14 +547,14 @@ void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, transfor
 }
 
 void renderer_debug_draw_sphere(const sphere_t sphere) {
-    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(sphere.radius.raw, 0, 0)), white, &id_transform);
-    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(-sphere.radius.raw, 0, 0)), white, &id_transform);
-    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(0, 0, sphere.radius.raw)), white, &id_transform);
-    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(0, 0, -sphere.radius.raw)), white, &id_transform);
-    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(+sphere.radius.raw, 0, +sphere.radius.raw), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
-    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(+sphere.radius.raw, 0, -sphere.radius.raw), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
-    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(-sphere.radius.raw, 0, +sphere.radius.raw), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
-    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(-sphere.radius.raw, 0, -sphere.radius.raw), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(sphere.radius, 0, 0)), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(-sphere.radius, 0, 0)), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(0, 0, sphere.radius)), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(0, 0, -sphere.radius)), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(+sphere.radius, 0, +sphere.radius), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(+sphere.radius, 0, -sphere.radius), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(-sphere.radius, 0, +sphere.radius), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(-sphere.radius, 0, -sphere.radius), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
 }
 
 void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) {

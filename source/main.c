@@ -37,12 +37,12 @@ int main(void) {
 	// Camera transform
 	transform_t camera_transform;
 
-    //player.position.x.raw = -11705653;
-   	//player.position.y.raw = 11413985;
-    //player.position.z.raw = 2112866;
-	player.position.x.raw = 0;
-	player.position.y.raw = -229376;
-	player.position.z.raw = 0;
+    player.position.x = -11705653;
+   	player.position.y = 11413985;
+    player.position.z = 2112866;
+    //player.position.x = 0;
+    //player.position.y = -229376;
+    //player.position.z = 0;
 	camera_transform.rotation.vx = 5853;
 	camera_transform.rotation.vy = -63752;
 	camera_transform.rotation.vz = 0;
@@ -52,12 +52,12 @@ int main(void) {
 
 	// Load model
 	model_t *m_cube = model_load("\\ASSETS\\CUBETEST.MSH;1");
-	const model_t *m_level = model_load("\\ASSETS\\TESTLVL.MSH;1");
-	const model_t *m_level_collision = model_load("\\ASSETS\\TESTLVL.MSH;1");
+	const model_t *m_level = model_load("\\ASSETS\\LEVEL.MSH;1");
+	const model_t *m_level_collision = model_load("\\ASSETS\\LEVELCOL.MSH;1");
 
 	texture_cpu_t *tex_level;
 	const uint32_t n_textures =
-		texture_collection_load("\\ASSETS\\TESTLVL.TXC;1", &tex_level);
+		texture_collection_load("\\ASSETS\\LEVEL.TXC;1", &tex_level);
 
 	for (uint8_t i = 0; i < n_textures; ++i) {
 	renderer_upload_texture(&tex_level[i], i);
@@ -78,6 +78,7 @@ int main(void) {
     ray_t ray = {0};
     while (!renderer_should_close()) {
         int delta_time = renderer_get_delta_time_ms();
+        delta_time = 33;
         if (delta_time > 40) {
             delta_time = 40;
         }

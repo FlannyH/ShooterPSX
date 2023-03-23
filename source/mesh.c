@@ -35,12 +35,12 @@ model_t* model_load(const char* path) {
         // Create a mesh object
         model->meshes[i].n_vertices = mesh_descriptions[i].n_vertices;
         model->meshes[i].vertices = &vertex_data[mesh_descriptions[i].vertex_start];
-        model->meshes[i].bounds.min.x.raw = mesh_descriptions[i].x_min;
-        model->meshes[i].bounds.max.x.raw = mesh_descriptions[i].x_max;
-        model->meshes[i].bounds.min.y.raw = mesh_descriptions[i].y_min;
-        model->meshes[i].bounds.max.y.raw = mesh_descriptions[i].y_max;
-        model->meshes[i].bounds.min.z.raw = mesh_descriptions[i].z_min;
-        model->meshes[i].bounds.max.z.raw = mesh_descriptions[i].z_max;
+        model->meshes[i].bounds.min.x = mesh_descriptions[i].x_min;
+        model->meshes[i].bounds.max.x = mesh_descriptions[i].x_max;
+        model->meshes[i].bounds.min.y = mesh_descriptions[i].y_min;
+        model->meshes[i].bounds.max.y = mesh_descriptions[i].y_max;
+        model->meshes[i].bounds.min.z = mesh_descriptions[i].z_min;
+        model->meshes[i].bounds.max.z = mesh_descriptions[i].z_max;
     }
 
     return model;

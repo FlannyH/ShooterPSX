@@ -18,8 +18,8 @@ static vec2_t vec2_from_scalars(const scalar_t x, const scalar_t y) {
 
 static vec2_t vec2_from_int32s(int32_t x, int32_t y, int32_t z) {
     vec2_t result;
-    result.x.raw = x;
-    result.y.raw = y;
+    result.x = x;
+    result.y = y;
     return result;
 }
 
@@ -53,7 +53,7 @@ static vec2_t vec2_div(const vec2_t a, const vec2_t b) {
 
 static scalar_t vec2_dot(const vec2_t a, const vec2_t b) {
     scalar_t result;
-    result.raw = 0;
+    result = 0;
     result = scalar_add(result, scalar_mul(a.x, b.x));
     result = scalar_add(result, scalar_mul(a.y, b.y));
     return result;
@@ -67,15 +67,15 @@ static vec2_t vec2_scale(const vec2_t a, const scalar_t b) {
 
 static vec2_t vec2_min(const vec2_t a, const vec2_t b) {
     vec2_t result;
-    result.x = (a.x.raw < b.x.raw) ? a.x : b.x;
-    result.y = (a.y.raw < b.y.raw) ? a.y : b.y;
+    result.x = (a.x < b.x) ? a.x : b.x;
+    result.y = (a.y < b.y) ? a.y : b.y;
     return result;
 }
 
 static vec2_t vec2_max(const vec2_t a, const vec2_t b) {
     vec2_t result;
-    result.x = (a.x.raw > b.x.raw) ? a.x : b.x;
-    result.y = (a.y.raw > b.y.raw) ? a.y : b.y;
+    result.x = (a.x > b.x) ? a.x : b.x;
+    result.y = (a.y > b.y) ? a.y : b.y;
     return result;
 }
 
@@ -97,24 +97,24 @@ static scalar_t vec2_magnitude_squared(const vec2_t a) {
 static vec2_t vec2_normalize(const vec2_t a) {
     const scalar_t magnitude_squared = vec2_magnitude_squared(a);
     const scalar_t magnitude = scalar_sqrt(magnitude_squared);
-    if (magnitude.raw == 0) {
+    if (magnitude == 0) {
         return vec2_from_int32s(0, 0, 0);
     }
     const vec2_t a_normalized = vec2_div(a, vec2_from_scalar(magnitude));
     return a_normalized;
 }
 
-static vec2_t vec2_shift_right(vec2_t a, int amount) {
+static vec2_t vec2_shift_right(const vec2_t a, const int amount) {
     vec2_t result = a;
-    result.x.raw >>= amount;
-    result.y.raw >>= amount;
+    result.x >>= amount;
+    result.y >>= amount;
     return result;
 }
 
-static vec2_t vec2_neg(vec2_t a) {
+static vec2_t vec2_neg(const vec2_t a) {
     vec2_t result = a;
-    result.x.raw = -result.x.raw;
-    result.y.raw = -result.y.raw;
+    result.x = -result.x;
+    result.y = -result.y;
     return result;
 }
 
@@ -124,7 +124,7 @@ static scalar_t vec2_magnitude(const vec2_t a) {
 }
 
 static void vec2_debug(const vec2_t a) {
-    printf("%0.3f, %0.3f\n", ((float)a.x.raw) / 4096.0f, ((float)a.y.raw) / 4096.0f);
+    printf("%0.3f, %0.3f\n", ((float)a.x) / 4096.0f, ((float)a.y) / 4096.0f);
 }
 
 #endif // VEC2_H
