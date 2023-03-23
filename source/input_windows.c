@@ -12,11 +12,32 @@ int8_t right_stick_y[2] = { 0, 0 };
 uint16_t button_prev[2] = { 0, 0 };
 uint16_t button_curr[2] = { 0, 0 };
 int8_t deadzone = 24;
+int player1_index = -1;
+int player2_index = -1;
 
 void input_init() {
 }
 
 void input_update() {
+    // Detect controllers
+    for (int i = 0; i < 8; ++i) {
+        if (i == player1_index || i == player2_index)
+            continue;
+
+        GLFWgamepadstate state;
+        if (glfwGetGamepadState(i, &state)) {
+            if (player1_index == -1)
+                player1_index = i;
+            else if (player2_index == -1) {
+                player2_index = i;
+                break;
+            }
+        }
+    }
+
+    if (player1_index == -1) player1_index = 0;
+    if (player2_index == -1) player2_index = 0;
+
     // Reset buttons
     button_prev[0] = button_curr[0];
     button_prev[1] = button_curr[1];
@@ -24,65 +45,62 @@ void input_update() {
     button_curr[1] = 0;
 
     // Update analog sticks
-    int count = 0;
-    const float* axes_1 = glfwGetJoystickAxes(0, &count);
-    const float* axes_2 = glfwGetJoystickAxes(1, &count);
-    const unsigned char* buttons_1 = glfwGetJoystickButtons(0, &count);
-    const unsigned char* buttons_2 = glfwGetJoystickButtons(1, &count);
-    if (axes_1) {
-        left_stick_x[0] = (int8_t)(axes_1[0] * 127.f);
-        left_stick_y[0] = (int8_t)(axes_1[1] * 127.f);
-        right_stick_x[0] = (int8_t)(axes_1[2] * 127.f);
-        right_stick_y[0] = (int8_t)(axes_1[3] * 127.f);
-        button_curr[0] |= (PAD_L2)*axes_1[4] > 0.5f ? 1 : 0;
+    int count_axes1 = 0;
+    int count_axes2 = 0;
+    int count_buttons1 = 0;
+    int count_buttons2 = 0;
+    const float* axes_1 = glfwGetJoystickAxes(player1_index, &count_axes1);
+    const float* axes_2 = glfwGetJoystickAxes(player2_index, &count_axes2);
+    const unsigned char* buttons_1 = glfwGetJoystickButtons(player1_index, &count_buttons1);
+    const unsigned char* buttons_2 = glfwGetJoystickButtons(player2_index, &count_buttons2);
+    GLFWgamepadstate state1;
+    GLFWgamepadstate state2;
+    glfwGetGamepadState(player1_index, &state1);
+    glfwGetGamepadState(player2_index, &state2);
+    if (glfwGetGamepadState(player1_index, &state1)) {
+        left_stick_x[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_LEFT_X] * 127.f);
+        left_stick_y[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] * 127.f);
+        right_stick_x[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_RIGHT_X] * 127.f);
+        right_stick_y[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y] * 127.f);
+        button_curr[0] |= (PAD_L2)*(state1.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] > 0.0f ? 1 : 0);
+        button_curr[0] |= (PAD_R2)*(state1.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] > 0.0f ? 1 : 0);
+        button_curr[0] |= (PAD_SELECT)*     state1.buttons[GLFW_GAMEPAD_BUTTON_BACK];
+        button_curr[0] |= (PAD_L3)*         state1.buttons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB];
+        button_curr[0] |= (PAD_R3)*         state1.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB];
+        button_curr[0] |= (PAD_START)*      state1.buttons[GLFW_GAMEPAD_BUTTON_START];
+        button_curr[0] |= (PAD_UP)*         state1.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP];
+        button_curr[0] |= (PAD_RIGHT)*      state1.buttons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT];
+        button_curr[0] |= (PAD_DOWN)*       state1.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN];
+        button_curr[0] |= (PAD_LEFT)*       state1.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT];
+        button_curr[0] |= (PAD_L1)*         state1.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER];
+        button_curr[0] |= (PAD_R1)*         state1.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER];
+        button_curr[0] |= (PAD_TRIANGLE)*   state1.buttons[GLFW_GAMEPAD_BUTTON_TRIANGLE];
+        button_curr[0] |= (PAD_CIRCLE)*     state1.buttons[GLFW_GAMEPAD_BUTTON_CIRCLE];
+        button_curr[0] |= (PAD_CROSS)*      state1.buttons[GLFW_GAMEPAD_BUTTON_CROSS];
+        button_curr[0] |= (PAD_SQUARE)*     state1.buttons[GLFW_GAMEPAD_BUTTON_SQUARE];
     }
-    if (axes_2) {
-        left_stick_x[1] = (int8_t)(axes_2[0] * 127.f);
-        left_stick_y[1] = (int8_t)(axes_2[1] * 127.f);
-        right_stick_x[1] = (int8_t)(axes_2[2] * 127.f);
-        right_stick_y[1] = (int8_t)(axes_2[3] * 127.f);
-        button_curr[1] |= (PAD_L2)*axes_2[4] > 0.5f ? 1 : 0;
+    if (glfwGetGamepadState(player2_index, &state2)) {
+        left_stick_x[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_LEFT_X] * 127.f);
+        left_stick_y[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] * 127.f);
+        right_stick_x[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_RIGHT_X] * 127.f);
+        right_stick_y[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y] * 127.f);
+        button_curr[1] |= (PAD_L2)*(state2.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] > 0.0f ? 1 : 0);
+        button_curr[1] |= (PAD_R2)*(state2.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] > 0.0f ? 1 : 0);
+        button_curr[1] |= (PAD_SELECT)*     state2.buttons[GLFW_GAMEPAD_BUTTON_BACK];
+        button_curr[1] |= (PAD_L3)*         state2.buttons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB];
+        button_curr[1] |= (PAD_R3)*         state2.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB];
+        button_curr[1] |= (PAD_START)*      state2.buttons[GLFW_GAMEPAD_BUTTON_START];
+        button_curr[1] |= (PAD_UP)*         state2.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP];
+        button_curr[1] |= (PAD_RIGHT)*      state2.buttons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT];
+        button_curr[1] |= (PAD_DOWN)*       state2.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN];
+        button_curr[1] |= (PAD_LEFT)*       state2.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT];
+        button_curr[1] |= (PAD_L1)*         state2.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER];
+        button_curr[1] |= (PAD_R1)*         state2.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER];
+        button_curr[1] |= (PAD_TRIANGLE)*   state2.buttons[GLFW_GAMEPAD_BUTTON_TRIANGLE];
+        button_curr[1] |= (PAD_CIRCLE)*     state2.buttons[GLFW_GAMEPAD_BUTTON_CIRCLE];
+        button_curr[1] |= (PAD_CROSS)*      state2.buttons[GLFW_GAMEPAD_BUTTON_CROSS];
+        button_curr[1] |= (PAD_SQUARE)*     state2.buttons[GLFW_GAMEPAD_BUTTON_SQUARE];
     }
-
-    // Update buttons
-    // TODO: test this with xbox controller as ground truth
-    if (buttons_1) {
-        button_curr[0] |= (PAD_SELECT)*buttons_1[6];
-        button_curr[0] |= (PAD_L3)*buttons_1[8];
-        button_curr[0] |= (PAD_R3)*buttons_1[9];
-        button_curr[0] |= (PAD_START)*buttons_1[7];
-        button_curr[0] |= (PAD_UP)*buttons_1[10];
-        button_curr[0] |= (PAD_RIGHT)*buttons_1[11];
-        button_curr[0] |= (PAD_DOWN)*buttons_1[12];
-        button_curr[0] |= (PAD_LEFT)*buttons_1[13];
-        //button_curr[0] |= (PAD_L2)*buttons_1[6];
-        //button_curr[0] |= (PAD_R2)*buttons_1[6];
-        button_curr[0] |= (PAD_L1)*buttons_1[4];
-        button_curr[0] |= (PAD_R1)*buttons_1[5];
-        button_curr[0] |= (PAD_TRIANGLE)*buttons_1[3];
-        button_curr[0] |= (PAD_CIRCLE)*buttons_1[1];
-        button_curr[0] |= (PAD_CROSS)*buttons_1[0];
-        button_curr[0] |= (PAD_SQUARE)*buttons_1[2];
-    }
-    if (buttons_2) {
-        button_curr[1] |= (PAD_SELECT)*buttons_2[6];
-        button_curr[1] |= (PAD_L3)*buttons_2[8];
-        button_curr[1] |= (PAD_R3)*buttons_2[9];
-        button_curr[1] |= (PAD_START)*buttons_2[7];
-        button_curr[1] |= (PAD_UP)*buttons_2[10];
-        button_curr[1] |= (PAD_RIGHT)*buttons_2[11];
-        button_curr[1] |= (PAD_DOWN)*buttons_2[12];
-        button_curr[1] |= (PAD_LEFT)*buttons_2[13];
-        //button_curr[1] |= (PAD_L2)*buttons_2[6];
-        //button_curr[1] |= (PAD_R2)*buttons_2[6];
-        button_curr[1] |= (PAD_L1)*buttons_2[4];
-        button_curr[1] |= (PAD_R1)*buttons_2[5];
-        button_curr[1] |= (PAD_TRIANGLE)*buttons_2[3];
-        button_curr[1] |= (PAD_CIRCLE)*buttons_2[1];
-        button_curr[1] |= (PAD_CROSS)*buttons_2[0];
-        button_curr[1] |= (PAD_SQUARE)*buttons_2[2];
-    }
-    
 }
 
 void input_set_stick_deadzone(int8_t new_deadzone) {
