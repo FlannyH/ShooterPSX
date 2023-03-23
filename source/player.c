@@ -11,12 +11,12 @@ const int32_t player_radius = 20 << 12;
 const int32_t step_height = 20 << 12;
 const int32_t terminal_velocity_down = -2600;
 const int32_t terminal_velocity_up = 8000;
-const int32_t gravity = -13;
-const int32_t walking_acceleration = 15;
+const int32_t gravity = -9;
+const int32_t walking_acceleration = 5;
 const int32_t walking_max_speed = 1150;
 const int32_t stick_sensitivity = 6000;
-const int32_t walking_drag = 30;
-const int32_t initial_jump_velocity = 3200;
+const int32_t walking_drag = 13;
+const int32_t initial_jump_velocity = 2200;
 const int32_t jump_ground_threshold = 4000;
 static scalar_t player_radius_squared = 0;
 
@@ -43,12 +43,6 @@ void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
 
     // Check the Y distance from the ground to the player's feet
     scalar_t distance = self->position.y - eye_height - hit.position.y;
-	printf("---------");
-    printf("player velocity: %i\\n", (-self->velocity.y * dt_ms) / 4096);
-    printf("player position: %i\n", self->position.y / 4096);
-    printf("eye_height: %i\n", eye_height / 4096);
-    printf("hit position: %i\n", hit.position.y / 4096);
-    printf("distance: %i\n", distance / 4096);
     if (distance <= (-self->velocity.y * dt_ms)) {
         // Set speed to 0
         if (self->velocity.y < 0)
