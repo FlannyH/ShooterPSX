@@ -24,9 +24,9 @@ void bvh_construct(bvh_t* bvh, const triangle_3d_t* primitives, const uint16_t n
 
     for (size_t i = 0; i < n_primitives; ++i) {
         // Set position
-        bvh->primitives[i].v0 = vec3_from_int32s(-(int32_t)primitives[i].v0.x << 12, -(int32_t)primitives[i].v0.y << 12, -(int32_t)primitives[i].v0.z << 12);
-        bvh->primitives[i].v1 = vec3_from_int32s(-(int32_t)primitives[i].v1.x << 12, -(int32_t)primitives[i].v1.y << 12, -(int32_t)primitives[i].v1.z << 12);
-        bvh->primitives[i].v2 = vec3_from_int32s(-(int32_t)primitives[i].v2.x << 12, -(int32_t)primitives[i].v2.y << 12, -(int32_t)primitives[i].v2.z << 12);
+        bvh->primitives[i].v0 = vec3_from_int32s(-(int32_t)primitives[i].v0.x * 4096, -(int32_t)primitives[i].v0.y * 4096, -(int32_t)primitives[i].v0.z * 4096);
+        bvh->primitives[i].v1 = vec3_from_int32s(-(int32_t)primitives[i].v1.x * 4096, -(int32_t)primitives[i].v1.y * 4096, -(int32_t)primitives[i].v1.z * 4096);
+        bvh->primitives[i].v2 = vec3_from_int32s(-(int32_t)primitives[i].v2.x * 4096, -(int32_t)primitives[i].v2.y * 4096, -(int32_t)primitives[i].v2.z * 4096);
 
         // Calculate normal
         const vec3_t ac = vec3_sub(vec3_shift_right(bvh->primitives[i].v1, 4), vec3_shift_right(bvh->primitives[i].v0, 4));

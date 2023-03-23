@@ -70,7 +70,7 @@ static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
 }
 
 static fixed20_12_t scalar_div(const fixed20_12_t a, const fixed20_12_t b) {
-    int64_t result32 = (int64_t)a << 12;
+    int64_t result32 = (int64_t)a * 4096;
     if (b != 0) {
         result32 /= b;
     }

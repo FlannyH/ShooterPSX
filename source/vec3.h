@@ -108,21 +108,15 @@ static vec3_t vec3_max(const vec3_t a, const vec3_t b) {
 }
 
 static scalar_t vec3_magnitude_squared(const vec3_t a) {
-    int overflow = 0;
-    scalar_t length_squared = scalar_mul(a.x, a.x);
-    overflow |= operator_flags.overflow;
-    length_squared = length_squared + scalar_mul(a.y, a.y);
-    overflow |= operator_flags.overflow;
-    length_squared = length_squared + scalar_mul(a.z, a.z);
-    overflow |= operator_flags.overflow;
-    if (overflow) {
-        length_squared = INT32_MAX;
+    const scalar_t x2 = scalar_mul(a.x, a.x);
+    const scalar_t y2 = scalar_mul(a.y, a.y);
+    const scalar_t z2 = scalar_mul(a.z, a.z);
+
+    if (is_infinity(x2) || is_infinity(y2) || is_infinity(z2)) {
+        return INT32_MAX;
     }
-    if (length_squared < 0) {
-        length_squared = INT32_MAX;
-    }
-    //WARN_IF("magnitude overflowed and became int32_max", length_squared == INT32_MAX);
-    return length_squared;
+
+    return x2 + y2 + z2;
 }
 
 static vec3_t vec3_normalize(const vec3_t a) {
@@ -153,9 +147,9 @@ static vec3_t vec3_shift_right(vec3_t a, int amount) {
 
 static vec3_t vec3_shift_left(vec3_t a, int amount) {
     vec3_t result = a;
-    result.x <<= amount;
-    result.y <<= amount;
-    result.z <<= amount;
+    result.x *= (1 << amount);
+    result.y *= (1 << amount);
+    result.z *= (1 << amount);
     return result;
 }
 
