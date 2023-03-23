@@ -18,7 +18,12 @@ static vec3_t vec3_from_floats(const float x, const float y, const float z) {
 
 // Debug
 static void vec3_debug(const vec3_t a) {
-    printf("%0.3f, %0.3f, %0.3f\n", ((float)a.x) / 4096.0f, ((float)a.y) / 4096.0f, ((float)a.z) / 4096.0f);
+    print_fixed_point(a.x);
+    printf(", ");
+    print_fixed_point(a.y);
+    printf(", ");
+    print_fixed_point(a.z);
+    printf("\n");
 }
 
 static vec3_t vec3_from_scalar(const scalar_t a) {

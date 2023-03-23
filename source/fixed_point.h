@@ -16,6 +16,17 @@ static fixed20_12_t scalar_from_float(const float a) {
     return result;
 }
 
+static void print_fixed_point(scalar_t a) {
+    if (a < 0) {
+        a = -a;
+        printf("-");
+    }
+    const int n_fractional_bits = 12;
+    const int32_t integer = a >> n_fractional_bits;   
+    const int32_t fractional = a & ((1 << n_fractional_bits) - 1);
+    printf("%i.%03i", integer, (fractional * 1000) / (1 << n_fractional_bits));
+}
+
 static void scalar_debug(const scalar_t a) {
     if (a == INT32_MAX) {
         printf("+inf\n");
@@ -25,7 +36,8 @@ static void scalar_debug(const scalar_t a) {
         printf("-inf\n");
         return;
     }
-    printf("%0.3f\n", ((float)a) / 4096.0f);
+    print_fixed_point(a);
+    printf("\n");
 }
 
 #ifdef _PSX

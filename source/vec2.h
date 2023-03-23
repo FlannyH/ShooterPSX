@@ -124,7 +124,10 @@ static scalar_t vec2_magnitude(const vec2_t a) {
 }
 
 static void vec2_debug(const vec2_t a) {
-    printf("%0.3f, %0.3f\n", ((float)a.x) / 4096.0f, ((float)a.y) / 4096.0f);
+    print_fixed_point(a.x);
+    printf(", ");
+    print_fixed_point(a.y);
+    printf("\n");
 }
 
 #endif // VEC2_H
