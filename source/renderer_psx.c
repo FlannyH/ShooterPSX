@@ -428,8 +428,8 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, const pixel32_t color, trans
     gte_SetTransMatrix(&model_matrix);
 
     // Load a line's vertices into the GTE
-    SVECTOR sv0 = { v0.x.raw >> 12, v0.y.raw >> 12, v0.z.raw >> 12};
-    SVECTOR sv1 = { v1.x.raw >> 12, v1.y.raw >> 12, v1.z.raw >> 12};
+    SVECTOR sv0 = { v0.x >> 12, v0.y >> 12, v0.z >> 12};
+    SVECTOR sv1 = { v1.x >> 12, v1.y >> 12, v1.z >> 12};
     gte_ldv3(
         &sv0.vx,
         &sv1.vx,
@@ -595,9 +595,9 @@ int renderer_should_close() {
 
 vec3_t renderer_get_forward_vector() {
     vec3_t result;
-    result.x.raw = (int32_t)view_matrix.m[2][0] >> 4;
-    result.y.raw = (int32_t)view_matrix.m[2][1] >> 4;
-    result.z.raw = (int32_t)view_matrix.m[2][2] >> 4;
+    result.x = (int32_t)view_matrix.m[2][0] >> 4;
+    result.y = (int32_t)view_matrix.m[2][1] >> 4;
+    result.z = (int32_t)view_matrix.m[2][2] >> 4;
     return result;
 }
 
