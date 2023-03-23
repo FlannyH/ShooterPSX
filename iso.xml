@@ -65,13 +65,13 @@
             <file name="MAIN.EXE"	type="data" source="main.exe" />
             <file name="SYSTEM.CNF"		type="data" source="${PROJECT_SOURCE_DIR}/system.cnf" />
             <dir name="ASSETS">
-			    <file name="CUBETEST.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/rat.msh" />
-			    <file name="LEVEL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/level.msh" />
-			    <file name="LEVELCOL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/levelcol.txc" />
-			    <file name="LEVELCOL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/levelcol.msh" />
-			    <file name="TESTLVL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/testlvl.msh" />
-			    <file name="LEVEL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/level.txc" />
-			    <file name="MUSIC.XA" type="mixed" source="${PROJECT_SOURCE_DIR}/assets/music.xa"/>
+			    <file name="CUBETEST.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/rat.msh" />
+			    <file name="LEVEL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVEL.MSH" />
+			    <file name="LEVELCOL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVELCOL.TXC" />
+			    <file name="LEVELCOL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVELCOL.MSH" />
+			    <file name="TESTLVL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/TESTLVL.MSH" />
+			    <file name="LEVEL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVEL.TXC" />
+			    <file name="MUSIC.XA" type="mixed" source="${PROJECT_SOURCE_DIR}/ASSETS/music.xa"/>
 			    <!--
 				    This file is only required if you are using dynamic linking
 				    (see the system/dynlink example). It contains the executable's

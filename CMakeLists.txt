@@ -80,8 +80,9 @@ else()
             ShooterPSX 
             ${CMAKE_CURRENT_SOURCE_DIR}/external/libraries/glfw3.a
         )
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lm -lstdc++ -fsanitize=undefined")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lm -lstdc++ -fsanitize=undefined -fsanitize=address ")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -fsanitize=undefined -fsanitize=address ")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined -fsanitize=address ")
     endif()
     include_directories(external/include/)
     include_directories(external/include/imgui)
