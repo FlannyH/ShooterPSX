@@ -39,34 +39,6 @@ static struct {
     int overflow : 1;
 } operator_flags;
 
-static fixed20_12_t scalar_from_int32(const int32_t raw) {
-    fixed20_12_t result;
-    result = raw;
-    return result;
-}
-
-static fixed20_12_t scalar_neg(const fixed20_12_t a) {
-    fixed20_12_t result = a;
-    result = -result;
-    return result;
-}
-
-static fixed20_12_t scalar_add(const fixed20_12_t a, const fixed20_12_t b) {
-    fixed20_12_t result;
-    result = a + b;
-    //WARN_IF("overflow/underflow occured during scalar_add", ((int64_t)a + (int64_t)b) > (int64_t)INT32_MAX);
-    //WARN_IF("overflow/underflow occured during scalar_add", ((int64_t)a + (int64_t)b) < (int64_t)INT32_MIN);
-    return result;
-}
-
-static fixed20_12_t scalar_sub(const fixed20_12_t a, const fixed20_12_t b) {
-    fixed20_12_t result;
-    result = a - b;
-    //WARN_IF("overflow/underflow occured during scalar_sub", ((int64_t)a - (int64_t)b) > (int64_t)INT32_MAX);
-    //WARN_IF("overflow/underflow occured during scalar_sub", ((int64_t)a - (int64_t)b) < (int64_t)INT32_MIN);
-    return result;
-}
-
 static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
     int64_t result32 = ((int64_t)(a >> 6) * ((int64_t)b >> 6));
 
@@ -82,7 +54,7 @@ static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
         operator_flags.overflow = 1;
         //WARN_IF("overflow occured during scalar_mul", 1);
     }
-    return scalar_from_int32((int32_t)result32);
+    return (fixed20_12_t)result32;
 }
 
 static fixed20_12_t scalar_div(const fixed20_12_t a, const fixed20_12_t b) {
@@ -95,9 +67,7 @@ static fixed20_12_t scalar_div(const fixed20_12_t a, const fixed20_12_t b) {
         //WARN_IF("division by zero occured in scalar_div", 1);
     }
     //WARN_IF("division result returned zero but the dividend is not zero, possible lack of precision", result32 == 0 && a != 0);
-    fixed20_12_t result;
-    result = (int32_t)result32;
-    return result;
+    return (int32_t)result32;
 }
 
 static fixed20_12_t scalar_min(const fixed20_12_t a, const fixed20_12_t b) {
@@ -110,22 +80,10 @@ static fixed20_12_t scalar_max(const fixed20_12_t a, const fixed20_12_t b) {
 
 static fixed20_12_t scalar_sqrt(fixed20_12_t a) {
 #ifdef _PSX
-    return scalar_from_int32(SquareRoot12(a));
+    return SquareRoot12(a);
 #else
     return scalar_from_float(sqrtf((float)a / 4096.0f));
 #endif
-}
-
-static fixed20_12_t scalar_shift_right(const fixed20_12_t a, const int shift) {
-    fixed20_12_t ret;
-    ret = a >> shift;
-    return ret;
-}
-
-static fixed20_12_t scalar_shift_left(const fixed20_12_t a, const int shift) {
-    fixed20_12_t ret;
-    ret = a << shift;
-    return ret;
 }
 
 static fixed20_12_t scalar_abs(fixed20_12_t a) {

@@ -71,14 +71,12 @@ int main(void) {
 
 	// Play music
 	music_play_file("\\ASSETS\\MUSIC.XA;1");
-    const pixel32_t white = { 255, 255, 255, 255 };
 
 	int frame_counter = 0;
     int bvh_depth = 0;
     ray_t ray = {0};
     while (!renderer_should_close()) {
         int delta_time = renderer_get_delta_time_ms();
-        delta_time = 33;
         if (delta_time > 40) {
             delta_time = 40;
         }

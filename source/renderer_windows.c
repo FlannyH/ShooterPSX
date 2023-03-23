@@ -522,14 +522,14 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
 
 void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, transform_t* model_transform) {
     // Create 8 vertices
-    vec3_t vertex000 = {box->min.x, box->min.y, box->min.z};
-    vec3_t vertex001 = {box->min.x, box->min.y, box->max.z};
-    vec3_t vertex010 = {box->min.x, box->max.y, box->min.z};
-    vec3_t vertex011 = {box->min.x, box->max.y, box->max.z};
-    vec3_t vertex100 = {box->max.x, box->min.y, box->min.z};
-    vec3_t vertex101 = {box->max.x, box->min.y, box->max.z};
-    vec3_t vertex110 = {box->max.x, box->max.y, box->min.z};
-    vec3_t vertex111 = {box->max.x, box->max.y, box->max.z};
+    const vec3_t vertex000 = {box->min.x, box->min.y, box->min.z};
+    const vec3_t vertex001 = {box->min.x, box->min.y, box->max.z};
+    const vec3_t vertex010 = {box->min.x, box->max.y, box->min.z};
+    const vec3_t vertex011 = {box->min.x, box->max.y, box->max.z};
+    const vec3_t vertex100 = {box->max.x, box->min.y, box->min.z};
+    const vec3_t vertex101 = {box->max.x, box->min.y, box->max.z};
+    const vec3_t vertex110 = {box->max.x, box->max.y, box->min.z};
+    const vec3_t vertex111 = {box->max.x, box->max.y, box->max.z};
 
     // Draw the lines
     renderer_debug_draw_line(vertex000, vertex100, color, model_transform);
@@ -551,10 +551,10 @@ void renderer_debug_draw_sphere(const sphere_t sphere) {
     renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(-sphere.radius, 0, 0)), white, &id_transform);
     renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(0, 0, sphere.radius)), white, &id_transform);
     renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(0, 0, -sphere.radius)), white, &id_transform);
-    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(+sphere.radius, 0, +sphere.radius), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
-    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(+sphere.radius, 0, -sphere.radius), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
-    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(-sphere.radius, 0, +sphere.radius), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
-    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(-sphere.radius, 0, -sphere.radius), vec3_from_scalar(scalar_from_int32(2896)))), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(+sphere.radius, 0, +sphere.radius), vec3_from_scalar(2896))), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(+sphere.radius, 0, -sphere.radius), vec3_from_scalar(2896))), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(-sphere.radius, 0, +sphere.radius), vec3_from_scalar(2896))), white, &id_transform);
+    renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_mul(vec3_from_int32s(-sphere.radius, 0, -sphere.radius), vec3_from_scalar(2896))), white, &id_transform);
 }
 
 void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) {

@@ -25,15 +25,15 @@ static vec2_t vec2_from_int32s(int32_t x, int32_t y, int32_t z) {
 
 static vec2_t vec2_add(const vec2_t a, const vec2_t b) {
     vec2_t result;
-    result.x = scalar_add(a.x, b.x);
-    result.y = scalar_add(a.y, b.y);
+    result.x = (a.x + b.x);
+    result.y = (a.y + b.y);
     return result;
 }
 
 static vec2_t vec2_sub(const vec2_t a, const vec2_t b) {
     vec2_t result;
-    result.x = scalar_sub(a.x, b.x);
-    result.y = scalar_sub(a.y, b.y);
+    result.x = (a.x - b.x);
+    result.y = (a.y - b.y);
     return result;
 }
 
@@ -54,8 +54,8 @@ static vec2_t vec2_div(const vec2_t a, const vec2_t b) {
 static scalar_t vec2_dot(const vec2_t a, const vec2_t b) {
     scalar_t result;
     result = 0;
-    result = scalar_add(result, scalar_mul(a.x, b.x));
-    result = scalar_add(result, scalar_mul(a.y, b.y));
+    result = (result + scalar_mul(a.x, b.x));
+    result = (result + scalar_mul(a.y, b.y));
     return result;
 }
 static vec2_t vec2_scale(const vec2_t a, const scalar_t b) {
@@ -81,17 +81,17 @@ static vec2_t vec2_max(const vec2_t a, const vec2_t b) {
 
 static vec2_t vec2_perpendicular(const vec2_t a) {
     vec2_t result;
-    result.x = scalar_neg(a.y);
+    result.x = -(a.y);
     result.y = a.x;
     return result;
 }
 
 static scalar_t vec2_cross(const vec2_t a, const vec2_t b) {
-    return scalar_sub(scalar_mul(a.x, b.y), scalar_mul(a.y, b.x));
+    return (scalar_mul(a.x, b.y) - scalar_mul(a.y, b.x));
 }
 
 static scalar_t vec2_magnitude_squared(const vec2_t a) {
-    return scalar_add(scalar_mul(a.x, a.x), scalar_mul(a.y, a.y));
+    return (scalar_mul(a.x, a.x) + scalar_mul(a.y, a.y));
 }
 
 static vec2_t vec2_normalize(const vec2_t a) {

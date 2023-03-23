@@ -4,8 +4,6 @@
 #include <string.h>
 
 int file_read(const char* path, uint32_t** destination, size_t* size) {
-    FILE* file;
-
     // Modify file name to not be CD based
     const size_t length = strlen(path) + 1; // Include the null terminator
     char* new_path = malloc(length + 1 - 2); // Length from strlen + 1 for the period at the start, -2 for the ;1 at the end, and +1 for the null terminator
@@ -14,14 +12,14 @@ int file_read(const char* path, uint32_t** destination, size_t* size) {
     new_path[length - 2] = 0;
 
     // Convert slashes to forward slashes, Linux build will cry otherwise
-    for (int x = 0; x < length - 2; ++x) {
+    for (size_t x = 0; x < length - 2; ++x) {
         if (new_path[x] == '\\') {
             new_path[x] = '/';
         }
     }
 
     // Open file
-    file = fopen(new_path, "rb");
+    FILE* file = fopen(new_path, "rb");
     if (file == NULL) {
         printf("[ERROR] Failed to load file %s\n", new_path);
         return 0;

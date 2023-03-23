@@ -60,7 +60,7 @@ void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
 }
 
 void apply_gravity(player_t* self, const int dt_ms) {
-    self->velocity.y = scalar_add(self->velocity.y, scalar_from_int32(gravity * dt_ms));
+    self->velocity.y = (self->velocity.y + gravity * dt_ms);
     if (self->velocity.y > terminal_velocity_up) {
         self->velocity.y = terminal_velocity_up;
     }
@@ -100,7 +100,7 @@ void handle_drag(player_t* self, const int dt_ms) {
     scalar_t velocity_z = self->velocity.z;
     const scalar_t velocity_x2 = scalar_mul(velocity_x, velocity_x);
     const scalar_t velocity_z2 = scalar_mul(velocity_z, velocity_z);
-    const scalar_t velocity_magnitude_squared = scalar_add(velocity_x2, velocity_z2);
+    const scalar_t velocity_magnitude_squared = (velocity_x2 + velocity_z2);
     scalar_t velocity_scalar = scalar_sqrt(velocity_magnitude_squared);
 
     // Normalize the speed
@@ -162,7 +162,7 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
         ray_t ray;
         ray.position = vec3_sub(self->position, vec3_from_int32s(0, eye_height - step_height, 0));
         ray.direction = vec3_normalize(velocity);
-        ray.inv_direction = vec3_div(vec3_from_scalar(scalar_from_int32(4096)), ray.direction);
+        ray.inv_direction = vec3_div(vec3_from_scalar(4096), ray.direction);
         ray.length = walking_max_speed * 2;
 
         bvh_intersect_ray(level_bvh, ray, &hit);
@@ -188,7 +188,7 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
             // If the sphere intersection hit something, move towards the hit position
             if (hit.distance != INT32_MAX) {
                 if (vec3_dot(velocity, vec3_sub(hit.position, target_position)) > 0) {
-                    const scalar_t separation_distance = scalar_sub(sphere.radius, scalar_abs(hit.distance_along_normal));
+                    const scalar_t separation_distance = (sphere.radius - scalar_abs(hit.distance_along_normal));
                     const vec3_t separation_vector = vec3_mul(hit.normal, vec3_from_scalar(separation_distance));
                     target_position = vec3_add(target_position, separation_vector);
                     target_position.y = self->position.y;
@@ -210,7 +210,7 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
 
 void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     if (player_radius_squared == 0) {
-        const scalar_t player_radius_scalar = scalar_from_int32(player_radius);
+        const scalar_t player_radius_scalar = player_radius;
         player_radius_squared = scalar_mul(player_radius_scalar, player_radius_scalar);
     }
 

@@ -17,7 +17,7 @@ void bvh_from_model(bvh_t* bvh, const model_t* mesh);
 void bvh_debug_draw(const bvh_t* bvh, int min_depth, int max_depth, pixel32_t color);
 
 // BVH intersection
-int bvh_intersect_ray(bvh_t* self, ray_t ray, rayhit_t* hit);
+void bvh_intersect_ray(bvh_t* self, ray_t ray, rayhit_t* hit);
 void bvh_intersect_sphere(bvh_t* bvh, sphere_t ray, rayhit_t* hit);
 void bvh_intersect_vertical_cylinder(bvh_t* bvh, vertical_cylinder_t ray, rayhit_t* hit);
 
@@ -31,7 +31,7 @@ int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vert
 
 
 // Statistics
-void collision_clear_stats();
+void collision_clear_stats(void);
 extern int n_ray_aabb_intersects;
 extern int n_ray_triangle_intersects;
 extern int n_sphere_aabb_intersects;
