@@ -85,6 +85,9 @@ void handle_stick_input(player_t* self, const int dt_ms) {
 
         // Look left and right
         self->rotation.y += (int32_t)(input_right_stick_x(0)) * (stick_sensitivity * dt_ms) >> 12;
+    } else {
+        self->rotation.y += (int32_t)(input_held(PAD_RIGHT, 0)) * (stick_sensitivity * dt_ms) >> 12;
+        self->rotation.y -= (int32_t)(input_held(PAD_LEFT, 0)) * (stick_sensitivity * dt_ms) >> 12;
     }
 }
 

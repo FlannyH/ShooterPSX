@@ -71,7 +71,7 @@
 			    <file name="LEVELCOL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVELCOL.MSH" />
 			    <file name="TESTLVL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/TESTLVL.MSH" />
 			    <file name="LEVEL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVEL.TXC" />
-			    <file name="MUSIC.XA" type="mixed" source="${PROJECT_SOURCE_DIR}/ASSETS/music.xa"/>
+			    <!--<file name="MUSIC.XA" type="mixed" source="${PROJECT_SOURCE_DIR}/ASSETS/music.xa"/>-->
 			    <!--
 				    This file is only required if you are using dynamic linking
 				    (see the system/dynlink example). It contains the executable's

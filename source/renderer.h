@@ -21,7 +21,7 @@ extern "C" {
 #ifdef PAL
 #define RES_Y 256
 #else
-#define RES_Y 240
+#define RES_Y 216
 #endif
 #define CENTER_X (RES_X / 2)
 #define CENTER_Y (RES_Y / 2)

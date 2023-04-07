@@ -26,9 +26,6 @@ int main(void) {
 	input_init();
 	init();
 
-	int16_t x = 30000;
-	x = x * x;
-
 	uint32_t frame_index = 0;
 
     // Init player
@@ -115,5 +112,4 @@ void init(void) {
 	FntOpen(0, 8, 320, 224, 0, 100);
 
 #endif
-	// todo: textures
 }
