@@ -147,7 +147,7 @@ void draw_triangle_shaded(vertex_3d_t* verts, uint8_t tex_id, uint16_t tex_offse
     // Apply transformations
     gte_rtpt();
     int flg;
-    gte_stflg(&flg); if ((flg & 0x00060000) != 0) return;
+    //gte_stflg(&flg); if ((flg & 0x00060000) != 0) return;
 
     // Calculate normal clip for backface culling
     int p;
