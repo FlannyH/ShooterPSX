@@ -26,13 +26,8 @@ int main(void) {
 	input_init();
 	init();
 
-	uint32_t frame_index = 0;
-
     // Init player
     player_t player = { 0 };
-
-	// Camera transform
-	transform_t camera_transform;
 
     player.position.x = -11705653;
    	player.position.y = 11413985;
@@ -40,15 +35,11 @@ int main(void) {
     //player.position.x = 0;
     //player.position.y = -229376;
     //player.position.z = 0;
-	camera_transform.rotation.vx = 5853;
-	camera_transform.rotation.vy = -63752;
-	camera_transform.rotation.vz = 0;
 
 	// Stick deadzone
 	input_set_stick_deadzone(36);
 
 	// Load model
-	model_t *m_cube = model_load("\\ASSETS\\CUBETEST.MSH;1");
 	const model_t *m_level = model_load("\\ASSETS\\LEVEL.MSH;1");
 	const model_t *m_level_collision = model_load("\\ASSETS\\LEVELCOL.MSH;1");
 
@@ -57,10 +48,9 @@ int main(void) {
 		texture_collection_load("\\ASSETS\\LEVEL.TXC;1", &tex_level);
 
 	for (uint8_t i = 0; i < n_textures; ++i) {
-	renderer_upload_texture(&tex_level[i], i);
+	    renderer_upload_texture(&tex_level[i], i);
 	}
 
-	transform_t t_cube1 = {{0, 0, 500}, {-2048, 0, 0}, {0, 0, 0}};
 	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}};
     
     bvh_t bvh_level_model;
@@ -70,12 +60,10 @@ int main(void) {
 	music_play_file("\\ASSETS\\MUSIC.XA;1");
 
 	int frame_counter = 0;
-    int bvh_depth = 0;
-    ray_t ray = {0};
     while (!renderer_should_close()) {
         int delta_time = renderer_get_delta_time_ms();
-        if (delta_time > 40) {
-            delta_time = 40;
+        if (delta_time > 34) {
+            delta_time = 34;
         }
         renderer_begin_frame(&player.transform);
         input_update();
@@ -107,7 +95,7 @@ void init(void) {
 	CdInit();
 
 	// Load the internal font texture
-	FntLoad(960, 0);
+	FntLoad(608, 448);
 	// Create the text stream
 	FntOpen(0, 8, 320, 224, 0, 100);
 

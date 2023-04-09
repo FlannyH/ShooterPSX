@@ -800,7 +800,6 @@ int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere
 
     // Shift it back
     closest_pos_on_triangle = vec3_shift_left(closest_pos_on_triangle, 3);
-    position = vec3_shift_left(position, 3);
 
     // Is the hit position close enough to the plane hit? (is it within the sphere?)
     const scalar_t distance_from_hit_squared = vec3_magnitude_squared(vec3_sub(sphere.center, closest_pos_on_triangle)); //WARN_IF("distance_from_hit_squared overflowed", is_infinity(distance_from_hit_squared));

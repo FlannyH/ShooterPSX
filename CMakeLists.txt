@@ -27,6 +27,8 @@ if (DEFINED PSN00BSDK_TARGET)
         source/player.c
     )
 
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall -Wno-unused-function")
+
     psn00bsdk_add_cd_image(
 	    iso      # Target name
 	    ShooterPSX # Output file name (= template.bin + template.cue)

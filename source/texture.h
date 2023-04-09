@@ -18,11 +18,11 @@ typedef struct {
     uint8_t b;
     uint8_t a;
 } pixel32_t;
-const static pixel32_t red = { 255,0,0,255 };
-const static pixel32_t green = { 0,255,0,255 };
-const static pixel32_t blue = { 0,0,255,255 };
-const static pixel32_t pink = { 255,0,255,255 };
-const static pixel32_t white = { 255, 0, 255, 255 };
+static const pixel32_t red = { 255,0,0,255 };
+static const pixel32_t green = { 0,255,0,255 };
+static const pixel32_t blue = { 0,0,255,255 };
+static const pixel32_t pink = { 255,0,255,255 };
+static const pixel32_t white = { 255, 0, 255, 255 };
 
 #pragma pack(push)
 #pragma pack(4)

@@ -17,9 +17,9 @@ extern "C" {
 #include "texture.h"
 
 #define ORD_TBL_LENGTH 4096
-#define RES_X 320
+#define RES_X 512
 #ifdef PAL
-#define RES_Y 256
+#define RES_Y 240
 #else
 #define RES_Y 216
 #endif

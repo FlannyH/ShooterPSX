@@ -12,6 +12,11 @@ static void panic_if(const char* error_if_false, const int condition, const int 
         printf("%s @ %i: assert failed! %s\n", file, line, error_if_false);
         exit(1);
     }
+#else
+    (void)error_if_false;
+    (void)condition;
+    (void)line;
+    (void)file;
 #endif
 }
 
@@ -20,6 +25,11 @@ static void warn_if(const char* error_if_false, const int condition, const int l
     if (condition) {
         printf("%s @ %i: assert failed! %s\n", file, line, error_if_false);
     }
+#else
+    (void)error_if_false;
+    (void)condition;
+    (void)line;
+    (void)file;
 #endif
 }
 
