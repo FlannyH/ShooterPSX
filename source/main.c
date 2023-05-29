@@ -51,7 +51,7 @@ int main(void) {
 	    renderer_upload_texture(&tex_level[i], i);
 	}
 
-	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {8192, 8192, 8192}};
+	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}};
     
     bvh_t bvh_level_model;
     bvh_from_model(&bvh_level_model, m_level_collision);
