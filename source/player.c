@@ -7,14 +7,14 @@
 #include "input.h"
 
 const int32_t eye_height = 56 << 12;
-const int32_t player_radius = 20 << 12;
+const int32_t player_radius = 30 << 12;
 const int32_t step_height = 20 << 12;
 const int32_t terminal_velocity_down = -2600;
 const int32_t terminal_velocity_up = 8000;
 const int32_t gravity = -12;
 const int32_t walking_acceleration = 5;
 const int32_t walking_max_speed = 1500;
-const int32_t stick_sensitivity = 6000;
+const int32_t stick_sensitivity = 600;
 const int32_t walking_drag = 13;
 const int32_t initial_jump_velocity = 2200;
 const int32_t jump_ground_threshold = 5200;

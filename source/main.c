@@ -40,7 +40,7 @@ int main(void) {
 	input_set_stick_deadzone(36);
 
 	// Load model
-	const model_t *m_level = model_load("\\ASSETS\\LEVEL.MSH;1");
+    const model_t* m_level = model_load("\\ASSETS\\LEVEL.MSH;1");
 	const model_t *m_level_collision = model_load("\\ASSETS\\LEVELCOL.MSH;1");
 
 	texture_cpu_t *tex_level;
@@ -51,7 +51,7 @@ int main(void) {
 	    renderer_upload_texture(&tex_level[i], i);
 	}
 
-	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}};
+	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {8192, 8192, 8192}};
     
     bvh_t bvh_level_model;
     bvh_from_model(&bvh_level_model, m_level_collision);
@@ -72,7 +72,7 @@ int main(void) {
         frame_counter += delta_time;
         
     #ifdef _PSX
-	    FntPrint(-1, "Frame: %i\n", frame_index++);
+	    FntPrint(-1, "Frame: %i\n", frame_counter++);
 	    FntPrint(-1, "Delta Time (hblank): %i\n", delta_time);
 	    FntPrint(-1, "Est. FPS: %i\n", 1000 / delta_time);
 	    FntPrint(-1, "Triangles (rendered/total): %i / %i\n",
@@ -85,6 +85,7 @@ int main(void) {
 #ifndef _PSX
 	debug_layer_close();
 #endif
+    return 0;
 }
 
 void init(void) {

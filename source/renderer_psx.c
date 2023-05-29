@@ -83,7 +83,7 @@ void renderer_init(void) {
     gte_SetGeomOffset(CENTER_X, CENTER_Y);
 
     // Set screen depth (which according to example code is kinda like FOV apparently)
-    gte_SetGeomScreen(240);
+    gte_SetGeomScreen(120);
 
     next_primitive = primitive_buffer[0];
 }
@@ -230,6 +230,36 @@ void draw_triangle_shaded_subdivided_once(vertex_3d_t* verts, uint8_t tex_id, ui
     draw_triangle_shaded(&vertices[9], tex_id, tex_offset_x, 0);
 }
 
+void draw_triangle_shaded_subdivided_twice(vertex_3d_t* verts, uint8_t tex_id, uint16_t tex_offset_x) {
+    // Create an array of vertices
+    vertex_3d_t vertices[4 * 3];
+
+    // Calculate edge centers
+    const vertex_3d_t v01 = get_halfway_point(verts[0], verts[1]);
+    const vertex_3d_t v12 = get_halfway_point(verts[1], verts[2]);
+    const vertex_3d_t v20 = get_halfway_point(verts[2], verts[0]);
+
+    // Populate vertex array
+    vertices[0] = verts[0];
+    vertices[1] = v01;
+    vertices[2] = v20;
+    vertices[3] = v01;
+    vertices[4] = verts[1];
+    vertices[5] = v12;
+    vertices[6] = v20;
+    vertices[7] = v12;
+    vertices[8] = verts[2];
+    vertices[9] = v20;
+    vertices[10] = v01;
+    vertices[11] = v12;
+
+    // Draw the triangles
+    draw_triangle_shaded_subdivided_once(&vertices[0], tex_id, tex_offset_x);
+    draw_triangle_shaded_subdivided_once(&vertices[3], tex_id, tex_offset_x);
+    draw_triangle_shaded_subdivided_once(&vertices[6], tex_id, tex_offset_x);
+    draw_triangle_shaded_subdivided_once(&vertices[9], tex_id, tex_offset_x);
+}
+
 void draw_triangle_shaded_untextured(vertex_3d_t* verts, uint8_t tex_id) {
     // Load triangle into GTE
     gte_ldv3(
@@ -346,9 +376,16 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
         const vec3_t camera_to_triangle = vec3_sub(triangle_position, camera_pos);
         const scalar_t crude_distance = scalar_abs(camera_to_triangle.x) + scalar_abs(camera_to_triangle.y) + scalar_abs(camera_to_triangle.z);
 
-
-        if (crude_distance < 0 * ONE) {
-            // Render subdivided textured triangle (todo)
+        if (crude_distance < 225 * ONE) {
+            // Render 4x4 subdivided textured triangle
+            draw_triangle_shaded_subdivided_twice(
+                &mesh->vertices[i],
+                tex_id,
+                tex_offset_x
+            );
+        }
+        else if (crude_distance < 450 * ONE) {
+            // Render 2x2 subdivided textured triangle
             draw_triangle_shaded_subdivided_once(
                 &mesh->vertices[i],
                 tex_id,
@@ -604,17 +641,17 @@ void renderer_upload_texture(const texture_cpu_t* texture, const uint8_t index) 
     textures_avg_colors[index] = texture->avg_color;
 
     // Load mipmap to VRAM - starting from 688, 256, spanning 336x128 VRAM pixels, stored in 8x32 blocks (for 32x32 textures)
-    uint8_t mip_data[8 * 32];
-    texture_64_to_32(texture->data, mip_data, texture->palette);
-    const RECT rect_mip = {
-        688 + ((int16_t)index % 42) * 8,
-        256 + (((int16_t)index) / 42) * 32,
-        (int16_t)texture->width / 8,
-        (int16_t)texture->height
-    };
-    LoadImage(&rect_mip, (uint32_t*)mip_data);
-    DrawSync(0);
-    textures[index] = rect_tex;
+    //uint8_t mip_data[8 * 32];
+    //texture_64_to_32(texture->data, mip_data, texture->palette);
+    //const RECT rect_mip = {
+    //    688 + ((int16_t)index % 42) * 8,
+    //    256 + (((int16_t)index) / 42) * 32,
+    //    (int16_t)texture->width / 8,
+    //    (int16_t)texture->height
+    //};
+    //LoadImage(&rect_mip, (uint32_t*)mip_data);
+    //DrawSync(0);
+    //textures[index] = rect_tex;
 
     // Load palette to VRAM - starting from 688,384, spanning 336x128 VRAM pixels, stored in 16x16 blocks (for 16-bit 16-color palettes, with fades to the average texture color for distance blur)
     const RECT rect_palette = {
@@ -623,15 +660,15 @@ void renderer_upload_texture(const texture_cpu_t* texture, const uint8_t index) 
         16,
         16
     };
-    pixel16_t palette_buffer[336 * 128];
-    const pixel16_t target_color = {
-        .r = texture->avg_color.r >> 3,
-        .g = texture->avg_color.r >> 3,
-        .b = texture->avg_color.r >> 3,
-        .a = texture->avg_color.a >> 7,
-    };
-    blend_palette(texture->palette, palette_buffer, target_color);
-    LoadImage(&rect_palette, (uint32_t*)palette_buffer);
+    //pixel16_t palette_buffer[336 * 128];
+    //const pixel16_t target_color = {
+    //    .r = texture->avg_color.r >> 3,
+    //    .g = texture->avg_color.r >> 3,
+    //    .b = texture->avg_color.r >> 3,
+    //    .a = texture->avg_color.a >> 7,
+    //};
+    //blend_palette(texture->palette, palette_buffer, target_color);
+    LoadImage(&rect_palette, (uint32_t*)texture->palette);
     DrawSync(0);
     palettes[index] = rect_palette;
 }
