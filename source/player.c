@@ -7,11 +7,11 @@
 #include "input.h"
 
 const int32_t eye_height = 56 << 12;
-const int32_t player_radius = 30 << 12;
+const int32_t player_radius = 40 << 12;
 const int32_t step_height = 20 << 12;
 const int32_t terminal_velocity_down = -2600;
 const int32_t terminal_velocity_up = 8000;
-const int32_t gravity = -12;
+const int32_t gravity = 0;// -12;
 const int32_t walking_acceleration = 5;
 const int32_t walking_max_speed = 1500;
 const int32_t stick_sensitivity = 2400;
@@ -132,10 +132,10 @@ void handle_jump(player_t* self) {
         }
     }
     if (input_held(PAD_UP, 0)) {
-        self->position.y += 4096;
+        self->position.y += 40960;
     }
     if (input_held(PAD_DOWN, 0)) {
-        self->position.y -= 4096;
+        self->position.y -= 40960;
     }
 }
 

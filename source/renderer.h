@@ -15,9 +15,9 @@ extern "C" {
 // ReSharper disable once CppUnusedIncludeDirective
 #include "common.h"
 #include "texture.h"
-
+    
 #define ORD_TBL_LENGTH 4096
-#define RES_X 512
+#define RES_X 320
 #ifdef PAL
 #define RES_Y 240
 #else

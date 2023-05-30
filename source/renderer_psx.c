@@ -61,8 +61,8 @@ void renderer_init(void) {
     SetDefDrawEnv(&draw[1], 0, 12, RES_X, RES_Y);
     
     // Specifies the clear color of the DRAWENV
-    setRGB0(&draw[0], 63, 0, 127);
-    setRGB0(&draw[1], 63, 0, 127);
+    setRGB0(&draw[0], 16, 16, 20);
+    setRGB0(&draw[1], 16, 16, 20);
 
     // Enable background clear
     draw[0].isbg = 1;
@@ -375,8 +375,8 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
         };
         const vec3_t camera_to_triangle = vec3_sub(triangle_position, camera_pos);
         const scalar_t crude_distance = scalar_abs(camera_to_triangle.x) + scalar_abs(camera_to_triangle.y) + scalar_abs(camera_to_triangle.z);
-
-        if (crude_distance < 225 * ONE) {
+        
+        if (crude_distance < 150 * ONE) {
             // Render 4x4 subdivided textured triangle
             draw_triangle_shaded_subdivided_twice(
                 &mesh->vertices[i],
@@ -384,7 +384,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
                 tex_offset_x
             );
         }
-        else if (crude_distance < 450 * ONE) {
+        else if (crude_distance < 300 * ONE) {
             // Render 2x2 subdivided textured triangle
             draw_triangle_shaded_subdivided_once(
                 &mesh->vertices[i],
@@ -392,9 +392,9 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
                 tex_offset_x
             );
         }
-        else if (crude_distance < 1800 * ONE) {
+        else if (crude_distance < 1500 * ONE) {
             // There should be a fade between textured and untextured triangles. Calculate this fade from 0 to 15, where
-            int index = (15 * (crude_distance - 1400 * ONE)) / (400 * ONE);
+            int index = (15 * (crude_distance - 1200 * ONE)) / (300 * ONE);
             if (index < 0) index = 0;
             if (index > 15) index = 15;
             // Render textured triangle
