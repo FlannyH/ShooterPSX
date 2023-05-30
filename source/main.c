@@ -29,9 +29,9 @@ int main(void) {
     // Init player
     player_t player = { 0 };
 
-    player.position.x = -11705653;
-   	player.position.y = 11413985;
-    player.position.z = 2112866;
+    player.position.x = 11705653 * 2;
+   	player.position.y = 11413985 * 2;
+    player.position.z = 2112866 * 2;
     //player.position.x = 0;
     //player.position.y = -229376;
     //player.position.z = 0;

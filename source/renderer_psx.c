@@ -131,7 +131,7 @@ void draw_triangle_shaded(vertex_3d_t* verts, uint8_t tex_id, uint16_t tex_offse
     gte_stopz(&p);
 
     // If this is the back of the triangle, cull it
-    if (p <= 0)
+    if (p >= 0)
         return;
 
     // Calculate average depth of the triangle
@@ -277,7 +277,7 @@ void draw_triangle_shaded_untextured(vertex_3d_t* verts, uint8_t tex_id) {
     gte_stopz(&p);
 
     // If this is the back of the triangle, cull it
-    if (p <= 0)
+    if (p >= 0)
         return;
 
     // Calculate average depth of the triangle
@@ -376,7 +376,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
         const vec3_t camera_to_triangle = vec3_sub(triangle_position, camera_pos);
         const scalar_t crude_distance = scalar_abs(camera_to_triangle.x) + scalar_abs(camera_to_triangle.y) + scalar_abs(camera_to_triangle.z);
         
-        if (crude_distance < 150 * ONE) {
+        if (crude_distance < 250 * ONE) {
             // Render 4x4 subdivided textured triangle
             draw_triangle_shaded_subdivided_twice(
                 &mesh->vertices[i],
@@ -384,7 +384,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
                 tex_offset_x
             );
         }
-        else if (crude_distance < 300 * ONE) {
+        else if (crude_distance < 800 * ONE) {
             // Render 2x2 subdivided textured triangle
             draw_triangle_shaded_subdivided_once(
                 &mesh->vertices[i],
@@ -392,9 +392,9 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
                 tex_offset_x
             );
         }
-        else if (crude_distance < 1500 * ONE) {
+        else if (crude_distance < 3500 * ONE) {
             // There should be a fade between textured and untextured triangles. Calculate this fade from 0 to 15, where
-            int index = (15 * (crude_distance - 1200 * ONE)) / (300 * ONE);
+            int index = (15 * (crude_distance - 3000 * ONE)) / (500 * ONE);
             if (index < 0) index = 0;
             if (index > 15) index = 15;
             // Render textured triangle

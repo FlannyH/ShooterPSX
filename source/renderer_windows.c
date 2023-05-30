@@ -437,7 +437,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
 	// Enable depth and draw
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
+	glCullFace(GL_BACK);
 	glDrawArrays(GL_TRIANGLES, 0, mesh->n_vertices);
 
 	n_total_triangles += mesh->n_vertices / 3;
