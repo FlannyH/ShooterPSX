@@ -23,7 +23,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size) {
 
     // Seek to the file and read it
     CdControl(CdlSetloc, &file.pos, 0);
-    CdRead(file.size / 2048, *destination, CdlModeSpeed);
+    CdRead(file_size / 2048, *destination, CdlModeSpeed);
 
     // Wait for it to finish reading
     CdReadSync(0, 0);
