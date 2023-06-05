@@ -43,6 +43,8 @@ int w, h;
 int prev_w = 0;
 int prev_h = 0;
 transform_t* cam_transform;
+vec3_t camera_pos;
+vec3_t camera_dir;
 
 typedef enum { vertex, pixel, geometry, compute } ShaderType;
 
@@ -294,7 +296,7 @@ void renderer_begin_frame(transform_t *camera_transform) {
 	glViewport(0, 0, w, h);
 
 	if (w != prev_w || h != prev_h) {
-		glm_perspective(glm_rad(90.0f), (float)w / (float)h, 0.1f, 10000.f,
+		glm_perspective(glm_rad(90.0f), (float)w / (float)h, 0.1f, 100000.f,
 										perspective_matrix);
 	}
 
@@ -360,6 +362,12 @@ void renderer_begin_frame(transform_t *camera_transform) {
         memcpy(view_matrix, view_matrix_normal, sizeof(view_matrix_normal));
     }
 
+	camera_dir.x = -view_matrix_normal[2][0] * 4096.f;
+	camera_dir.y = -view_matrix_normal[2][1] * 4096.f;
+	camera_dir.z = -view_matrix_normal[2][2] * 4096.f;
+	memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
+	vec3_debug(camera_dir);
+
 	n_total_triangles = 0;
 }
 
@@ -380,6 +388,23 @@ void renderer_draw_model_shaded(const model_t *model, transform_t *model_transfo
 
 int32_t max_dot_value = 0;
 void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform) {
+
+
+	const ray_t ray = {
+		.position = {
+			.x = camera_pos.x >> 12,
+			.y = camera_pos.y >> 12,
+			.z = camera_pos.z >> 12,
+		},
+		.direction = camera_dir,
+		.inv_direction = vec3_div(vec3_from_scalar(4096), camera_dir),
+		.length = INT32_MAX,
+	};
+	if (!ray_aabb_intersect(&mesh->bounds, ray)) {
+		renderer_debug_draw_aabb(&mesh->bounds, white, model_transform);
+		return;
+	}
+
 	// Calculate model matrix
 	mat4 model_matrix;
 	glm_mat4_identity(model_matrix);
@@ -498,12 +523,12 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
 
     // Copy data into it
     line_3d_t line;
-    line.v0.x = (int16_t)(v0.x >> 12);
-    line.v0.y = (int16_t)(v0.y >> 12);
-    line.v0.z = (int16_t)(v0.z >> 12);
-    line.v1.x = (int16_t)(v1.x >> 12);
-    line.v1.y = (int16_t)(v1.y >> 12);
-    line.v1.z = (int16_t)(v1.z >> 12);
+    line.v0.x = (int16_t)(v0.x >> 0);
+    line.v0.y = (int16_t)(v0.y >> 0);
+    line.v0.z = (int16_t)(v0.z >> 0);
+    line.v1.x = (int16_t)(v1.x >> 0);
+    line.v1.y = (int16_t)(v1.y >> 0);
+    line.v1.z = (int16_t)(v1.z >> 0);
     line.v0.r = color.r;
     line.v0.g = color.g;
     line.v0.b = color.b;

@@ -21,6 +21,7 @@ uint32_t primitive_buffer[2][(32768 << 3) / sizeof(uint32_t)];
 uint32_t* next_primitive;
 MATRIX view_matrix;
 vec3_t camera_pos;
+vec3_t camera_dir;
 int vsync_enable = 0;
 int frame_counter = 0;
 
@@ -99,6 +100,7 @@ void renderer_begin_frame(transform_t* camera_transform) {
     HiRotMatrix(&camera_transform->rotation, &view_matrix);
     VECTOR position = camera_transform->position;
     memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
+    //memcpy(&camera_dir, &camera_transform->rotation, sizeof(camera_dir));
     position.vx = -position.vx >> 12;
     position.vy = -position.vy >> 12;
     position.vz = -position.vz >> 12;
@@ -106,6 +108,12 @@ void renderer_begin_frame(transform_t* camera_transform) {
     TransMatrix(&view_matrix, &position);
     gte_SetRotMatrix(&view_matrix);
     gte_SetTransMatrix(&view_matrix);
+	//printf("RIGHT: %i, %i, %i\n", view_matrix.m[0][0], view_matrix.m[1][0], view_matrix.m[2][0]);
+	//printf("UP:    %i, %i, %i\n", view_matrix.m[0][1], view_matrix.m[1][1], view_matrix.m[2][1]);
+	//printf("FRONT: %i, %i, %i\n", view_matrix.m[0][2], view_matrix.m[1][2], view_matrix.m[2][2]);
+	camera_dir.x = view_matrix.m[2][0];
+	camera_dir.y = view_matrix.m[2][1];
+	camera_dir.z = view_matrix.m[2][2];
     
     
     n_rendered_triangles = 0;
@@ -116,8 +124,8 @@ void draw_triangle_shaded(vertex_3d_t* verts, uint8_t tex_id, uint16_t tex_offse
     // Load triangle into GTE
     gte_ldv3(
         &verts[0],
-        &verts[1],
-        &verts[2]
+        &verts[2],
+        &verts[1]
     );
 
     // Apply transformations
@@ -131,7 +139,7 @@ void draw_triangle_shaded(vertex_3d_t* verts, uint8_t tex_id, uint16_t tex_offse
     gte_stopz(&p);
 
     // If this is the back of the triangle, cull it
-    if (p >= 0)
+    if (p <= 0)
         return;
 
     // Calculate average depth of the triangle
@@ -145,8 +153,8 @@ void draw_triangle_shaded(vertex_3d_t* verts, uint8_t tex_id, uint16_t tex_offse
     // Store them
     int16_t vertex_positions[6];
     gte_stsxy0(&vertex_positions[0]);
-    gte_stsxy1(&vertex_positions[2]);
-    gte_stsxy2(&vertex_positions[4]);
+    gte_stsxy2(&vertex_positions[2]);
+    gte_stsxy1(&vertex_positions[4]);
 
     // Create primitive
     POLY_GT3* new_triangle = (POLY_GT3*)next_primitive;
@@ -360,6 +368,21 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
     gte_SetRotMatrix(&model_matrix);
     gte_SetTransMatrix(&model_matrix);
 
+	// If the mesh's bounding box is not inside the viewing frustum, cull it
+	#if 1
+	const ray_t ray = {
+		.position = camera_pos,
+		.direction = camera_dir,
+		.inv_direction = vec3_div(vec3_from_scalar(4096), camera_dir),
+		.length = INT32_MAX,
+	};
+	vec3_debug(ray.inv_direction);
+	if (ray_aabb_intersect(&mesh->bounds, ray) == 0) {
+		printf("culling frustum\n");
+		//return;
+	}
+	#endif
+
     n_total_triangles += mesh->n_vertices / 3;
     const uint8_t tex_id = mesh->vertices[0].tex_id;
     const uint16_t tex_offset_x = (tex_id % 4) * 64;
@@ -376,7 +399,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
         const vec3_t camera_to_triangle = vec3_sub(triangle_position, camera_pos);
         const scalar_t crude_distance = scalar_abs(camera_to_triangle.x) + scalar_abs(camera_to_triangle.y) + scalar_abs(camera_to_triangle.z);
         
-        if (crude_distance < 250 * ONE) {
+        if (crude_distance < 650 * ONE) {
             // Render 4x4 subdivided textured triangle
             draw_triangle_shaded_subdivided_twice(
                 &mesh->vertices[i],
@@ -384,7 +407,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
                 tex_offset_x
             );
         }
-        else if (crude_distance < 800 * ONE) {
+        else if (crude_distance < 1600 * ONE) {
             // Render 2x2 subdivided textured triangle
             draw_triangle_shaded_subdivided_once(
                 &mesh->vertices[i],
@@ -392,9 +415,9 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
                 tex_offset_x
             );
         }
-        else if (crude_distance < 3500 * ONE) {
+        else if (crude_distance < 7200 * ONE) {
             // There should be a fade between textured and untextured triangles. Calculate this fade from 0 to 15, where
-            int index = (15 * (crude_distance - 3000 * ONE)) / (500 * ONE);
+            int index = (15 * (crude_distance - 6400 * ONE)) / (800 * ONE);
             if (index < 0) index = 0;
             if (index > 15) index = 15;
             // Render textured triangle
@@ -405,13 +428,14 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
                 index
             );
         }
-        else {
+        else if (crude_distance < 30000 * ONE){
             // Render untextured triangle
             draw_triangle_shaded_untextured(
                 &mesh->vertices[i],
                 tex_id
             );
         }
+		// Otherwise, we don't render it. Triangles this far away are VERY far away
     }
 
 	PopMatrix();

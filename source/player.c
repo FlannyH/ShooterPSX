@@ -6,18 +6,18 @@
 
 #include "input.h"
 
-const int32_t eye_height = 112 << 12;
-const int32_t player_radius = 72 << 12;
-const int32_t step_height = 40 << 12;
-const int32_t terminal_velocity_down = -5200;
-const int32_t terminal_velocity_up = 16000;
+const int32_t eye_height = 225 << 12;
+const int32_t player_radius = 120 << 12;
+const int32_t step_height = 80 << 12;
+const int32_t terminal_velocity_down = -10400;
+const int32_t terminal_velocity_up = 32000;
 const int32_t gravity = 0;// -12;
-const int32_t walking_acceleration = 20;
-const int32_t walking_max_speed = 3000;
+const int32_t walking_acceleration = 50;
+const int32_t walking_max_speed = 6000;
 const int32_t stick_sensitivity = 2400;
-const int32_t walking_drag = 26;
-const int32_t initial_jump_velocity = 4400;
-const int32_t jump_ground_threshold = 10400;
+const int32_t walking_drag = 75;
+const int32_t initial_jump_velocity = 6600;
+const int32_t jump_ground_threshold = 16000;
 static scalar_t player_radius_squared = 0;
 
 transform_t t_level = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };
