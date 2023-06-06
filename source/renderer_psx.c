@@ -384,19 +384,63 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
     gte_SetTransMatrix(&model_matrix);
 
 	// If the mesh's bounding box is not inside the viewing frustum, cull it
-	#if 0
-	const ray_t ray = {
-		.position = camera_pos,
-		.direction = camera_dir,
-		.inv_direction = vec3_div(vec3_from_scalar(4096), camera_dir),
-		.length = INT32_MAX,
-	};
-	vec3_debug(ray.inv_direction);
-	if (ray_aabb_intersect(&mesh->bounds, ray) == 0) {
-		printf("culling frustum\n");
-		//return;
-	}
-	#endif
+    {
+        // Create shorthand for better readability
+        const vec3_t *min = &mesh->bounds.min; // shorthand for readability
+        const vec3_t *max = &mesh->bounds.max; // shorthand for readability
+
+        // We will transform these to screen space
+        SVECTOR vertices[8] = {
+            ((SVECTOR) {min->x, min->y, min->z}),
+            ((SVECTOR) {min->x, min->y, max->z}),
+            ((SVECTOR) {min->x, max->y, min->z}),
+            ((SVECTOR) {min->x, max->y, max->z}),
+            ((SVECTOR) {max->x, min->y, min->z}),
+            ((SVECTOR) {max->x, min->y, max->z}),
+            ((SVECTOR) {max->x, max->y, min->z}),
+            ((SVECTOR) {max->x, max->y, max->z}),
+        };
+
+        // Transform vertices and store them back
+        int16_t padding_for_last_store;
+        // 0, 1, 2
+        gte_ldv3(&vertices[0].vx, &vertices[1].vx, &vertices[2].vx);
+        gte_rtpt();
+        gte_stsxy3(&vertices[0].vx, &vertices[1].vx, &vertices[2].vx);
+        gte_stsz3(&vertices[0].vz, &vertices[1].vz, &vertices[2].vz);
+        // 3, 4, 5
+        gte_ldv3(&vertices[3].vx, &vertices[4].vx, &vertices[5].vx); // 3 4 5
+        gte_rtpt();
+        gte_stsxy3(&vertices[3].vx, &vertices[4].vx, &vertices[5].vx);
+        gte_stsz3(&vertices[3].vz, &vertices[4].vz, &vertices[5].vz);
+        // 6, 7
+        gte_ldv01(&vertices[6].vx, &vertices[7].vx);
+        gte_rtpt();
+        gte_stsxy01(&vertices[6].vx, &vertices[7].vx);
+        gte_stsz3(&vertices[6].vz, &vertices[7].vz, &padding_for_last_store);
+
+        // Find screen aligned bounding box
+        SVECTOR after_min = (SVECTOR){INT16_MAX, INT16_MAX, INT16_MAX};
+        SVECTOR after_max = (SVECTOR){INT16_MIN, INT16_MIN, INT16_MIN};
+        for (size_t i = 0; i < 8; ++i) {
+            if      (vertices[i].vx < after_min.vx) after_min.vx = vertices[i].vx;
+            else if (vertices[i].vx > after_max.vx) after_max.vx = vertices[i].vx;
+            if      (vertices[i].vy > after_max.vy) after_max.vy = vertices[i].vy;
+            else if (vertices[i].vy < after_min.vy) after_min.vy = vertices[i].vy;
+            if      (vertices[i].vz > after_max.vz) after_max.vz = vertices[i].vz;
+        }
+
+        // If this screen aligned bounding box is off screen, do not draw this mesh
+        #define FRUSCUL_PAD_X 0 // these are in case I ever want to add a safe zone
+        #define FRUSCUL_PAD_Y 0 // or for debugging.
+        if (after_max.vx < 0+FRUSCUL_PAD_X) return; // mesh is to the left of the screen
+        if (after_max.vy < 0+FRUSCUL_PAD_Y) return; // mesh is above the screen
+        if (after_max.vz < 0) return; // mesh is behind the screen
+        if (after_min.vx > RES_X-FRUSCUL_PAD_X) return; // mesh is to the right of the screen
+        if (after_min.vy > RES_Y-FRUSCUL_PAD_Y) return; // mesh is below the screen
+        #undef FRUSCUL_PAD_X
+        #undef FRUSCUL_PAD_Y
+    };
 
     n_total_triangles += mesh->n_vertices / 3;
     const uint8_t tex_id = mesh->vertices[0].tex_id;
