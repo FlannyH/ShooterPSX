@@ -384,6 +384,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
     gte_SetTransMatrix(&model_matrix);
 
 	// If the mesh's bounding box is not inside the viewing frustum, cull it
+    if (1)
     {
         // Create shorthand for better readability
         const vec3_t *min = &mesh->bounds.min; // shorthand for readability
@@ -443,20 +444,20 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
     };
 
     n_total_triangles += mesh->n_vertices / 3;
-    const uint8_t tex_id = mesh->vertices[0].tex_id;
-    const uint16_t tex_offset_x = (tex_id % 4) * 64;
 
     // Loop over each triangle
     for (size_t i = 0; i < mesh->n_vertices; i += 3) {
         // Calculate distance from camera to triangle
         // Just use v0 for now, it doesn't have to be perfect
         const vec3_t triangle_position = {
-            (scalar_t)mesh->vertices[i].x * ONE,
-            (scalar_t)mesh->vertices[i].y * ONE,
-            (scalar_t)mesh->vertices[i].z * ONE,
+            (scalar_t)(mesh->vertices[i+0].x + mesh->vertices[i+1].x + mesh->vertices[i+2].x) * (ONE/3),
+            (scalar_t)(mesh->vertices[i+0].y + mesh->vertices[i+1].y + mesh->vertices[i+2].y) * (ONE/3),
+            (scalar_t)(mesh->vertices[i+0].z + mesh->vertices[i+1].z + mesh->vertices[i+2].z) * (ONE/3),
         };
         const vec3_t camera_to_triangle = vec3_sub(triangle_position, camera_pos);
         const scalar_t crude_distance = scalar_abs(camera_to_triangle.x) + scalar_abs(camera_to_triangle.y) + scalar_abs(camera_to_triangle.z);
+        const uint8_t tex_id = mesh->vertices[i].tex_id;
+        const uint16_t tex_offset_x = (tex_id % 4) * 64;
         
         if (crude_distance < 650 * ONE) {
             // Render 4x4 subdivided textured triangle
@@ -558,8 +559,8 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, const pixel32_t color, trans
     gte_SetTransMatrix(&model_matrix);
 
     // Load a line's vertices into the GTE
-    SVECTOR sv0 = { v0.x >> 12, v0.y >> 12, v0.z >> 12};
-    SVECTOR sv1 = { v1.x >> 12, v1.y >> 12, v1.z >> 12};
+    SVECTOR sv0 = { v0.x, v0.y, v0.z };
+    SVECTOR sv1 = { v1.x, v1.y, v1.z };
     gte_ldv3(
         &sv0.vx,
         &sv1.vx,
@@ -643,18 +644,18 @@ void blend_palette(const pixel16_t* in_palette, pixel16_t* out_palette, const pi
         const size_t w = 16;
         out_palette[x + w * 0x00] = in_color;
         out_palette[x + w * 0x01] = pixel_lerp(0x01, in_color, target_color);
-        out_palette[x + w * 0x02] =pixel_lerp(0x02, in_color, target_color);
+        out_palette[x + w * 0x02] = pixel_lerp(0x02, in_color, target_color);
         out_palette[x + w * 0x03] = pixel_lerp(0x03, in_color, target_color);
         out_palette[x + w * 0x04] = pixel_lerp(0x04, in_color, target_color);
-        out_palette[x + w * 0x05] =pixel_lerp(0x05, in_color, target_color);
-        out_palette[x + w * 0x06] =pixel_lerp(0x06, in_color, target_color);
+        out_palette[x + w * 0x05] = pixel_lerp(0x05, in_color, target_color);
+        out_palette[x + w * 0x06] = pixel_lerp(0x06, in_color, target_color);
         out_palette[x + w * 0x07] = pixel_lerp(0x07, in_color, target_color);
         out_palette[x + w * 0x08] = pixel_lerp(0x08, in_color, target_color);
         out_palette[x + w * 0x09] = pixel_lerp(0x09, in_color, target_color);
         out_palette[x + w * 0x0A] = pixel_lerp(0x0A, in_color, target_color);
         out_palette[x + w * 0x0B] = pixel_lerp(0x0B, in_color, target_color);
-        out_palette[x + w * 0x0C] =pixel_lerp(0x0C, in_color, target_color);
-        out_palette[x + w * 0x0D] =pixel_lerp(0x0D, in_color, target_color);
+        out_palette[x + w * 0x0C] = pixel_lerp(0x0C, in_color, target_color);
+        out_palette[x + w * 0x0D] = pixel_lerp(0x0D, in_color, target_color);
         out_palette[x + w * 0x0E] = pixel_lerp(0x0E, in_color, target_color);
         out_palette[x + w * 0x0F] = pixel_lerp(0x0F, in_color, target_color);
 

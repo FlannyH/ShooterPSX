@@ -76,6 +76,10 @@ typedef struct {
 } collision_triangle_3d_t;
 
 typedef struct {
+    int16_t x, y, z; // 3D position
+} svec3_t;
+
+typedef struct {
     uint32_t n_vertices;
     vertex_3d_t* vertices;
     aabb_t bounds;

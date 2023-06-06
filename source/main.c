@@ -74,15 +74,6 @@ int main(void) {
         player_update(&player, &bvh_level_model, delta_time);
         frame_counter += delta_time;
         
-    #ifdef _PSX
-	    FntPrint(-1, "Frame: %i\n", frame_counter++);
-	    FntPrint(-1, "Delta Time (hblank): %i\n", delta_time);
-	    FntPrint(-1, "Est. FPS: %i\n", 1000 / delta_time);
-	    FntPrint(-1, "Triangles (rendered/total): %i / %i\n",
-			     renderer_get_n_rendered_triangles(),
-			     renderer_get_n_total_triangles());
-	    FntFlush(-1);
-    #endif
 	    renderer_end_frame();
 	}
 #ifndef _PSX
