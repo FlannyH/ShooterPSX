@@ -389,7 +389,7 @@ void renderer_draw_model_shaded(const model_t *model, transform_t *model_transfo
 int32_t max_dot_value = 0;
 void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform) {
 
-
+#if 0
 	const ray_t ray = {
 		.position = {
 			.x = camera_pos.x >> 12,
@@ -404,6 +404,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
 		renderer_debug_draw_aabb(&mesh->bounds, white, model_transform);
 		return;
 	}
+#endif
 
 	// Calculate model matrix
 	mat4 model_matrix;

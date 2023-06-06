@@ -19,9 +19,9 @@ extern "C" {
 #define ORD_TBL_LENGTH 4096
 #define RES_X 512
 #ifdef PAL
-#define RES_Y 240
+#define RES_Y 256
 #else
-#define RES_Y 216
+#define RES_Y 240
 #endif
 #define CENTER_X (RES_X / 2)
 #define CENTER_Y (RES_Y / 2)
@@ -32,6 +32,7 @@ typedef struct {
     VECTOR scale; // Scale (4096 = 1.0)
 } transform_t;
 const static transform_t id_transform = { {0,0,0},{0,0,0}, {-4096, -4096, -4096} };
+extern int widescreen;
 
 // Functions
 void renderer_init(void); // Initializes the renderer by configuring the GPU, setting the video mode, and preparing the drawing environment

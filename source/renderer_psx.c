@@ -6,6 +6,8 @@
 #include <psxetc.h>
 #include <inline_c.h>
 #include <string.h>
+#include <psxpad.h>
+#include "input.h"
 
 // Define environment pairs and buffer counter
 DISPENV disp[2];
@@ -58,8 +60,8 @@ void renderer_init(void) {
 
 
     // Configures the pair of DRAWENVs for the DISPENVs
-    SetDefDrawEnv(&draw[0], 512, 12, RES_X, RES_Y);
-    SetDefDrawEnv(&draw[1], 0, 12, RES_X, RES_Y);
+    SetDefDrawEnv(&draw[0], 512, 0, RES_X, RES_Y);
+    SetDefDrawEnv(&draw[1], 0, 0, RES_X, RES_Y);
     
     // Specifies the clear color of the DRAWENV
     setRGB0(&draw[0], 16, 16, 20);
@@ -91,13 +93,16 @@ void renderer_init(void) {
 
 void renderer_begin_frame(transform_t* camera_transform) {
     // Apply camera transform
-    VECTOR scale = {
-        .vx = 8192,
-        .vy = 3840,
-        .vz = 4096,
-    };
-    ScaleMatrix(&view_matrix, &scale);
+    static int scalex = 512;
+
+    if (input_held(PAD_LEFT, 0)) {
+        scalex -= 4;
+    }
+    if (input_held(PAD_RIGHT, 0)) {
+        scalex += 4;
+    }
     HiRotMatrix(&camera_transform->rotation, &view_matrix);
+    //ScaleMatrix(&view_matrix, &scale);
     VECTOR position = camera_transform->position;
     memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
     //memcpy(&camera_dir, &camera_transform->rotation, sizeof(camera_dir));
@@ -106,6 +111,16 @@ void renderer_begin_frame(transform_t* camera_transform) {
     position.vz = -position.vz >> 12;
     ApplyMatrixLV(&view_matrix, &position, &position);
     TransMatrix(&view_matrix, &position);
+    // Finishing touch: scale by aspect ratio
+    MATRIX aspect_matrix = {
+        .m = {
+            {(ONE * RES_X) / (widescreen ? 427 : 320), 0, 0},
+            {0, ONE, 0},
+            {0, 0, ONE},
+        },
+        .t = {0, 0, 0},
+    };
+    CompMatrixLV(&aspect_matrix, &view_matrix, &view_matrix);
     gte_SetRotMatrix(&view_matrix);
     gte_SetTransMatrix(&view_matrix);
 	//printf("RIGHT: %i, %i, %i\n", view_matrix.m[0][0], view_matrix.m[1][0], view_matrix.m[2][0]);
@@ -334,7 +349,7 @@ void draw_triangle_shaded_untextured(vertex_3d_t* verts, uint8_t tex_id) {
     );
     setRGB1(new_triangle,
         vert_colors[1].r,
-        vert_colors[1].g,
+                           vert_colors[1].g,
         vert_colors[1].b
     );
     setRGB2(new_triangle,
@@ -369,7 +384,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
     gte_SetTransMatrix(&model_matrix);
 
 	// If the mesh's bounding box is not inside the viewing frustum, cull it
-	#if 1
+	#if 0
 	const ray_t ray = {
 		.position = camera_pos,
 		.direction = camera_dir,
@@ -428,7 +443,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
                 index
             );
         }
-        else if (crude_distance < 30000 * ONE){
+        else if (crude_distance < 300000 * ONE){
             // Render untextured triangle
             draw_triangle_shaded_untextured(
                 &mesh->vertices[i],
