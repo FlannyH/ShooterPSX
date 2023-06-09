@@ -8,7 +8,7 @@ typedef struct {
 } vec3_t;
 
 // Let's hope and cry that this will be compile-time evaluated
-static vec3_t vec3_from_floats(const float x, const float y, const float z) {
+__attribute__((always_inline)) inline vec3_t vec3_from_floats(const float x, const float y, const float z) {
     vec3_t result;
     result.x = scalar_from_float(x);
     result.y = scalar_from_float(y);
@@ -17,7 +17,7 @@ static vec3_t vec3_from_floats(const float x, const float y, const float z) {
 }
 
 // Debug
-static void vec3_debug(const vec3_t a) {
+__attribute__((always_inline)) inline void vec3_debug(const vec3_t a) {
     print_fixed_point(a.x);
     printf(", ");
     print_fixed_point(a.y);
@@ -26,17 +26,17 @@ static void vec3_debug(const vec3_t a) {
     printf("\n");
 }
 
-static vec3_t vec3_from_scalar(const scalar_t a) {
+__attribute__((always_inline)) inline vec3_t vec3_from_scalar(const scalar_t a) {
     const vec3_t result = { a, a, a };
     return result;
 }
 
-static vec3_t vec3_from_scalars(const scalar_t x, const scalar_t y, const scalar_t z) {
+__attribute__((always_inline)) inline vec3_t vec3_from_scalars(const scalar_t x, const scalar_t y, const scalar_t z) {
     const vec3_t result = { x, y, z };
     return result;
 }
 
-static vec3_t vec3_from_int32s(int32_t x, int32_t y, int32_t z) {
+__attribute__((always_inline)) inline vec3_t vec3_from_int32s(int32_t x, int32_t y, int32_t z) {
     vec3_t result;
     result.x = x;
     result.y = y;
@@ -44,7 +44,7 @@ static vec3_t vec3_from_int32s(int32_t x, int32_t y, int32_t z) {
     return result;
 }
 
-static vec3_t vec3_add(const vec3_t a, const vec3_t b) {
+__attribute__((always_inline)) inline vec3_t vec3_add(const vec3_t a, const vec3_t b) {
     vec3_t result;
     result.x = a.x + b.x;
     result.y = a.y + b.y;
@@ -52,7 +52,7 @@ static vec3_t vec3_add(const vec3_t a, const vec3_t b) {
     return result;
 }
 
-static vec3_t vec3_sub(const vec3_t a, const vec3_t b) {
+__attribute__((always_inline)) inline vec3_t vec3_sub(const vec3_t a, const vec3_t b) {
     vec3_t result;
     result.x = a.x - b.x;
     result.y = a.y - b.y;
@@ -60,7 +60,7 @@ static vec3_t vec3_sub(const vec3_t a, const vec3_t b) {
     return result;
 }
 
-static vec3_t vec3_mul(const vec3_t a, const vec3_t b) {
+__attribute__((always_inline)) inline static vec3_t vec3_mul(const vec3_t a, const vec3_t b) {
     vec3_t result;
     result.x = scalar_mul(a.x, b.x);
     result.y = scalar_mul(a.y, b.y);
@@ -68,7 +68,7 @@ static vec3_t vec3_mul(const vec3_t a, const vec3_t b) {
     return result;
 }
 
-static vec3_t vec3_div(const vec3_t a, const vec3_t b) {
+__attribute__((always_inline)) inline vec3_t vec3_div(const vec3_t a, const vec3_t b) {
     vec3_t result;
     result.x = scalar_div(a.x, b.x);
     result.y = scalar_div(a.y, b.y);
@@ -76,14 +76,14 @@ static vec3_t vec3_div(const vec3_t a, const vec3_t b) {
     return result;
 }
 
-static scalar_t vec3_dot(const vec3_t a, const vec3_t b) {
+__attribute__((always_inline)) inline static scalar_t vec3_dot(const vec3_t a, const vec3_t b) {
     scalar_t result = 0;
     result += scalar_mul(a.x, b.x);
     result += scalar_mul(a.y, b.y);
     result += scalar_mul(a.z, b.z);
     return result;
 }
-static vec3_t vec3_scale(const vec3_t a, const scalar_t b) {
+__attribute__((always_inline)) inline static vec3_t vec3_scale(const vec3_t a, const scalar_t b) {
     vec3_t result;
     result.x = scalar_mul(a.x, b);
     result.y = scalar_mul(a.y, b);
@@ -91,7 +91,7 @@ static vec3_t vec3_scale(const vec3_t a, const scalar_t b) {
     return result;
 }
 
-static vec3_t vec3_min(const vec3_t a, const vec3_t b) {
+__attribute__((always_inline)) inline vec3_t vec3_min(const vec3_t a, const vec3_t b) {
     vec3_t result;
     result.x = (a.x < b.x) ? a.x : b.x;
     result.y = (a.y < b.y) ? a.y : b.y;
@@ -99,7 +99,7 @@ static vec3_t vec3_min(const vec3_t a, const vec3_t b) {
     return result;
 }
 
-static vec3_t vec3_max(const vec3_t a, const vec3_t b) {
+__attribute__((always_inline)) inline vec3_t vec3_max(const vec3_t a, const vec3_t b) {
     vec3_t result;
     result.x = (a.x > b.x) ? a.x : b.x;
     result.y = (a.y > b.y) ? a.y : b.y;
@@ -107,7 +107,7 @@ static vec3_t vec3_max(const vec3_t a, const vec3_t b) {
     return result;
 }
 
-static scalar_t vec3_magnitude_squared(const vec3_t a) {
+__attribute__((always_inline)) inline static scalar_t vec3_magnitude_squared(const vec3_t a) {
     const scalar_t x2 = scalar_mul(a.x, a.x);
     const scalar_t y2 = scalar_mul(a.y, a.y);
     const scalar_t z2 = scalar_mul(a.z, a.z);
@@ -119,7 +119,7 @@ static scalar_t vec3_magnitude_squared(const vec3_t a) {
     return x2 + y2 + z2;
 }
 
-static vec3_t vec3_normalize(const vec3_t a) {
+__attribute__((always_inline)) inline static vec3_t vec3_normalize(const vec3_t a) {
     const scalar_t magnitude_squared = vec3_magnitude_squared(a);
     const scalar_t magnitude = scalar_sqrt(magnitude_squared);
     if (magnitude == 0) {
@@ -129,7 +129,7 @@ static vec3_t vec3_normalize(const vec3_t a) {
     return a_normalized;
 }
 
-static vec3_t vec3_cross(vec3_t a, vec3_t b) {
+__attribute__((always_inline)) inline static vec3_t vec3_cross(vec3_t a, vec3_t b) {
     vec3_t result;
     result.x = scalar_mul(a.y, b.z) - scalar_mul(a.z, b.y);
     result.y = scalar_mul(a.z, b.x) - scalar_mul(a.x, b.z);
@@ -137,7 +137,7 @@ static vec3_t vec3_cross(vec3_t a, vec3_t b) {
     return result;
 }
 
-static vec3_t vec3_shift_right(vec3_t a, int amount) {
+__attribute__((always_inline)) inline vec3_t vec3_shift_right(vec3_t a, int amount) {
     vec3_t result = a;
     result.x >>= amount;
     result.y >>= amount;
@@ -145,7 +145,7 @@ static vec3_t vec3_shift_right(vec3_t a, int amount) {
     return result;
 }
 
-static vec3_t vec3_shift_left(vec3_t a, int amount) {
+__attribute__((always_inline)) inline vec3_t vec3_shift_left(vec3_t a, int amount) {
     vec3_t result = a;
     result.x *= (1 << amount);
     result.y *= (1 << amount);
@@ -153,7 +153,7 @@ static vec3_t vec3_shift_left(vec3_t a, int amount) {
     return result;
 }
 
-static vec3_t vec3_neg(vec3_t a) {
+__attribute__((always_inline)) inline vec3_t vec3_neg(vec3_t a) {
     vec3_t result = a;
     result.x = -result.x;
     result.y = -result.y;

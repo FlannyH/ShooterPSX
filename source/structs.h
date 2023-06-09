@@ -80,6 +80,10 @@ typedef struct {
 } svec3_t;
 
 typedef struct {
+    int16_t x, y; // 2D position
+} svec2_t;
+
+typedef struct {
     uint32_t n_vertices;
     vertex_3d_t* vertices;
     aabb_t bounds;

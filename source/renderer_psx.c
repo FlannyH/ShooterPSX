@@ -8,6 +8,14 @@
 #include <string.h>
 #include <psxpad.h>
 #include "input.h"
+#include "vec2.h"
+
+#define TRI_THRESHOLD_SUB2 125
+#define TRI_THRESHOLD_SUB1 300
+#define TRI_THRESHOLD_NORMAL 500
+#define TRI_THRESHOLD_FADE_START 800
+#define TRI_THRESHOLD_FADE_END 1200
+#define N_CLUT_FADES 16
 
 // Define environment pairs and buffer counter
 DISPENV disp[2];
@@ -34,13 +42,13 @@ RECT palettes[256];
 vertex_3d_t get_halfway_point(const vertex_3d_t v0, const vertex_3d_t v1) {
     return (vertex_3d_t) {
         .x = v0.x + ((v1.x - v0.x) >> 1),
-            .y = v0.y + ((v1.y - v0.y) >> 1),
-            .z = v0.z + ((v1.z - v0.z) >> 1),
-            .r = v0.r + ((v1.r - v0.r) >> 1),
-            .g = v0.g + ((v1.g - v0.g) >> 1),
-            .b = v0.b + ((v1.b - v0.b) >> 1),
-            .u = v0.u + ((v1.u - v0.u) >> 1),
-            .v = v0.v + ((v1.v - v0.v) >> 1),
+        .y = v0.y + ((v1.y - v0.y) >> 1),
+        .z = v0.z + ((v1.z - v0.z) >> 1),
+        .r = v0.r + ((v1.r - v0.r) >> 1),
+        .g = v0.g + ((v1.g - v0.g) >> 1),
+        .b = v0.b + ((v1.b - v0.b) >> 1),
+        .u = v0.u + ((v1.u - v0.u) >> 1),
+        .v = v0.v + ((v1.v - v0.v) >> 1),
     };
 }
 
@@ -91,7 +99,9 @@ void renderer_init(void) {
     next_primitive = primitive_buffer[0];
 }
 
+static int mul = 0;
 void renderer_begin_frame(transform_t* camera_transform) {
+    mul ^= 1;
     // Apply camera transform
     static int scalex = 512;
 
@@ -135,155 +145,191 @@ void renderer_begin_frame(transform_t* camera_transform) {
     n_total_triangles = 0;
 }
 
-void draw_triangle_shaded(vertex_3d_t* verts, uint8_t tex_id, uint16_t tex_offset_x, int clut_fade) {
-    // Load triangle into GTE
+// For some reason, making this a macro improved performance by rough 8%. Can't tell you why though.
+#define ADD_TEX_TRI_TO_QUEUE(p0, p1, p2, v0, v1, v2, avg_z, clut_fade, tex_id) {       \
+    POLY_GT3* new_triangle = (POLY_GT3*)next_primitive;\
+    next_primitive += sizeof(POLY_GT3);\
+    setPolyGT3(new_triangle); \
+    setXY3(new_triangle, \
+        p0.x, p0.y,\
+        p1.x, p1.y,\
+        p2.x, p2.y\
+    );\
+    setRGB0(new_triangle, v0.r >> 1, v0.g >> 1, v0.b >> 1);\
+    setRGB1(new_triangle, v1.r >> 1, v1.g >> 1, v1.b >> 1);\
+    setRGB2(new_triangle, v2.r >> 1, v2.g >> 1, v2.b >> 1);\
+    const uint16_t tex_offset_x = (tex_id % 4) * 64;\
+    new_triangle->clut = getClut(palettes[tex_id].x, palettes[tex_id].y + clut_fade);\
+    new_triangle->tpage = getTPage(0, 0, textures[tex_id].x, textures[tex_id].y);\
+    setUV3(new_triangle,\
+        (((uint16_t)(v0.u)) >> 2) + tex_offset_x,\
+        (((uint16_t)(v0.v)) >> 2),\
+        (((uint16_t)(v1.u)) >> 2) + tex_offset_x,\
+        (((uint16_t)(v1.v)) >> 2),\
+        (((uint16_t)(v2.u)) >> 2) + tex_offset_x,\
+        (((uint16_t)(v2.v)) >> 2)\
+    );\
+    addPrim(ord_tbl[drawbuffer] + (avg_z>>2), new_triangle);\
+    ++n_rendered_triangles;\
+}\
+
+__attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* verts) {
+    // Transform the triangle vertices - there's 6 entries instead of 3, so we have enough room for subdivided triangles
+    svec2_t trans_vec_xy[6];
+    scalar_t trans_vec_z[6];
+    scalar_t avg_z;
     gte_ldv3(
         &verts[0],
-        &verts[2],
-        &verts[1]
+        &verts[1],
+        &verts[2]
     );
-
-    // Apply transformations
     gte_rtpt();
-    //int flg;
-    //gte_stflg(&flg); if ((flg & 0x00060000) != 0) return;
 
-    // Calculate normal clip for backface culling
+    // Backface culling
     int p;
     gte_nclip();
     gte_stopz(&p);
+    if (p >= 0) return;
+    (void)p; // we don't need it anymore after this
 
-    // If this is the back of the triangle, cull it
-    if (p <= 0)
-        return;
-
-    // Calculate average depth of the triangle
+    // Store transformed position, and center depth
+    gte_stsxy3c(&trans_vec_xy[0]);
+    gte_stsz3c(&trans_vec_z[0]);
     gte_avsz3();
-    gte_stotz(&p);
+    gte_stotz(&avg_z);
 
-    // Depth clipping
-    if ((p >> 2) > ORD_TBL_LENGTH || ((p >> 2) <= 0))
+    // Depth culling
+    if ((avg_z>>2) > ORD_TBL_LENGTH || ((avg_z >> 2) <= 0)) return;
+
+    if (avg_z < TRI_THRESHOLD_SUB1) {
+        // Let's calculate the center of each edge
+        const vertex_3d_t ab = get_halfway_point(verts[0], verts[1]);
+        const vertex_3d_t bc = get_halfway_point(verts[1], verts[2]);
+        const vertex_3d_t ca = get_halfway_point(verts[2], verts[0]);
+
+        // Transform them
+        gte_ldv3(&ab.x, &bc.x, &ca.x);
+        gte_rtpt();
+        gte_stsxy3c(&trans_vec_xy[3]);
+        gte_stsz3c(&trans_vec_z[3]);
+
+        // We need to draw them in this order:
+        int avg_z_035; // - 0 3 5
+        int avg_z_314; // - 3 1 4
+        int avg_z_345; // - 3 4 5
+        int avg_z_542; // - 5 4 2
+
+        // Calculate all the average Z values
+        //gte_ldsz3(&trans_vec_z[0], &trans_vec_z[3], &trans_vec_z[5]);
+        //gte_avsz3();
+        //gte_stotz(&avg_z_035);
+        //gte_ldsz3(&trans_vec_z[3], &trans_vec_z[1], &trans_vec_z[4]);
+        //gte_avsz3();
+        //gte_stotz(&avg_z_314);
+        //gte_ldsz3(&trans_vec_z[3], &trans_vec_z[4], &trans_vec_z[5]);
+        //gte_avsz3();
+        //gte_stotz(&avg_z_345);
+        //gte_ldsz3(&trans_vec_z[5], &trans_vec_z[4], &trans_vec_z[2]);
+        //gte_avsz3();
+        //gte_stotz(&avg_z_542);
+
+        // Draw them
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[3], trans_vec_xy[5], verts[0], ab, ca, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[1], trans_vec_xy[4], ab, verts[1], bc, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[4], trans_vec_xy[5], ab, bc, ca, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[5], trans_vec_xy[4], trans_vec_xy[2], ca, bc, verts[2], avg_z, 0, verts[0].tex_id);
         return;
+    }
+    if (avg_z < TRI_THRESHOLD_FADE_END) {
+        int16_t clut_fade = 0;
+        if (avg_z >= TRI_THRESHOLD_FADE_START) {
+            clut_fade = ((N_CLUT_FADES-1) * (avg_z - TRI_THRESHOLD_FADE_START)) / (TRI_THRESHOLD_FADE_END - TRI_THRESHOLD_FADE_START);
+        }
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], verts[0], verts[1], verts[2], avg_z, clut_fade, verts[0].tex_id);
+        return;
+    }
 
-    // Store them
-    int16_t vertex_positions[6];
-    gte_stsxy0(&vertex_positions[0]);
-    gte_stsxy2(&vertex_positions[2]);
-    gte_stsxy1(&vertex_positions[4]);
+    else {
+        // Create primitive
+        POLY_G3* new_triangle = (POLY_G3*)next_primitive;
+        next_primitive += sizeof(POLY_G3);
 
-    // Create primitive
-    POLY_GT3* new_triangle = (POLY_GT3*)next_primitive;
-    next_primitive += sizeof(POLY_GT3);
+        // Initialize the entry in the render queue
+        setPolyG3(new_triangle);
 
-    // Set the vertex positions of the triangle
-    setXY3(
-        new_triangle,
-        vertex_positions[0], vertex_positions[1],
-        vertex_positions[2], vertex_positions[3],
-        vertex_positions[4], vertex_positions[5]
-    );
+        // Set the vertex positions of the triangle
+        setXY3(new_triangle, 
+            trans_vec_xy[0].x, trans_vec_xy[0].y,
+            trans_vec_xy[1].x, trans_vec_xy[1].y,
+            trans_vec_xy[2].x, trans_vec_xy[2].y
+        );
 
-    // Set the vertex colors of the triangle
-    setRGB0(new_triangle,
-        verts[0].r,
-        verts[0].g,
-        verts[0].b
-    );
-    setRGB1(new_triangle,
-        verts[1].r,
-        verts[1].g,
-        verts[1].b
-    );
-    setRGB2(new_triangle,
-        verts[2].r,
-        verts[2].g,
-        verts[2].b
-    );
-
-    // Bind texture
-    new_triangle->clut = getClut(palettes[tex_id].x, palettes[tex_id].y + clut_fade);
-    new_triangle->tpage = getTPage(0, 0, textures[tex_id].x, textures[tex_id].y);
-
-    // Transform UVs to texture space
-    setUV3(new_triangle,
-        (((uint16_t)(verts[0].u) * textures[tex_id].w) >> 6) + tex_offset_x, // 6 because UVs do happen to be 4-bit pixel coordinates instead of 16-bit
-        (((uint16_t)(verts[0].v) * textures[tex_id].h) >> 8),
-        (((uint16_t)(verts[1].u) * textures[tex_id].w) >> 6) + tex_offset_x, // also + offset because apparently texture pages are 256x256 in 4-bit
-        (((uint16_t)(verts[1].v) * textures[tex_id].h) >> 8),
-        (((uint16_t)(verts[2].u) * textures[tex_id].w) >> 6) + tex_offset_x,
-        (((uint16_t)(verts[2].v) * textures[tex_id].h) >> 8)
-    );
-
-    // Initialize the entry in the render queue
-    setPolyGT3(new_triangle);
-
-    // Add the triangle to the draw queue
-    addPrim(ord_tbl[drawbuffer] + (p >> 2), new_triangle);
-    ++n_rendered_triangles;
+// left in to see if this is worth exploring in the future, for now this is not worth it and not reliable        
+#if 0
+        // Set the vertex colors of the triangle
+        MATRIX tex_color = {
+            .m = {
+                {textures_avg_colors[verts->tex_id].r << 4, 0, 0},
+                {0, textures_avg_colors[verts->tex_id].g << 4, 0},
+                {0, 0, textures_avg_colors[verts->tex_id].b << 4}
+            },
+            .t = {0, 0, 0},
+        };
+        gte_SetColorMatrix(&tex_color);
+        VECTOR color_v0 = {verts[0].r, verts[0].g, verts[0].b};
+        VECTOR color_v1 = {verts[1].r, verts[1].g, verts[1].b};
+        VECTOR color_v2 = {verts[2].r, verts[2].g, verts[2].b};
+        SVECTOR blend_v0 = {0};
+        SVECTOR blend_v1 = {0};
+        SVECTOR blend_v2 = {0};
+        gte_ldv0(&color_v0);
+        gte_lcv0();
+        gte_stsv(&blend_v0);
+        gte_ldv0(&color_v1);
+        gte_lcv0();
+        gte_stsv(&blend_v1);
+        gte_ldv0(&color_v2);
+        gte_lcv0();
+        gte_stsv(&blend_v2);
+        
+        setRGB0(new_triangle, (uint8_t)(verts[0].r & 0xFF), (uint8_t)(verts[0].g & 0xFF), (uint8_t)(verts[0].b & 0xFF));
+        setRGB1(new_triangle, (uint8_t)(verts[1].r & 0xFF), (uint8_t)(verts[1].g & 0xFF), (uint8_t)(verts[1].b & 0xFF));
+        setRGB2(new_triangle, (uint8_t)(verts[2].r & 0xFF), (uint8_t)(verts[2].g & 0xFF), (uint8_t)(verts[2].b & 0xFF));
+#else
+        pixel32_t vert_colors[3];
+        for (size_t ci = 0; ci < 3; ++ci) {
+            const uint16_t r = ((((uint16_t)verts[ci].r) * ((uint16_t)textures_avg_colors[verts->tex_id].r)) >> 8);
+            const uint16_t g = ((((uint16_t)verts[ci].g) * ((uint16_t)textures_avg_colors[verts->tex_id].g)) >> 8);
+            const uint16_t b = ((((uint16_t)verts[ci].b) * ((uint16_t)textures_avg_colors[verts->tex_id].b)) >> 8);
+            vert_colors[ci].r = (r > 255) ? 255 : r;
+            vert_colors[ci].g = (g > 255) ? 255 : g;
+            vert_colors[ci].b = (b > 255) ? 255 : b;
+        }
+        // Set the vertex colors of the triangle
+        setRGB0(new_triangle,
+            vert_colors[0].r,
+            vert_colors[0].g,
+            vert_colors[0].b
+        );
+        setRGB1(new_triangle,
+            vert_colors[1].r,
+            vert_colors[1].g,
+            vert_colors[1].b
+        );
+        setRGB2(new_triangle,
+            vert_colors[2].r,
+            vert_colors[2].g,
+            vert_colors[2].b
+        );
+#endif
+        // Add the triangle to the draw queue
+        addPrim(ord_tbl[drawbuffer] + (avg_z>>2), new_triangle);
+        ++n_rendered_triangles;
+        return;
+    }
 }
 
-void draw_triangle_shaded_subdivided_once(vertex_3d_t* verts, uint8_t tex_id, uint16_t tex_offset_x)
-{
-    // Create an array of vertices
-    vertex_3d_t vertices[4 * 3];
-
-    // Calculate edge centers
-    const vertex_3d_t v01 = get_halfway_point(verts[0], verts[1]);
-    const vertex_3d_t v12 = get_halfway_point(verts[1], verts[2]);
-    const vertex_3d_t v20 = get_halfway_point(verts[2], verts[0]);
-
-    // Populate vertex array
-    vertices[0] = verts[0];
-    vertices[1] = v01;
-    vertices[2] = v20;
-    vertices[3] = v01;
-    vertices[4] = verts[1];
-    vertices[5] = v12;
-    vertices[6] = v20;
-    vertices[7] = v12;
-    vertices[8] = verts[2];
-    vertices[9] = v20;
-    vertices[10] = v01;
-    vertices[11] = v12;
-
-    // Draw the triangles
-    draw_triangle_shaded(&vertices[0], tex_id, tex_offset_x, 0);
-    draw_triangle_shaded(&vertices[3], tex_id, tex_offset_x, 0);
-    draw_triangle_shaded(&vertices[6], tex_id, tex_offset_x, 0);
-    draw_triangle_shaded(&vertices[9], tex_id, tex_offset_x, 0);
-}
-
-void draw_triangle_shaded_subdivided_twice(vertex_3d_t* verts, uint8_t tex_id, uint16_t tex_offset_x) {
-    // Create an array of vertices
-    vertex_3d_t vertices[4 * 3];
-
-    // Calculate edge centers
-    const vertex_3d_t v01 = get_halfway_point(verts[0], verts[1]);
-    const vertex_3d_t v12 = get_halfway_point(verts[1], verts[2]);
-    const vertex_3d_t v20 = get_halfway_point(verts[2], verts[0]);
-
-    // Populate vertex array
-    vertices[0] = verts[0];
-    vertices[1] = v01;
-    vertices[2] = v20;
-    vertices[3] = v01;
-    vertices[4] = verts[1];
-    vertices[5] = v12;
-    vertices[6] = v20;
-    vertices[7] = v12;
-    vertices[8] = verts[2];
-    vertices[9] = v20;
-    vertices[10] = v01;
-    vertices[11] = v12;
-
-    // Draw the triangles
-    draw_triangle_shaded_subdivided_once(&vertices[0], tex_id, tex_offset_x);
-    draw_triangle_shaded_subdivided_once(&vertices[3], tex_id, tex_offset_x);
-    draw_triangle_shaded_subdivided_once(&vertices[6], tex_id, tex_offset_x);
-    draw_triangle_shaded_subdivided_once(&vertices[9], tex_id, tex_offset_x);
-}
-
-void draw_triangle_shaded_untextured(vertex_3d_t* verts, uint8_t tex_id) {
+__attribute__((always_inline)) inline void draw_triangle_shaded_untextured(vertex_3d_t* verts, uint8_t tex_id) {
     // Load triangle into GTE
     gte_ldv3(
         &verts[0],
@@ -447,55 +493,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
 
     // Loop over each triangle
     for (size_t i = 0; i < mesh->n_vertices; i += 3) {
-        // Calculate distance from camera to triangle
-        // Just use v0 for now, it doesn't have to be perfect
-        const vec3_t triangle_position = {
-            (scalar_t)(mesh->vertices[i+0].x + mesh->vertices[i+1].x + mesh->vertices[i+2].x) * (ONE/3),
-            (scalar_t)(mesh->vertices[i+0].y + mesh->vertices[i+1].y + mesh->vertices[i+2].y) * (ONE/3),
-            (scalar_t)(mesh->vertices[i+0].z + mesh->vertices[i+1].z + mesh->vertices[i+2].z) * (ONE/3),
-        };
-        const vec3_t camera_to_triangle = vec3_sub(triangle_position, camera_pos);
-        const scalar_t crude_distance = scalar_abs(camera_to_triangle.x) + scalar_abs(camera_to_triangle.y) + scalar_abs(camera_to_triangle.z);
-        const uint8_t tex_id = mesh->vertices[i].tex_id;
-        const uint16_t tex_offset_x = (tex_id % 4) * 64;
-        
-        if (crude_distance < 650 * ONE) {
-            // Render 4x4 subdivided textured triangle
-            draw_triangle_shaded_subdivided_twice(
-                &mesh->vertices[i],
-                tex_id,
-                tex_offset_x
-            );
-        }
-        else if (crude_distance < 1600 * ONE) {
-            // Render 2x2 subdivided textured triangle
-            draw_triangle_shaded_subdivided_once(
-                &mesh->vertices[i],
-                tex_id,
-                tex_offset_x
-            );
-        }
-        else if (crude_distance < 7200 * ONE) {
-            // There should be a fade between textured and untextured triangles. Calculate this fade from 0 to 15, where
-            int index = (15 * (crude_distance - 6400 * ONE)) / (800 * ONE);
-            if (index < 0) index = 0;
-            if (index > 15) index = 15;
-            // Render textured triangle
-            draw_triangle_shaded(
-                &mesh->vertices[i],
-                tex_id,
-                tex_offset_x,
-                index
-            );
-        }
-        else if (crude_distance < 300000 * ONE){
-            // Render untextured triangle
-            draw_triangle_shaded_untextured(
-                &mesh->vertices[i],
-                tex_id
-            );
-        }
-		// Otherwise, we don't render it. Triangles this far away are VERY far away
+        draw_triangle_shaded(&mesh->vertices[i]);
     }
 
 	PopMatrix();
@@ -507,7 +505,7 @@ void renderer_draw_model_shaded(const model_t* model, transform_t* model_transfo
     }
 }
 
-void renderer_draw_triangles_shaded_2d(const vertex_2d_t* vertex_buffer, const uint16_t n_verts, const int16_t x, const int16_t y) {
+extern inline void renderer_draw_triangles_shaded_2d(const vertex_2d_t* vertex_buffer, const uint16_t n_verts, const int16_t x, const int16_t y) {
     // Loop over each triangle
     for (size_t i = 0; i < n_verts; i += 3) {
         // Allocate a triangle in the render queue

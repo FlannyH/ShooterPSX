@@ -10,13 +10,13 @@ typedef int32_t fixed20_12_t;
 typedef fixed20_12_t scalar_t;
 
 // Let's hope and pray that this will be compile-time evaluated
-static fixed20_12_t scalar_from_float(const float a) {
+__attribute__((always_inline)) inline fixed20_12_t scalar_from_float(const float a) {
     fixed20_12_t result;
     result = (int32_t)(a * 4096.0f);
     return result;
 }
 
-static void print_fixed_point(scalar_t a) {
+__attribute__((always_inline)) inline void print_fixed_point(scalar_t a) {
     if (a < 0) {
         a = -a;
         printf("-");
@@ -27,7 +27,7 @@ static void print_fixed_point(scalar_t a) {
     printf("%i.%03i", integer, (fractional * 1000) / (1 << n_fractional_bits));
 }
 
-static void scalar_debug(const scalar_t a) {
+__attribute__((always_inline)) inline void scalar_debug(const scalar_t a) {
     if (a == INT32_MAX) {
         printf("+inf\n");
         return;
@@ -51,7 +51,7 @@ static struct {
     int overflow : 1;
 } operator_flags;
 
-static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
+__attribute__((always_inline)) inline static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
     int64_t result32 = ((int64_t)(a >> 6) * ((int64_t)b >> 6));
 
     // overflow check
@@ -69,7 +69,7 @@ static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
     return (fixed20_12_t)result32;
 }
 
-static fixed20_12_t scalar_div(const fixed20_12_t a, const fixed20_12_t b) {
+__attribute__((always_inline)) inline fixed20_12_t scalar_div(const fixed20_12_t a, const fixed20_12_t b) {
     int64_t result32 = (int64_t)a * 4096;
     if (b != 0) {
         result32 /= b;
@@ -82,15 +82,15 @@ static fixed20_12_t scalar_div(const fixed20_12_t a, const fixed20_12_t b) {
     return (int32_t)result32;
 }
 
-static fixed20_12_t scalar_min(const fixed20_12_t a, const fixed20_12_t b) {
+__attribute__((always_inline)) inline fixed20_12_t scalar_min(const fixed20_12_t a, const fixed20_12_t b) {
     return (a < b) ? a : b;
 }
 
-static fixed20_12_t scalar_max(const fixed20_12_t a, const fixed20_12_t b) {
+__attribute__((always_inline)) inline fixed20_12_t scalar_max(const fixed20_12_t a, const fixed20_12_t b) {
     return (a > b) ? a : b;
 }
 
-static fixed20_12_t scalar_sqrt(fixed20_12_t a) {
+__attribute__((always_inline)) inline fixed20_12_t scalar_sqrt(fixed20_12_t a) {
 #ifdef _PSX
     return SquareRoot12(a);
 #else
@@ -98,14 +98,14 @@ static fixed20_12_t scalar_sqrt(fixed20_12_t a) {
 #endif
 }
 
-static fixed20_12_t scalar_abs(fixed20_12_t a) {
+__attribute__((always_inline)) inline fixed20_12_t scalar_abs(fixed20_12_t a) {
     if (a < 0) {
         a = -a;
     }
     return a;
 }
 
-static fixed20_12_t scalar_clamp(fixed20_12_t a, const fixed20_12_t min, const fixed20_12_t max) {
+__attribute__((always_inline)) inline fixed20_12_t scalar_clamp(fixed20_12_t a, const fixed20_12_t min, const fixed20_12_t max) {
     if (a < min) {
         a = min;
     }
@@ -115,7 +115,7 @@ static fixed20_12_t scalar_clamp(fixed20_12_t a, const fixed20_12_t min, const f
     return a;
 }
 
-static int is_infinity(const fixed20_12_t a) {
+__attribute__((always_inline)) inline int is_infinity(const fixed20_12_t a) {
     return (a == INT32_MAX || a == -INT32_MAX);
 }
 
