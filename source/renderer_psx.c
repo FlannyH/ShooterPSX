@@ -13,8 +13,8 @@
 #define TRI_THRESHOLD_SUB2 125
 #define TRI_THRESHOLD_SUB1 300
 #define TRI_THRESHOLD_NORMAL 500
-#define TRI_THRESHOLD_FADE_START 800
-#define TRI_THRESHOLD_FADE_END 1200
+#define TRI_THRESHOLD_FADE_START 700
+#define TRI_THRESHOLD_FADE_END 1000
 #define N_CLUT_FADES 16
 
 // Define environment pairs and buffer counter
@@ -346,6 +346,7 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
         const vertex_3d_t cd = get_halfway_point(verts[3], verts[2]);
         const vertex_3d_t da = get_halfway_point(verts[2], verts[0]);
         const vertex_3d_t center = get_halfway_point(ab, cd);
+
         // Transform them
         gte_ldv3(&ab.x, &bc.x, &cd.x);
         gte_rtpt();
@@ -356,11 +357,30 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
         gte_stsxy3c(&trans_vec_xy[7]);
         gte_stsz3c(&trans_vec_z[7]);
 
+        // Calculate average Z
+        int avg_z_0478;
+        int avg_z_4185;
+        int avg_z_7826;
+        int avg_z_8563;
+        gte_ldsz4(trans_vec_z[0], trans_vec_z[4], trans_vec_z[7], trans_vec_z[8]);
+        gte_avsz4();
+        gte_stotz(&avg_z_0478);
+        gte_ldsz4(trans_vec_z[4], trans_vec_z[1], trans_vec_z[8], trans_vec_z[5]);
+        gte_avsz4();
+        gte_stotz(&avg_z_4185);
+        gte_ldsz4(trans_vec_z[7], trans_vec_z[8], trans_vec_z[2], trans_vec_z[6]);
+        gte_avsz4();
+        gte_stotz(&avg_z_7826);
+        gte_ldsz4(trans_vec_z[8], trans_vec_z[5], trans_vec_z[6], trans_vec_z[3]);
+        gte_avsz4();
+        gte_stotz(&avg_z_8563);
+
+
         // Draw them
-        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[4], trans_vec_xy[7], trans_vec_xy[8], verts[0], ab, da, center, avg_z, 0, verts[0].tex_id);
-        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[4], trans_vec_xy[1], trans_vec_xy[8], trans_vec_xy[5], ab, verts[1], center, bc, avg_z, 0, verts[0].tex_id);
-        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[7], trans_vec_xy[8], trans_vec_xy[2], trans_vec_xy[6], da, center, verts[2], cd, avg_z, 0, verts[0].tex_id);
-        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[8], trans_vec_xy[5], trans_vec_xy[6], trans_vec_xy[3], center, bc, cd, verts[3], avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[4], trans_vec_xy[7], trans_vec_xy[8], verts[0], ab, da, center, avg_z_0478, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[4], trans_vec_xy[1], trans_vec_xy[8], trans_vec_xy[5], ab, verts[1], center, bc, avg_z_4185, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[7], trans_vec_xy[8], trans_vec_xy[2], trans_vec_xy[6], da, center, verts[2], cd, avg_z_7826, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[8], trans_vec_xy[5], trans_vec_xy[6], trans_vec_xy[3], center, bc, cd, verts[3], avg_z_8563, 0, verts[0].tex_id);
         return;
     }
     if (avg_z < TRI_THRESHOLD_FADE_END) {
@@ -608,6 +628,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
 void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform) {
     for (size_t i = 0; i < model->n_meshes; ++i) {
         renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+        //renderer_debug_draw_aabb(&model->meshes[i].bounds, white, model_transform);
     }
 }
 
