@@ -33,7 +33,8 @@ model_t* model_load(const char* path) {
     // Loop over each submesh and create a model
     for (size_t i = 0; i < model_header->n_submeshes; ++i) {
         // Create a mesh object
-        model->meshes[i].n_vertices = mesh_descriptions[i].n_vertices;
+        model->meshes[i].n_triangles = mesh_descriptions[i].n_triangles;
+        model->meshes[i].n_quads = mesh_descriptions[i].n_quads;
         model->meshes[i].vertices = &vertex_data[mesh_descriptions[i].vertex_start];
         model->meshes[i].bounds.min.x = mesh_descriptions[i].x_min;
         model->meshes[i].bounds.max.x = mesh_descriptions[i].x_max;

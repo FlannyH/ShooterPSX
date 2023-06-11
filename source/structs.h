@@ -84,7 +84,8 @@ typedef struct {
 } svec2_t;
 
 typedef struct {
-    uint32_t n_vertices;
+    uint16_t n_triangles;
+    uint16_t n_quads;
     vertex_3d_t* vertices;
     aabb_t bounds;
 } mesh_t;
@@ -98,13 +99,15 @@ typedef struct {
 
 typedef struct {
     uint16_t vertex_start;  // First vertex index for this model.
-    uint16_t n_vertices;    // Number of vertices for this model.
+    uint16_t n_triangles;    // Number of vertices for this model.
+    uint16_t n_quads;    // Number of vertices for this model.
     int16_t x_min;          // Axis aligned bounding box minimum X.
     int16_t x_max;          // Axis aligned bounding box maximum X.
     int16_t y_min;          // Axis aligned bounding box minimum Y.
     int16_t y_max;          // Axis aligned bounding box maximum Y.
     int16_t z_min;          // Axis aligned bounding box minimum Z.
     int16_t z_max;          // Axis aligned bounding box maximum Z.
+    int16_t _pad;          // Axis aligned bounding box maximum Z.
 } mesh_desc_t;
 
 typedef struct {

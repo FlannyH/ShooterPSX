@@ -154,6 +154,7 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
         // Calculate the target position based on velocity
         vec3_t target_position = vec3_add(self->position, velocity);
 
+#ifndef DEBUG_CAMERA
         // Intersect with the geometry twice times
         rayhit_t hit;
         ray_t ray;
@@ -196,6 +197,7 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
             }
         }
 
+#endif
         // Set the position
         if (!input_held(PAD_R1, 0)) {
             self->position.x = target_position.x;
@@ -210,9 +212,10 @@ void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms) {
         const scalar_t player_radius_scalar = player_radius;
         player_radius_squared = scalar_mul(player_radius_scalar, player_radius_scalar);
     }
-
+#ifndef DEBUG_CAMERA
     apply_gravity(self, dt_ms);
     check_ground_collision(self, level_bvh, dt_ms);
+#endif
     handle_stick_input(self, dt_ms);
     handle_drag(self, dt_ms);
     handle_jump(self);

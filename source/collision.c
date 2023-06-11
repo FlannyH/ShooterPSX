@@ -350,14 +350,14 @@ void bvh_partition(const bvh_t* bvh, const axis_t axis, const scalar_t pivot, co
 }
 
 void bvh_from_mesh(bvh_t* bvh, const mesh_t* mesh) {
-    bvh_construct(bvh, (triangle_3d_t*)mesh->vertices, (uint16_t)mesh->n_vertices / 3);
+    bvh_construct(bvh, (triangle_3d_t*)mesh->vertices, (uint16_t)mesh->n_triangles);
 }
 
 void bvh_from_model(bvh_t* bvh, const model_t* mesh) {
     // Get total number of vertices
     uint32_t n_verts = 0;
     for (uint32_t i = 0; i < mesh->n_meshes; ++i) {
-        n_verts += mesh->meshes[i].n_vertices;
+        n_verts += mesh->meshes[i].n_triangles * 3;
     }
 
     // Allocate a buffer for the vertices
@@ -366,8 +366,8 @@ void bvh_from_model(bvh_t* bvh, const model_t* mesh) {
     // Copy all the meshes into it sequentially
     unsigned long long offset = 0;
     for (uint32_t i = 0; i < mesh->n_meshes; ++i) {
-        const size_t bytes_to_copy = mesh->meshes[i].n_vertices * sizeof(vertex_3d_t);
-        const size_t verts_to_copy = mesh->meshes[i].n_vertices / 3;
+        const size_t bytes_to_copy = mesh->meshes[i].n_triangles * 3 * sizeof(vertex_3d_t);
+        const size_t verts_to_copy = mesh->meshes[i].n_triangles;
         memcpy(triangles + offset, mesh->meshes[i].vertices, (int)bytes_to_copy);
         offset += verts_to_copy;
     }

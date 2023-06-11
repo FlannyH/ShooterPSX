@@ -173,6 +173,38 @@ void renderer_begin_frame(transform_t* camera_transform) {
     ++n_rendered_triangles;\
 }\
 
+// Same as above but for quads
+#define ADD_TEX_QUAD_TO_QUEUE(p0, p1, p2, p3, v0, v1, v2, v3, avg_z, clut_fade, tex_id) {       \
+    POLY_GT4* new_triangle = (POLY_GT4*)next_primitive;\
+    next_primitive += sizeof(POLY_GT4);\
+    setPolyGT4(new_triangle); \
+    setXY4(new_triangle, \
+        p0.x, p0.y,\
+        p1.x, p1.y,\
+        p2.x, p2.y,\
+        p3.x, p3.y\
+    );\
+    setRGB0(new_triangle, v0.r >> 1, v0.g >> 1, v0.b >> 1);\
+    setRGB1(new_triangle, v1.r >> 1, v1.g >> 1, v1.b >> 1);\
+    setRGB2(new_triangle, v2.r >> 1, v2.g >> 1, v2.b >> 1);\
+    setRGB3(new_triangle, v3.r >> 1, v3.g >> 1, v3.b >> 1);\
+    const uint16_t tex_offset_x = (tex_id % 4) * 64;\
+    new_triangle->clut = getClut(palettes[tex_id].x, palettes[tex_id].y + clut_fade);\
+    new_triangle->tpage = getTPage(0, 0, textures[tex_id].x, textures[tex_id].y);\
+    setUV4(new_triangle,\
+        (((uint16_t)(v0.u)) >> 2) + tex_offset_x,\
+        (((uint16_t)(v0.v)) >> 2),\
+        (((uint16_t)(v1.u)) >> 2) + tex_offset_x,\
+        (((uint16_t)(v1.v)) >> 2),\
+        (((uint16_t)(v2.u)) >> 2) + tex_offset_x,\
+        (((uint16_t)(v2.v)) >> 2),\
+        (((uint16_t)(v3.u)) >> 2) + tex_offset_x,\
+        (((uint16_t)(v3.v)) >> 2)\
+    );\
+    addPrim(ord_tbl[drawbuffer] + (avg_z>>2), new_triangle);\
+    ++n_rendered_triangles;\
+}\
+
 __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* verts) {
     // Transform the triangle vertices - there's 6 entries instead of 3, so we have enough room for subdivided triangles
     svec2_t trans_vec_xy[6];
@@ -189,7 +221,7 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
     int p;
     gte_nclip();
     gte_stopz(&p);
-    if (p >= 0) return;
+    if (p <= 0) return;
     (void)p; // we don't need it anymore after this
 
     // Store transformed position, and center depth
@@ -212,26 +244,6 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
         gte_rtpt();
         gte_stsxy3c(&trans_vec_xy[3]);
         gte_stsz3c(&trans_vec_z[3]);
-
-        // We need to draw them in this order:
-        int avg_z_035; // - 0 3 5
-        int avg_z_314; // - 3 1 4
-        int avg_z_345; // - 3 4 5
-        int avg_z_542; // - 5 4 2
-
-        // Calculate all the average Z values
-        //gte_ldsz3(&trans_vec_z[0], &trans_vec_z[3], &trans_vec_z[5]);
-        //gte_avsz3();
-        //gte_stotz(&avg_z_035);
-        //gte_ldsz3(&trans_vec_z[3], &trans_vec_z[1], &trans_vec_z[4]);
-        //gte_avsz3();
-        //gte_stotz(&avg_z_314);
-        //gte_ldsz3(&trans_vec_z[3], &trans_vec_z[4], &trans_vec_z[5]);
-        //gte_avsz3();
-        //gte_stotz(&avg_z_345);
-        //gte_ldsz3(&trans_vec_z[5], &trans_vec_z[4], &trans_vec_z[2]);
-        //gte_avsz3();
-        //gte_stotz(&avg_z_542);
 
         // Draw them
         ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[3], trans_vec_xy[5], verts[0], ab, ca, avg_z, 0, verts[0].tex_id);
@@ -264,38 +276,6 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
             trans_vec_xy[2].x, trans_vec_xy[2].y
         );
 
-// left in to see if this is worth exploring in the future, for now this is not worth it and not reliable        
-#if 0
-        // Set the vertex colors of the triangle
-        MATRIX tex_color = {
-            .m = {
-                {textures_avg_colors[verts->tex_id].r << 4, 0, 0},
-                {0, textures_avg_colors[verts->tex_id].g << 4, 0},
-                {0, 0, textures_avg_colors[verts->tex_id].b << 4}
-            },
-            .t = {0, 0, 0},
-        };
-        gte_SetColorMatrix(&tex_color);
-        VECTOR color_v0 = {verts[0].r, verts[0].g, verts[0].b};
-        VECTOR color_v1 = {verts[1].r, verts[1].g, verts[1].b};
-        VECTOR color_v2 = {verts[2].r, verts[2].g, verts[2].b};
-        SVECTOR blend_v0 = {0};
-        SVECTOR blend_v1 = {0};
-        SVECTOR blend_v2 = {0};
-        gte_ldv0(&color_v0);
-        gte_lcv0();
-        gte_stsv(&blend_v0);
-        gte_ldv0(&color_v1);
-        gte_lcv0();
-        gte_stsv(&blend_v1);
-        gte_ldv0(&color_v2);
-        gte_lcv0();
-        gte_stsv(&blend_v2);
-        
-        setRGB0(new_triangle, (uint8_t)(verts[0].r & 0xFF), (uint8_t)(verts[0].g & 0xFF), (uint8_t)(verts[0].b & 0xFF));
-        setRGB1(new_triangle, (uint8_t)(verts[1].r & 0xFF), (uint8_t)(verts[1].g & 0xFF), (uint8_t)(verts[1].b & 0xFF));
-        setRGB2(new_triangle, (uint8_t)(verts[2].r & 0xFF), (uint8_t)(verts[2].g & 0xFF), (uint8_t)(verts[2].b & 0xFF));
-#else
         pixel32_t vert_colors[3];
         for (size_t ci = 0; ci < 3; ++ci) {
             const uint16_t r = ((((uint16_t)verts[ci].r) * ((uint16_t)textures_avg_colors[verts->tex_id].r)) >> 8);
@@ -321,9 +301,126 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
             vert_colors[2].g,
             vert_colors[2].b
         );
-#endif
+        
         // Add the triangle to the draw queue
         addPrim(ord_tbl[drawbuffer] + (avg_z>>2), new_triangle);
+        ++n_rendered_triangles;
+        return;
+    }
+}
+__attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) {
+    // Transform the quad vertices, with enough entries in the array for subdivided quads
+    svec2_t trans_vec_xy[10];
+    scalar_t trans_vec_z[10];
+    scalar_t avg_z;
+    gte_ldv3(
+        &verts[0],
+        &verts[1],
+        &verts[2]
+    );
+    gte_rtpt();
+
+    // Backface culling
+    int p;
+    gte_nclip();
+    gte_stopz(&p);
+    if (p <= 0) return;
+
+    // Store transformed position, and center depth
+    gte_stsxy3c(&trans_vec_xy[0]);
+    gte_stsz3c(&trans_vec_z[0]);
+    gte_ldv0(&verts[3]);
+    gte_rtps();
+    gte_stsxy(&trans_vec_xy[3]);
+    gte_stsz(&trans_vec_z[3]);
+    gte_avsz4();
+    gte_stotz(&avg_z);
+
+    // Depth culling
+    if ((avg_z>>2) > ORD_TBL_LENGTH || ((avg_z >> 2) <= 0)) return;
+
+    if (avg_z < TRI_THRESHOLD_SUB1) {
+        // Let's calculate the new points we need
+        const vertex_3d_t ab = get_halfway_point(verts[0], verts[1]);
+        const vertex_3d_t bc = get_halfway_point(verts[1], verts[3]);
+        const vertex_3d_t cd = get_halfway_point(verts[3], verts[2]);
+        const vertex_3d_t da = get_halfway_point(verts[2], verts[0]);
+        const vertex_3d_t center = get_halfway_point(ab, cd);
+        // Transform them
+        gte_ldv3(&ab.x, &bc.x, &cd.x);
+        gte_rtpt();
+        gte_stsxy3c(&trans_vec_xy[4]);
+        gte_stsz3c(&trans_vec_z[4]);
+        gte_ldv01(&da.x, &center.x);
+        gte_rtpt();
+        gte_stsxy3c(&trans_vec_xy[7]);
+        gte_stsz3c(&trans_vec_z[7]);
+
+        // Draw them
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[4], trans_vec_xy[7], trans_vec_xy[8], verts[0], ab, da, center, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[4], trans_vec_xy[1], trans_vec_xy[8], trans_vec_xy[5], ab, verts[1], center, bc, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[7], trans_vec_xy[8], trans_vec_xy[2], trans_vec_xy[6], da, center, verts[2], cd, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[8], trans_vec_xy[5], trans_vec_xy[6], trans_vec_xy[3], center, bc, cd, verts[3], avg_z, 0, verts[0].tex_id);
+        return;
+    }
+    if (avg_z < TRI_THRESHOLD_FADE_END) {
+        int16_t clut_fade = 0;
+        if (avg_z >= TRI_THRESHOLD_FADE_START) {
+            clut_fade = ((N_CLUT_FADES-1) * (avg_z - TRI_THRESHOLD_FADE_START)) / (TRI_THRESHOLD_FADE_END - TRI_THRESHOLD_FADE_START);
+        }
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[3], verts[0], verts[1], verts[2], verts[3], avg_z, clut_fade, verts[0].tex_id);
+        return;
+    }
+
+    else {
+        // Create primitive
+        POLY_G4* new_quad = (POLY_G4*)next_primitive;
+        next_primitive += sizeof(POLY_G4);
+
+        // Initialize the entry in the render queue
+        setPolyG4(new_quad);
+
+        // Set the vertex positions of the triangle
+        setXY4(new_quad, 
+            trans_vec_xy[0].x, trans_vec_xy[0].y,
+            trans_vec_xy[1].x, trans_vec_xy[1].y,
+            trans_vec_xy[2].x, trans_vec_xy[2].y,
+            trans_vec_xy[3].x, trans_vec_xy[3].y
+        );
+
+        pixel32_t vert_colors[4];
+        for (size_t ci = 0; ci < 4; ++ci) {
+            const uint16_t r = ((((uint16_t)verts[ci].r) * ((uint16_t)textures_avg_colors[verts->tex_id].r)) >> 8);
+            const uint16_t g = ((((uint16_t)verts[ci].g) * ((uint16_t)textures_avg_colors[verts->tex_id].g)) >> 8);
+            const uint16_t b = ((((uint16_t)verts[ci].b) * ((uint16_t)textures_avg_colors[verts->tex_id].b)) >> 8);
+            vert_colors[ci].r = (r > 255) ? 255 : r;
+            vert_colors[ci].g = (g > 255) ? 255 : g;
+            vert_colors[ci].b = (b > 255) ? 255 : b;
+        }
+        // Set the vertex colors of the triangle
+        setRGB0(new_quad,
+            vert_colors[0].r,
+            vert_colors[0].g,
+            vert_colors[0].b
+        );
+        setRGB1(new_quad,
+            vert_colors[1].r,
+            vert_colors[1].g,
+            vert_colors[1].b
+        );
+        setRGB2(new_quad,
+            vert_colors[2].r,
+            vert_colors[2].g,
+            vert_colors[2].b
+        );
+        setRGB3(new_quad,
+            vert_colors[3].r,
+            vert_colors[3].g,
+            vert_colors[3].b
+        );
+        
+        // Add the triangle to the draw queue
+        addPrim(ord_tbl[drawbuffer] + (avg_z>>2), new_quad);
         ++n_rendered_triangles;
         return;
     }
@@ -395,7 +492,7 @@ __attribute__((always_inline)) inline void draw_triangle_shaded_untextured(verte
     );
     setRGB1(new_triangle,
         vert_colors[1].r,
-                           vert_colors[1].g,
+        vert_colors[1].g,
         vert_colors[1].b
     );
     setRGB2(new_triangle,
@@ -489,11 +586,20 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
         #undef FRUSCUL_PAD_Y
     };
 
-    n_total_triangles += mesh->n_vertices / 3;
+    //n_total_triangles += mesh->n_vertices / 3;
 
     // Loop over each triangle
-    for (size_t i = 0; i < mesh->n_vertices; i += 3) {
-        draw_triangle_shaded(&mesh->vertices[i]);
+    size_t vert_idx = 0;
+    for (size_t i = 0; i < mesh->n_triangles; ++i) {
+        draw_triangle_shaded(&mesh->vertices[vert_idx]);
+        vert_idx += 3;
+    }
+    for (size_t i = 0; i < mesh->n_quads; ++i) {
+        //draw_triangle_shaded(&mesh->vertices[vert_idx]);
+        //vertex_3d_t hack[3] = {mesh->vertices[vert_idx], mesh->vertices[vert_idx + 2], mesh->vertices[vert_idx + 3]};
+        //draw_triangle_shaded(hack);
+        draw_quad_shaded(&mesh->vertices[vert_idx]);
+        vert_idx += 4;
     }
 
 	PopMatrix();

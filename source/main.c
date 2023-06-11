@@ -63,6 +63,7 @@ int main(void) {
 	music_play_file("\\ASSETS\\MUSIC.XA;1");
 
 	int frame_counter = 0;
+    player_update(&player, &bvh_level_model, 16);
     while (!renderer_should_close()) {
         int delta_time = renderer_get_delta_time_ms();
         if (delta_time > 34) {

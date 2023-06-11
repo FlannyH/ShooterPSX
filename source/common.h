@@ -5,6 +5,7 @@
 #endif
 
 //#define PAL
+#define DEBUG_CAMERA
 
 static void panic_if(const char* error_if_false, const int condition, const int line, const char* file) {
 #ifdef _DEBUG
