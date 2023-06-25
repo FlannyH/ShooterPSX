@@ -84,3 +84,22 @@ aabb_t collision_triangle_get_bounds(const collision_triangle_3d_t* self) {
     );
     return result;
 }
+
+collision_model_t collision_model_load(const char* path) {
+    // Read the file
+    uint32_t* file_data;
+    size_t size;
+    file_read(path, &file_data, &size);
+
+    // Ensure FMSH header is valid
+    if (file_data[0] != 0x4C4F4346) { // "FCOL"
+        printf("[ERROR] Error loading collision model '%s', file header is invalid!\n", path);
+        return (collision_model_t) {0, NULL};
+    }
+
+	// Return collision model data
+	return (collision_model_t) {
+		.n_triangles = file_data[1], // everything is neatly aligned
+		.collision_mesh = (file_collision_triangle_3d_t*)&file_data[2], // so we can just do this hack
+	};
+}

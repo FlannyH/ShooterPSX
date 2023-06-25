@@ -615,9 +615,6 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
         vert_idx += 3;
     }
     for (size_t i = 0; i < mesh->n_quads; ++i) {
-        //draw_triangle_shaded(&mesh->vertices[vert_idx]);
-        //vertex_3d_t hack[3] = {mesh->vertices[vert_idx], mesh->vertices[vert_idx + 2], mesh->vertices[vert_idx + 3]};
-        //draw_triangle_shaded(hack);
         draw_quad_shaded(&mesh->vertices[vert_idx]);
         vert_idx += 4;
     }

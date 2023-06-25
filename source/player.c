@@ -207,7 +207,7 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     self->position.y += self->velocity.y * dt_ms; // we do this one separately to save the hassle
 }
 
-void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms) {
+void player_update(player_t, bvh_t* level_bvh, const int dt_ms) {
     if (player_radius_squared == 0) {
         const scalar_t player_radius_scalar = player_radius;
         player_radius_squared = scalar_mul(player_radius_scalar, player_radius_scalar);

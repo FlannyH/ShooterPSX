@@ -53,6 +53,15 @@ typedef struct {
 } vertex_3d_t;
 
 typedef struct {
+    int16_t x, y, z; // 3D position
+	int16_t terrain_id; // For things like footstep sounds, maybe physics, special triggers,
+} collision_vertex_3d_t;
+
+typedef struct {
+	collision_vertex_3d_t v0, v1, v2;
+} file_collision_triangle_3d_t;
+
+typedef struct {
     vertex_3d_t v0, v1;
 } line_3d_t;
 
@@ -74,6 +83,11 @@ typedef struct {
     uint16_t n_shifts_edge;
     uint16_t n_shifts_dot;
 } collision_triangle_3d_t;
+
+typedef struct {
+	uint32_t n_triangles;
+	file_collision_triangle_3d_t* collision_mesh;
+} collision_model_t;
 
 typedef struct {
     int16_t x, y, z; // 3D position

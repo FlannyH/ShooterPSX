@@ -21,7 +21,7 @@
 
 #include "texture.h"
 
-int widescreen = 1;
+int widescreen = 0;
 
 int main(void) {
 	renderer_init();
@@ -44,7 +44,8 @@ int main(void) {
 
 	// Load model
     const model_t* m_level = model_load("\\ASSETS\\LEVEL.MSH;1");
-	const model_t *m_level_collision = model_load("\\ASSETS\\LEVELCOL.MSH;1");
+	const collision_model_t m_level_collision = collision_model_load("\\ASSETS\\LEVEL.COL;1");
+	printf("%i", m_level_collision.n_triangles);
 
 	texture_cpu_t *tex_level;
 	const uint32_t n_textures =
@@ -57,10 +58,10 @@ int main(void) {
 	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}};
     
     bvh_t bvh_level_model;
-    bvh_from_model(&bvh_level_model, m_level_collision);
+    bvh_from_model(&bvh_level_model, &m_level_collision);
 
 	// Play music
-	music_play_file("\\ASSETS\\MUSIC.XA;1");
+	//music_play_file("\\ASSETS\\MUSIC.XA;1");
 
 	int frame_counter = 0;
     player_update(&player, &bvh_level_model, 16);

@@ -67,10 +67,9 @@
             <dir name="ASSETS">
 			    <file name="CUBETEST.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/rat.msh" />
 			    <file name="LEVEL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVEL.MSH" />
-			    <file name="LEVELCOL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVELCOL.TXC" />
-			    <file name="LEVELCOL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVELCOL.MSH" />
-			    <file name="TESTLVL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/TESTLVL.MSH" />
 			    <file name="LEVEL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVEL.TXC" />
+			    <file name="LEVEL.COL"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVEL.COL" />
+			    <file name="TESTLVL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/TESTLVL.MSH" />
 			    <!--<file name="MUSIC.XA" type="mixed" source="${PROJECT_SOURCE_DIR}/ASSETS/music.xa"/>-->
 			    <!--
 				    This file is only required if you are using dynamic linking
