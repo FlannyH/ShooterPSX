@@ -1,12 +1,12 @@
 # Flan Sound Bank
 ## File header
-| Type    | Name                      | Description                                                                       |
-| ------- | ------------------------- | --------------------------------------------------------------------------------- |
-| char[4] | file_magic                | File magic: "FSBK"                                                                |
-| u32     | n_samples                 | Number of samples                                                                 |
-| u32     | offset_instrument_descs   | Offset (bytes) to instrument description table, relative to the end of the header |
-| u32     | offset_instrument_regions | Offset (bytes) to instrument region table, relative to the end of the header      |
-| u32     | offset_sample_data        | Offset (bytes) to raw SPU-ADPCM data chunk                                        |
+| Type    | Name                      | Description                                                                               |
+| ------- | ------------------------- | ----------------------------------------------------------------------------------------- |
+| char[4] | file_magic                | File magic: "FSBK"                                                                        |
+| u32     | n_samples                 | Number of samples                                                                         |
+| u32     | offset_instrument_descs   | Offset (bytes) to instrument description table, relative to the end of the header         |
+| u32     | offset_instrument_regions | Offset (bytes) to instrument region table, relative to the end of the header              |
+| u32     | offset_sample_data        | Offset (bytes) to raw SPU-ADPCM data chunk. This will be uploaded straight to the SPU-RAM |
 
 ## Instrument Description
 | Type | Name               | Description                   |
