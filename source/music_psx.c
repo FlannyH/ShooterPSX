@@ -1,81 +1,22 @@
-#ifdef _PSX
 #include "music.h"
 #include <stdint.h>
 #include <stdio.h>
-#include <psxapi.h>
-#include <psxcd.h>
+#include <psxspu.h>
 
-CdlFILE xa_file;
-CdlFILTER xa_filter;
-CdlLOC xa_location;
-char xa_sector_buffer[2048];
-volatile int num_loops=0;
-volatile int xa_play_channel;
+void music_test_sound() {
+	// Load sound
+	uint32_t* data;
+	size_t size;
+	file_read("\\ASSETS\\AMEN.BIN;1", &data, &size);
+	SpuSetTransferStartAddr(0x01000);
+	SpuWrite(data, size);
 
-typedef struct {
-	uint16_t id;
-	uint16_t chan;
-	uint8_t  pad[28];
-} SectorHead;
-
-void xa_callback(const CdlIntrResult intr, unsigned char *result)
-{
-
-    // We want this callback to respond to data ready events
-	if (intr == CdlDataReady)
-	{
-		// Get data sector
-		CdGetSector(&xa_sector_buffer, 512);
-		/* Check if sector belongs to the currently playing channel */
-		SectorHead* sec = (SectorHead*)xa_sector_buffer;
-		
-		if( sec->id == 352 )
-		{
-			// Debug
-			//printf("ID=%d CHAN=%d PL=%d\n", sec->id, (sec->chan>>10)&0xF, xa_play_channel);
-		
-			/* Check if sector is of the currently playing channel */
-			if( ((sec->chan>>10)&0xF) == xa_play_channel ) 
-			{
-				num_loops++;
-			
-				/* Retry playback by seeking to start of XA data and stream */
-				CdControlF(CdlReadS, &xa_location);
-			
-				/* Stop playback */
-				//CdControlF(CdlPause, 0);
-			}
-		}
-	}
+	// Play sound
+    SpuSetVoiceStartAddr(0, getSPUAddr(0x01000));
+	SpuSetVoicePitch(0, getSPUSampleRate(18900));
+	SPU_CH_ADSR1(0) = 0x00ff;
+	SPU_CH_ADSR2(0) = 0x0000;
+	SPU_CH_VOL_L(0) = 0x3fff;
+	SPU_CH_VOL_R(0) = 0x3fff;
+	SpuSetKey(1, 1 << 0);
 }
-
-void music_play_file(const char* path) {
-    // Find the XA file
-    if (!CdSearchFile(&xa_file, path)) {
-        printf("Can't find file %s!", path);
-        return;
-    }
-
-    // Get the location on disc
-    int xa_pos = CdPosToInt(&xa_file.pos);
-    printf("XA located at sector %d size %d.\n", xa_pos, xa_file.size);
-    xa_location = xa_file.pos;
-
-    // Hook XA callback function into CdReadCallback
-	EnterCriticalSection();
-	CdReadyCallback(xa_callback);
-	ExitCriticalSection();
-
-    // Set flags for CD for XA streaming
-    const int flags = CdlModeSpeed|CdlModeRT|CdlModeSF;
-	CdControl(CdlSetmode, &flags, 0);
-
-    // Select file 1
-	xa_filter.file = 1;
-    xa_filter.chan = 1;
-    CdControl(CdlSetfilter, &xa_filter, 0);
-    CdControl(CdlReadS, &xa_location, 0);
-    printf("start playing xa file allegedly\n");
-    xa_play_channel = 0;
-}
-#endif

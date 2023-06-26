@@ -69,6 +69,7 @@
 			    <file name="LEVEL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVEL.MSH" />
 			    <file name="LEVELCOL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVELCOL.TXC" />
 			    <file name="LEVELCOL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVELCOL.MSH" />
+			    <file name="AMEN.BIN"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/AMEN.BIN" />
 			    <file name="TESTLVL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/TESTLVL.MSH" />
 			    <file name="LEVEL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVEL.TXC" />
 			    <!--<file name="MUSIC.XA" type="mixed" source="${PROJECT_SOURCE_DIR}/ASSETS/music.xa"/>-->

@@ -41,6 +41,7 @@ int main(void) {
 
 	// Stick deadzone
 	input_set_stick_deadzone(36);
+	music_test_sound();
 
 	// Load model
     const model_t* m_level = model_load("\\ASSETS\\LEVEL.MSH;1");
@@ -58,9 +59,6 @@ int main(void) {
     
     bvh_t bvh_level_model;
     bvh_from_model(&bvh_level_model, m_level_collision);
-
-	// Play music
-	music_play_file("\\ASSETS\\MUSIC.XA;1");
 
 	int frame_counter = 0;
     player_update(&player, &bvh_level_model, 16);
