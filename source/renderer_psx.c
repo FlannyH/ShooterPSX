@@ -66,6 +66,14 @@ void renderer_init(void) {
     SetDefDispEnv(&disp[0], 0, 0, RES_X, RES_Y);
     SetDefDispEnv(&disp[1], 512, 0, RES_X, RES_Y);
 
+#ifdef PAL
+    // Correction for PAL
+    disp[0].screen.y = 20;
+    disp[0].screen.h = 256;
+    disp[1].screen.y = 20;
+    disp[1].screen.h = 256;
+#endif
+
 
     // Configures the pair of DRAWENVs for the DISPENVs
     SetDefDrawEnv(&draw[0], 512, 0, RES_X, RES_Y);

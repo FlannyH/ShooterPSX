@@ -21,7 +21,7 @@
 
 #include "texture.h"
 
-int widescreen = 1;
+int widescreen = 0;
 
 int main(void) {
 	renderer_init();
@@ -66,6 +66,7 @@ int main(void) {
     player_update(&player, &bvh_level_model, 16);
     while (!renderer_should_close()) {
         int delta_time = renderer_get_delta_time_ms();
+		const int original_delta_time = delta_time;
         if (delta_time > 34) {
             delta_time = 34;
         }
@@ -74,6 +75,9 @@ int main(void) {
         renderer_draw_model_shaded(m_level, &t_level);
         player_update(&player, &bvh_level_model, delta_time);
         frame_counter += delta_time;
+
+		FntPrint(-1, "%i FPS\n%i ms", 1000/original_delta_time, original_delta_time);
+		FntFlush(-1);
         
 	    renderer_end_frame();
 	}
@@ -91,9 +95,9 @@ void init(void) {
 	CdInit();
 
 	// Load the internal font texture
-	FntLoad(608, 448);
+	FntLoad(512, 256);
 	// Create the text stream
-	FntOpen(0, 8, 320, 224, 0, 100);
+	FntOpen(64, 32, 128, 128, 0, 256);
 
 #endif
 }
