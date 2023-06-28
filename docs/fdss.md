@@ -4,7 +4,13 @@
 | ------- | ------------------------- | ---------------------------------------------------------------------- |
 | char[4] | file_magic                | File magic: "FDSS"                                                     |
 | u32     | n_sections                | Number of sections in the song                                         |
+| u32     | section_table_offset      | Offset (bytes) to song section offset table data, relative to the end of the header |
 | u32     | section_data_offset       | Offset (bytes) to song section data, relative to the end of the header |
+
+## Section Table Entry
+| Type    | Name                      | Description                                                            |
+| ------- | ------------------------- | ---------------------------------------------------------------------- |
+| u32     | offset                    | Offset (bytes) to the start of a section, relative to section data start                                                     |
 
 ## Sequence Data Format
 ### Channel Command overview
