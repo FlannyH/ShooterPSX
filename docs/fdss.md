@@ -17,7 +17,7 @@
 | Command Code | Description            | Operands                              | Example |
 | ------------ | ---------------------- | ------------------------------------- |------------------------------------------------------------------------------------------ |
 | \$0x          | Release Note           | key (u8)                              | \$03 \$3C: Channel 3 release key 60                                                        |
-| \$1x          | Play Note              | key (u8), velocity (u8), panning (u8) | \$13 \$3C \$3F \$7F: Channel 3 play key 60 at velocity 63 (~50%) and panning 127 (center)     |
+| \$1x          | Play Note              | key (u8), velocity (u8), | \$13 \$3C \$3F: Channel 3 play key 60 at velocity 63 (~50%)   |
 | \$2x          | Set Channel Volume     | volume (u8)                           | \$23 \$3F: Channel 3 set volume to 50%                                                     |
 | \$3x          | Set Channel Panning    | panning (u8)                          | \$33 \$00 \$34 \$FF: Channel 3 set panning to left, Channel 4 set panning to right           |
 | \$4x          | Set Channel Pitch      | pitch (i16)                           | \$43 \$F4 \$01: Channel 3 set pitch to +100 cents                                           |
