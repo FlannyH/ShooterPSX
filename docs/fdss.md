@@ -47,12 +47,11 @@ Any SPU channel that is currently playing this key from this channel, the note g
 | Key       | 0-127     | C0 - B10               | C5 = 60
 
 #### ($1x) - Play Note
-The driver will look for a free sampler channel, and start a note with the specifiec MIDI key, velocity, and panning.
+The driver will look for a free sampler channel, and start a note with the specific MIDI key and velocity.
 | Parameter | Raw range | Unit range             | Examples
 | --------- | --------- | ---------------------- | -------
 | Key       | 0-127     | C0 - B10               | C5 = 60
 | Velocity  | 0-255     | 0% - 200%              | 0% = 0, 100% = 127, 200% = 254
-| Panning   | 0-255     | 100% left - 100% right | Left = 0, Center = 127, Right = 254
 
 #### ($2x) - Set Channel Volume
 The channel's volume level is set to the volume operand's value. Any new notes, as well as any currently playing notes, immediately get updated to fit the new channel volume, allowing for effects like volume fades.
