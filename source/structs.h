@@ -90,8 +90,9 @@ typedef struct {
     aabb_t bounds;
 } mesh_t;
 
+#define MAGIC_FMSH 0x48534D46
 typedef struct {
-    uint32_t file_magic;         // File identifier magic, always "FMSH"
+    uint32_t file_magic;        // File identifier magic, always "FMSH"
     uint32_t n_submeshes;       // Number of submeshes in this model.
     uint32_t offset_mesh_desc;  // Offset into the binary section to the start of the array of MeshDesc structs.
     uint32_t offset_vertex_data;// Offset into the binary section to the start of the raw VertexPSX data.
@@ -136,4 +137,5 @@ typedef struct {
     col_mat_t collision_material;
     collision_triangle_3d_t* triangle;
 } rayhit_t;
+
 #endif // STRUCTS_H

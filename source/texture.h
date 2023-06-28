@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 // Texture Collection file header
+#define MAGIC_FTXC 0x43585446
 typedef struct {
     uint32_t file_magic;               // File identifier magic, always "FTXC" or 0x46545843
     uint32_t n_texture_cell;           // Number of texture cells in this file. This is also the number of palettes in the file, as we assume each texture has its own 16 color palette.
