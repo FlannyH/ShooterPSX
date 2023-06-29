@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <psxspu.h>
 #include <psxgte.h>
+#include <string.h>
+#include "lut.h"
 #include "fixed_point.h"
 #include "vec2.h"
 #include "file.h"
@@ -9,8 +11,6 @@
 // Channels
 spu_channel_t spu_channel[24];
 midi_channel_t midi_channel[16];
-uint16_t* pan_lut = NULL;
-uint16_t* note_lut = NULL;
 
 // Instruments
 instrument_description_t* instruments = NULL;
@@ -33,7 +33,7 @@ void music_test_sound() {
 	// Play sound
     SpuSetVoiceStartAddr(0, getSPUAddr(0x01000));
 	SpuSetVoicePitch(0, getSPUSampleRate(18900));
-	SPU_CH_ADSR1(0) = 0x00ff;
+	SPU_CH_ADSR1(0) = 0xC0ff;
 	SPU_CH_ADSR2(0) = 0x0000;
 	SPU_CH_VOL_L(0) = 0x3fff;
 	SPU_CH_VOL_R(0) = 0x3fff;
@@ -79,14 +79,6 @@ void music_play_sequence(int section) {
 		midi_channel[i].pitch_wheel = 0;
 	}
 	memset(spu_channel, 0, sizeof(spu_channel));
-
-	// Calculate panning lut
-	if (pan_lut == NULL) {
-		pan_lut = (uint16_t*)malloc(sizeof(uint16_t) * 256);
-		for (size_t i = 0; i < 256; ++i) {
-			pan_lut[i] = isin(i * 128);
-		}
-	}
 }
 
 void music_tick() {
@@ -100,11 +92,11 @@ void music_tick() {
 		const uint8_t command = *sequence_pointer++;
 
 		// Release Note
-		if (command & 0xF0 == 0x00) {
+		if ((command & 0xF0) == 0x00) {
 
 		}
 		// Play Note
-		if (command & 0xF0 == 0x10) {
+		if ((command & 0xF0) == 0x10) {
 			// Get parameters
 			const uint8_t key = *sequence_pointer++;
 			const uint8_t velocity = *sequence_pointer++;
@@ -127,23 +119,23 @@ void music_tick() {
 
 			// Find first instrument region that fits, and start playing the note
 			const uint16_t n_regions = instruments[midi_chn->instrument].n_regions;
-			const instrument_region_header_t* regions = &instrument_regions[instruments[midi_chn->instrument].region_start_index];
+			//const instrument_region_header_t* regions = &instrument_regions[instruments[midi_chn->instrument].region_start_index];
 			for (size_t i = 0; i < n_regions; ++i) {
-				if (key >= regions[i].key_min 
-				&& key <= regions[i].key_max) {
+				if (1 /*key >= regions[i].key_min 
+				&& key <= regions[i].key_max*/) {
 					// Calculate sample rate and velocity
 					scalar_t s_velocity = velocity * ONE;
 					vec2_t stereo_volume = {
-						scalar_mul((uint32_t)pan_lut[255 - midi_chn->panning], velocity),
-						scalar_mul((uint32_t)pan_lut[midi_chn->panning], velocity),
+						scalar_mul((uint32_t)lut_panning[255 - midi_chn->panning], velocity),
+						scalar_mul((uint32_t)lut_panning[midi_chn->panning], velocity),
 					};
-					scalar_t sample_rate = scalar_mul(regions[i].sample_rate * ONE, );
+					scalar_t sample_rate = scalar_mul(/*regions[i].sample_rate*/ 18900 * ONE, (uint32_t)lut_note_pitch[key]);
 
 					// Start playing the note on the SPU
 					SpuSetVoiceStartAddr(spu_channel_id, getSPUAddr(0x01000));
-					SpuSetVoicePitch(spu_channel_id, getSPUSampleRate(18900));
-					SPU_CH_ADSR1(spu_channel_id) = regions[i].reg_adsr1;
-					SPU_CH_ADSR2(spu_channel_id) = regions[i].reg_adsr2;
+					SpuSetVoicePitch(spu_channel_id, sample_rate / 44100);
+					SPU_CH_ADSR1(spu_channel_id) = 0x0000;//regions[i].reg_adsr1;
+					SPU_CH_ADSR2(spu_channel_id) = 0x00ff;//regions[i].reg_adsr2;
 					SPU_CH_VOL_L(spu_channel_id) = stereo_volume.x * 2;
 					SPU_CH_VOL_R(spu_channel_id) = stereo_volume.y * 2;
 					SpuSetKey(1, 1 << spu_channel_id);

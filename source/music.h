@@ -41,8 +41,7 @@ typedef struct {
 
 #define SPU_STATE_IDLE 0
 #define SPU_STATE_SFX 1
-#define SPU_STATE_SCHEDULE_NOTE 2
-#define SPU_STATE_PLAYING_NOTE 3
+#define SPU_STATE_PLAYING_NOTE 2
 
 typedef struct {
     uint8_t state; // see above SPU_STATE_(...)
