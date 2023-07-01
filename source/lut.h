@@ -57,4 +57,12 @@ static const uint16_t lut_note_pitch[128] = {
     0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
     0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
 };
+
+// Wait times for the music driver
+static const uint16_t lut_wait_times[32] = {
+    1,      2,      3,      4,      6,      8,      12,     16,
+    20,     24,     28,     32,     40,     48,     56,     64,
+    80,     96,     112,    128,    160,    192,    224,    256,
+    320,    384,    448,    512,    640,    768,    896,    1024,
+};
 #endif

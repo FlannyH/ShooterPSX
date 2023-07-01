@@ -11,6 +11,7 @@ typedef struct {
     uint32_t offset_instrument_descs; // Offset (bytes) to instrument description table, relative to the end of the header
     uint32_t offset_instrument_regions; // Offset (bytes) to instrument region table, relative to the end of the header
     uint32_t offset_sample_data;      // Offset (bytes) to raw SPU-ADPCM data chunk
+    uint32_t length_sample_data;      // Number of bytes in the SPU-ADPCM data chunk
 } soundbank_header_t;
 
 // Instrument description
@@ -42,6 +43,7 @@ typedef struct {
 #define SPU_STATE_IDLE 0
 #define SPU_STATE_SFX 1
 #define SPU_STATE_PLAYING_NOTE 2
+#define SPU_STATE_RELEASING_NOTE 2
 
 typedef struct {
     uint8_t state; // see above SPU_STATE_(...)
@@ -59,7 +61,9 @@ typedef struct {
 } midi_channel_t;
 
 void music_test_sound();
+void music_load_soundbank(const char* path);
 void music_load_sequence(const char* path);
 void music_play_sequence(int section);
+void music_tick();
 
 #endif

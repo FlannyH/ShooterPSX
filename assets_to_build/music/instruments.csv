@@ -1,0 +1,18 @@
+# Instrument ID;# Key Min;# Key Max;# Attack Mode;# Attack Shift;# Attack Step;#Decay Shift;# Sustain level;# Sustain Mode;# Sustain Direction;# Sustain Shift;# Sustain Step;# Release Step;# Release Mode;# Release Shift;# Sample Source
+128;36;36;0;0;0;0;15;0;0;0;0;0;0;0;samples/kick.wav
+128;40;40;0;0;0;0;15;0;0;0;0;0;0;0;samples/snare.wav
+128;41;41;0;0;0;0;15;0;0;0;0;0;0;0;samples/low_tom1.wav
+128;42;42;0;0;0;0;15;0;0;0;0;0;0;0;samples/chh.wav
+128;43;43;0;0;0;0;15;0;0;0;0;0;0;0;samples/low_tom2.wav
+128;45;45;0;0;0;0;15;0;0;0;0;0;0;0;samples/mid_tom2.wav
+128;46;46;0;0;0;0;15;0;0;0;0;0;0;0;samples/ohh.wav
+128;49;49;0;0;0;0;15;0;0;0;0;0;0;0;samples/crash1.wav
+128;57;57;0;0;0;0;15;0;0;0;0;0;0;0;samples/crash2.wav
+29;0;127;0;0;0;0;15;0;0;0;0;0;0;0;samples/guitar1.wav
+30;0;42;0;0;0;0;15;0;0;0;0;0;0;0;samples/guitar2_d3.wav
+30;43;48;0;0;0;0;15;0;0;0;0;0;0;0;samples/guitar2_g3.wav
+30;49;127;0;0;0;0;15;0;0;0;0;0;0;0;samples/guitar2_cs4.wav
+28;0;127;0;0;0;0;15;0;0;0;0;0;0;0;samples/muted_guitar.wav
+14;0;127;0;0;0;0;15;0;0;0;0;0;0;0;samples/bell.wav
+95;0;127;0;0;0;0;15;0;0;0;0;0;0;0;samples/saw_pad.wav
+33;0;127;0;0;0;0;15;0;0;0;0;0;0;0;samples/bass.wav

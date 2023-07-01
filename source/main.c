@@ -41,19 +41,24 @@ int main(void) {
 
 	// Stick deadzone
 	input_set_stick_deadzone(36);
-	music_test_sound();
 
 	// Load model
     const model_t* m_level = model_load("\\ASSETS\\LEVEL.MSH;1");
 	const model_t *m_level_collision = model_load("\\ASSETS\\LEVELCOL.MSH;1");
 
 	texture_cpu_t *tex_level;
+
+	// todo: add unload functionality for when the textures are on the gpu. we don't need these in ram.
 	const uint32_t n_textures =
 		texture_collection_load("\\ASSETS\\LEVEL.TXC;1", &tex_level);
 
 	for (uint8_t i = 0; i < n_textures; ++i) {
 	    renderer_upload_texture(&tex_level[i], i);
 	}
+
+	music_load_soundbank("\\ASSETS\\INSTR.SBK;1");
+	music_load_sequence("\\ASSETS\\LEVEL1.DSS;1");
+	music_play_sequence(0);
 
 	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}};
     
@@ -72,6 +77,7 @@ int main(void) {
         renderer_draw_model_shaded(m_level, &t_level);
         player_update(&player, &bvh_level_model, delta_time);
         frame_counter += delta_time;
+		music_tick();
         
 	    renderer_end_frame();
 	}
