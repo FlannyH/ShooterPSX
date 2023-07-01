@@ -43,7 +43,7 @@ typedef struct {
 #define SPU_STATE_IDLE 0
 #define SPU_STATE_SFX 1
 #define SPU_STATE_PLAYING_NOTE 2
-#define SPU_STATE_RELEASING_NOTE 2
+#define SPU_STATE_RELEASING_NOTE 3
 
 typedef struct {
     uint8_t state; // see above SPU_STATE_(...)

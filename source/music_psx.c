@@ -153,30 +153,37 @@ void music_play_sequence(int section) {
 	memset(spu_channel, 0, sizeof(spu_channel));
 }
 
-void music_tick() {
+void music_tick(int delta_time) {
 	if (music_playing == 0) {
 		return;
 	}
 
 	// Handle commands
-	--wait_timer;
+	wait_timer -= delta_time;
 	while (wait_timer < 0) {
+		// Set released channels to idle if their curves are done
+		for (size_t i = 0; i < 24; ++i) {
+			if (spu_channel[i].state != SPU_STATE_RELEASING_NOTE) continue;
+			if (SPU_CH_ADSR_VOL(i) != 0) continue;
+
+			spu_channel[i].state = SPU_STATE_IDLE;
+		}
+
+
 		const uint8_t command = *sequence_pointer++;
-		//printf("%04X\n", command);
 
 		// Release Note
 		if ((command & 0xF0) == 0x00) {
 			// Get parameters
 			const uint8_t key = *sequence_pointer++;
+			//printf("release channel %02i key %i\n", command & 0x0F, key);
 
 			// Find all notes in this channel with this key
 			for (size_t i = 0; i < 24; ++i) {
-				if (spu_channel[i].midi_channel == (command & 0x0F) 
-				&& spu_channel[i].key == key 
-				&& spu_channel[i].state == SPU_STATE_PLAYING_NOTE) {
-					//printf("releasing channel %i key %i %i\n",i, key, spu_channel[i].key);
+				if ((spu_channel[i].midi_channel == (command & 0x0F))
+				&& (spu_channel[i].key == key)
+				&& (spu_channel[i].state == SPU_STATE_PLAYING_NOTE)) {
 					spu_channel[i].state = SPU_STATE_RELEASING_NOTE;
-					spu_channel[i].key = 255;
 					SpuSetKey(0, 1 << i);
 				}
 			}
@@ -187,24 +194,12 @@ void music_tick() {
 			// Get parameters
 			const uint8_t key = *sequence_pointer++;
 			const uint8_t velocity = *sequence_pointer++;
-			
-			// Let's check all the SPU channels, see if any of the releasing channels finished their release curve
-			size_t spu_channel_id = 0;
-			for (int i = 0; i < 24; ++i) {
-				if (spu_channel[i].state == SPU_STATE_RELEASING_NOTE
-				&& SPU_CH_ADSR_VOL(i) == 0) {
-					//printf("CUT SPU %i, %i\n",i, spu_channel[i].state);
-					spu_channel[i].state = SPU_STATE_IDLE;
-				}
-			}
+			//printf("play channel %02i key %i\n", command & 0x0F, key);
 
 			// Debug SPU channels
-			//printf ("curr state: ");
-			//for (int i = 0; i < 24; ++i) printf("%i", spu_channel[i].state);
-			//printf ("\n");
 
 			// Find free SPU channel
-			spu_channel_id = 0;
+			int spu_channel_id = 24;
 			for (int i = 0; i < 24; ++i) {
 				// If this one is free, cut the loop and use this index
 				if (spu_channel[i].state == SPU_STATE_IDLE) {
@@ -234,15 +229,25 @@ void music_tick() {
 						scalar_mul((uint32_t)lut_panning[255 - midi_chn->panning], s_velocity),
 						scalar_mul((uint32_t)lut_panning[midi_chn->panning], s_velocity),
 					};
-					scalar_t sample_rate = scalar_mul(regions[i].sample_rate * ONE, (uint32_t)lut_note_pitch[key]);
+					
+					// Handle channel pitch
+					int8_t key_offset = midi_chn->pitch_wheel / 1000;
+					int32_t key_fine = ((((int32_t)midi_chn->pitch_wheel) << 8) / 1000) & 0xFF;
+
+					// Calculate A and B for lerp - this brings the values to Q48.16
+					const uint32_t sample_rate_a = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + key_offset]) >> 8;
+					const uint32_t sample_rate_b = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + key_offset]) >> 8;
+
+					// todo: figure out why this doesn't fucking work
+					uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-key_fine)) + (sample_rate_b * (key_fine)))) >> 4;
 
 					// Start playing the note on the SPU
 					SpuSetVoiceStartAddr(spu_channel_id, 0x01000 + regions[i].sample_start);
-					SpuSetVoicePitch(spu_channel_id, sample_rate / 44100);
+					SpuSetVoicePitch(spu_channel_id, (sample_rate) / 44100);
 					SPU_CH_ADSR1(spu_channel_id) = regions[i].reg_adsr1;
-					SPU_CH_ADSR2(spu_channel_id) = regions[i].reg_adsr2;
-					SPU_CH_VOL_L(spu_channel_id) = stereo_volume.x >> 11;
-					SPU_CH_VOL_R(spu_channel_id) = stereo_volume.y >> 11;
+					SPU_CH_ADSR2(spu_channel_id) = regions[i].reg_adsr2 | 0x04;
+					SPU_CH_VOL_L(spu_channel_id) = stereo_volume.x >> 12;
+					SPU_CH_VOL_R(spu_channel_id) = stereo_volume.y >> 12;
 					SpuSetKey(1, 1 << spu_channel_id);
 					//printf("playing %i on %i\n",key, spu_channel_id);
 
@@ -297,7 +302,7 @@ void music_tick() {
 
 		// Wait a number of ticks
 		else if ((command >= 0xA0) && (command <= 0xBF)) {
-			wait_timer += lut_wait_times[command & 0x1F];
+			wait_timer += lut_wait_times[command & 0x1F] * 6;
 		}
 
 		// Set time signature, we ignore for now

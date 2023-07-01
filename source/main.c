@@ -77,9 +77,7 @@ int main(void) {
         renderer_draw_model_shaded(m_level, &t_level);
         player_update(&player, &bvh_level_model, delta_time);
         frame_counter += delta_time;
-		music_tick();
-		music_tick();
-		music_tick();
+		music_tick(delta_time);
         
 	    renderer_end_frame();
 	}
