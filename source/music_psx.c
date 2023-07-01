@@ -33,9 +33,31 @@ void music_test_sound() {
 	SpuWrite(data, size);
 
 	// Play sound
-    SpuSetVoiceStartAddr(0, getSPUAddr(0x01000));
+    SpuSetVoiceStartAddr(0, 0x01000);
 	SpuSetVoicePitch(0, getSPUSampleRate(18900));
 	SPU_CH_ADSR1(0) = 0xC0ff;
+	SPU_CH_ADSR2(0) = 0x0000;
+	SPU_CH_VOL_L(0) = 0x3fff;
+	SPU_CH_VOL_R(0) = 0x3fff;
+	SpuSetKey(1, 1 << 0);
+}
+
+void music_test_instr_region(int region) {
+	// Play sound
+	printf("testing region %i: ", region);
+	printf("key: %i - %i, sls: %i, ss: %i, sr: %i, regs: %i, %i\n", 
+		instrument_regions[region].key_min,
+		instrument_regions[region].key_max,
+		instrument_regions[region].sample_loop_start,
+		instrument_regions[region].sample_start,
+		instrument_regions[region].sample_rate,
+		instrument_regions[region].reg_adsr1,
+		instrument_regions[region].reg_adsr2
+	);
+
+    SpuSetVoiceStartAddr(0, 0x01000 + instrument_regions[region].sample_start);
+	SpuSetVoicePitch(0, getSPUSampleRate(32000));
+	SPU_CH_ADSR1(0) = 0x00ff;
 	SPU_CH_ADSR2(0) = 0x0000;
 	SPU_CH_VOL_L(0) = 0x3fff;
 	SPU_CH_VOL_R(0) = 0x3fff;
@@ -56,7 +78,7 @@ void music_load_soundbank(const char* path) {
 	}
 
 	// First upload all the samples to audio RAM
-	uint8_t* sample_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_sample_data;
+	uint32_t* sample_data = ((uint32_t*)(sbk_header+1)) + sbk_header->offset_sample_data / 4;
 	SpuSetTransferStartAddr(0x01000);
 	SpuWrite(sample_data, sbk_header->length_sample_data);
 
@@ -66,11 +88,23 @@ void music_load_soundbank(const char* path) {
 	uint8_t* inst_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_descs;
 	uint8_t* region_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_regions;
 	size_t inst_size = sizeof(instrument_description_t) * 256;
-	size_t region_size = sizeof(instrument_description_t) * sbk_header->n_samples;
+	size_t region_size = sizeof(instrument_region_header_t) * sbk_header->n_samples;
 	instruments = (instrument_description_t*)malloc(inst_size);
 	instrument_regions = (instrument_region_header_t*)malloc(region_size);
 	memcpy(instruments, inst_data, inst_size);
 	memcpy(instrument_regions, region_data, region_size);
+
+	for (int i = 0; i < sbk_header->n_samples; ++i) {
+		printf("key: %i - %i, sls: %i, ss: %i, sr: %i, regs: %i, %i\n", 
+		instrument_regions[i].key_min,
+		instrument_regions[i].key_max,
+		instrument_regions[i].sample_loop_start,
+		instrument_regions[i].sample_start,
+		instrument_regions[i].sample_rate,
+		instrument_regions[i].reg_adsr1,
+		instrument_regions[i].reg_adsr2
+		);
+	}
 
 	// Free the original file
 	free(sbk_header);
@@ -155,8 +189,16 @@ void music_tick() {
 			const uint8_t key = *sequence_pointer++;
 			const uint8_t velocity = *sequence_pointer++;
 			
-			// Find free SPU channel
+			// Let's check all the SPU channels, see if any of the releasing channels finished their release curve
 			size_t spu_channel_id = 0;
+			for (spu_channel_id = 0; spu_channel_id < 24; ++spu_channel_id) {
+				if (*(int16_t*)&SPU_CH_ADSR_VOL(spu_channel_id) <= 0 && spu_channel[spu_channel_id].state == SPU_STATE_RELEASING_NOTE) {
+					spu_channel[spu_channel_id].state = SPU_STATE_IDLE;
+				}
+			}
+
+			// Find free SPU channel
+			spu_channel_id = 0;
 			for (spu_channel_id = 0; spu_channel_id < 24; ++spu_channel_id) {
 				// If this one is free, cut the loop and use this index
 				if (spu_channel[spu_channel_id].state == 0) {
@@ -188,7 +230,8 @@ void music_tick() {
 					scalar_t sample_rate = scalar_mul(regions[i].sample_rate * ONE, (uint32_t)lut_note_pitch[key]);
 
 					// Start playing the note on the SPU
-					SpuSetVoiceStartAddr(spu_channel_id, getSPUAddr(0x01000 + regions[i].sample_start));
+					printf("Playing sample at $%x\n", 0x01000 + regions[i].sample_start);
+					SpuSetVoiceStartAddr(spu_channel_id, 0x01000 + regions[i].sample_start);
 					SpuSetVoicePitch(spu_channel_id, sample_rate / 44100);
 					SPU_CH_ADSR1(spu_channel_id) = regions[i].reg_adsr1;
 					SPU_CH_ADSR2(spu_channel_id) = regions[i].reg_adsr2;
@@ -271,6 +314,11 @@ void music_tick() {
 		// Jump to Loop Start
 		else if (command == 0xFF) {
 			sequence_pointer = loop_start;
+		}
+
+		// Unknown command 
+		else {
+			printf("Unknown FDSS command $02X\n", command);
 		}
 	}
 }

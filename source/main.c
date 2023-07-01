@@ -78,6 +78,8 @@ int main(void) {
         player_update(&player, &bvh_level_model, delta_time);
         frame_counter += delta_time;
 		music_tick();
+		music_tick();
+		music_tick();
         
 	    renderer_end_frame();
 	}
