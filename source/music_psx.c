@@ -35,7 +35,7 @@ void music_test_sound() {
 	// Play sound
     SpuSetVoiceStartAddr(0, 0x01000);
 	SpuSetVoicePitch(0, getSPUSampleRate(18900));
-	SPU_CH_ADSR1(0) = 0xC0ff;
+	SPU_CH_ADSR1(0) = 0x00ff;
 	SPU_CH_ADSR2(0) = 0x0000;
 	SPU_CH_VOL_L(0) = 0x3fff;
 	SPU_CH_VOL_R(0) = 0x3fff;
@@ -245,7 +245,7 @@ void music_tick(int delta_time) {
 					SpuSetVoiceStartAddr(spu_channel_id, 0x01000 + regions[i].sample_start);
 					SpuSetVoicePitch(spu_channel_id, (sample_rate) / 44100);
 					SPU_CH_ADSR1(spu_channel_id) = regions[i].reg_adsr1;
-					SPU_CH_ADSR2(spu_channel_id) = regions[i].reg_adsr2 | 0x04;
+					SPU_CH_ADSR2(spu_channel_id) = regions[i].reg_adsr2;
 					SPU_CH_VOL_L(spu_channel_id) = stereo_volume.x >> 12;
 					SPU_CH_VOL_R(spu_channel_id) = stereo_volume.y >> 12;
 					SpuSetKey(1, 1 << spu_channel_id);

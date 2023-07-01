@@ -65,22 +65,16 @@
             <file name="MAIN.EXE"	type="data" source="main.exe" />
             <file name="SYSTEM.CNF"		type="data" source="${PROJECT_SOURCE_DIR}/system.cnf" />
             <dir name="ASSETS">
-			    <file name="CUBETEST.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/rat.msh" />
-			    <file name="LEVEL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVEL.MSH" />
-			    <file name="LEVELCOL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVELCOL.TXC" />
-			    <file name="LEVELCOL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVELCOL.MSH" />
-			    <file name="LEVEL1.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVEL1.DSS" />
-			    <file name="INSTR.SBK"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/INSTR.SBK" />
-			    <file name="TESTLVL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/TESTLVL.MSH" />
-			    <file name="LEVEL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/ASSETS/LEVEL.TXC" />
-			    <!--<file name="MUSIC.XA" type="mixed" source="${PROJECT_SOURCE_DIR}/ASSETS/music.xa"/>-->
-			    <!--
-				    This file is only required if you are using dynamic linking
-				    (see the system/dynlink example). It contains the executable's
-				    symbol map and can be used to obtain the address of a function
-				    or global variable by its name.
-			    -->
-			    <!--<file name="TEMPLATE.MAP"	type="data" source="template.map" />-->
+				<dir name="MODELS">
+					<file name="LEVEL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level.msh" />
+					<file name="LEVEL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level.txc" />
+				</dir>
+				<dir name="MUSIC">
+					<dir name="SEQUENCE">
+						<file name="LEVEL1.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/level1.dss" />
+					</dir>
+					<file name="INSTR.SBK"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/instr.sbk" />
+				</dir>
             </dir>
 			<dummy sectors="1024"/>
 		</directory_tree>

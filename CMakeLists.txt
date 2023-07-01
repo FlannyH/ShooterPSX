@@ -35,6 +35,7 @@ if (DEFINED PSN00BSDK_TARGET)
 	    iso.xml  # Path to config file
 	    DEPENDS main
     )
+
 else()
     project ("ShooterPSX")
     set(CMAKE_CXX_STANDARD 17)
