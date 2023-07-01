@@ -146,7 +146,6 @@ void music_play_sequence(int section) {
 	music_playing = 1;
 	wait_timer = 1;
 	for (size_t i = 0; i < 16; ++i) {
-		memset(midi_channel[i].active_spu_channels, -1, 8);
 		midi_channel[i].volume = 127;
 		midi_channel[i].panning = 127;
 		midi_channel[i].pitch_wheel = 0;
@@ -163,6 +162,7 @@ void music_tick() {
 	--wait_timer;
 	while (wait_timer < 0) {
 		const uint8_t command = *sequence_pointer++;
+		//printf("%04X\n", command);
 
 		// Release Note
 		if ((command & 0xF0) == 0x00) {
@@ -170,15 +170,14 @@ void music_tick() {
 			const uint8_t key = *sequence_pointer++;
 
 			// Find all notes in this channel with this key
-			midi_channel_t* midi_chn = &midi_channel[command & 0x0F];
-			for (size_t i = 0; i < 8; ++i) {
-				const int8_t spu = midi_chn->active_spu_channels[i];
-				if (spu != -1) {
-					if (spu_channel[spu].key == key) {
-						midi_chn->active_spu_channels[i] = -1;
-						spu_channel[spu].state = SPU_STATE_RELEASING_NOTE;
-						SpuSetKey(0, 1 << spu);
-					}
+			for (size_t i = 0; i < 24; ++i) {
+				if (spu_channel[i].midi_channel == (command & 0x0F) 
+				&& spu_channel[i].key == key 
+				&& spu_channel[i].state == SPU_STATE_PLAYING_NOTE) {
+					//printf("releasing channel %i key %i %i\n",i, key, spu_channel[i].key);
+					spu_channel[i].state = SPU_STATE_RELEASING_NOTE;
+					spu_channel[i].key = 255;
+					SpuSetKey(0, 1 << i);
 				}
 			}
 		}
@@ -191,17 +190,25 @@ void music_tick() {
 			
 			// Let's check all the SPU channels, see if any of the releasing channels finished their release curve
 			size_t spu_channel_id = 0;
-			for (spu_channel_id = 0; spu_channel_id < 24; ++spu_channel_id) {
-				if (*(int16_t*)&SPU_CH_ADSR_VOL(spu_channel_id) <= 0 && spu_channel[spu_channel_id].state == SPU_STATE_RELEASING_NOTE) {
-					spu_channel[spu_channel_id].state = SPU_STATE_IDLE;
+			for (int i = 0; i < 24; ++i) {
+				if (spu_channel[i].state == SPU_STATE_RELEASING_NOTE
+				&& SPU_CH_ADSR_VOL(i) == 0) {
+					//printf("CUT SPU %i, %i\n",i, spu_channel[i].state);
+					spu_channel[i].state = SPU_STATE_IDLE;
 				}
 			}
 
+			// Debug SPU channels
+			//printf ("curr state: ");
+			//for (int i = 0; i < 24; ++i) printf("%i", spu_channel[i].state);
+			//printf ("\n");
+
 			// Find free SPU channel
 			spu_channel_id = 0;
-			for (spu_channel_id = 0; spu_channel_id < 24; ++spu_channel_id) {
+			for (int i = 0; i < 24; ++i) {
 				// If this one is free, cut the loop and use this index
-				if (spu_channel[spu_channel_id].state == 0) {
+				if (spu_channel[i].state == SPU_STATE_IDLE) {
+					spu_channel_id = i;
 					break;
 				}
 			}
@@ -230,25 +237,20 @@ void music_tick() {
 					scalar_t sample_rate = scalar_mul(regions[i].sample_rate * ONE, (uint32_t)lut_note_pitch[key]);
 
 					// Start playing the note on the SPU
-					printf("Playing sample at $%x\n", 0x01000 + regions[i].sample_start);
 					SpuSetVoiceStartAddr(spu_channel_id, 0x01000 + regions[i].sample_start);
 					SpuSetVoicePitch(spu_channel_id, sample_rate / 44100);
 					SPU_CH_ADSR1(spu_channel_id) = regions[i].reg_adsr1;
 					SPU_CH_ADSR2(spu_channel_id) = regions[i].reg_adsr2;
-					SPU_CH_VOL_L(spu_channel_id) = stereo_volume.x * 2;
-					SPU_CH_VOL_R(spu_channel_id) = stereo_volume.y * 2;
+					SPU_CH_VOL_L(spu_channel_id) = stereo_volume.x >> 11;
+					SPU_CH_VOL_R(spu_channel_id) = stereo_volume.y >> 11;
 					SpuSetKey(1, 1 << spu_channel_id);
+					//printf("playing %i on %i\n",key, spu_channel_id);
 
-					// Mark the channel as playing
-					for (size_t i = 0; i < 8; ++i) {
-						if (midi_chn->active_spu_channels[i] == -1) {
-							midi_chn->active_spu_channels[i] = spu_channel_id;
-						}
-					}
 					spu_chn->key = key;
 					spu_chn->velocity = velocity;
 					spu_chn->state = SPU_STATE_PLAYING_NOTE;
 					spu_chn->instrument = midi_chn->instrument;
+					spu_chn->midi_channel = command & 0x0F;
 					break;
 				}
 			}

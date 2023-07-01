@@ -50,10 +50,10 @@ typedef struct {
     uint8_t key; // currently playing key
     uint8_t velocity; // currently playing velocity
     uint8_t instrument; // currently playing instrument
+    uint8_t midi_channel;
 } spu_channel_t;
 
 typedef struct {
-    int8_t active_spu_channels[8]; // indices of each SPU channel that this channel currently actively uses. values of -1 are to be ignored
     uint8_t volume; // channel volume. 0 = 0%, 127 = 100%, 254 = 200%
     uint8_t panning; // channel panning, 0 is left, 254 is right
     uint8_t instrument; // channel instrument
