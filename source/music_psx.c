@@ -48,7 +48,7 @@ void music_test_instr_region(int region) {
 	printf("key: %i - %i, sls: %i, ss: %i, sr: %i, regs: %i, %i\n", 
 		instrument_regions[region].key_min,
 		instrument_regions[region].key_max,
-		instrument_regions[region].sample_loop_start,
+		instrument_regions[region].volume_multiplier,
 		instrument_regions[region].sample_start,
 		instrument_regions[region].sample_rate,
 		instrument_regions[region].reg_adsr1,
@@ -57,8 +57,8 @@ void music_test_instr_region(int region) {
 
     SpuSetVoiceStartAddr(0, 0x01000 + instrument_regions[region].sample_start);
 	SpuSetVoicePitch(0, getSPUSampleRate(32000));
-	SPU_CH_ADSR1(0) = 0x00ff;
-	SPU_CH_ADSR2(0) = 0x0000;
+	SPU_CH_ADSR1(0) = instrument_regions[region].reg_adsr1;
+	SPU_CH_ADSR2(0) = instrument_regions[region].reg_adsr2;
 	SPU_CH_VOL_L(0) = 0x3fff;
 	SPU_CH_VOL_R(0) = 0x3fff;
 	SpuSetKey(1, 1 << 0);
@@ -94,18 +94,6 @@ void music_load_soundbank(const char* path) {
 	memcpy(instruments, inst_data, inst_size);
 	memcpy(instrument_regions, region_data, region_size);
 
-	for (int i = 0; i < sbk_header->n_samples; ++i) {
-		printf("key: %i - %i, sls: %i, ss: %i, sr: %i, regs: %i, %i\n", 
-		instrument_regions[i].key_min,
-		instrument_regions[i].key_max,
-		instrument_regions[i].sample_loop_start,
-		instrument_regions[i].sample_start,
-		instrument_regions[i].sample_rate,
-		instrument_regions[i].reg_adsr1,
-		instrument_regions[i].reg_adsr2
-		);
-	}
-
 	// Free the original file
 	free(sbk_header);
 }
@@ -140,6 +128,8 @@ void music_play_sequence(int section) {
 	// It is! Find where the data is
 	uint32_t* header_end = (uint32_t*)(curr_loaded_seq + 1); // start of header + 1 whole struct's worth of bytes
 	uint32_t* section_table = header_end + (curr_loaded_seq->offset_section_table / 4); // find the section table and get the entry
+	PANIC_IF("misaligned data!", (((intptr_t)header_end) & 0x03) != 0);
+	PANIC_IF("misaligned data!", (((intptr_t)section_table) & 0x03) != 0);
 	sequence_pointer = ((uint8_t*)header_end) + curr_loaded_seq->offset_section_data + section_table[section];
 	
 	// Initialize variables
@@ -169,7 +159,6 @@ void music_tick(int delta_time) {
 			spu_channel[i].state = SPU_STATE_IDLE;
 		}
 
-
 		const uint8_t command = *sequence_pointer++;
 
 		// Release Note
@@ -194,7 +183,6 @@ void music_tick(int delta_time) {
 			// Get parameters
 			const uint8_t key = *sequence_pointer++;
 			const uint8_t velocity = *sequence_pointer++;
-			//printf("play channel %02i key %i\n", command & 0x0F, key);
 
 			// Debug SPU channels
 
@@ -223,7 +211,7 @@ void music_tick(int delta_time) {
 				&& key <= regions[i].key_max) {
 					// Calculate sample rate and velocity
 					scalar_t s_velocity = ((scalar_t)velocity) * ONE;
-					scalar_t s_channel_volume = ((scalar_t)midi_chn->volume) * ONE;
+					scalar_t s_channel_volume = ((scalar_t)midi_chn->volume) * (ONE / 256) * regions[i].volume_multiplier;
 					s_velocity = scalar_mul(s_velocity, s_channel_volume);
 					vec2_t stereo_volume = {
 						scalar_mul((uint32_t)lut_panning[255 - midi_chn->panning], s_velocity),
@@ -237,8 +225,6 @@ void music_tick(int delta_time) {
 					// Calculate A and B for lerp - this brings the values to Q48.16
 					const uint32_t sample_rate_a = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + key_offset]) >> 8;
 					const uint32_t sample_rate_b = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + key_offset]) >> 8;
-
-					// todo: figure out why this doesn't fucking work
 					uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-key_fine)) + (sample_rate_b * (key_fine)))) >> 4;
 
 					// Start playing the note on the SPU
@@ -278,9 +264,12 @@ void music_tick(int delta_time) {
 		// Set Channel Pitch
 		else if ((command & 0xF0) == 0x40) {
 			midi_channel_t* midi_chn = &midi_channel[command & 0x0F];
-			const int16_t pitch_wheel = *(int16_t*)sequence_pointer;
-			midi_chn->pitch_wheel = pitch_wheel;
-			sequence_pointer += 2;
+
+			// bleh. can't guarantee alignment so i have no choice.
+			uint8_t pitch_wheel_low = *sequence_pointer++;
+			uint8_t pitch_wheel_high = *sequence_pointer++;
+			uint16_t pitch_wheel_temp = ((uint16_t)pitch_wheel_low) + (((uint16_t)pitch_wheel_high) << 8);
+			midi_chn->pitch_wheel = *(int16_t*)&pitch_wheel_temp;
 		}
 
 		// Set Channel Instrument
@@ -292,12 +281,8 @@ void music_tick(int delta_time) {
 
 		// Set tempo
 		else if ((command & 0xF0) == 0x80) {
-			// Upper 4 bits of 12 bit value are stored in the command code. we need to backtrack to get there
-			sequence_pointer--;
-
 			// And then filter the command code out
-			tempo = (*(uint16_t*)sequence_pointer) & 0x0FFF; 
-			sequence_pointer += 2;
+			tempo = ((command << 8) + (*sequence_pointer++)) & 0x0FFF; 
 		}
 
 		// Wait a number of ticks
@@ -325,7 +310,7 @@ void music_tick(int delta_time) {
 
 		// Unknown command 
 		else {
-			printf("Unknown FDSS command $02X\n", command);
+			printf("Unknown FDSS command %02X\n", command);
 		}
 	}
 }

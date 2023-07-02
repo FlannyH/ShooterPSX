@@ -20,7 +20,7 @@
 | ---- | ----------------- | --------------------------------------------------------------------------------- |
 | u8   | key_min           | Minimum MIDI key for this instrument region                                       |
 | u8   | key_max           | Maximum MIDI key for this instrument region                                       |
-| u16  | sample_loop_start | Sample loop start (samples)                                                       |
+| u16  | volume_multiplier | @8.8 fixed point volume multiplier                                                |
 | u32  | sample_start      | Offset (bytes) into sample data chunk. Can be written to SPU Sample Start Address |
 | u32  | sample_rate       | Sample rate (Hz) at MIDI key 60 (C5)                                              |
 | u16  | reg_adsr1         | Raw data to be written to SPU_CH_ADSR1 when enabling a note                       |

@@ -32,7 +32,7 @@ uint32_t* next_primitive;
 MATRIX view_matrix;
 vec3_t camera_pos;
 vec3_t camera_dir;
-int vsync_enable = 0;
+int vsync_enable = 1;
 int frame_counter = 0;
 
 pixel32_t textures_avg_colors[256];

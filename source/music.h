@@ -24,8 +24,8 @@ typedef struct {
 typedef struct {
     uint8_t key_min;               // Minimum MIDI key for this instrument region
     uint8_t key_max;               // Maximum MIDI key for this instrument region
-    uint16_t sample_loop_start;    // Sample loop start (samples)
-    uint32_t sample_start;        // Offset (bytes) into sample data chunk. Can be written to SPU Sample Start Address
+    uint16_t volume_multiplier;    // @8.8 fixed point volume multiplier
+    uint32_t sample_start;         // Offset (bytes) into sample data chunk. Can be written to SPU Sample Start Address
     uint32_t sample_rate;          // Sample rate (Hz) at MIDI key 60 (C5)
     uint16_t reg_adsr1;            // Raw data to be written to SPU_CH_ADSR1 when enabling a note
     uint16_t reg_adsr2;            // Raw data to be written to SPU_CH_ADSR2 when enabling a note
@@ -65,6 +65,6 @@ void music_test_instr_region(int region);
 void music_load_soundbank(const char* path);
 void music_load_sequence(const char* path);
 void music_play_sequence(int section);
-void music_tick();
+void music_tick(int delta_time);
 
 #endif

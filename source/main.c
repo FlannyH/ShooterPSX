@@ -56,15 +56,16 @@ int main(void) {
 	}
 
 	music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK;1");
-	music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\LEVEL1.DSS;1");
+	music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\SUBNIVIS.DSS;1");
 	music_play_sequence(0);
 
 	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}};
     
     bvh_t bvh_level_model;
-    bvh_from_model(&bvh_level_model, m_level);
+    //bvh_from_model(&bvh_level_model, m_level);
 
 	int frame_counter = 0;
+	int sound_to_test = 0;
     player_update(&player, &bvh_level_model, 16);
     while (!renderer_should_close()) {
         int delta_time = renderer_get_delta_time_ms();
@@ -76,6 +77,11 @@ int main(void) {
         renderer_draw_model_shaded(m_level, &t_level);
         player_update(&player, &bvh_level_model, delta_time);
         frame_counter += delta_time;
+		if (frame_counter > 0) {
+			frame_counter -= 2000;
+			//music_test_instr_region(sound_to_test);
+			sound_to_test = (sound_to_test + 1) % 17;
+		}
 		music_tick(delta_time);
         
 	    renderer_end_frame();
