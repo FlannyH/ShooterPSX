@@ -28,8 +28,8 @@
 		-->
 		<identifiers
 			system			="PLAYSTATION"
-			volume			="PSN00BSDK_TEMPLATE"
-			volume_set		="PSN00BSDK_TEMPLATE"
+			volume			="SHOOTERPSX"
+			volume_set		="SHOOTERPSX"
 			publisher		="MEIDOTEK"
 			data_preparer	="PSN00BSDK ${PSN00BSDK_VERSION}"
 			application		="PLAYSTATION"
