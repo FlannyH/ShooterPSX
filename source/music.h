@@ -51,7 +51,26 @@ typedef struct {
     uint8_t velocity; // currently playing velocity
     uint8_t instrument; // currently playing instrument
     uint8_t midi_channel;
+    int16_t release_time;
 } spu_channel_t;
+
+#define SPU_STAGE_ON 1
+#define SPU_STAGE_OFF 0
+typedef struct {
+    uint32_t voice_start;
+    uint16_t sample_rate;
+    uint16_t adsr1;
+    uint16_t adsr2;
+    uint16_t vol_l;
+    uint16_t vol_r;
+    uint8_t key;
+    uint8_t midi_channel;
+} spu_stage_on_t;
+
+typedef struct {
+    uint8_t midi_channel;
+    uint8_t key;
+} spu_stage_off_t;
 
 typedef struct {
     uint8_t volume; // channel volume. 0 = 0%, 127 = 100%, 254 = 200%

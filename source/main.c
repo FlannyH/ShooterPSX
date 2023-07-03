@@ -65,26 +65,21 @@ int main(void) {
     //bvh_from_model(&bvh_level_model, m_level);
 
 	int frame_counter = 0;
-	int sound_to_test = 0;
     player_update(&player, &bvh_level_model, 16);
     while (!renderer_should_close()) {
         int delta_time = renderer_get_delta_time_ms();
         if (delta_time > 34) {
             delta_time = 34;
         }
-        renderer_begin_frame(&player.transform);
-        input_update();
-        renderer_draw_model_shaded(m_level, &t_level);
-        player_update(&player, &bvh_level_model, delta_time);
         frame_counter += delta_time;
-		if (frame_counter > 0) {
-			frame_counter -= 2000;
-			//music_test_instr_region(sound_to_test);
-			sound_to_test = (sound_to_test + 1) % 17;
-		}
-		music_tick(delta_time);
+        PROFILE("begin_frame", renderer_begin_frame(&player.transform), 1);
+        PROFILE("input", input_update(), 1);
+        PROFILE("render", renderer_draw_model_shaded(m_level, &t_level), 1);
+        PROFILE("player", player_update(&player, &bvh_level_model, delta_time), 1);
+		PROFILE("music", music_tick(delta_time), 1);
+	    PROFILE("end_frame", renderer_end_frame(), 1);
         
-	    renderer_end_frame();
+		FntFlush(-1);
 	}
 #ifndef _PSX
 	debug_layer_close();
@@ -100,9 +95,9 @@ void init(void) {
 	CdInit();
 
 	// Load the internal font texture
-	FntLoad(608, 448);
+	FntLoad(512, 256);
 	// Create the text stream
-	FntOpen(0, 8, 320, 224, 0, 100);
+	FntOpen(16, 16, 480, 224, 0, 512);
 
 #endif
 }

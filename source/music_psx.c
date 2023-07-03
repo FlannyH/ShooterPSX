@@ -1,6 +1,7 @@
 #include "music.h"
 #include <stdio.h>
 #include <psxspu.h>
+#include <psxgpu.h>
 #include <psxgte.h>
 #include <string.h>
 #include "lut.h"
@@ -143,6 +144,10 @@ void music_play_sequence(int section) {
 	memset(spu_channel, 0, sizeof(spu_channel));
 }
 
+spu_stage_on_t staged_note_on_events[24] = {0};
+spu_stage_off_t staged_note_off_events[24] = {0};
+int n_staged_note_on_events = 0;
+int n_staged_note_off_events = 0;
 void music_tick(int delta_time) {
 	if (music_playing == 0) {
 		return;
@@ -150,32 +155,21 @@ void music_tick(int delta_time) {
 
 	// Handle commands
 	wait_timer -= delta_time;
+	n_staged_note_on_events = 0;
+	n_staged_note_off_events = 0;
 	while (wait_timer < 0) {
-		// Set released channels to idle if their curves are done
-		for (size_t i = 0; i < 24; ++i) {
-			if (spu_channel[i].state != SPU_STATE_RELEASING_NOTE) continue;
-			if (SPU_CH_ADSR_VOL(i) != 0) continue;
-
-			spu_channel[i].state = SPU_STATE_IDLE;
-		}
-
 		const uint8_t command = *sequence_pointer++;
 
 		// Release Note
 		if ((command & 0xF0) == 0x00) {
 			// Get parameters
 			const uint8_t key = *sequence_pointer++;
-			//printf("release channel %02i key %i\n", command & 0x0F, key);
 
-			// Find all notes in this channel with this key
-			for (size_t i = 0; i < 24; ++i) {
-				if ((spu_channel[i].midi_channel == (command & 0x0F))
-				&& (spu_channel[i].key == key)
-				&& (spu_channel[i].state == SPU_STATE_PLAYING_NOTE)) {
-					spu_channel[i].state = SPU_STATE_RELEASING_NOTE;
-					SpuSetKey(0, 1 << i);
-				}
-			}
+			// Stage key off event
+			staged_note_off_events[n_staged_note_off_events++] = (spu_stage_off_t){
+				.key = key,
+				.midi_channel = (command & 0x0F),
+			};
 		}
 
 		// Play Note
@@ -184,23 +178,7 @@ void music_tick(int delta_time) {
 			const uint8_t key = *sequence_pointer++;
 			const uint8_t velocity = *sequence_pointer++;
 
-			// Debug SPU channels
-
-			// Find free SPU channel
-			int spu_channel_id = 24;
-			for (int i = 0; i < 24; ++i) {
-				// If this one is free, cut the loop and use this index
-				if (spu_channel[i].state == SPU_STATE_IDLE) {
-					spu_channel_id = i;
-					break;
-				}
-			}
-
-			// No channel available? too bad, this note won't play
-			if (spu_channel_id == 24) continue;
-
 			// These are the channels we'll be updating
-			spu_channel_t* spu_chn = &spu_channel[spu_channel_id];
 			midi_channel_t* midi_chn = &midi_channel[command & 0x0F];
 
 			// Find first instrument region that fits, and start playing the note
@@ -226,22 +204,19 @@ void music_tick(int delta_time) {
 					const uint32_t sample_rate_a = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + key_offset]) >> 8;
 					const uint32_t sample_rate_b = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + key_offset]) >> 8;
 					uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-key_fine)) + (sample_rate_b * (key_fine)))) >> 4;
-
-					// Start playing the note on the SPU
-					SpuSetVoiceStartAddr(spu_channel_id, 0x01000 + regions[i].sample_start);
-					SpuSetVoicePitch(spu_channel_id, (sample_rate) / 44100);
-					SPU_CH_ADSR1(spu_channel_id) = regions[i].reg_adsr1;
-					SPU_CH_ADSR2(spu_channel_id) = regions[i].reg_adsr2;
-					SPU_CH_VOL_L(spu_channel_id) = stereo_volume.x >> 12;
-					SPU_CH_VOL_R(spu_channel_id) = stereo_volume.y >> 12;
-					SpuSetKey(1, 1 << spu_channel_id);
-					//printf("playing %i on %i\n",key, spu_channel_id);
-
-					spu_chn->key = key;
-					spu_chn->velocity = velocity;
-					spu_chn->state = SPU_STATE_PLAYING_NOTE;
-					spu_chn->instrument = midi_chn->instrument;
-					spu_chn->midi_channel = command & 0x0F;
+					
+					// Stage a note on event
+					staged_note_on_events[n_staged_note_on_events] = (spu_stage_on_t){
+						.voice_start = 0x01000 + regions[i].sample_start,
+						.sample_rate = sample_rate / 44100,
+						.adsr1 = regions[i].reg_adsr1,
+						.adsr2 = regions[i].reg_adsr2,
+						.vol_l = stereo_volume.x >> 12,
+						.vol_r = stereo_volume.y >> 12,
+						.midi_channel = command & 0x0F,
+						.key = key
+					};
+					n_staged_note_on_events++;
 					break;
 				}
 			}
@@ -313,4 +288,47 @@ void music_tick(int delta_time) {
 			printf("Unknown FDSS command %02X\n", command);
 		}
 	}
+	
+	// Handle staged events
+	uint32_t note_on = 0;
+	uint32_t note_off = 0;
+	for (int stage_i = 0; stage_i < n_staged_note_off_events; ++stage_i) {
+		// Find channels that have this key and this channel
+		for (int spu_i = 0; spu_i < 24; ++spu_i) {
+			// If the MIDI key and channel match, kill this note
+			if (staged_note_off_events[stage_i].key == spu_channel[spu_i].key
+			&& staged_note_off_events[stage_i].midi_channel == spu_channel[spu_i].midi_channel) {
+				note_off |= 1 << spu_i;
+			}
+		}
+	}
+	for (int i = 0; i < n_staged_note_on_events; ++i) {
+		// Find free channel
+		int channel_id = 0;
+		for (channel_id = 0; channel_id < 24; ++channel_id) {
+			if (SPU_CH_ADSR_VOL(channel_id) != 0) continue;
+			if (note_on & (1 << channel_id)) continue;
+			if (note_off & (1 << channel_id)) continue;
+			break;
+		}
+
+		if (channel_id >= 24) break;
+
+		// Trigger note on that channel
+		SpuSetVoiceStartAddr(channel_id, staged_note_on_events[i].voice_start);
+		SpuSetVoicePitch(channel_id, staged_note_on_events[i].sample_rate);
+		SPU_CH_ADSR1(channel_id) = staged_note_on_events[i].adsr1;
+		SPU_CH_ADSR2(channel_id) = staged_note_on_events[i].adsr2;
+		SPU_CH_VOL_L(channel_id) = staged_note_on_events[i].vol_l;
+		SPU_CH_VOL_R(channel_id) = staged_note_on_events[i].vol_r;
+		note_on |= 1 << channel_id;
+
+		// Store some metadata
+		spu_channel[channel_id].key = staged_note_on_events[i].key;
+		spu_channel[channel_id].midi_channel = staged_note_on_events[i].midi_channel;
+	}
+
+	WARN_IF("note_off and note_on staged on same channel!", (note_off & note_on) != 0);
+	SpuSetKey(0, note_off);
+	SpuSetKey(1, note_on);
 }
