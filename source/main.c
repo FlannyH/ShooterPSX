@@ -43,24 +43,26 @@ int main(void) {
 	input_set_stick_deadzone(36);
 
 	// Load model
-    const model_t* m_level = model_load("\\ASSETS\\LEVEL.MSH;1");
-	const model_t *m_level_collision = model_load("\\ASSETS\\LEVELCOL.MSH;1");
+    const model_t* m_level = model_load("\\ASSETS\\MODELS\\LEVEL.MSH;1");
 
 	texture_cpu_t *tex_level;
+
+	// todo: add unload functionality for when the textures are on the gpu. we don't need these in ram.
 	const uint32_t n_textures =
-		texture_collection_load("\\ASSETS\\LEVEL.TXC;1", &tex_level);
+		texture_collection_load("\\ASSETS\\MODELS\\LEVEL.TXC;1", &tex_level);
 
 	for (uint8_t i = 0; i < n_textures; ++i) {
 	    renderer_upload_texture(&tex_level[i], i);
 	}
 
+	music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK;1");
+	music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\SUBNIVIS.DSS;1");
+	music_play_sequence(0);
+
 	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}};
     
     bvh_t bvh_level_model;
-    bvh_from_model(&bvh_level_model, m_level_collision);
-
-	// Play music
-	music_play_file("\\ASSETS\\MUSIC.XA;1");
+    //bvh_from_model(&bvh_level_model, m_level);
 
 	int frame_counter = 0;
     player_update(&player, &bvh_level_model, 16);
@@ -70,16 +72,15 @@ int main(void) {
         if (delta_time > 34) {
             delta_time = 34;
         }
-        renderer_begin_frame(&player.transform);
-        input_update();
-        renderer_draw_model_shaded(m_level, &t_level);
-        player_update(&player, &bvh_level_model, delta_time);
         frame_counter += delta_time;
-
-		FntPrint(-1, "%i FPS\n%i ms", 1000/original_delta_time, original_delta_time);
-		FntFlush(-1);
+        PROFILE("begin_frame", renderer_begin_frame(&player.transform), 1);
+        PROFILE("input", input_update(), 1);
+        PROFILE("render", renderer_draw_model_shaded(m_level, &t_level), 1);
+        PROFILE("player", player_update(&player, &bvh_level_model, delta_time), 1);
+		PROFILE("music", music_tick(delta_time), 1);
+	    PROFILE("end_frame", renderer_end_frame(), 1);
         
-	    renderer_end_frame();
+		FntFlush(-1);
 	}
 #ifndef _PSX
 	debug_layer_close();
@@ -97,7 +98,7 @@ void init(void) {
 	// Load the internal font texture
 	FntLoad(512, 256);
 	// Create the text stream
-	FntOpen(64, 32, 128, 128, 0, 256);
+	FntOpen(16, 16, 480, 224, 0, 512);
 
 #endif
 }

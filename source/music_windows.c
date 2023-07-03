@@ -1,5 +1,4 @@
 #include "music.h"
 
-void music_play_file(const char* path) {
-    
-}
+void music_test_sound() {}
+void music_play_sequence(const char* path) {}

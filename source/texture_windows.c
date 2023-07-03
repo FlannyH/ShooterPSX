@@ -15,7 +15,7 @@ uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures)
     tex_col_header_t* tex_col_hdr = (tex_col_header_t*)file_data;
 
     // Verify file magic
-    if (tex_col_hdr->file_magic != 0x43585446) {
+    if (tex_col_hdr->file_magic != MAGIC_FTXC) {
         printf("[ERROR] Error loading texture collection '%s', file header is invalid!\n", path);
         return 0;
     }

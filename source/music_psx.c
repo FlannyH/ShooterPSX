@@ -1,81 +1,334 @@
-#ifdef _PSX
 #include "music.h"
-#include <stdint.h>
 #include <stdio.h>
-#include <psxapi.h>
-#include <psxcd.h>
+#include <psxspu.h>
+#include <psxgpu.h>
+#include <psxgte.h>
+#include <string.h>
+#include "lut.h"
+#include "fixed_point.h"
+#include "vec2.h"
+#include "file.h"
 
-CdlFILE xa_file;
-CdlFILTER xa_filter;
-CdlLOC xa_location;
-char xa_sector_buffer[2048];
-volatile int num_loops=0;
-volatile int xa_play_channel;
+// Channels
+spu_channel_t spu_channel[24];
+midi_channel_t midi_channel[16];
 
-typedef struct {
-	uint16_t id;
-	uint16_t chan;
-	uint8_t  pad[28];
-} SectorHead;
+// Instruments
+instrument_description_t* instruments = NULL;
+instrument_region_header_t* instrument_regions = NULL;
 
-void xa_callback(const CdlIntrResult intr, unsigned char *result)
-{
+// Sequence
+dyn_song_seq_header_t* curr_loaded_seq = NULL;
+uint8_t* sequence_pointer = NULL;
+uint8_t* loop_start = NULL;
+uint8_t music_playing = 0;
+int16_t wait_timer = 0;
+uint16_t tempo = 0; // Tempo in BPM, in @9.3 fixed point. Values go from 0.0 to 511.875
 
-    // We want this callback to respond to data ready events
-	if (intr == CdlDataReady)
-	{
-		// Get data sector
-		CdGetSector(&xa_sector_buffer, 512);
-		/* Check if sector belongs to the currently playing channel */
-		SectorHead* sec = (SectorHead*)xa_sector_buffer;
-		
-		if( sec->id == 352 )
-		{
-			// Debug
-			//printf("ID=%d CHAN=%d PL=%d\n", sec->id, (sec->chan>>10)&0xF, xa_play_channel);
-		
-			/* Check if sector is of the currently playing channel */
-			if( ((sec->chan>>10)&0xF) == xa_play_channel ) 
-			{
-				num_loops++;
-			
-				/* Retry playback by seeking to start of XA data and stream */
-				CdControlF(CdlReadS, &xa_location);
-			
-				/* Stop playback */
-				//CdControlF(CdlPause, 0);
+void music_test_sound() {
+	// Load sound
+	uint32_t* data;
+	size_t size;
+	file_read("\\ASSETS\\AMEN.BIN;1", &data, &size);
+	SpuSetTransferStartAddr(0x01000);
+	SpuWrite(data, size);
+
+	// Play sound
+    SpuSetVoiceStartAddr(0, 0x01000);
+	SpuSetVoicePitch(0, getSPUSampleRate(18900));
+	SPU_CH_ADSR1(0) = 0x00ff;
+	SPU_CH_ADSR2(0) = 0x0000;
+	SPU_CH_VOL_L(0) = 0x3fff;
+	SPU_CH_VOL_R(0) = 0x3fff;
+	SpuSetKey(1, 1 << 0);
+}
+
+void music_test_instr_region(int region) {
+	// Play sound
+	printf("testing region %i: ", region);
+	printf("key: %i - %i, sls: %i, ss: %i, sr: %i, regs: %i, %i\n", 
+		instrument_regions[region].key_min,
+		instrument_regions[region].key_max,
+		instrument_regions[region].volume_multiplier,
+		instrument_regions[region].sample_start,
+		instrument_regions[region].sample_rate,
+		instrument_regions[region].reg_adsr1,
+		instrument_regions[region].reg_adsr2
+	);
+
+    SpuSetVoiceStartAddr(0, 0x01000 + instrument_regions[region].sample_start);
+	SpuSetVoicePitch(0, getSPUSampleRate(32000));
+	SPU_CH_ADSR1(0) = instrument_regions[region].reg_adsr1;
+	SPU_CH_ADSR2(0) = instrument_regions[region].reg_adsr2;
+	SPU_CH_VOL_L(0) = 0x3fff;
+	SPU_CH_VOL_R(0) = 0x3fff;
+	SpuSetKey(1, 1 << 0);
+}
+
+void music_load_soundbank(const char* path) {
+	// Load the SBK file
+	uint32_t* data;
+	size_t size;
+	file_read(path, &data, &size);
+	
+	// Validate header
+	soundbank_header_t* sbk_header = (soundbank_header_t*)data;
+	if (sbk_header->file_magic != MAGIC_FSBK) {
+		printf("[ERROR] Error loading sound bank '%s', file header is invalid!\n", path);
+        return;
+	}
+
+	// First upload all the samples to audio RAM
+	uint32_t* sample_data = ((uint32_t*)(sbk_header+1)) + sbk_header->offset_sample_data / 4;
+	SpuSetTransferStartAddr(0x01000);
+	SpuWrite(sample_data, sbk_header->length_sample_data);
+
+	// Copy the instruments and regions to another part in memory
+	if (instruments) free(instruments);
+	if (instrument_regions) free(instrument_regions);
+	uint8_t* inst_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_descs;
+	uint8_t* region_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_regions;
+	size_t inst_size = sizeof(instrument_description_t) * 256;
+	size_t region_size = sizeof(instrument_region_header_t) * sbk_header->n_samples;
+	instruments = (instrument_description_t*)malloc(inst_size);
+	instrument_regions = (instrument_region_header_t*)malloc(region_size);
+	memcpy(instruments, inst_data, inst_size);
+	memcpy(instrument_regions, region_data, region_size);
+
+	// Free the original file
+	free(sbk_header);
+}
+
+void music_load_sequence(const char* path) {
+	// Load the DSS file
+	uint32_t* data;
+	size_t size;
+	file_read(path, &data, &size);
+
+	// This one is now loaded
+	if (((dyn_song_seq_header_t*)data)->file_magic != MAGIC_FDSS) {
+		curr_loaded_seq = NULL;
+		sequence_pointer = NULL;
+		printf("[ERROR] Error loading dynamic music sequence '%s', file header is invalid!\n", path);
+        return;
+	}
+
+	if (curr_loaded_seq) free(curr_loaded_seq);
+	curr_loaded_seq = (dyn_song_seq_header_t*)data; // curr_loaded_seq now owns this memory
+
+}
+
+void music_play_sequence(int section) {
+	// Is the section index valid?
+	if (section >= curr_loaded_seq->n_sections) {
+		printf("[ERROR] Attempt to play non-existent section!");
+		sequence_pointer = NULL;
+		return;
+	}
+
+	// It is! Find where the data is
+	uint32_t* header_end = (uint32_t*)(curr_loaded_seq + 1); // start of header + 1 whole struct's worth of bytes
+	uint32_t* section_table = header_end + (curr_loaded_seq->offset_section_table / 4); // find the section table and get the entry
+	PANIC_IF("misaligned data!", (((intptr_t)header_end) & 0x03) != 0);
+	PANIC_IF("misaligned data!", (((intptr_t)section_table) & 0x03) != 0);
+	sequence_pointer = ((uint8_t*)header_end) + curr_loaded_seq->offset_section_data + section_table[section];
+	
+	// Initialize variables
+	music_playing = 1;
+	wait_timer = 1;
+	for (size_t i = 0; i < 16; ++i) {
+		midi_channel[i].volume = 127;
+		midi_channel[i].panning = 127;
+		midi_channel[i].pitch_wheel = 0;
+	}
+	memset(spu_channel, 0, sizeof(spu_channel));
+}
+
+spu_stage_on_t staged_note_on_events[24] = {0};
+spu_stage_off_t staged_note_off_events[24] = {0};
+int n_staged_note_on_events = 0;
+int n_staged_note_off_events = 0;
+void music_tick(int delta_time) {
+	if (music_playing == 0) {
+		return;
+	}
+
+	// Handle commands
+	wait_timer -= delta_time;
+	n_staged_note_on_events = 0;
+	n_staged_note_off_events = 0;
+	while (wait_timer < 0) {
+		const uint8_t command = *sequence_pointer++;
+
+		// Release Note
+		if ((command & 0xF0) == 0x00) {
+			// Get parameters
+			const uint8_t key = *sequence_pointer++;
+
+			// Stage key off event
+			staged_note_off_events[n_staged_note_off_events++] = (spu_stage_off_t){
+				.key = key,
+				.midi_channel = (command & 0x0F),
+			};
+		}
+
+		// Play Note
+		else if ((command & 0xF0) == 0x10) {
+			// Get parameters
+			const uint8_t key = *sequence_pointer++;
+			const uint8_t velocity = *sequence_pointer++;
+
+			// These are the channels we'll be updating
+			midi_channel_t* midi_chn = &midi_channel[command & 0x0F];
+
+			// Find first instrument region that fits, and start playing the note
+			const uint16_t n_regions = instruments[midi_chn->instrument].n_regions;
+			const instrument_region_header_t* regions = &instrument_regions[instruments[midi_chn->instrument].region_start_index];
+			for (size_t i = 0; i < n_regions; ++i) {
+				if (key >= regions[i].key_min 
+				&& key <= regions[i].key_max) {
+					// Calculate sample rate and velocity
+					scalar_t s_velocity = ((scalar_t)velocity) * ONE;
+					scalar_t s_channel_volume = ((scalar_t)midi_chn->volume) * (ONE / 256) * regions[i].volume_multiplier;
+					s_velocity = scalar_mul(s_velocity, s_channel_volume);
+					vec2_t stereo_volume = {
+						scalar_mul((uint32_t)lut_panning[255 - midi_chn->panning], s_velocity),
+						scalar_mul((uint32_t)lut_panning[midi_chn->panning], s_velocity),
+					};
+					
+					// Handle channel pitch
+					int8_t key_offset = midi_chn->pitch_wheel / 1000;
+					int32_t key_fine = ((((int32_t)midi_chn->pitch_wheel) << 8) / 1000) & 0xFF;
+
+					// Calculate A and B for lerp - this brings the values to Q48.16
+					const uint32_t sample_rate_a = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + key_offset]) >> 8;
+					const uint32_t sample_rate_b = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + key_offset]) >> 8;
+					uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-key_fine)) + (sample_rate_b * (key_fine)))) >> 4;
+					
+					// Stage a note on event
+					staged_note_on_events[n_staged_note_on_events] = (spu_stage_on_t){
+						.voice_start = 0x01000 + regions[i].sample_start,
+						.sample_rate = sample_rate / 44100,
+						.adsr1 = regions[i].reg_adsr1,
+						.adsr2 = regions[i].reg_adsr2,
+						.vol_l = stereo_volume.x >> 12,
+						.vol_r = stereo_volume.y >> 12,
+						.midi_channel = command & 0x0F,
+						.key = key
+					};
+					n_staged_note_on_events++;
+					break;
+				}
+			}
+		}
+
+		// Set Channel Volume
+		else if ((command & 0xF0) == 0x20) {
+			midi_channel_t* midi_chn = &midi_channel[command & 0x0F];
+			const uint8_t volume = *sequence_pointer++;
+			midi_chn->volume = volume;
+		}
+
+		// Set Channel Panning
+		else if ((command & 0xF0) == 0x30) {
+			midi_channel_t* midi_chn = &midi_channel[command & 0x0F];
+			const uint8_t panning = *sequence_pointer++;
+			midi_chn->panning = panning;
+		}
+
+		// Set Channel Pitch
+		else if ((command & 0xF0) == 0x40) {
+			midi_channel_t* midi_chn = &midi_channel[command & 0x0F];
+
+			// bleh. can't guarantee alignment so i have no choice.
+			uint8_t pitch_wheel_low = *sequence_pointer++;
+			uint8_t pitch_wheel_high = *sequence_pointer++;
+			uint16_t pitch_wheel_temp = ((uint16_t)pitch_wheel_low) + (((uint16_t)pitch_wheel_high) << 8);
+			midi_chn->pitch_wheel = *(int16_t*)&pitch_wheel_temp;
+		}
+
+		// Set Channel Instrument
+		else if ((command & 0xF0) == 0x50) {
+			midi_channel_t* midi_chn = &midi_channel[command & 0x0F];
+			const uint8_t instrument = *sequence_pointer++;
+			midi_chn->instrument = instrument;
+		}
+
+		// Set tempo
+		else if ((command & 0xF0) == 0x80) {
+			// And then filter the command code out
+			tempo = ((command << 8) + (*sequence_pointer++)) & 0x0FFF; 
+		}
+
+		// Wait a number of ticks
+		else if ((command >= 0xA0) && (command <= 0xBF)) {
+			wait_timer += lut_wait_times[command & 0x1F] * 6;
+		}
+
+		// Set time signature, we ignore for now
+		else if (command == 0xFD) {
+			const uint8_t num = *sequence_pointer++;
+			const uint8_t denom = *sequence_pointer++;
+			(void)num;
+			(void)denom;
+		}
+
+		// Set Loop Start		
+		else if (command == 0xFE) {
+			loop_start = sequence_pointer;
+		}
+
+		// Jump to Loop Start
+		else if (command == 0xFF) {
+			sequence_pointer = loop_start;
+		}
+
+		// Unknown command 
+		else {
+			printf("Unknown FDSS command %02X\n", command);
+		}
+	}
+	
+	// Handle staged events
+	uint32_t note_on = 0;
+	uint32_t note_off = 0;
+	for (int stage_i = 0; stage_i < n_staged_note_off_events; ++stage_i) {
+		// Find channels that have this key and this channel
+		for (int spu_i = 0; spu_i < 24; ++spu_i) {
+			// If the MIDI key and channel match, kill this note
+			if (staged_note_off_events[stage_i].key == spu_channel[spu_i].key
+			&& staged_note_off_events[stage_i].midi_channel == spu_channel[spu_i].midi_channel) {
+				note_off |= 1 << spu_i;
 			}
 		}
 	}
+	for (int i = 0; i < n_staged_note_on_events; ++i) {
+		// Find free channel
+		int channel_id = 0;
+		for (channel_id = 0; channel_id < 24; ++channel_id) {
+			if (SPU_CH_ADSR_VOL(channel_id) != 0) continue;
+			if (note_on & (1 << channel_id)) continue;
+			if (note_off & (1 << channel_id)) continue;
+			break;
+		}
+
+		if (channel_id >= 24) break;
+
+		// Trigger note on that channel
+		SpuSetVoiceStartAddr(channel_id, staged_note_on_events[i].voice_start);
+		SpuSetVoicePitch(channel_id, staged_note_on_events[i].sample_rate);
+		SPU_CH_ADSR1(channel_id) = staged_note_on_events[i].adsr1;
+		SPU_CH_ADSR2(channel_id) = staged_note_on_events[i].adsr2;
+		SPU_CH_VOL_L(channel_id) = staged_note_on_events[i].vol_l;
+		SPU_CH_VOL_R(channel_id) = staged_note_on_events[i].vol_r;
+		note_on |= 1 << channel_id;
+
+		// Store some metadata
+		spu_channel[channel_id].key = staged_note_on_events[i].key;
+		spu_channel[channel_id].midi_channel = staged_note_on_events[i].midi_channel;
+	}
+
+	WARN_IF("note_off and note_on staged on same channel!", (note_off & note_on) != 0);
+	SpuSetKey(0, note_off);
+	SpuSetKey(1, note_on);
 }
-
-void music_play_file(const char* path) {
-    // Find the XA file
-    if (!CdSearchFile(&xa_file, path)) {
-        printf("Can't find file %s!", path);
-        return;
-    }
-
-    // Get the location on disc
-    int xa_pos = CdPosToInt(&xa_file.pos);
-    printf("XA located at sector %d size %d.\n", xa_pos, xa_file.size);
-    xa_location = xa_file.pos;
-
-    // Hook XA callback function into CdReadCallback
-	EnterCriticalSection();
-	CdReadyCallback(xa_callback);
-	ExitCriticalSection();
-
-    // Set flags for CD for XA streaming
-    const int flags = CdlModeSpeed|CdlModeRT|CdlModeSF;
-	CdControl(CdlSetmode, &flags, 0);
-
-    // Select file 1
-	xa_filter.file = 1;
-    xa_filter.chan = 1;
-    CdControl(CdlSetfilter, &xa_filter, 0);
-    CdControl(CdlReadS, &xa_location, 0);
-    printf("start playing xa file allegedly\n");
-    xa_play_channel = 0;
-}
-#endif
