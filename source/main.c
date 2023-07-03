@@ -21,7 +21,7 @@
 
 #include "texture.h"
 
-int widescreen = 1;
+int widescreen = 0;
 
 int main(void) {
 	renderer_init();
@@ -68,6 +68,7 @@ int main(void) {
     player_update(&player, &bvh_level_model, 16);
     while (!renderer_should_close()) {
         int delta_time = renderer_get_delta_time_ms();
+		const int original_delta_time = delta_time;
         if (delta_time > 34) {
             delta_time = 34;
         }

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #endif
 
-//#define PAL
+#define PAL
 #define DEBUG_CAMERA
 #define _DEBUG
 
