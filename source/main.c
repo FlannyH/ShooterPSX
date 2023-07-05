@@ -57,7 +57,7 @@ int main(void) {
 
 	music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK;1");
 	music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\SUBNIVIS.DSS;1");
-	//music_play_sequence(0);
+	music_play_sequence(0);
 
 	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}};
     
@@ -68,20 +68,22 @@ int main(void) {
 	int show_debug = 0;
     player_update(&player, &bvh_level_model, 16);
     while (!renderer_should_close()) {
-        int delta_time = renderer_get_delta_time_ms();
-        if (delta_time > 34) {
-            delta_time = 34;
+        int delta_time_raw = renderer_get_delta_time_raw();
+        if (delta_time_raw > 520) {
+            delta_time_raw = 520;
         }
+        int delta_time = renderer_convert_dt_raw_to_ms(delta_time_raw);
         frame_counter += delta_time;
 		if (input_pressed(PAD_SELECT, 0)) show_debug = !show_debug;
 		if (show_debug) {
-			PROFILE("begin_frame", renderer_begin_frame(&player.transform), 1);
+			renderer_begin_frame(&player.transform);
 			PROFILE("input", input_update(), 1);
 			PROFILE("render", renderer_draw_model_shaded(m_level, &t_level), 1);
 			PROFILE("player", player_update(&player, &bvh_level_model, delta_time), 1);
-			PROFILE("music", music_tick(delta_time), 1);
-			PROFILE("end_frame", renderer_end_frame(), 1);
+			PROFILE("music", music_tick(16), 1);
+			FntPrint(-1, "dt: %i\n", delta_time);
 			FntFlush(-1);
+			renderer_end_frame();
 		}
 		else {
 			renderer_begin_frame(&player.transform);

@@ -32,7 +32,7 @@ uint32_t* next_primitive;
 MATRIX view_matrix;
 vec3_t camera_pos;
 vec3_t camera_dir;
-int vsync_enable = 0;
+int vsync_enable = 1;
 int frame_counter = 0;
 
 pixel32_t textures_avg_colors[256];
@@ -974,8 +974,7 @@ int renderer_get_delta_time_raw(void) {
     }
 }
 
-int renderer_get_delta_time_ms(void) {
-    int dt_raw = renderer_get_delta_time_raw();
+int renderer_convert_dt_raw_to_ms(int dt_raw) {
     int dt_ms;
     if (vsync_enable) {
 #ifdef PAL
@@ -991,6 +990,11 @@ int renderer_get_delta_time_ms(void) {
         dt_ms = 1;
     }
     return dt_ms;
+}
+
+int renderer_get_delta_time_ms(void) {
+    int dt_raw = renderer_get_delta_time_raw();
+    return renderer_convert_dt_raw_to_ms(dt_raw);
 }
 
 uint32_t renderer_get_n_rendered_triangles(void) {

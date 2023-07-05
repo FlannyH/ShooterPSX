@@ -47,6 +47,7 @@ void renderer_debug_draw_sphere(sphere_t sphere);
 void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index);
 int renderer_get_delta_time_raw(void);
 int renderer_get_delta_time_ms(void);
+int renderer_convert_dt_raw_to_ms(int dt_raw);
 uint32_t renderer_get_n_rendered_triangles(void);
 uint32_t renderer_get_n_total_triangles(void);
 int renderer_should_close(void);
