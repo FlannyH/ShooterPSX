@@ -73,7 +73,7 @@ int main(void) {
             delta_time = 34;
         }
         frame_counter += delta_time;
-		if (input_pressed(0, PAD_SELECT)) show_debug = !show_debug;
+		if (input_pressed(PAD_SELECT, 0)) show_debug = !show_debug;
 		if (show_debug) {
 			PROFILE("begin_frame", renderer_begin_frame(&player.transform), 1);
 			PROFILE("input", input_update(), 1);
