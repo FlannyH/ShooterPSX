@@ -299,6 +299,7 @@ void music_tick(int delta_time) {
 			if (staged_note_off_events[stage_i].key == spu_channel[spu_i].key
 			&& staged_note_off_events[stage_i].midi_channel == spu_channel[spu_i].midi_channel) {
 				note_off |= 1 << spu_i;
+				spu_channel[spu_i].key = 255;
 			}
 		}
 	}
@@ -327,6 +328,17 @@ void music_tick(int delta_time) {
 		spu_channel[channel_id].key = staged_note_on_events[i].key;
 		spu_channel[channel_id].midi_channel = staged_note_on_events[i].midi_channel;
 	}
+
+
+	//FntPrint(-1, "spu: ");
+	//for (int i = 0; i < 24; ++i) FntPrint(-1, "%i", SPU_CH_ADSR_VOL(i) != 0);
+	//FntPrint(-1, "\n");
+	//FntPrint(-1, "on:  ");
+	//for (int i = 0; i < 24; ++i) FntPrint(-1, "%i", (note_on & (1 << i)) != 0);
+	//FntPrint(-1, "\n");
+	//FntPrint(-1, "off: ");
+	//for (int i = 0; i < 24; ++i) FntPrint(-1, "%i", (note_off & (1 << i)) != 0);
+	//FntPrint(-1, "\n");
 
 	WARN_IF("note_off and note_on staged on same channel!", (note_off & note_on) != 0);
 	SpuSetKey(0, note_off);

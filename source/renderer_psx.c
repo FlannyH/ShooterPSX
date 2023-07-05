@@ -241,6 +241,24 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
     // Depth culling
     if ((avg_z>>2) > ORD_TBL_LENGTH || ((avg_z >> 2) <= 0)) return;
 
+#if 1
+    // Is this triangle even on screen?
+    for (size_t i = 0; i < 3; ++i) {
+        if (
+            trans_vec_xy[i].x >= 0 && 
+            trans_vec_xy[i].x <= RES_X &&
+            trans_vec_xy[i].y >= 0 && 
+            trans_vec_xy[i].y <= RES_Y 
+        ) {
+            goto dont_return;
+        }
+    }
+    return;
+
+    dont_return:
+#endif
+
+#if 1
     if (avg_z < TRI_THRESHOLD_SUB1) {
         // Let's calculate the center of each edge
         const vertex_3d_t ab = get_halfway_point(verts[0], verts[1]);
@@ -258,14 +276,17 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
         ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[1], trans_vec_xy[4], ab, verts[1], bc, avg_z, 0, verts[0].tex_id);
         ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[4], trans_vec_xy[5], ab, bc, ca, avg_z, 0, verts[0].tex_id);
         ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[5], trans_vec_xy[4], trans_vec_xy[2], ca, bc, verts[2], avg_z, 0, verts[0].tex_id);
+        n_rendered_triangles += 4;
         return;
     }
+#endif
     if (avg_z < TRI_THRESHOLD_FADE_END) {
         int16_t clut_fade = 0;
         if (avg_z >= TRI_THRESHOLD_FADE_START) {
             clut_fade = ((N_CLUT_FADES-1) * (avg_z - TRI_THRESHOLD_FADE_START)) / (TRI_THRESHOLD_FADE_END - TRI_THRESHOLD_FADE_START);
         }
         ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], verts[0], verts[1], verts[2], avg_z, clut_fade, verts[0].tex_id);
+        n_rendered_triangles += 4;
         return;
     }
 
@@ -346,7 +367,25 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
 
     // Depth culling
     if ((avg_z>>2) > ORD_TBL_LENGTH || ((avg_z >> 2) <= 0)) return;
+    
+#if 1
+    // Is this quad even on screen?
+    for (size_t i = 0; i < 4; ++i) {
+        if (
+            trans_vec_xy[i].x >= 0 && 
+            trans_vec_xy[i].x <= RES_X &&
+            trans_vec_xy[i].y >= 0 && 
+            trans_vec_xy[i].y <= RES_Y 
+        ) {
+            goto dont_return;
+        }
+    }
+    return;
 
+    dont_return:
+#endif
+
+#if 1
     if (avg_z < TRI_THRESHOLD_SUB1) {
         // Let's calculate the new points we need
         const vertex_3d_t ab = get_halfway_point(verts[0], verts[1]);
@@ -391,6 +430,7 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
         ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[8], trans_vec_xy[5], trans_vec_xy[6], trans_vec_xy[3], center, bc, cd, verts[3], avg_z_8563, 0, verts[0].tex_id);
         return;
     }
+#endif
     if (avg_z < TRI_THRESHOLD_FADE_END) {
         int16_t clut_fade = 0;
         if (avg_z >= TRI_THRESHOLD_FADE_START) {
