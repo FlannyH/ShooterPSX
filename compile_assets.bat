@@ -1,4 +1,3 @@
-del assets /Q
 mkdir assets
 mkdir assets\models
 mkdir assets\music

@@ -56,7 +56,7 @@ int main(void) {
 	}
 
 	music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK;1");
-	music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\SUBNIVIS.DSS;1");
+	music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\LEVEL1.DSS;1");
 	music_play_sequence(0);
 
 	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}};
