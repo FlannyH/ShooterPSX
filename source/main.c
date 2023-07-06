@@ -68,11 +68,15 @@ int main(void) {
 	int show_debug = 0;
     player_update(&player, &bvh_level_model, 16);
     while (!renderer_should_close()) {
+#ifndef _WIN32
         int delta_time_raw = renderer_get_delta_time_raw();
         if (delta_time_raw > 520) {
             delta_time_raw = 520;
         }
         int delta_time = renderer_convert_dt_raw_to_ms(delta_time_raw);
+#else
+        int delta_time = renderer_get_delta_time_ms();
+#endif
         frame_counter += delta_time;
 		if (input_pressed(PAD_SELECT, 0)) show_debug = !show_debug;
 		if (show_debug) {
@@ -90,7 +94,7 @@ int main(void) {
 			input_update();
 			renderer_draw_model_shaded(m_level, &t_level);
 			player_update(&player, &bvh_level_model, delta_time);
-			music_tick(delta_time);
+			music_tick(16);
 			renderer_end_frame();
 		}
 	}

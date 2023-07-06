@@ -42,8 +42,16 @@ model_t* model_load(const char* path) {
         model->meshes[i].bounds.max.y = mesh_descriptions[i].y_max;
         model->meshes[i].bounds.min.z = mesh_descriptions[i].z_min;
         model->meshes[i].bounds.max.z = mesh_descriptions[i].z_max;
-    }
 
+        // Swizzle the quads
+        mesh_t* mesh = &model->meshes[i];
+        for (size_t i = 0; i < mesh->n_quads; ++i) {
+            const size_t index = (mesh->n_triangles * 3) + (i * 4);
+            vertex_3d_t temp = mesh->vertices[index + 2];
+            mesh->vertices[index + 2] = mesh->vertices[index + 3];
+            mesh->vertices[index + 3] = temp;
+        }
+    }
     return model;
 }
 

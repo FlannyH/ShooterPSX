@@ -35,7 +35,8 @@ GLuint shader;
 GLuint vao;
 GLuint vbo;
 clock_t dt_clock;
-GLuint textures[256];
+//GLuint textures[256];
+GLuint textures;
 float tex_res[512];
 clock_t dt = 0;
 uint32_t n_total_triangles = 0;
@@ -223,13 +224,9 @@ GLuint shader_from_file(char *vert_path, char *frag_path) {
 
 	// Make sure it worked
 	if (vert_loaded == false)
-		printf("[ERROR] Failed to load shader '%s'! Either the shader files do not "
-					 "exist, or a compilation error occurred.\n",
-					 vert_path);
+		printf("[ERROR] Failed to load shader '%s'! Either the shader files do not exist, or a compilation error occurred.\n", vert_path);
 	if (frag_loaded == false)
-		printf("[ERROR] Failed to load shader '%s'! Either the shader files do not "
-					 "exist, or a compilation error occurred.\n",
-					 frag_path);
+		printf("[ERROR] Failed to load shader '%s'! Either the shader files do not exist, or a compilation error occurred.\n", frag_path);
 
 	// Link
 	glLinkProgram(shader_gpu);
@@ -240,8 +237,7 @@ GLuint shader_from_file(char *vert_path, char *frag_path) {
 void renderer_init() {
 	// Create OpenGL window
 	glfwInit();
-	window = glfwCreateWindow(320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING,
-														"ShooterPSX", NULL, NULL);
+	window = glfwCreateWindow(320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, "ShooterPSX", NULL, NULL);
 	if (window == NULL) {
 		printf("[ERROR] Could not open OpenGL window! Aborting.");
 		glfwTerminate();
@@ -249,6 +245,7 @@ void renderer_init() {
 	}
 	glfwMakeContextCurrent(window);
 	gl3wInit();
+    glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(DebugCallbackFunc, NULL);
 	glfwSwapInterval(1);
 
@@ -256,12 +253,10 @@ void renderer_init() {
 	glViewport(0, 0, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING);
 
 	// Set perspective matrix
-	glm_perspective(glm_rad(90.0f), 4.0f / 3.0f, 0.1f, 100000.f,
-									perspective_matrix);
+	glm_perspective(glm_rad(90.0f), 4.0f / 3.0f, 0.1f, 100000.f, perspective_matrix);
 
 	// Load shaders
-	shader =
-			shader_from_file("\\ASSETS\\GOURAUD.VSH;1", "\\ASSETS\\GOURAUD.FSH;1");
+	shader = shader_from_file("\\ASSETS\\GOURAUD.VSH;1", "\\ASSETS\\GOURAUD.FSH;1");
 
 	// Set up VAO and VBO
 	glGenVertexArrays(1, &vao);
@@ -271,12 +266,11 @@ void renderer_init() {
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(vertex_3d_t),
-												(const void *)offsetof(vertex_3d_t, x));
-	glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(vertex_3d_t),
-												(const void *)offsetof(vertex_3d_t, r));
-	glVertexAttribPointer(2, 2, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(vertex_3d_t),
-												(const void *)offsetof(vertex_3d_t, u));
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(vertex_3d_t), (const void *)offsetof(vertex_3d_t, x));
+	glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(vertex_3d_t), (const void *)offsetof(vertex_3d_t, r));
+	glVertexAttribPointer(2, 2, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(vertex_3d_t), (const void *)offsetof(vertex_3d_t, u));
+	glVertexAttribPointer(3, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(vertex_3d_t), (const void *)offsetof(vertex_3d_t, tex_id));
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// Initialize delta time clock
@@ -286,7 +280,17 @@ void renderer_init() {
 	debug_layer_init(window);
 
 	// Zero init textures
-	memset(textures, 0, sizeof(textures));
+	//memset(textures, 0, sizeof(textures));
+    void* random_data = malloc(64 * 64 * 256 * 4);
+	glGenTextures(1, &textures);
+	glBindTexture(GL_TEXTURE_3D, textures);
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, 64, 64, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, random_data);
+	glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_3D, 0);
+    free(random_data);
 }
 
 void renderer_begin_frame(transform_t *camera_transform) {
@@ -388,24 +392,6 @@ void renderer_draw_model_shaded(const model_t *model, transform_t *model_transfo
 
 int32_t max_dot_value = 0;
 void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform) {
-
-#if 0
-	const ray_t ray = {
-		.position = {
-			.x = camera_pos.x >> 12,
-			.y = camera_pos.y >> 12,
-			.z = camera_pos.z >> 12,
-		},
-		.direction = camera_dir,
-		.inv_direction = vec3_div(vec3_from_scalar(4096), camera_dir),
-		.length = INT32_MAX,
-	};
-	if (!ray_aabb_intersect(&mesh->bounds, ray)) {
-		renderer_debug_draw_aabb(&mesh->bounds, white, model_transform);
-		return;
-	}
-#endif
-
 	// Calculate model matrix
 	mat4 model_matrix;
 	glm_mat4_identity(model_matrix);
@@ -425,48 +411,39 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
     };
 	glm_translate(model_matrix, position);
     glm_scale(model_matrix, scale);
-	glm_rotate_x(model_matrix,
-							 (float)model_transform->rotation.vx * 2 * PI / 131072.0f,
-							 model_matrix);
-	glm_rotate_y(model_matrix,
-							 (float)model_transform->rotation.vy * 2 * PI / 131072.0f,
-							 model_matrix);
-	glm_rotate_z(model_matrix,
-							 (float)model_transform->rotation.vz * 2 * PI / 131072.0f,
-							 model_matrix);
+	glm_rotate_x(model_matrix, (float)model_transform->rotation.vx * 2 * PI / 131072.0f, model_matrix);
+	glm_rotate_y(model_matrix, (float)model_transform->rotation.vy * 2 * PI / 131072.0f, model_matrix);
+	glm_rotate_z(model_matrix, (float)model_transform->rotation.vz * 2 * PI / 131072.0f, model_matrix);
 
 	// Bind shader
 	glUseProgram(shader);
 
 	// Bind texture
-	glBindTexture(GL_TEXTURE_2D, textures[mesh->vertices[0].tex_id]);
+	glBindTexture(GL_TEXTURE_3D, textures);
 
 	// Bind vertex buffers
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
 	// Set matrices
-	glUniformMatrix4fv(glGetUniformLocation(shader, "proj_matrix"), 1, GL_FALSE,
-										 &perspective_matrix[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE,
-										 &view_matrix[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE,
-										 &model_matrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "proj_matrix"), 1, GL_FALSE, &perspective_matrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE, &view_matrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
 
     // If no texture is bound, don't use it in the shader
-    glUniform1i(glGetUniformLocation(shader, "texture_bound"), !(mesh->vertices[0].tex_id == 255) && !(textures[mesh->vertices[0].tex_id] == 0));
-
+    glUniform1i(glGetUniformLocation(shader, "texture_bound"), mesh->vertices[0].tex_id != 255);
+    
 	// Copy data into it
-	glBufferData(GL_ARRAY_BUFFER, mesh->n_vertices * sizeof(vertex_3d_t),
-							 mesh->vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(vertex_3d_t), mesh->vertices, GL_STATIC_DRAW);
 
 	// Enable depth and draw
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-	glDrawArrays(GL_TRIANGLES, 0, mesh->n_vertices);
+	glCullFace(GL_FRONT);
+	glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
+    glDrawArrays(GL_QUADS, mesh->n_triangles * 3, mesh->n_quads * 4);
 
-	n_total_triangles += mesh->n_vertices / 3;
+	n_total_triangles += mesh->n_triangles;
 }
 
 void renderer_draw_triangles_shaded_2d(const vertex_2d_t *vertex_buffer, uint16_t n_verts, int16_t x, int16_t y) {
@@ -493,21 +470,15 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
     };
     glm_translate(model_matrix, position);
     glm_scale(model_matrix, scale);
-    glm_rotate_x(model_matrix,
-        (float)model_transform->rotation.vx * 2 * PI / 131072.0f,
-        model_matrix);
-    glm_rotate_y(model_matrix,
-        (float)model_transform->rotation.vy * 2 * PI / 131072.0f,
-        model_matrix);
-    glm_rotate_z(model_matrix,
-        (float)model_transform->rotation.vz * 2 * PI / 131072.0f,
-        model_matrix);
+    glm_rotate_x(model_matrix, (float)model_transform->rotation.vx * 2 * PI / 131072.0f, model_matrix);
+    glm_rotate_y(model_matrix, (float)model_transform->rotation.vy * 2 * PI / 131072.0f, model_matrix);
+    glm_rotate_z(model_matrix, (float)model_transform->rotation.vz * 2 * PI / 131072.0f, model_matrix);
 
     // Bind shader
     glUseProgram(shader);
 
     // Bind texture
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(GL_TEXTURE_3D, 0);
     glUniform1i(glGetUniformLocation(shader, "texture_bound"), 0);
 
     // Bind vertex buffers
@@ -515,12 +486,9 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
     // Set matrices
-    glUniformMatrix4fv(glGetUniformLocation(shader, "proj_matrix"), 1, GL_FALSE,
-        &perspective_matrix[0][0]);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE,
-        &view_matrix[0][0]);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE,
-        &model_matrix[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "proj_matrix"), 1, GL_FALSE, &perspective_matrix[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE, &view_matrix[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
 
     // Copy data into it
     line_3d_t line;
@@ -612,18 +580,9 @@ void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) 
 		pixels[i * 2 + 1].a = pixel_right.a << 7;
 	}
 
-	// Generate texture if necessary
-	if (textures[index] == 0)
-		glGenTextures(1, &textures[index]);
-
 	// Upload texture
-	glBindTexture(GL_TEXTURE_2D, textures[index]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texture->width, texture->height, 0,
-							 GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture(GL_TEXTURE_3D, textures);
+	glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, index, texture->width, texture->height, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
 	// Store texture resolution
 	tex_res[(size_t)index * 2 + 0] = (float)texture->width;
