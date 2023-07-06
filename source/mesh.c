@@ -43,6 +43,7 @@ model_t* model_load(const char* path) {
         model->meshes[i].bounds.min.z = mesh_descriptions[i].z_min;
         model->meshes[i].bounds.max.z = mesh_descriptions[i].z_max;
 
+#ifdef _WIN32
         // Swizzle the quads
         mesh_t* mesh = &model->meshes[i];
         for (size_t i = 0; i < mesh->n_quads; ++i) {
@@ -51,6 +52,7 @@ model_t* model_load(const char* path) {
             mesh->vertices[index + 2] = mesh->vertices[index + 3];
             mesh->vertices[index + 3] = temp;
         }
+#endif
     }
     return model;
 }
