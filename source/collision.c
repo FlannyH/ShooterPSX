@@ -15,7 +15,7 @@ int n_sphere_triangle_intersects = 0;
 int n_vertical_cylinder_aabb_intersects = 0;
 int n_vertical_cylinder_triangle_intersects = 0;
 
-void bvh_construct(bvh_t* bvh, const triangle_3d_t* primitives, const uint16_t n_primitives) {
+void bvh_construct(bvh_t* bvh, const col_mesh_file_tri_t* primitives, const uint16_t n_primitives) {
     // Convert triangles from the model into collision triangles
     // todo: maybe store this mesh in the file? not sure if it's worth implementing but could be nice
     bvh->primitives = malloc(sizeof(collision_triangle_3d_t) * n_primitives);
@@ -353,27 +353,9 @@ void bvh_from_mesh(bvh_t* bvh, const mesh_t* mesh) {
     bvh_construct(bvh, (triangle_3d_t*)mesh->vertices, (uint16_t)mesh->n_triangles);
 }
 
-void bvh_from_model(bvh_t* bvh, const model_t* mesh) {
-    // Get total number of vertices
-    uint32_t n_verts = 0;
-    for (uint32_t i = 0; i < mesh->n_meshes; ++i) {
-        n_verts += mesh->meshes[i].n_triangles * 3;
-    }
-
-    // Allocate a buffer for the vertices
-    triangle_3d_t* triangles = malloc(n_verts / 3 * sizeof(triangle_3d_t));
-
-    // Copy all the meshes into it sequentially
-    unsigned long long offset = 0;
-    for (uint32_t i = 0; i < mesh->n_meshes; ++i) {
-        const size_t bytes_to_copy = mesh->meshes[i].n_triangles * 3 * sizeof(vertex_3d_t);
-        const size_t verts_to_copy = mesh->meshes[i].n_triangles;
-        memcpy(triangles + offset, mesh->meshes[i].vertices, (int)bytes_to_copy);
-        offset += verts_to_copy;
-    }
-
+void bvh_from_model(bvh_t* bvh, const collision_mesh_t* mesh) {
     // Construct the BVH
-    bvh_construct(bvh, triangles, n_verts / 3);
+    bvh_construct(bvh, mesh->verts, mesh->n_verts / 3);
 }
 
 void debug_draw(const bvh_t* self, const bvh_node_t* node, const int min_depth, const int max_depth, const int curr_depth, const pixel32_t color) {

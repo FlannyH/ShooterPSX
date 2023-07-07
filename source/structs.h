@@ -138,4 +138,24 @@ typedef struct {
     collision_triangle_3d_t* triangle;
 } rayhit_t;
 
+#define MAGIC_FCOL 0x4C4F4346
+typedef struct {
+    uint32_t file_magic; // File magic: "FCOL"
+    uint32_t n_verts; // The number of vertices in this collision mesh
+} collision_mesh_header_t;
+
+typedef struct {
+  int16_t x, y, z;
+  uint16_t terrain_id;  
+} col_mesh_file_vert_t;
+
+typedef struct {
+  col_mesh_file_vert_t v0, v1, v2;
+} col_mesh_file_tri_t;
+
+typedef struct {
+    uint32_t n_verts;
+    col_mesh_file_vert_t* verts;
+} collision_mesh_t;
+
 #endif // STRUCTS_H

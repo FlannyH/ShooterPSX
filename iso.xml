@@ -68,6 +68,7 @@
 				<dir name="MODELS">
 					<file name="LEVEL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level.msh" />
 					<file name="LEVEL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level.txc" />
+					<file name="LEVEL.COL"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level.col" />
 				</dir>
 				<dir name="MUSIC">
 					<dir name="SEQUENCE">
