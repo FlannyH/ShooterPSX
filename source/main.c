@@ -31,9 +31,9 @@ int main(void) {
     // Init player
     player_t player = { 0 };
 
-    player.position.x = 11705653 * 4;
-   	player.position.y = 11413985 * 4;
-    player.position.z = 2112866 * 4;
+    player.position.x = 11705653 / 2;
+   	player.position.y = 11413985 / 2;
+    player.position.z = 2112866  / 2;
 	player.rotation.y = 4096 * 16;
     //player.position.x = 0;
     //player.position.y = -229376;
@@ -58,7 +58,7 @@ int main(void) {
 	}
 
 	music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK;1");
-	music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\LEVEL1.DSS;1");
+	music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\SUBNIVIS.DSS;1");
 	music_play_sequence(0);
 
 	transform_t t_level = {{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}};
@@ -94,7 +94,7 @@ int main(void) {
 		else {
 			renderer_begin_frame(&player.transform);
 			input_update();
-			renderer_draw_model_shaded(m_level_col_dbg, &t_level);
+			renderer_draw_model_shaded(m_level, &t_level);
 			player_update(&player, &bvh_level_model, delta_time);
 			music_tick(16);
 			renderer_end_frame();

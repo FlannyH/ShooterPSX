@@ -28,7 +28,7 @@ void debug_layer_update() {
 
     // Draw debug windows
     ImGui::Begin("DebugInfo");
-    ImGui::Text("Frametime: %f ms", dt_smooth);
+    ImGui::Text("Frametime: %f ms", dt_smooth * 1000);
     ImGui::Text("FPS: %f", 1.0 / dt_smooth);
     ImGui::Text("Triangles: %i\n", renderer_get_n_total_triangles());
     ImGui::Text("n_ray_aabb_intersects: %i\n", n_ray_aabb_intersects);

@@ -6,18 +6,18 @@
 
 #include "input.h"
 
-const int32_t eye_height = 225 << 12;
-const int32_t player_radius = 120 << 12;
-const int32_t step_height = 80 << 12;
-const int32_t terminal_velocity_down = -10400;
-const int32_t terminal_velocity_up = 32000;
-const int32_t gravity = 0;// -12;
-const int32_t walking_acceleration = 50;
-const int32_t walking_max_speed = 6000;
+const int32_t eye_height = 225 * COL_SCALE;
+const int32_t player_radius = 120 * COL_SCALE;
+const int32_t step_height = 80 * COL_SCALE;
+const int32_t terminal_velocity_down = -12400 / 8;
+const int32_t terminal_velocity_up = 40000 / 8;
+const int32_t gravity = -5;
+const int32_t walking_acceleration = 50 / 8;
+const int32_t walking_max_speed = 6660 / 8;
 const int32_t stick_sensitivity = 2400;
-const int32_t walking_drag = 75;
-const int32_t initial_jump_velocity = 6600;
-const int32_t jump_ground_threshold = 16000;
+const int32_t walking_drag = 75 / 8;
+const int32_t initial_jump_velocity = 8000 / 8;
+const int32_t jump_ground_threshold = 16000 / 8;
 static scalar_t player_radius_squared = 0;
 
 transform_t t_level = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };
@@ -221,9 +221,9 @@ void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     handle_jump(self);
     handle_movement(self, level_bvh, dt_ms);
 
-    self->transform.position.vx = -self->position.x;
-    self->transform.position.vy = -self->position.y;
-    self->transform.position.vz = -self->position.z;
+    self->transform.position.vx = -self->position.x * (4096 / COL_SCALE);
+    self->transform.position.vy = -self->position.y * (4096 / COL_SCALE);
+    self->transform.position.vz = -self->position.z * (4096 / COL_SCALE);
     self->transform.rotation.vx = -self->rotation.x;
     self->transform.rotation.vy = -self->rotation.y;
     self->transform.rotation.vz = -self->rotation.z;

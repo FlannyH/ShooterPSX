@@ -5,7 +5,7 @@
 #endif
 
 //#define PAL
-#define DEBUG_CAMERA
+//#define DEBUG_CAMERA
 #define _DEBUG
 
 #ifdef _WIN32

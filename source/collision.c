@@ -24,9 +24,9 @@ void bvh_construct(bvh_t* bvh, const col_mesh_file_tri_t* primitives, const uint
 
     for (size_t i = 0; i < n_primitives; ++i) {
         // Set position
-        bvh->primitives[i].v0 = vec3_from_int32s(-(int32_t)primitives[i].v0.x * 4096, -(int32_t)primitives[i].v0.y * 4096, -(int32_t)primitives[i].v0.z * 4096);
-        bvh->primitives[i].v1 = vec3_from_int32s(-(int32_t)primitives[i].v1.x * 4096, -(int32_t)primitives[i].v1.y * 4096, -(int32_t)primitives[i].v1.z * 4096);
-        bvh->primitives[i].v2 = vec3_from_int32s(-(int32_t)primitives[i].v2.x * 4096, -(int32_t)primitives[i].v2.y * 4096, -(int32_t)primitives[i].v2.z * 4096);
+        bvh->primitives[i].v0 = vec3_from_int32s(-(int32_t)primitives[i].v0.x * COL_SCALE, -(int32_t)primitives[i].v0.y * COL_SCALE, -(int32_t)primitives[i].v0.z * COL_SCALE);
+        bvh->primitives[i].v1 = vec3_from_int32s(-(int32_t)primitives[i].v1.x * COL_SCALE, -(int32_t)primitives[i].v1.y * COL_SCALE, -(int32_t)primitives[i].v1.z * COL_SCALE);
+        bvh->primitives[i].v2 = vec3_from_int32s(-(int32_t)primitives[i].v2.x * COL_SCALE, -(int32_t)primitives[i].v2.y * COL_SCALE, -(int32_t)primitives[i].v2.z * COL_SCALE);
 
         // Calculate normal
         const vec3_t ac = vec3_sub(vec3_shift_right(bvh->primitives[i].v1, 4), vec3_shift_right(bvh->primitives[i].v0, 4));
@@ -39,7 +39,7 @@ void bvh_construct(bvh_t* bvh, const col_mesh_file_tri_t* primitives, const uint
         bvh->primitives[i].center = bvh->primitives[i].v0;
         bvh->primitives[i].center = vec3_add(bvh->primitives[i].center, bvh->primitives[i].v1);
         bvh->primitives[i].center = vec3_add(bvh->primitives[i].center, bvh->primitives[i].v2);
-        bvh->primitives[i].center = vec3_mul(bvh->primitives[i].center, vec3_from_scalar(1365));
+        bvh->primitives[i].center = vec3_muls(bvh->primitives[i].center, 1365);
 
         // Precalculate triangle collision variables
         vec3_t c = vec3_sub(bvh->primitives[i].v2, bvh->primitives[i].v0);
@@ -303,19 +303,19 @@ void handle_node_intersection_vertical_cylinder(bvh_t* self, const bvh_node_t* c
 }
 
 
-void bvh_intersect_ray(bvh_t* self, const ray_t ray, rayhit_t* hit) {
+void bvh_intersect_ray(bvh_t* self, ray_t ray, rayhit_t* hit) {
     hit->distance = INT32_MAX;
     handle_node_intersection_ray(self, self->root, ray, hit, 0);
 }
 
-void bvh_intersect_sphere(bvh_t* bvh, const sphere_t ray, rayhit_t* hit) {
+void bvh_intersect_sphere(bvh_t* bvh, sphere_t sphere, rayhit_t* hit) {
     hit->distance = INT32_MAX;
-    handle_node_intersection_sphere(bvh, bvh->root, ray, hit, 0);
+    handle_node_intersection_sphere(bvh, bvh->root, sphere, hit, 0);
 }
 
-void bvh_intersect_vertical_cylinder(bvh_t* bvh, vertical_cylinder_t ray, rayhit_t* hit) {
+void bvh_intersect_vertical_cylinder(bvh_t* bvh, vertical_cylinder_t cyl, rayhit_t* hit) {
     hit->distance = INT32_MAX;
-    handle_node_intersection_vertical_cylinder(bvh, bvh->root, ray, hit, 0);
+    handle_node_intersection_vertical_cylinder(bvh, bvh->root, cyl, hit, 0);
 }
 
 void bvh_swap_primitives(uint16_t* a, uint16_t* b) {
@@ -450,7 +450,7 @@ int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_
     }
 
     //Get position
-    const vec3_t position = vec3_add(ray.position, vec3_mul(ray.direction, vec3_from_scalar(distance)));
+    const vec3_t position = vec3_add(ray.position, vec3_muls(ray.direction, distance));
 
     // Shift it to the right by 4 - to avoid overflow with bigger triangles at the cost of some precision
     v0 = vec3_shift_right(v0, 4);
@@ -668,21 +668,21 @@ vec3_t find_closest_point_on_triangle_3d(vec3_t a, vec3_t b, vec3_t c, vec3_t p,
     const scalar_t vc = scalar_mul(d1, d4) - scalar_mul(d3, d2);
     if (vc <= 0 && d1 >= 0 && d3 <= 0) {
         const scalar_t v = scalar_div(d1, (d1 - d3));
-        return vec3_add(a, vec3_mul(vec3_from_scalar(v), ab));
+        return vec3_add(a, vec3_muls(ab, v));
     }
 
     // AC's chonko zone - closest point is on edge AC
     const scalar_t vb = (scalar_mul(d5, d2) - scalar_mul(d1, d6));
     if (vb <= 0 && d2 >= 0 && d6 <= 0) {
         const scalar_t v = scalar_div(d2, (d2 - d6));
-        return vec3_add(a, vec3_mul(vec3_from_scalar(v), ac));
+        return vec3_add(a, vec3_muls(ac, v));
     }
 
     // BC's chonko zone - closest point is on edge BC
     const scalar_t va = (scalar_mul(d3, d6) - scalar_mul(d5, d4));
     if (va <= 0 && (d4 - d3) >= 0 && (d5 - d6) >= 0) {
         const scalar_t v = scalar_div((d4 - d3), ((d4 - d3) + (d5 - d6)));
-        return vec3_add(b, vec3_mul(vec3_from_scalar(v), vec3_sub(c, b)));
+        return vec3_add(b, vec3_muls(vec3_sub(c, b), v));
     }
 
     // Otherwise the point is inside the triangle
@@ -691,7 +691,7 @@ vec3_t find_closest_point_on_triangle_3d(vec3_t a, vec3_t b, vec3_t c, vec3_t p,
     const scalar_t w = scalar_div(vc, va_vb_vc);
     if (v_out) *v_out = v;
     if (w_out) *w_out = w;
-    return vec3_add(vec3_add(a, vec3_mul(vec3_from_scalar(v), ab)), vec3_mul(vec3_from_scalar(w), ac));
+    return vec3_add(vec3_add(a, vec3_muls(ab, v)), vec3_muls(ac, w));
 }
 
 int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vertical_cylinder_t vertical_cylinder, rayhit_t* hit) {
@@ -764,7 +764,7 @@ int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere
     // Find the closest point from the sphere to the triangle
     const vec3_t triangle_to_center = vec3_sub(sphere.center, triangle->v0);
     const scalar_t distance = vec3_dot(triangle_to_center, triangle->normal); WARN_IF("distance overflowed", is_infinity(distance));
-    vec3_t position = vec3_sub(sphere.center, vec3_mul(triangle->normal, vec3_from_scalar(distance)));
+    vec3_t position = vec3_sub(sphere.center, vec3_muls(triangle->normal, distance));
 
     // If the closest point from the sphere on the plane is too far, don't bother with all the expensive math, we will never intersect
     if (distance > sphere.radius && distance < -sphere.radius) {

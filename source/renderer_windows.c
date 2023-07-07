@@ -300,7 +300,7 @@ void renderer_begin_frame(transform_t *camera_transform) {
 	glViewport(0, 0, w, h);
 
 	if (w != prev_w || h != prev_h) {
-		glm_perspective(glm_rad(90.0f), (float)w / (float)h, 0.1f, 100000.f,
+		glm_perspective(glm_rad(90.0f), (float)w / (float)h, 0.1f, 1000000.f,
 										perspective_matrix);
 	}
 
@@ -370,7 +370,7 @@ void renderer_begin_frame(transform_t *camera_transform) {
 	camera_dir.y = -view_matrix_normal[2][1] * 4096.f;
 	camera_dir.z = -view_matrix_normal[2][2] * 4096.f;
 	memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
-	vec3_debug(camera_dir);
+	//vec3_debug(camera_dir);
 
 	n_total_triangles = 0;
 }
@@ -464,9 +464,9 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
             (float)model_transform->position.vz,
     };
     vec3 scale = {
-            (float)model_transform->scale.vx / 4096.0f,
-            (float)model_transform->scale.vy / 4096.0f,
-            (float)model_transform->scale.vz / 4096.0f,
+            (float)model_transform->scale.vx / (float)COL_SCALE,
+            (float)model_transform->scale.vy / (float)COL_SCALE,
+            (float)model_transform->scale.vz / (float)COL_SCALE,
     };
     glm_translate(model_matrix, position);
     glm_scale(model_matrix, scale);
@@ -492,12 +492,12 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
 
     // Copy data into it
     line_3d_t line;
-    line.v0.x = (int16_t)(v0.x >> 0);
-    line.v0.y = (int16_t)(v0.y >> 0);
-    line.v0.z = (int16_t)(v0.z >> 0);
-    line.v1.x = (int16_t)(v1.x >> 0);
-    line.v1.y = (int16_t)(v1.y >> 0);
-    line.v1.z = (int16_t)(v1.z >> 0);
+    line.v0.x = (int16_t)(v0.x >> 12);
+    line.v0.y = (int16_t)(v0.y >> 12);
+    line.v0.z = (int16_t)(v0.z >> 12);
+    line.v1.x = (int16_t)(v1.x >> 12);
+    line.v1.y = (int16_t)(v1.y >> 12);
+    line.v1.z = (int16_t)(v1.z >> 12);
     line.v0.r = color.r;
     line.v0.g = color.g;
     line.v0.b = color.b;
@@ -512,6 +512,15 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
     glDrawArrays(GL_LINES, 0, 2);
+}
+
+void renderer_debug_draw_bvh_triangles(const bvh_t* box, const pixel32_t color, transform_t* model_transform) {
+    for (size_t i = 0; i < box->n_primitives; ++i) {
+        const collision_triangle_3d_t* tri = &box->primitives[i];
+        renderer_debug_draw_line(tri->v0, tri->v1, color, model_transform);
+        renderer_debug_draw_line(tri->v1, tri->v2, color, model_transform);
+        renderer_debug_draw_line(tri->v2, tri->v0, color, model_transform);
+    }
 }
 
 void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, transform_t* model_transform) {

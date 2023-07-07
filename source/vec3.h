@@ -68,11 +68,27 @@ ALWAYS_INLINE static vec3_t vec3_mul(const vec3_t a, const vec3_t b) {
     return result;
 }
 
+ALWAYS_INLINE static vec3_t vec3_muls(const vec3_t a, const scalar_t b) {
+    vec3_t result;
+    result.x = scalar_mul(a.x, b);
+    result.y = scalar_mul(a.y, b);
+    result.z = scalar_mul(a.z, b);
+    return result;
+}
+
 ALWAYS_INLINE vec3_t vec3_div(const vec3_t a, const vec3_t b) {
     vec3_t result;
     result.x = scalar_div(a.x, b.x);
     result.y = scalar_div(a.y, b.y);
     result.z = scalar_div(a.z, b.z);
+    return result;
+}
+
+ALWAYS_INLINE vec3_t vec3_divs(const vec3_t a, const scalar_t b) {
+    vec3_t result;
+    result.x = scalar_div(a.x, b);
+    result.y = scalar_div(a.y, b);
+    result.z = scalar_div(a.z, b);
     return result;
 }
 
@@ -125,7 +141,7 @@ ALWAYS_INLINE static vec3_t vec3_normalize(const vec3_t a) {
     if (magnitude == 0) {
         return vec3_from_int32s(0, 0, 0);
     }
-    const vec3_t a_normalized = vec3_div(a, vec3_from_scalar(magnitude));
+    const vec3_t a_normalized = vec3_divs(a, magnitude);
     return a_normalized;
 }
 
