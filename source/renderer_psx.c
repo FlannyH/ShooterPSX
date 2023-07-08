@@ -10,7 +10,7 @@
 #include "input.h"
 #include "vec2.h"
 
-#define TRI_THRESHOLD_SUB2 110
+#define TRI_THRESHOLD_SUB2 125
 #define TRI_THRESHOLD_SUB1 300
 #define TRI_THRESHOLD_NORMAL 500
 #define TRI_THRESHOLD_FADE_START 700
@@ -156,7 +156,7 @@ void renderer_begin_frame(transform_t* camera_transform) {
 // For some reason, making this a macro improved performance by rough 8%. Can't tell you why though.
 #define ADD_TEX_TRI_TO_QUEUE(p0, p1, p2, v0, v1, v2, avg_z, clut_fade, tex_id) {       \
     POLY_GT3* new_triangle = (POLY_GT3*)next_primitive;\
-    next_primitive += sizeof(POLY_GT3);\
+    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);\
     setPolyGT3(new_triangle); \
     setXY3(new_triangle, \
         p0.x, p0.y,\
@@ -184,7 +184,7 @@ void renderer_begin_frame(transform_t* camera_transform) {
 // Same as above but for quads
 #define ADD_TEX_QUAD_TO_QUEUE(p0, p1, p2, p3, v0, v1, v2, v3, avg_z, clut_fade, tex_id) {       \
     POLY_GT4* new_triangle = (POLY_GT4*)next_primitive;\
-    next_primitive += sizeof(POLY_GT4);\
+    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);\
     setPolyGT4(new_triangle); \
     setXY4(new_triangle, \
         p0.x, p0.y,\
@@ -349,7 +349,7 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
     else {
         // Create primitive
         POLY_G3* new_triangle = (POLY_G3*)next_primitive;
-        next_primitive += sizeof(POLY_G3);
+        next_primitive += sizeof(POLY_G3) / sizeof(*next_primitive);
 
         // Initialize the entry in the render queue
         setPolyG3(new_triangle);
@@ -574,7 +574,7 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
     else {
         // Create primitive
         POLY_G4* new_quad = (POLY_G4*)next_primitive;
-        next_primitive += sizeof(POLY_G4);
+        next_primitive += sizeof(POLY_G4) / sizeof(*next_primitive);
 
         // Initialize the entry in the render queue
         setPolyG4(new_quad);
@@ -661,7 +661,7 @@ __attribute__((always_inline)) inline void draw_triangle_shaded_untextured(verte
 
     // Create primitive
     POLY_G3* new_triangle = (POLY_G3*)next_primitive;
-    next_primitive += sizeof(POLY_G3);
+    next_primitive += sizeof(POLY_G3) / sizeof(*next_primitive);
 
     // Set the vertex positions of the triangle
     setXY3(
@@ -816,7 +816,7 @@ extern inline void renderer_draw_triangles_shaded_2d(const vertex_2d_t* vertex_b
     for (size_t i = 0; i < n_verts; i += 3) {
         // Allocate a triangle in the render queue
         POLY_G3* new_triangle = (POLY_G3*)next_primitive;
-        next_primitive += sizeof(POLY_G3);
+        next_primitive += sizeof(POLY_G3) / sizeof(*next_primitive);
 
         // Initialize the entry in the render queue
         setPolyG3(new_triangle);
@@ -882,7 +882,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, const pixel32_t color, trans
         return;
 
     LINE_F2* new_line = (LINE_F2*)next_primitive;
-    next_primitive += sizeof(LINE_F2);
+    next_primitive += sizeof(LINE_F2) / sizeof(*next_primitive);
 
     // Set the vertex positions of the line
     gte_stsxy0(&new_line->x0);
