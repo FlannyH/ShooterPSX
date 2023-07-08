@@ -10,8 +10,8 @@
 #include "input.h"
 #include "vec2.h"
 
-#define TRI_THRESHOLD_SUB2 125
-#define TRI_THRESHOLD_SUB1 300
+#define TRI_THRESHOLD_SUB2 130
+#define TRI_THRESHOLD_SUB1 400
 #define TRI_THRESHOLD_NORMAL 500
 #define TRI_THRESHOLD_FADE_START 700
 #define TRI_THRESHOLD_FADE_END 1000
@@ -215,8 +215,8 @@ void renderer_begin_frame(transform_t* camera_transform) {
 
 __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* verts) {
     // Transform the triangle vertices - there's 6 entries instead of 3, so we have enough room for subdivided triangles
-    svec2_t trans_vec_xy[6];
-    scalar_t trans_vec_z[6];
+    svec2_t trans_vec_xy[15];
+    scalar_t trans_vec_z[15];
     scalar_t avg_z;
     gte_ldv3(
         &verts[0],
@@ -258,6 +258,62 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
     dont_return:
 #endif
 
+#if 1
+
+#endif
+    if (avg_z < TRI_THRESHOLD_SUB2) {
+        // Generate all 15 vertices
+        #define vtx0 verts[0]
+        #define vtx1 verts[1]
+        #define vtx2 verts[2]
+        const vertex_3d_t vtx3 = get_halfway_point(vtx0, vtx1);
+        const vertex_3d_t vtx4 = get_halfway_point(vtx1, vtx2);
+        const vertex_3d_t vtx5 = get_halfway_point(vtx0, vtx2);
+        const vertex_3d_t vtx6 = get_halfway_point(vtx0, vtx3);
+        const vertex_3d_t vtx7 = get_halfway_point(vtx1, vtx3);
+        const vertex_3d_t vtx8 = get_halfway_point(vtx1, vtx4);
+        const vertex_3d_t vtx9 = get_halfway_point(vtx4, vtx2);
+        const vertex_3d_t vtx10 = get_halfway_point(vtx5, vtx2);
+        const vertex_3d_t vtx11 = get_halfway_point(vtx5, vtx0);
+        const vertex_3d_t vtx12 = get_halfway_point(vtx5, vtx3);
+        const vertex_3d_t vtx13 = get_halfway_point(vtx12, vtx8);
+        const vertex_3d_t vtx14 = get_halfway_point(vtx5, vtx4);
+
+        // Transform them all
+        gte_ldv3(&vtx3.x, &vtx4.x, &vtx5.x);
+        gte_rtpt();
+        gte_stsxy3c(&trans_vec_xy[3]);
+        gte_stsz3c(&trans_vec_z[3]);
+        gte_ldv3(&vtx6.x, &vtx7.x, &vtx8.x);
+        gte_rtpt();
+        gte_stsxy3c(&trans_vec_xy[6]);
+        gte_stsz3c(&trans_vec_z[6]);
+        gte_ldv3(&vtx9.x, &vtx10.x, &vtx11.x);
+        gte_rtpt();
+        gte_stsxy3c(&trans_vec_xy[9]);
+        gte_stsz3c(&trans_vec_z[9]);
+        gte_ldv3(&vtx12.x, &vtx13.x, &vtx14.x);
+        gte_rtpt();
+        gte_stsxy3c(&trans_vec_xy[12]);
+        gte_stsz3c(&trans_vec_z[12]);
+
+        // Add to queue
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[6], trans_vec_xy[11], vtx0, vtx6, vtx11, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[11], trans_vec_xy[12], trans_vec_xy[5], vtx11, vtx12, vtx5, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[5], trans_vec_xy[14], trans_vec_xy[10], vtx5, vtx14, vtx10, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[10], trans_vec_xy[9], trans_vec_xy[2], vtx10, vtx9, vtx2, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[6], trans_vec_xy[3], trans_vec_xy[11], trans_vec_xy[12], vtx6, vtx3, vtx11, vtx12, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[7], trans_vec_xy[12], trans_vec_xy[13], vtx3, vtx7, vtx12, vtx13, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[7], trans_vec_xy[1], trans_vec_xy[13], trans_vec_xy[8], vtx7, vtx1, vtx13, vtx8, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[12], trans_vec_xy[13], trans_vec_xy[5], trans_vec_xy[14], vtx12, vtx13, vtx5, vtx14, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[13], trans_vec_xy[8], trans_vec_xy[14], trans_vec_xy[4], vtx13, vtx8, vtx14, vtx4, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[14], trans_vec_xy[4], trans_vec_xy[10], trans_vec_xy[9], vtx14, vtx4, vtx10, vtx9, avg_z, 0, verts[0].tex_id);
+
+        #undef vtx0
+        #undef vtx1
+        #undef vtx2
+        return;
+    }
 #if 1
     if (avg_z < TRI_THRESHOLD_SUB1) {
         // Let's calculate the center of each edge
@@ -339,8 +395,8 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
 }
 __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) {
     // Transform the quad vertices, with enough entries in the array for subdivided quads
-    svec2_t trans_vec_xy[10];
-    scalar_t trans_vec_z[10];
+    svec2_t trans_vec_xy[24];
+    scalar_t trans_vec_z[24];
     scalar_t avg_z;
     gte_ldv3(
         &verts[0],
@@ -384,7 +440,83 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
 
     dont_return:
 #endif
+#if 1
+    if (avg_z < TRI_THRESHOLD_SUB2) {
+        // Generate all 25 vertices
+        #define vtx0 verts[0]
+        #define vtx1 verts[1]
+        #define vtx2 verts[2]
+        #define vtx3 verts[3]
+        const vertex_3d_t vtx4 = get_halfway_point(vtx0, vtx1);
+        const vertex_3d_t vtx5 = get_halfway_point(vtx2, vtx3);
+        const vertex_3d_t vtx6 = get_halfway_point(vtx4, vtx5);
+        const vertex_3d_t vtx7 = get_halfway_point(vtx0, vtx2);
+        const vertex_3d_t vtx8 = get_halfway_point(vtx1, vtx3);
+        const vertex_3d_t vtx9 = get_halfway_point(vtx0, vtx4);
+        const vertex_3d_t vtx10 = get_halfway_point(vtx4, vtx1);
+        const vertex_3d_t vtx11 = get_halfway_point(vtx7, vtx6);
+        const vertex_3d_t vtx12 = get_halfway_point(vtx6, vtx8);
+        const vertex_3d_t vtx13 = get_halfway_point(vtx2, vtx5);
+        const vertex_3d_t vtx14 = get_halfway_point(vtx5, vtx3);
+        const vertex_3d_t vtx15 = get_halfway_point(vtx0, vtx7);
+        const vertex_3d_t vtx16 = get_halfway_point(vtx9, vtx11);
+        const vertex_3d_t vtx17 = get_halfway_point(vtx4, vtx6);
+        const vertex_3d_t vtx18 = get_halfway_point(vtx10, vtx12);
+        const vertex_3d_t vtx19 = get_halfway_point(vtx1, vtx8);
+        const vertex_3d_t vtx20 = get_halfway_point(vtx7, vtx2);
+        const vertex_3d_t vtx21 = get_halfway_point(vtx11, vtx13);
+        const vertex_3d_t vtx22 = get_halfway_point(vtx6, vtx5);
+        const vertex_3d_t vtx23 = get_halfway_point(vtx12, vtx14);
+        const vertex_3d_t vtx24 = get_halfway_point(vtx8, vtx3);
 
+        // Transform them all
+        gte_ldv3(&vtx4.x, &vtx5.x, &vtx6.x);
+        gte_rtpt();
+        gte_stsxy3c(&trans_vec_xy[4]);
+        gte_ldv3(&vtx7.x, &vtx8.x, &vtx9.x);
+        gte_rtpt();
+        gte_stsxy3c(&trans_vec_xy[7]);
+        gte_ldv3(&vtx10.x, &vtx11.x, &vtx12.x);
+        gte_rtpt();
+        gte_stsxy3c(&trans_vec_xy[10]);
+        gte_ldv3(&vtx13.x, &vtx14.x, &vtx15.x);
+        gte_rtpt();
+        gte_stsxy3c(&trans_vec_xy[13]);
+        gte_ldv3(&vtx16.x, &vtx17.x, &vtx18.x);
+        gte_rtpt();
+        gte_stsxy3c(&trans_vec_xy[16]);
+        gte_ldv3(&vtx19.x, &vtx20.x, &vtx21.x);
+        gte_rtpt();
+        gte_stsxy3c(&trans_vec_xy[19]);
+        gte_ldv3(&vtx22.x, &vtx23.x, &vtx24.x);
+        gte_rtpt();
+        gte_stsxy3c(&trans_vec_xy[22]);
+
+        // Add to queue
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[9], trans_vec_xy[15], trans_vec_xy[16], vtx0, vtx9, vtx15, vtx16, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[9], trans_vec_xy[4], trans_vec_xy[16], trans_vec_xy[17], vtx9, vtx4, vtx16, vtx17, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[4], trans_vec_xy[10], trans_vec_xy[17], trans_vec_xy[18], vtx4, vtx10, vtx17, vtx18, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[10], trans_vec_xy[1], trans_vec_xy[18], trans_vec_xy[19], vtx10, vtx1, vtx18, vtx19, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[15], trans_vec_xy[16], trans_vec_xy[7], trans_vec_xy[11], vtx15, vtx16, vtx7, vtx11, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[16], trans_vec_xy[17], trans_vec_xy[11], trans_vec_xy[6], vtx16, vtx17, vtx11, vtx6, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[17], trans_vec_xy[18], trans_vec_xy[6], trans_vec_xy[12], vtx17, vtx18, vtx6, vtx12, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[18], trans_vec_xy[19], trans_vec_xy[12], trans_vec_xy[8], vtx18, vtx19, vtx12, vtx8, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[7], trans_vec_xy[11], trans_vec_xy[20], trans_vec_xy[21], vtx7, vtx11, vtx20, vtx21, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[11], trans_vec_xy[6], trans_vec_xy[21], trans_vec_xy[22], vtx11, vtx6, vtx21, vtx22, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[6], trans_vec_xy[12], trans_vec_xy[22], trans_vec_xy[23], vtx6, vtx12, vtx22, vtx23, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[12], trans_vec_xy[8], trans_vec_xy[23], trans_vec_xy[24], vtx12, vtx8, vtx23, vtx24, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[20], trans_vec_xy[21], trans_vec_xy[2], trans_vec_xy[13], vtx20, vtx21, vtx2, vtx13, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[21], trans_vec_xy[22], trans_vec_xy[13], trans_vec_xy[5], vtx21, vtx22, vtx13, vtx5, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[22], trans_vec_xy[23], trans_vec_xy[5], trans_vec_xy[14], vtx22, vtx23, vtx5, vtx14, avg_z, 0, verts[0].tex_id);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[23], trans_vec_xy[24], trans_vec_xy[14], trans_vec_xy[3], vtx23, vtx24, vtx14, vtx3, avg_z, 0, verts[0].tex_id);
+
+        #undef vtx0
+        #undef vtx1
+        #undef vtx2
+        #undef vtx3
+        return;
+    }
+#endif 
 #if 1
     if (avg_z < TRI_THRESHOLD_SUB1) {
         // Let's calculate the new points we need
@@ -421,7 +553,6 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
         gte_ldsz4(trans_vec_z[8], trans_vec_z[5], trans_vec_z[6], trans_vec_z[3]);
         gte_avsz4();
         gte_stotz(&avg_z_8563);
-
 
         // Draw them
         ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[4], trans_vec_xy[7], trans_vec_xy[8], verts[0], ab, da, center, avg_z_0478, 0, verts[0].tex_id);
