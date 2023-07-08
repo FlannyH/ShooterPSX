@@ -79,7 +79,6 @@
 					<file name="INSTR.SBK"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/instr.sbk" />
 				</dir>
             </dir>
-			<dummy sectors="1024"/>
 		</directory_tree>
 	</track>
 
