@@ -7,7 +7,7 @@
 #include "input.h"
 
 const int32_t eye_height = 225 * COL_SCALE;
-const int32_t player_radius = 120 * COL_SCALE;
+const int32_t player_radius = 175 * COL_SCALE;
 const int32_t step_height = 80 * COL_SCALE;
 const int32_t terminal_velocity_down = -12400 / 8;
 const int32_t terminal_velocity_up = 40000 / 8;
