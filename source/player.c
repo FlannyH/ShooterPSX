@@ -7,7 +7,7 @@
 #include "input.h"
 
 const int32_t eye_height = 225 * COL_SCALE;
-const int32_t player_radius = 175 * COL_SCALE;
+const int32_t player_radius = 125 * COL_SCALE;
 const int32_t step_height = 100 * COL_SCALE;
 const int32_t terminal_velocity_down = -12400 / 8;
 const int32_t terminal_velocity_up = 40000 / 8;
@@ -85,9 +85,23 @@ void handle_stick_input(player_t* self, const int dt_ms) {
 
         // Look left and right
         self->rotation.y += (int32_t)(input_right_stick_x(0)) * (stick_sensitivity * dt_ms) >> 12;
+
+        // Debug
+        if (input_held(PAD_UP, 0)) {
+            self->position.y += 40960;
+        }
+        if (input_held(PAD_DOWN, 0)) {
+            self->position.y -= 40960;
+        }
     } else {
-        self->rotation.y += (int32_t)(input_held(PAD_RIGHT, 0)) * (stick_sensitivity * dt_ms) >> 12;
-        self->rotation.y -= (int32_t)(input_held(PAD_LEFT, 0)) * (stick_sensitivity * dt_ms) >> 12;
+        // Look left and right
+        const int32_t dpad_x = ((int32_t)(input_held(PAD_RIGHT, 0) != 0) * 127) + ((int32_t)(input_held(PAD_LEFT, 0) != 0) * -127);
+        self->rotation.y += dpad_x * (stick_sensitivity * dt_ms) >> 12;
+        
+        // Moving forwards and backwards
+        const int32_t dpad_y = ((int32_t)(input_held(PAD_UP, 0) != 0) * -127) + ((int32_t)(input_held(PAD_DOWN, 0) != 0) * 127);
+        self->velocity.x += hisin(self->rotation.y) * dpad_y * (walking_acceleration * dt_ms) >> 12;
+        self->velocity.z += hicos(self->rotation.y) * dpad_y * (walking_acceleration * dt_ms) >> 12;
     }
 }
 
@@ -130,12 +144,6 @@ void handle_jump(player_t* self) {
         if (self->distance_from_ground - eye_height < jump_ground_threshold) {
             self->velocity.y = initial_jump_velocity;
         }
-    }
-    if (input_held(PAD_UP, 0)) {
-        self->position.y += 40960;
-    }
-    if (input_held(PAD_DOWN, 0)) {
-        self->position.y -= 40960;
     }
 }
 
