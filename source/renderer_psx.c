@@ -23,8 +23,6 @@ DRAWENV draw[2];
 int drawbuffer;
 int delta_time_raw_curr = 0;
 int delta_time_raw_prev = 0;
-uint32_t n_total_triangles = 0;
-int n_rendered_triangles = 0;
 
 uint32_t ord_tbl[2][ORD_TBL_LENGTH];
 uint32_t primitive_buffer[2][(32768 << 3) / sizeof(uint32_t)];
@@ -34,6 +32,14 @@ vec3_t camera_pos;
 vec3_t camera_dir;
 int vsync_enable = 1;
 int frame_counter = 0;
+int n_rendered_triangles = 0;
+int n_rendered_quads = 0;
+int n_rendered_untex_triangles = 0;
+int n_rendered_untex_quads = 0;
+int n_calls_to_draw_triangle = 0;
+int n_calls_to_draw_quad = 0;
+int n_meshes_drawn = 0;
+int n_meshes_total = 0;
 
 pixel32_t textures_avg_colors[256];
 RECT textures[256];
@@ -147,10 +153,14 @@ void renderer_begin_frame(transform_t* camera_transform) {
 	camera_dir.x = view_matrix.m[2][0];
 	camera_dir.y = view_matrix.m[2][1];
 	camera_dir.z = view_matrix.m[2][2];
-    
-    
     n_rendered_triangles = 0;
-    n_total_triangles = 0;
+    n_rendered_quads = 0;
+    n_rendered_untex_triangles = 0;
+    n_rendered_untex_quads = 0;
+    n_calls_to_draw_triangle = 0;
+    n_calls_to_draw_quad = 0;
+    n_meshes_drawn = 0;
+    n_meshes_total = 0;
 }
 
 // For some reason, making this a macro improved performance by rough 8%. Can't tell you why though.
@@ -177,13 +187,13 @@ void renderer_begin_frame(transform_t* camera_transform) {
         (((uint16_t)(v2.u)) >> 2) + tex_offset_x,\
         (((uint16_t)(v2.v)) >> 2)\
     );\
-    addPrim(ord_tbl[drawbuffer] + (avg_z>>2), new_triangle);\
+    addPrim(ord_tbl[drawbuffer] + (avg_z >> 0), new_triangle);\
     ++n_rendered_triangles;\
 }\
 
 // Same as above but for quads
 #define ADD_TEX_QUAD_TO_QUEUE(p0, p1, p2, p3, v0, v1, v2, v3, avg_z, clut_fade, tex_id) {       \
-    POLY_GT4* new_triangle = (POLY_GT4*)next_primitive;\
+    POLY_GT4* const new_triangle = (POLY_GT4*)next_primitive;\
     next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);\
     setPolyGT4(new_triangle); \
     setXY4(new_triangle, \
@@ -196,24 +206,25 @@ void renderer_begin_frame(transform_t* camera_transform) {
     setRGB1(new_triangle, v1.r >> 1, v1.g >> 1, v1.b >> 1);\
     setRGB2(new_triangle, v2.r >> 1, v2.g >> 1, v2.b >> 1);\
     setRGB3(new_triangle, v3.r >> 1, v3.g >> 1, v3.b >> 1);\
-    const uint16_t tex_offset_x = (tex_id % 4) * 64;\
+    const uint8_t tex_offset_x = (tex_id & 0b11) << 6;\
     new_triangle->clut = getClut(palettes[tex_id].x, palettes[tex_id].y + clut_fade);\
     new_triangle->tpage = getTPage(0, 0, textures[tex_id].x, textures[tex_id].y);\
     setUV4(new_triangle,\
-        (((uint16_t)(v0.u)) >> 2) + tex_offset_x,\
-        (((uint16_t)(v0.v)) >> 2),\
-        (((uint16_t)(v1.u)) >> 2) + tex_offset_x,\
-        (((uint16_t)(v1.v)) >> 2),\
-        (((uint16_t)(v2.u)) >> 2) + tex_offset_x,\
-        (((uint16_t)(v2.v)) >> 2),\
-        (((uint16_t)(v3.u)) >> 2) + tex_offset_x,\
-        (((uint16_t)(v3.v)) >> 2)\
+        (v0.u >> 2) + tex_offset_x,\
+        (v0.v >> 2),\
+        (v1.u >> 2) + tex_offset_x,\
+        (v1.v >> 2),\
+        (v2.u >> 2) + tex_offset_x,\
+        (v2.v >> 2),\
+        (v3.u >> 2) + tex_offset_x,\
+        (v3.v >> 2)\
     );\
-    addPrim(ord_tbl[drawbuffer] + (avg_z>>2), new_triangle);\
-    ++n_rendered_triangles;\
+    addPrim(ord_tbl[drawbuffer] + (avg_z), new_triangle);\
+    ++n_rendered_quads;\
 }\
 
 __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* verts) {
+    ++n_calls_to_draw_triangle;
     // Transform the triangle vertices - there's 6 entries instead of 3, so we have enough room for subdivided triangles
     svec2_t trans_vec_xy[15];
     scalar_t trans_vec_z[15];
@@ -239,7 +250,7 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
     gte_stotz(&avg_z);
 
     // Depth culling
-    if ((avg_z>>2) > ORD_TBL_LENGTH || ((avg_z >> 2) <= 0)) return;
+    if ((avg_z >> 0) >= ORD_TBL_LENGTH || ((avg_z >> 0) <= 0)) return;
 
 #if 1
     // Is this triangle even on screen?
@@ -332,7 +343,6 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
         ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[1], trans_vec_xy[4], ab, verts[1], bc, avg_z, 0, verts[0].tex_id);
         ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[4], trans_vec_xy[5], ab, bc, ca, avg_z, 0, verts[0].tex_id);
         ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[5], trans_vec_xy[4], trans_vec_xy[2], ca, bc, verts[2], avg_z, 0, verts[0].tex_id);
-        n_rendered_triangles += 4;
         return;
     }
 #endif
@@ -342,7 +352,6 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
             clut_fade = ((N_CLUT_FADES-1) * (avg_z - TRI_THRESHOLD_FADE_START)) / (TRI_THRESHOLD_FADE_END - TRI_THRESHOLD_FADE_START);
         }
         ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], verts[0], verts[1], verts[2], avg_z, clut_fade, verts[0].tex_id);
-        n_rendered_triangles += 4;
         return;
     }
 
@@ -388,12 +397,13 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
         );
         
         // Add the triangle to the draw queue
-        addPrim(ord_tbl[drawbuffer] + (avg_z>>2), new_triangle);
-        ++n_rendered_triangles;
+        addPrim(ord_tbl[drawbuffer] + (avg_z >> 0), new_triangle);
+        ++n_rendered_untex_triangles;
         return;
     }
 }
 __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) {
+    ++n_calls_to_draw_quad;
     // Transform the quad vertices, with enough entries in the array for subdivided quads
     svec2_t trans_vec_xy[24];
     scalar_t trans_vec_z[24];
@@ -422,7 +432,7 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
     gte_stotz(&avg_z);
 
     // Depth culling
-    if ((avg_z>>2) > ORD_TBL_LENGTH || ((avg_z >> 2) <= 0)) return;
+    if ((avg_z >> 0) >= ORD_TBL_LENGTH || ((avg_z >> 0) <= 0)) return;
     
 #if 1
     // Is this quad even on screen?
@@ -619,8 +629,8 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
         );
         
         // Add the triangle to the draw queue
-        addPrim(ord_tbl[drawbuffer] + (avg_z>>2), new_quad);
-        ++n_rendered_triangles;
+        addPrim(ord_tbl[drawbuffer] + (avg_z >> 0), new_quad);
+        ++n_rendered_untex_quads;
         return;
     }
 }
@@ -650,7 +660,7 @@ __attribute__((always_inline)) inline void draw_triangle_shaded_untextured(verte
     gte_stotz(&p);
 
     // Depth clipping
-    if ((p >> 2) > ORD_TBL_LENGTH || ((p >> 2) <= 0))
+    if ((p >> 2) >= ORD_TBL_LENGTH || ((p >> 2) <= 0))
         return;
 
     // Store them
@@ -709,6 +719,7 @@ __attribute__((always_inline)) inline void draw_triangle_shaded_untextured(verte
 }
 
 void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform) {
+    ++n_meshes_total;
     if (!mesh) {
         printf("renderer_draw_mesh_shaded: mesh was null!\n");
         return;
@@ -785,6 +796,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
         #undef FRUSCUL_PAD_Y
     };
 
+    ++n_meshes_drawn;
     //n_total_triangles += mesh->n_vertices / 3;
 
     // Loop over each triangle
@@ -878,7 +890,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, const pixel32_t color, trans
     int p = 4;
 
     // Depth clipping
-    if ((p >> 2) > ORD_TBL_LENGTH || ((p >> 2) <= 0))
+    if ((p >> 2) >= ORD_TBL_LENGTH || ((p >> 2) <= 0))
         return;
 
     LINE_F2* new_line = (LINE_F2*)next_primitive;
@@ -1128,12 +1140,28 @@ int renderer_get_delta_time_ms(void) {
     return renderer_convert_dt_raw_to_ms(dt_raw);
 }
 
-uint32_t renderer_get_n_rendered_triangles(void) {
+int renderer_get_n_rendered_untex_triangles(void) {
+    return n_rendered_untex_triangles;
+}
+
+int renderer_get_n_rendered_triangles(void) {
     return n_rendered_triangles;
 }
 
-uint32_t renderer_get_n_total_triangles(void) {
-    return n_total_triangles;
+int renderer_get_n_rendered_untex_quads(void) {
+    return n_rendered_untex_quads;
+}
+
+int renderer_get_n_rendered_quads(void) {
+    return n_rendered_quads;
+}
+
+int renderer_get_n_calls_to_draw_triangle(void) {
+    return n_calls_to_draw_triangle;
+}
+
+int renderer_get_n_calls_to_draw_quad(void) {
+    return n_calls_to_draw_quad;
 }
 
 int renderer_should_close() {

@@ -88,6 +88,14 @@ int main(void) {
 			PROFILE("player", player_update(&player, &bvh_level_model, delta_time), 1);
 			PROFILE("music", music_tick(16), 1);
 			FntPrint(-1, "dt: %i\n", delta_time);
+			FntPrint(-1, "primitives: %i T3, %i T4, %i U3, %i U4\n",
+				n_rendered_triangles,
+				n_rendered_quads,
+				n_rendered_untex_triangles,
+				n_rendered_untex_quads
+			);
+			FntPrint(-1, "primitives processed: %i tris, %i quads\n", n_calls_to_draw_triangle, n_calls_to_draw_quad);
+			FntPrint(-1, "meshes drawn: %i / %i\n", n_meshes_drawn, n_meshes_total);
 			FntFlush(-1);
 			renderer_end_frame();
 		}

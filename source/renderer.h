@@ -48,10 +48,16 @@ void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index);
 int renderer_get_delta_time_raw(void);
 int renderer_get_delta_time_ms(void);
 int renderer_convert_dt_raw_to_ms(int dt_raw);
-uint32_t renderer_get_n_rendered_triangles(void);
-uint32_t renderer_get_n_total_triangles(void);
 int renderer_should_close(void);
 vec3_t renderer_get_forward_vector(void);
+extern int n_rendered_triangles;
+extern int n_rendered_quads;
+extern int n_rendered_untex_triangles;
+extern int n_rendered_untex_quads;
+extern int n_calls_to_draw_triangle;
+extern int n_calls_to_draw_quad;
+extern int n_meshes_drawn;
+extern int n_meshes_total;
 #ifdef __cplusplus
 }
 #endif
