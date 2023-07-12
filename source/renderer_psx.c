@@ -15,7 +15,7 @@
 #define TRI_THRESHOLD_NORMAL 500
 #define TRI_THRESHOLD_FADE_START 700
 #define TRI_THRESHOLD_FADE_END 1000
-#define MESH_RENDER_DISTANCE 10000
+#define MESH_RENDER_DISTANCE 12000
 #define N_CLUT_FADES 16
 
 // Define environment pairs and buffer counter
@@ -914,91 +914,6 @@ void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, transfor
     renderer_debug_draw_line(vertex100, vertex110, color, model_transform);
     renderer_debug_draw_line(vertex101, vertex111, color, model_transform);
     renderer_debug_draw_line(vertex001, vertex011, color, model_transform);
-}
-
-pixel16_t pixel_lerp(const uint16_t t_0_16, const pixel16_t a, const pixel16_t b) {
-    return (pixel16_t) {
-        .r = (((uint16_t)a.r * (16-t_0_16)) + ((uint16_t)b.r * t_0_16)) >> 4,
-        .g = (((uint16_t)a.g * (16-t_0_16)) + ((uint16_t)b.g * t_0_16)) >> 4,
-        .b = (((uint16_t)a.b * (16-t_0_16)) + ((uint16_t)b.b * t_0_16)) >> 4,
-        .a = (((uint16_t)a.a * (16-t_0_16)) + ((uint16_t)b.a * t_0_16)) >> 4,
-    };
-}
-
-// Blends a 16-color palette to a 16x16 color palette that fades all the colors to the texture average
-void blend_palette(const pixel16_t* in_palette, pixel16_t* out_palette, const pixel16_t target_color) {
-    // Loop over each color in the palette
-    for (size_t x = 0; x < 16; ++x) {
-        // Get the current color in the input palette
-        const pixel16_t in_color = in_palette[x];
-
-        // Iteratively blend
-        const size_t w = 16;
-        out_palette[x + w * 0x00] = in_color;
-        out_palette[x + w * 0x01] = pixel_lerp(0x01, in_color, target_color);
-        out_palette[x + w * 0x02] = pixel_lerp(0x02, in_color, target_color);
-        out_palette[x + w * 0x03] = pixel_lerp(0x03, in_color, target_color);
-        out_palette[x + w * 0x04] = pixel_lerp(0x04, in_color, target_color);
-        out_palette[x + w * 0x05] = pixel_lerp(0x05, in_color, target_color);
-        out_palette[x + w * 0x06] = pixel_lerp(0x06, in_color, target_color);
-        out_palette[x + w * 0x07] = pixel_lerp(0x07, in_color, target_color);
-        out_palette[x + w * 0x08] = pixel_lerp(0x08, in_color, target_color);
-        out_palette[x + w * 0x09] = pixel_lerp(0x09, in_color, target_color);
-        out_palette[x + w * 0x0A] = pixel_lerp(0x0A, in_color, target_color);
-        out_palette[x + w * 0x0B] = pixel_lerp(0x0B, in_color, target_color);
-        out_palette[x + w * 0x0C] = pixel_lerp(0x0C, in_color, target_color);
-        out_palette[x + w * 0x0D] = pixel_lerp(0x0D, in_color, target_color);
-        out_palette[x + w * 0x0E] = pixel_lerp(0x0E, in_color, target_color);
-        out_palette[x + w * 0x0F] = pixel_lerp(0x0F, in_color, target_color);
-
-    }
-}
-
-uint16_t find_distance_between_colors(const pixel16_t a, const pixel16_t b) {
-    return(
-        ((uint16_t)a.r * (uint16_t)b.r) +
-        ((uint16_t)a.g * (uint16_t)b.g) +
-        ((uint16_t)a.b * (uint16_t)b.b)
-    );
-}
-
-void texture_64_to_32(const uint8_t* in_data, uint8_t* out_data, const pixel16_t* palette) {
-    memset(out_data, 0x00, 32 * 64);
-    for (size_t y = 0; y < 32; ++y)
-    {
-        for (size_t x = 0; x < 32; ++x)
-        {
-            // Sample 2x2 pixels, and blend the color
-            const pixel16_t texsample1 = palette[in_data[((x * 2)) + ((y * 2) + 0) * 64] & 0x0F];
-            const pixel16_t texsample2 = palette[in_data[((x * 2)) + ((y * 2) + 0) * 64] >> 4];
-            const pixel16_t texsample3 = palette[in_data[((x * 2)) + ((y * 2) + 1) * 64] & 0x0F];
-            const pixel16_t texsample4 = palette[in_data[((x * 2)) + ((y * 2) + 1) * 64] >> 4];
-            const pixel16_t blended = {
-                .r = ((uint8_t)texsample1.r + (uint8_t)texsample2.r + (uint8_t)texsample3.r + (uint8_t)texsample4.r) / 4,
-                .g = ((uint8_t)texsample1.g + (uint8_t)texsample2.g + (uint8_t)texsample3.g + (uint8_t)texsample4.g) / 4,
-                .b = ((uint8_t)texsample1.b + (uint8_t)texsample2.b + (uint8_t)texsample3.b + (uint8_t)texsample4.b) / 4,
-                .a = ((uint8_t)texsample1.a + (uint8_t)texsample2.a + (uint8_t)texsample3.a + (uint8_t)texsample4.a) / 4
-            };
-
-            // Find the closest color in the palette to that
-            uint16_t lowest_distance = 0xFFFF;
-            uint8_t closest_value = 0;
-            for (size_t i = 0; i < 16; ++i) {
-                const uint16_t curr_distance = find_distance_between_colors(blended, palette[i]);
-                if (curr_distance < lowest_distance) {
-                    lowest_distance = curr_distance;
-                    closest_value = i;
-                }
-            }
-
-            // Write it to the texture
-            if (x % 2 == 0) {
-                out_data[(x >> 1) + y * 16] |= closest_value << 4;
-            } else {
-                out_data[(x >> 1) + y * 16] |= closest_value;
-            }
-        }
-    }
 }
 
 void renderer_upload_texture(const texture_cpu_t* texture, const uint8_t index) {
