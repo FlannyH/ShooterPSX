@@ -1,6 +1,56 @@
 # Blender 3.6.0 MTL File: 'level.blend'
 # www.blender.org
 
+newmtl Material
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd D:/Projects/Git/SoundfontPSX/dependencies/FlanGUI/test.png
+
+newmtl busy_wall_bl
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/busy_wall_bl.png
+
+newmtl busy_wall_br
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/busy_wall_br.png
+
+newmtl busy_wall_tl
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/busy_wall_tl.png
+
+newmtl busy_wall_tr
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/busy_wall_tr.png
+
 newmtl floor
 Ns 1000.000000
 Ka 1.000000 1.000000 1.000000
@@ -60,6 +110,26 @@ Ni 1.450000
 d 1.000000
 illum 2
 map_Kd level_tex/techflat1_grey2.png
+
+newmtl powerup_pedestal_bg
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/powerup_pedestal_bg.png
+
+newmtl red_line
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/red_line.png
 
 newmtl regular_walls
 Ns 1000.000000
