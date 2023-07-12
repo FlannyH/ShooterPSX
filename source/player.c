@@ -15,7 +15,7 @@ const int32_t gravity = -5;
 const int32_t walking_acceleration = 50 / 8;
 const int32_t walking_max_speed = 6660 / 8;
 const int32_t stick_sensitivity = 2400;
-const int32_t walking_drag = 75 / 8;
+const int32_t walking_drag = 32 / 8;
 const int32_t initial_jump_velocity = 8000 / 8;
 const int32_t jump_ground_threshold = 16000 / 8;
 static scalar_t player_radius_squared = 0;
@@ -120,7 +120,7 @@ void handle_drag(player_t* self, const int dt_ms) {
 
     // Clamp magnitude
     if (velocity_scalar > walking_max_speed) {
-        velocity_scalar = walking_max_speed;
+        velocity_scalar = walking_max_speed - (walking_drag * dt_ms);
     }
     // Apply drag
     else if (velocity_scalar > walking_drag * dt_ms) {
