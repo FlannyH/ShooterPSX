@@ -383,8 +383,8 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
 }
 __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) {
     // Transform the quad vertices, with enough entries in the array for subdivided quads
-    svec2_t trans_vec_xy[24];
-    scalar_t trans_vec_z[24];
+    svec2_t trans_vec_xy[25];
+    scalar_t trans_vec_z[25];
     scalar_t avg_z;
     gte_ldv3(
         &verts[0],
@@ -796,45 +796,6 @@ void renderer_draw_model_shaded(const model_t* model, transform_t* model_transfo
     for (size_t i = 0; i < model->n_meshes; ++i) {
         renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
         //renderer_debug_draw_aabb(&model->meshes[i].bounds, white, model_transform);
-    }
-}
-
-extern inline void renderer_draw_triangles_shaded_2d(const vertex_2d_t* vertex_buffer, const uint16_t n_verts, const int16_t x, const int16_t y) {
-    // Loop over each triangle
-    for (size_t i = 0; i < n_verts; i += 3) {
-        // Allocate a triangle in the render queue
-        POLY_G3* new_triangle = (POLY_G3*)next_primitive;
-        next_primitive += sizeof(POLY_G3) / sizeof(*next_primitive);
-
-        // Initialize the entry in the render queue
-        setPolyG3(new_triangle);
-
-        // Set the vertex positions of the triangle
-        setXY3(new_triangle, 
-            vertex_buffer[i + 0].x + x, vertex_buffer[i + 0].y + y,
-            vertex_buffer[i + 1].x + x, vertex_buffer[i + 1].y + y,
-            vertex_buffer[i + 2].x + x, vertex_buffer[i + 2].y + y
-        );
-
-        // Set the vertex colors of the triangle
-        setRGB0(new_triangle,
-            vertex_buffer[i + 0].r,
-            vertex_buffer[i + 0].g,
-            vertex_buffer[i + 0].b
-        );
-        setRGB1(new_triangle,
-            vertex_buffer[i + 1].r,
-            vertex_buffer[i + 1].g,
-            vertex_buffer[i + 1].b
-        );
-        setRGB2(new_triangle,
-            vertex_buffer[i + 2].r,
-            vertex_buffer[i + 2].g,
-            vertex_buffer[i + 2].b
-        );
-
-        // Add the triangle to the draw queue
-        addPrim(ord_tbl[drawbuffer], new_triangle);
     }
 }
 
