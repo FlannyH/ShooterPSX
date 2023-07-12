@@ -15,6 +15,7 @@
 #define TRI_THRESHOLD_NORMAL 500
 #define TRI_THRESHOLD_FADE_START 700
 #define TRI_THRESHOLD_FADE_END 1000
+#define MESH_RENDER_DISTANCE 10000
 #define N_CLUT_FADES 16
 
 // Define environment pairs and buffer counter
@@ -30,14 +31,8 @@ uint32_t* next_primitive;
 MATRIX view_matrix;
 vec3_t camera_pos;
 vec3_t camera_dir;
-int vsync_enable = 1;
+int vsync_enable = 2;
 int frame_counter = 0;
-int n_rendered_triangles = 0;
-int n_rendered_quads = 0;
-int n_rendered_untex_triangles = 0;
-int n_rendered_untex_quads = 0;
-int n_calls_to_draw_triangle = 0;
-int n_calls_to_draw_quad = 0;
 int n_meshes_drawn = 0;
 int n_meshes_total = 0;
 
@@ -106,8 +101,6 @@ void renderer_init(void) {
 
     // Set up where we want the center of the screen to be
     gte_SetGeomOffset(CENTER_X, CENTER_Y);
-
-    // Set screen depth (which according to example code is kinda like FOV apparently)
     gte_SetGeomScreen(120);
 
     next_primitive = primitive_buffer[0];
@@ -126,15 +119,14 @@ void renderer_begin_frame(transform_t* camera_transform) {
         scalex += 4;
     }
     HiRotMatrix(&camera_transform->rotation, &view_matrix);
-    //ScaleMatrix(&view_matrix, &scale);
     VECTOR position = camera_transform->position;
     memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
-    //memcpy(&camera_dir, &camera_transform->rotation, sizeof(camera_dir));
     position.vx = -position.vx >> 12;
     position.vy = -position.vy >> 12;
     position.vz = -position.vz >> 12;
     ApplyMatrixLV(&view_matrix, &position, &position);
     TransMatrix(&view_matrix, &position);
+
     // Finishing touch: scale by aspect ratio
     MATRIX aspect_matrix = {
         .m = {
@@ -147,18 +139,9 @@ void renderer_begin_frame(transform_t* camera_transform) {
     CompMatrixLV(&aspect_matrix, &view_matrix, &view_matrix);
     gte_SetRotMatrix(&view_matrix);
     gte_SetTransMatrix(&view_matrix);
-	//printf("RIGHT: %i, %i, %i\n", view_matrix.m[0][0], view_matrix.m[1][0], view_matrix.m[2][0]);
-	//printf("UP:    %i, %i, %i\n", view_matrix.m[0][1], view_matrix.m[1][1], view_matrix.m[2][1]);
-	//printf("FRONT: %i, %i, %i\n", view_matrix.m[0][2], view_matrix.m[1][2], view_matrix.m[2][2]);
 	camera_dir.x = view_matrix.m[2][0];
 	camera_dir.y = view_matrix.m[2][1];
 	camera_dir.z = view_matrix.m[2][2];
-    n_rendered_triangles = 0;
-    n_rendered_quads = 0;
-    n_rendered_untex_triangles = 0;
-    n_rendered_untex_quads = 0;
-    n_calls_to_draw_triangle = 0;
-    n_calls_to_draw_quad = 0;
     n_meshes_drawn = 0;
     n_meshes_total = 0;
 }
@@ -176,24 +159,23 @@ void renderer_begin_frame(transform_t* camera_transform) {
     setRGB0(new_triangle, v0.r >> 1, v0.g >> 1, v0.b >> 1);\
     setRGB1(new_triangle, v1.r >> 1, v1.g >> 1, v1.b >> 1);\
     setRGB2(new_triangle, v2.r >> 1, v2.g >> 1, v2.b >> 1);\
-    const uint16_t tex_offset_x = (tex_id % 4) * 64;\
+    const uint8_t tex_offset_x = (tex_id & 0b11) << 6;\
     new_triangle->clut = getClut(palettes[tex_id].x, palettes[tex_id].y + clut_fade);\
     new_triangle->tpage = getTPage(0, 0, textures[tex_id].x, textures[tex_id].y);\
     setUV3(new_triangle,\
-        (((uint16_t)(v0.u)) >> 2) + tex_offset_x,\
-        (((uint16_t)(v0.v)) >> 2),\
-        (((uint16_t)(v1.u)) >> 2) + tex_offset_x,\
-        (((uint16_t)(v1.v)) >> 2),\
-        (((uint16_t)(v2.u)) >> 2) + tex_offset_x,\
-        (((uint16_t)(v2.v)) >> 2)\
+        (v0.u >> 2) + tex_offset_x,\
+        (v0.v >> 2),\
+        (v1.u >> 2) + tex_offset_x,\
+        (v1.v >> 2),\
+        (v2.u >> 2) + tex_offset_x,\
+        (v2.v >> 2)\
     );\
     addPrim(ord_tbl[drawbuffer] + (avg_z >> 0), new_triangle);\
-    ++n_rendered_triangles;\
 }\
 
 // Same as above but for quads
 #define ADD_TEX_QUAD_TO_QUEUE(p0, p1, p2, p3, v0, v1, v2, v3, avg_z, clut_fade, tex_id) {       \
-    POLY_GT4* const new_triangle = (POLY_GT4*)next_primitive;\
+    POLY_GT4* new_triangle = (POLY_GT4*)next_primitive;\
     next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);\
     setPolyGT4(new_triangle); \
     setXY4(new_triangle, \
@@ -220,11 +202,9 @@ void renderer_begin_frame(transform_t* camera_transform) {
         (v3.v >> 2)\
     );\
     addPrim(ord_tbl[drawbuffer] + (avg_z), new_triangle);\
-    ++n_rendered_quads;\
 }\
 
 __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* verts) {
-    ++n_calls_to_draw_triangle;
     // Transform the triangle vertices - there's 6 entries instead of 3, so we have enough room for subdivided triangles
     svec2_t trans_vec_xy[15];
     scalar_t trans_vec_z[15];
@@ -398,12 +378,10 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
         
         // Add the triangle to the draw queue
         addPrim(ord_tbl[drawbuffer] + (avg_z >> 0), new_triangle);
-        ++n_rendered_untex_triangles;
         return;
     }
 }
 __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) {
-    ++n_calls_to_draw_quad;
     // Transform the quad vertices, with enough entries in the array for subdivided quads
     svec2_t trans_vec_xy[24];
     scalar_t trans_vec_z[24];
@@ -630,7 +608,6 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
         
         // Add the triangle to the draw queue
         addPrim(ord_tbl[drawbuffer] + (avg_z >> 0), new_quad);
-        ++n_rendered_untex_quads;
         return;
     }
 }
@@ -740,8 +717,8 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
     if (1)
     {
         // Create shorthand for better readability
-        const vec3_t *min = &mesh->bounds.min; // shorthand for readability
-        const vec3_t *max = &mesh->bounds.max; // shorthand for readability
+        const vec3_t *min = &mesh->bounds.min;
+        const vec3_t *max = &mesh->bounds.max;
 
         // We will transform these to screen space
         SVECTOR vertices[8] = {
@@ -782,6 +759,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
             if      (vertices[i].vy > after_max.vy) after_max.vy = vertices[i].vy;
             else if (vertices[i].vy < after_min.vy) after_min.vy = vertices[i].vy;
             if      (vertices[i].vz > after_max.vz) after_max.vz = vertices[i].vz;
+            else if (vertices[i].vz < after_min.vz) after_min.vz = vertices[i].vz;
         }
 
         // If this screen aligned bounding box is off screen, do not draw this mesh
@@ -790,6 +768,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
         if (after_max.vx < 0+FRUSCUL_PAD_X) return; // mesh is to the left of the screen
         if (after_max.vy < 0+FRUSCUL_PAD_Y) return; // mesh is above the screen
         if (after_max.vz < 0) return; // mesh is behind the screen
+        if (after_min.vz > MESH_RENDER_DISTANCE) return; // mesh is too far away
         if (after_min.vx > RES_X-FRUSCUL_PAD_X) return; // mesh is to the right of the screen
         if (after_min.vy > RES_Y-FRUSCUL_PAD_Y) return; // mesh is below the screen
         #undef FRUSCUL_PAD_X
@@ -806,9 +785,6 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
         vert_idx += 3;
     }
     for (size_t i = 0; i < mesh->n_quads; ++i) {
-        //draw_triangle_shaded(&mesh->vertices[vert_idx]);
-        //vertex_3d_t hack[3] = {mesh->vertices[vert_idx], mesh->vertices[vert_idx + 2], mesh->vertices[vert_idx + 3]};
-        //draw_triangle_shaded(hack);
         draw_quad_shaded(&mesh->vertices[vert_idx]);
         vert_idx += 4;
     }
@@ -1040,19 +1016,6 @@ void renderer_upload_texture(const texture_cpu_t* texture, const uint8_t index) 
     textures[index] = rect_tex;
     textures_avg_colors[index] = texture->avg_color;
 
-    // Load mipmap to VRAM - starting from 688, 256, spanning 336x128 VRAM pixels, stored in 8x32 blocks (for 32x32 textures)
-    //uint8_t mip_data[8 * 32];
-    //texture_64_to_32(texture->data, mip_data, texture->palette);
-    //const RECT rect_mip = {
-    //    688 + ((int16_t)index % 42) * 8,
-    //    256 + (((int16_t)index) / 42) * 32,
-    //    (int16_t)texture->width / 8,
-    //    (int16_t)texture->height
-    //};
-    //LoadImage(&rect_mip, (uint32_t*)mip_data);
-    //DrawSync(0);
-    //textures[index] = rect_tex;
-
     // Load palette to VRAM - starting from 688,384, spanning 336x128 VRAM pixels, stored in 16x16 blocks (for 16-bit 16-color palettes, with fades to the average texture color for distance blur)
     const RECT rect_palette = {
         688 + ((int16_t)index % 21) * 16,
@@ -1060,14 +1023,7 @@ void renderer_upload_texture(const texture_cpu_t* texture, const uint8_t index) 
         16,
         16
     };
-    //pixel16_t palette_buffer[336 * 128];
-    //const pixel16_t target_color = {
-    //    .r = texture->avg_color.r >> 3,
-    //    .g = texture->avg_color.r >> 3,
-    //    .b = texture->avg_color.r >> 3,
-    //    .a = texture->avg_color.a >> 7,
-    //};
-    //blend_palette(texture->palette, palette_buffer, target_color);
+
     LoadImage(&rect_palette, (uint32_t*)texture->palette);
     DrawSync(0);
     palettes[index] = rect_palette;
@@ -1138,30 +1094,6 @@ int renderer_convert_dt_raw_to_ms(int dt_raw) {
 int renderer_get_delta_time_ms(void) {
     int dt_raw = renderer_get_delta_time_raw();
     return renderer_convert_dt_raw_to_ms(dt_raw);
-}
-
-int renderer_get_n_rendered_untex_triangles(void) {
-    return n_rendered_untex_triangles;
-}
-
-int renderer_get_n_rendered_triangles(void) {
-    return n_rendered_triangles;
-}
-
-int renderer_get_n_rendered_untex_quads(void) {
-    return n_rendered_untex_quads;
-}
-
-int renderer_get_n_rendered_quads(void) {
-    return n_rendered_quads;
-}
-
-int renderer_get_n_calls_to_draw_triangle(void) {
-    return n_calls_to_draw_triangle;
-}
-
-int renderer_get_n_calls_to_draw_quad(void) {
-    return n_calls_to_draw_quad;
 }
 
 int renderer_should_close() {
