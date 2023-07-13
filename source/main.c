@@ -50,8 +50,7 @@ int main(void) {
 	texture_cpu_t *tex_level;
 
 	// todo: add unload functionality for when the textures are on the gpu. we don't need these in ram.
-	const uint32_t n_textures =
-		texture_collection_load("\\ASSETS\\MODELS\\LEVEL.TXC;1", &tex_level);
+	const uint32_t n_textures = texture_collection_load("\\ASSETS\\MODELS\\LEVEL.TXC;1", &tex_level);
 
 	for (uint8_t i = 0; i < n_textures; ++i) {
 	    renderer_upload_texture(&tex_level[i], i);
