@@ -10,8 +10,8 @@
 #include "input.h"
 #include "vec2.h"
 
-#define TRI_THRESHOLD_SUB2 125
-#define TRI_THRESHOLD_SUB1 300
+#define TRI_THRESHOLD_MUL_SUB2 2
+#define TRI_THRESHOLD_MUL_SUB1 5
 #define TRI_THRESHOLD_NORMAL 500
 #define TRI_THRESHOLD_FADE_START 700
 #define TRI_THRESHOLD_FADE_END 1000
@@ -31,7 +31,7 @@ uint32_t* next_primitive;
 MATRIX view_matrix;
 vec3_t camera_pos;
 vec3_t camera_dir;
-int vsync_enable = 2;
+int vsync_enable = 1;
 int frame_counter = 0;
 int n_meshes_drawn = 0;
 int n_meshes_total = 0;
@@ -252,7 +252,7 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
 #if 1
 
 #endif
-    if (avg_z < TRI_THRESHOLD_SUB2) {
+    if (avg_z < TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id) {
         // Generate all 15 vertices
         #define vtx0 verts[0]
         #define vtx1 verts[1]
@@ -306,7 +306,7 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
         return;
     }
 #if 1
-    if (avg_z < TRI_THRESHOLD_SUB1) {
+    if (avg_z < TRI_THRESHOLD_MUL_SUB1 * (int32_t)verts[1].tex_id) {
         // Let's calculate the center of each edge
         const vertex_3d_t ab = get_halfway_point(verts[0], verts[1]);
         const vertex_3d_t bc = get_halfway_point(verts[1], verts[2]);
@@ -429,7 +429,7 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
     dont_return:
 #endif
 #if 1
-    if (avg_z < TRI_THRESHOLD_SUB2) {
+    if (avg_z < TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id) {
         // Generate all 25 vertices
         #define vtx0 verts[0]
         #define vtx1 verts[1]
@@ -506,7 +506,7 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
     }
 #endif 
 #if 1
-    if (avg_z < TRI_THRESHOLD_SUB1) {
+    if (avg_z < TRI_THRESHOLD_MUL_SUB1 * (int32_t)verts[1].tex_id) {
         // Let's calculate the new points we need
         const vertex_3d_t ab = get_halfway_point(verts[0], verts[1]);
         const vertex_3d_t bc = get_halfway_point(verts[1], verts[3]);
