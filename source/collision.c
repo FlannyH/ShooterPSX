@@ -253,7 +253,7 @@ void handle_node_intersection_sphere(bvh_t* self, const bvh_node_t* current_node
                     const vec3_t player_to_surface = vec3_sub(sphere.center, sub_hit.position);
                     sub_hit.distance_along_normal = vec3_dot(sub_hit.normal, player_to_surface);
 
-                    if (sub_hit.distance_along_normal <= sphere.radius)
+                    if (sub_hit.distance_along_normal >= 0 && sub_hit.distance_along_normal <= sphere.radius)
                     {
                         // Copy the hit info into the output hit for the BVH traversal
                         memcpy(hit, &sub_hit, sizeof(rayhit_t));
