@@ -1,5 +1,6 @@
 #ifdef _PSX
 #include "input.h"
+#include "fixed_point.h"
 #include <psxapi.h>     // API header, has InitPAD() and StartPAD() defs
 #include <psxpad.h>
 
@@ -26,6 +27,28 @@ void input_init(void) {
     pad[1] = ((PADTYPE*)pad_buff[1]);
 }
 
+int8_t apply_deadzone(uint8_t input) {
+    // In range -128, +127
+    const int16_t deadzone16 = (int16_t)deadzone;
+    int16_t stick = ((int16_t)input) - 128;
+
+    // Separate sign and magnitude
+    const int16_t sign = (stick < 0) ? -1 : +1;
+    stick = scalar_abs(stick);
+
+    // Subtract deadzone and clamp to 0, 127
+    stick = scalar_clamp(stick - deadzone16, 0, 127);
+    
+    // Remap from 0, 127-deadzone to 0, 127
+    stick = stick * 127 / (127-deadzone16);
+
+    // Re-apply sign
+    stick *= sign;
+
+
+    return (int8_t)stick;
+}
+
 void input_update(void) {
     for (int i = 0; i < 2; ++i) {
         // Pass current to previous
@@ -41,10 +64,10 @@ void input_update(void) {
 
         // If we have analog sticks, update those, taking deadzone into account
         if (input_has_analog(i)) {
-            left_stick_x_curr[i] = (((pad[i]->ls_x-128) < -deadzone ) || ( (pad[i]->ls_x-128) > deadzone)) * (pad[i]->ls_x - 128);
-            left_stick_y_curr[i] = (((pad[i]->ls_y-128) < -deadzone ) || ( (pad[i]->ls_y-128) > deadzone)) * (pad[i]->ls_y - 128);
-            right_stick_x_curr[i] = (((pad[i]->rs_x-128) < -deadzone ) || ( (pad[i]->rs_x-128) > deadzone)) * (pad[i]->rs_x - 128);
-            right_stick_y_curr[i] = (((pad[i]->rs_y-128) < -deadzone ) || ( (pad[i]->rs_y-128) > deadzone)) * (pad[i]->rs_y - 128);
+            left_stick_x_curr[i] = apply_deadzone(pad[i]->ls_x);
+            left_stick_y_curr[i] = apply_deadzone(pad[i]->ls_y);
+            right_stick_x_curr[i] = apply_deadzone(pad[i]->rs_x);
+            right_stick_y_curr[i] = apply_deadzone(pad[i]->rs_y);
         }
     }
 }
