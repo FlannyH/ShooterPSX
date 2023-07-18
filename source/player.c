@@ -163,8 +163,8 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     for (size_t i = 0; i < 2; ++i) {
         // Collide
         const vertical_cylinder_t cyl = {
-            .bottom = (vec3_t){self->position.x, self->position.y - eye_height - 4096, self->position.z},
-            .height = eye_height + 4096,
+            .bottom = (vec3_t){self->position.x, self->position.y - eye_height - 4096 + step_height, self->position.z},
+            .height = eye_height + 4096 - step_height,
             .radius = player_radius,
             .radius_squared = player_radius_squared,
             .is_wall_check = 1,
@@ -174,7 +174,6 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
 
         // Did we hit anything?
         if (!is_infinity(hit.distance)) {
-            scalar_debug(hit.distance);
             int is_wall = (hit.normal.y <= 0);
             // If this is a wall
             if (is_wall) {
