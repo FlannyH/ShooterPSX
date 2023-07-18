@@ -144,7 +144,7 @@ void handle_drag(player_t* self, const int dt_ms) {
 
 void handle_jump(player_t* self) {
     if (input_pressed(PAD_CROSS, 0)) {
-        if (is_grounded) {
+        if (self->distance_from_ground - eye_height < jump_ground_threshold) {
             self->velocity.y = initial_jump_velocity;
         }
     }
