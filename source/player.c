@@ -160,37 +160,39 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
         //return;
     }
 
-    // Collide
-    const vertical_cylinder_t cyl = {
-        .bottom = (vec3_t){self->position.x, self->position.y - eye_height - 4096, self->position.z},
-        .height = eye_height + 4096,
-        .radius = player_radius,
-        .radius_squared = player_radius_squared,
-        .is_wall_check = 1,
-    };
-    rayhit_t hit;
-    bvh_intersect_vertical_cylinder(level_bvh, cyl, &hit);
+    for (size_t i = 0; i < 2; ++i) {
+        // Collide
+        const vertical_cylinder_t cyl = {
+            .bottom = (vec3_t){self->position.x, self->position.y - eye_height - 4096, self->position.z},
+            .height = eye_height + 4096,
+            .radius = player_radius,
+            .radius_squared = player_radius_squared,
+            .is_wall_check = 1,
+        };
+        rayhit_t hit;
+        bvh_intersect_vertical_cylinder(level_bvh, cyl, &hit);
 
-    // Did we hit anything?
-    if (!is_infinity(hit.distance)) {
-        scalar_debug(hit.distance);
-        int is_wall = (hit.normal.y <= 0);
-        // If this is a wall
-        if (is_wall) {
-            // Eject player out of geometry
-            const vec3_t amount_to_eject = (vec3_t){
-                scalar_mul(hit.normal.x, player_radius - hit.distance),
-                scalar_mul(hit.normal.y, hit.distance),
-                scalar_mul(hit.normal.z, player_radius - hit.distance),
-            };
-            self->position = vec3_add(self->position, amount_to_eject);
+        // Did we hit anything?
+        if (!is_infinity(hit.distance)) {
+            scalar_debug(hit.distance);
+            int is_wall = (hit.normal.y <= 0);
+            // If this is a wall
+            if (is_wall) {
+                // Eject player out of geometry
+                const vec3_t amount_to_eject = (vec3_t){
+                    scalar_mul(hit.normal.x, player_radius - hit.distance),
+                    scalar_mul(hit.normal.y, hit.distance),
+                    scalar_mul(hit.normal.z, player_radius - hit.distance),
+                };
+                self->position = vec3_add(self->position, amount_to_eject);
 
-            // Absorb penetration force (this sounds hella sus)
-            scalar_t velocity_length = scalar_sqrt(vec3_magnitude_squared(self->velocity));
-            vec3_t velocity_normalized = vec3_divs(self->velocity, velocity_length);
-            vec3_t undesired_motion = vec3_muls(hit.normal, vec3_dot(velocity_normalized, hit.normal));
-            vec3_t desired_motion = vec3_sub(velocity_normalized, undesired_motion);
-            self->velocity = vec3_muls(desired_motion, velocity_length);
+                // Absorb penetration force (this sounds hella sus)
+                scalar_t velocity_length = scalar_sqrt(vec3_magnitude_squared(self->velocity));
+                vec3_t velocity_normalized = vec3_divs(self->velocity, velocity_length);
+                vec3_t undesired_motion = vec3_muls(hit.normal, vec3_dot(velocity_normalized, hit.normal));
+                vec3_t desired_motion = vec3_sub(velocity_normalized, undesired_motion);
+                self->velocity = vec3_muls(desired_motion, velocity_length);
+            }
         }
     }
     self->position.y += self->velocity.y * dt_ms;
