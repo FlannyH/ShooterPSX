@@ -34,10 +34,12 @@ int8_t apply_deadzone(uint8_t input) {
 
     // Separate sign and magnitude
     const int16_t sign = (stick < 0) ? -1 : +1;
-    stick = scalar_abs(stick);
+    if (stick < 0) stick = -stick;
 
     // Subtract deadzone and clamp to 0, 127
-    stick = scalar_clamp(stick - deadzone16, 0, 127);
+    stick -= deadzone16;
+    if (stick < 0) stick = 0;
+    else if (stick > 127) stick = 127;
     
     // Remap from 0, 127-deadzone to 0, 127
     stick = stick * 127 / (127-deadzone16);
