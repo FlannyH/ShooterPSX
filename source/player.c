@@ -170,15 +170,6 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     };
     rayhit_t hit;
     bvh_intersect_vertical_cylinder(level_bvh, cyl, &hit);
-    renderer_debug_draw_sphere((sphere_t) {
-        .center = cyl.bottom,
-        .radius = player_radius,
-    });
-    renderer_debug_draw_sphere((sphere_t) {
-        .center = { cyl.bottom.x, cyl.bottom.y + eye_height, cyl.bottom.z },
-        .radius = player_radius,
-    });
-    // note to self: cylinder collision has false positives fucking everywhere. test with single triangle.
 
     // Did we hit anything?
     if (!is_infinity(hit.distance)) {

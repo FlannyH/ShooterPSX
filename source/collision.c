@@ -239,7 +239,6 @@ void handle_node_intersection_sphere(bvh_t* self, const bvh_node_t* current_node
     // Intersect current node
     if (sphere_aabb_intersect(&current_node->bounds, sphere))
     {
-        renderer_debug_draw_aabb(&current_node->bounds, blue, &id_transform);
         // If it's a leaf
         if (current_node->is_leaf)
         {
@@ -251,9 +250,6 @@ void handle_node_intersection_sphere(bvh_t* self, const bvh_node_t* current_node
                 // If hit
                 if (sphere_triangle_intersect_old(&self->primitives[self->indices[i]], sphere, &sub_hit)) {
                     const collision_triangle_3d_t* tri = &self->primitives[self->indices[i]];
-                    renderer_debug_draw_line(tri->v0, tri->v1, red, &id_transform);
-                    renderer_debug_draw_line(tri->v1, tri->v2, red, &id_transform);
-                    renderer_debug_draw_line(tri->v2, tri->v0, red, &id_transform);
 
                     // When colliding with a surface, you would want 
                     const vec3_t player_to_surface = vec3_sub(sphere.center, sub_hit.position);
@@ -280,7 +276,6 @@ void handle_node_intersection_vertical_cylinder(bvh_t* self, const bvh_node_t* c
     // Intersect current node
     if (vertical_cylinder_aabb_intersect(&current_node->bounds, vertical_cylinder))
     {
-        renderer_debug_draw_aabb(&current_node->bounds, red, &id_transform);
         // If it's a leaf
         if (current_node->is_leaf)
         {
@@ -313,7 +308,6 @@ void handle_node_intersection_capsule(bvh_t* self, const bvh_node_t* current_nod
     // Intersect current node
     if (capsule_aabb_intersect(&current_node->bounds, capsule))
     {
-        //renderer_debug_draw_aabb(&current_node->bounds, green, &id_transform);
         // If it's a leaf
         if (current_node->is_leaf)
         {
@@ -325,9 +319,6 @@ void handle_node_intersection_capsule(bvh_t* self, const bvh_node_t* current_nod
                 // If hit
                 if (capsule_triangle_intersect(&self->primitives[self->indices[i]], capsule, &sub_hit)) {
                     const collision_triangle_3d_t* tri = &self->primitives[self->indices[i]];
-                    renderer_debug_draw_line(tri->v0, tri->v1, red, &id_transform);
-                    renderer_debug_draw_line(tri->v1, tri->v2, red, &id_transform);
-                    renderer_debug_draw_line(tri->v2, tri->v0, red, &id_transform);
                     // If lowest distance
                     if (sub_hit.distance < hit->distance && sub_hit.distance >= 0)
                     {
@@ -857,18 +848,6 @@ int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vert
 
         // Find the lowest point that is in the range
         closest_pos_3d.y = scalar_max(min_y, vertical_cylinder.bottom.y);
-        renderer_debug_draw_sphere((sphere_t) {
-            .center = { closest_pos_3d.x, min_y, closest_pos_3d.z },
-            .radius = 4096,
-        });
-        renderer_debug_draw_sphere((sphere_t) {
-            .center = { closest_pos_3d.x, max_y, closest_pos_3d.z },
-            .radius = 4096,
-        });
-        renderer_debug_draw_sphere((sphere_t) {
-            .center = { closest_pos_3d.x, vertical_cylinder.bottom.y, closest_pos_3d.z },
-            .radius = 2048,
-        });
     }
     else {
         closest_pos_3d.y = triangle->v0.y;
@@ -882,10 +861,6 @@ int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vert
     const scalar_t max = (min + vertical_cylinder.height);
     if (closest_pos_3d.y >= min && closest_pos_3d.y <= max) {
         // Return this point
-        renderer_debug_draw_line(triangle->v0, triangle->v1, pink, &id_transform);
-        renderer_debug_draw_line(triangle->v1, triangle->v2, green, &id_transform);
-        renderer_debug_draw_line(triangle->v2, triangle->v0, blue, &id_transform);
-        renderer_debug_draw_sphere((sphere_t) { .center = closest_pos_3d, .radius = 4096 });
         hit->position = closest_pos_3d;
         if (triangle->normal.y == 0) {
             vec2_t center_to_intersect = vec2_sub(position, closest_pos_on_triangle);
@@ -1038,7 +1013,6 @@ int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere
         hit->distance = (radius - len) << 4;
         hit->distance_along_normal = (radius - len) << 4;
         hit->position = vec3_shift_left(best_point, 4);
-        renderer_debug_draw_sphere((sphere_t) { .center = hit->position, .radius = sphere.radius });
         return 1;
     }
 
