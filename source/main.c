@@ -77,7 +77,7 @@ int main(void) {
         int delta_time = renderer_convert_dt_raw_to_ms(delta_time_raw);
 #else
         int delta_time = renderer_get_delta_time_ms();
-        delta_time = scalar_min(delta_time, 33);
+        delta_time = scalar_min(delta_time, 40);
 #endif
         frame_counter += delta_time;
 		if (input_pressed(PAD_SELECT, 0)) show_debug = !show_debug;
