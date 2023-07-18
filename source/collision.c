@@ -239,6 +239,7 @@ void handle_node_intersection_sphere(bvh_t* self, const bvh_node_t* current_node
     // Intersect current node
     if (sphere_aabb_intersect(&current_node->bounds, sphere))
     {
+        renderer_debug_draw_aabb(&current_node->bounds, blue, &id_transform);
         // If it's a leaf
         if (current_node->is_leaf)
         {
@@ -248,7 +249,12 @@ void handle_node_intersection_sphere(bvh_t* self, const bvh_node_t* current_node
             for (int i = current_node->left_first; i < current_node->left_first + current_node->primitive_count; i++)
             {
                 // If hit
-                if (sphere_triangle_intersect(&self->primitives[self->indices[i]], sphere, &sub_hit)) {
+                if (sphere_triangle_intersect_old(&self->primitives[self->indices[i]], sphere, &sub_hit)) {
+                    const collision_triangle_3d_t* tri = &self->primitives[self->indices[i]];
+                    renderer_debug_draw_line(tri->v0, tri->v1, red, &id_transform);
+                    renderer_debug_draw_line(tri->v1, tri->v2, red, &id_transform);
+                    renderer_debug_draw_line(tri->v2, tri->v0, red, &id_transform);
+
                     // When colliding with a surface, you would want 
                     const vec3_t player_to_surface = vec3_sub(sphere.center, sub_hit.position);
                     sub_hit.distance_along_normal = vec3_dot(sub_hit.normal, player_to_surface);
@@ -274,6 +280,7 @@ void handle_node_intersection_vertical_cylinder(bvh_t* self, const bvh_node_t* c
     // Intersect current node
     if (vertical_cylinder_aabb_intersect(&current_node->bounds, vertical_cylinder))
     {
+        renderer_debug_draw_aabb(&current_node->bounds, red, &id_transform);
         // If it's a leaf
         if (current_node->is_leaf)
         {
@@ -302,6 +309,43 @@ void handle_node_intersection_vertical_cylinder(bvh_t* self, const bvh_node_t* c
     }
 }
 
+void handle_node_intersection_capsule(bvh_t* self, const bvh_node_t* current_node, const capsule_t capsule, rayhit_t* hit, const int rec_depth) {
+    // Intersect current node
+    if (capsule_aabb_intersect(&current_node->bounds, capsule))
+    {
+        //renderer_debug_draw_aabb(&current_node->bounds, green, &id_transform);
+        // If it's a leaf
+        if (current_node->is_leaf)
+        {
+            // Intersect all triangles attached to it
+            rayhit_t sub_hit = { 0 };
+            sub_hit.distance = 0;
+            for (int i = current_node->left_first; i < current_node->left_first + current_node->primitive_count; i++)
+            {
+                // If hit
+                if (capsule_triangle_intersect(&self->primitives[self->indices[i]], capsule, &sub_hit)) {
+                    const collision_triangle_3d_t* tri = &self->primitives[self->indices[i]];
+                    renderer_debug_draw_line(tri->v0, tri->v1, red, &id_transform);
+                    renderer_debug_draw_line(tri->v1, tri->v2, red, &id_transform);
+                    renderer_debug_draw_line(tri->v2, tri->v0, red, &id_transform);
+                    // If lowest distance
+                    if (sub_hit.distance < hit->distance && sub_hit.distance >= 0)
+                    {
+                        // Copy the hit info into the output hit for the BVH traversal
+                        memcpy(hit, &sub_hit, sizeof(rayhit_t));
+                        hit->triangle = &self->primitives[self->indices[i]];
+                    }
+                }
+            }
+            return;
+        }
+
+        //Otherwise, intersect child nodes
+        handle_node_intersection_capsule(self, &self->nodes[current_node->left_first + 0], capsule, hit, rec_depth + 1);
+        handle_node_intersection_capsule(self, &self->nodes[current_node->left_first + 1], capsule, hit, rec_depth + 1);
+    }
+}
+
 
 void bvh_intersect_ray(bvh_t* self, ray_t ray, rayhit_t* hit) {
     hit->distance = INT32_MAX;
@@ -316,6 +360,11 @@ void bvh_intersect_sphere(bvh_t* bvh, sphere_t sphere, rayhit_t* hit) {
 void bvh_intersect_vertical_cylinder(bvh_t* bvh, vertical_cylinder_t cyl, rayhit_t* hit) {
     hit->distance = INT32_MAX;
     handle_node_intersection_vertical_cylinder(bvh, bvh->root, cyl, hit, 0);
+}
+
+void bvh_intersect_capsule(bvh_t* bvh, capsule_t capsule, rayhit_t* hit) {
+    hit->distance = INT32_MAX;
+    handle_node_intersection_capsule(bvh, bvh->root, capsule, hit, 0);
 }
 
 void bvh_swap_primitives(uint16_t* a, uint16_t* b) {
@@ -550,6 +599,38 @@ int vertical_cylinder_aabb_intersect(const aabb_t* aabb, const vertical_cylinder
     );
 }
 
+// We can just make this an AABB-AABB collision lmao it's broad phase anyway
+int capsule_aabb_intersect(const aabb_t* aabb, capsule_t capsule) {
+    // Create AABB from capsule
+    const vec3_t corner1 = {
+        capsule.tip.x - capsule.radius,
+        capsule.tip.y,
+        capsule.tip.z - capsule.radius
+    };
+    const vec3_t corner2 = {
+        capsule.base.x + capsule.radius,
+        capsule.base.y,
+        capsule.base.z + capsule.radius
+    };
+    const aabb_t capsule_box = {
+        .max = {
+            scalar_max(corner1.x, corner2.x),
+            scalar_max(corner1.y, corner2.y),
+            scalar_max(corner1.z, corner2.z),
+        },
+        .min = {
+            scalar_min(corner1.x, corner2.x),
+            scalar_min(corner1.y, corner2.y),
+            scalar_min(corner1.z, corner2.z),
+        }
+    };
+
+    // Do they intersect?
+    return  (capsule_box.min.x <= aabb->max.x) && (capsule_box.max.x >= aabb->min.x)
+    &&      (capsule_box.min.y <= aabb->max.y) && (capsule_box.max.y >= aabb->min.y)
+    &&      (capsule_box.min.z <= aabb->max.z) && (capsule_box.max.z >= aabb->min.z);
+}
+
 scalar_t edge_function(const vec2_t a, const vec2_t b, const vec2_t p) {
     const vec2_t a_p = vec2_sub(p, a);
     const vec2_t a_b = vec2_sub(b, a);
@@ -696,10 +777,16 @@ vec3_t find_closest_point_on_triangle_3d(vec3_t a, vec3_t b, vec3_t c, vec3_t p,
 
 int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vertical_cylinder_t vertical_cylinder, rayhit_t* hit) {
     n_vertical_cylinder_triangle_intersects++;
-    // Since this is only used for ground collisions, we can ignore surfaces that don't face up
-    if (triangle->normal.y <= 0) {
-        hit->distance = INT32_MAX;
-        return 0;
+
+    if (vertical_cylinder.is_wall_check) {
+        if (triangle->normal.y > 0) {
+            return 0;
+        }
+    }
+    else {
+        if (triangle->normal.y <= 0) {
+            return 0;
+        }
     }
 
     // Project everything into 2D top-down
@@ -730,19 +817,92 @@ int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vert
     vec3_t closest_pos_3d;
     closest_pos_3d.x = closest_pos_on_triangle.x;
     closest_pos_3d.z = closest_pos_on_triangle.y;
-    closest_pos_3d.y = triangle->v0.y;
-    closest_pos_3d.y = (closest_pos_3d.y + scalar_mul(v, (triangle->v1.y - triangle->v0.y)));
-    closest_pos_3d.y = (closest_pos_3d.y + scalar_mul(w, (triangle->v2.y - triangle->v0.y)));
+
+    // Edge case! If the triangle is facing horizontally, the 2D projection will be degenerate.
+    if (triangle->normal.y == 0) {
+        // Figure out what Y range we have
+        // Project v0-point onto v0-v1
+        const vec2_t v0_point = vec2_sub(closest_pos_on_triangle, v0);
+        const vec2_t v1_point = vec2_sub(closest_pos_on_triangle, v1);
+        const vec2_t v2_point = vec2_sub(closest_pos_on_triangle, v2);
+        const vec2_t v0_v1 = vec2_sub(v1, v0);
+        const vec2_t v1_v2 = vec2_sub(v2, v1);
+        const vec2_t v2_v0 = vec2_sub(v0, v2);
+        const scalar_t t_v0v1 = scalar_div(vec2_dot(v0_point, v0_v1), vec2_magnitude_squared(v0_v1));
+        const scalar_t t_v1v2 = scalar_div(vec2_dot(v1_point, v1_v2), vec2_magnitude_squared(v1_v2));
+        const scalar_t t_v2v0 = scalar_div(vec2_dot(v2_point, v2_v0), vec2_magnitude_squared(v2_v0));
+        scalar_t min_y = INT32_MAX;
+        scalar_t max_y = INT32_MIN;
+        if (!is_infinity(t_v0v1) && t_v0v1 >= 0 && t_v0v1 <= 4096) {
+            const scalar_t y = triangle->v0.y + scalar_mul(triangle->v1.y - triangle->v0.y, t_v0v1);
+            if (y < min_y) min_y = y;
+            if (y > max_y) max_y = y;
+        }
+        if (!is_infinity(t_v1v2) && t_v1v2 >= 0 && t_v1v2 <= 4096) {
+            const scalar_t y = triangle->v1.y + scalar_mul(triangle->v2.y - triangle->v1.y, t_v1v2);
+            if (y < min_y) min_y = y;
+            if (y > max_y) max_y = y;
+        }
+        if (!is_infinity(t_v2v0) && t_v2v0 >= 0 && t_v2v0 <= 4096) {
+            const scalar_t y = triangle->v2.y + scalar_mul(triangle->v0.y - triangle->v2.y, t_v2v0);
+            if (y < min_y) min_y = y;
+            if (y > max_y) max_y = y;
+        }
+
+        // If the ranges do not overlap, no collision happened
+        if (max_y < vertical_cylinder.bottom.y || min_y > (vertical_cylinder.bottom.y + vertical_cylinder.height)) {
+            hit->distance = INT32_MAX;
+            return 0;
+        }
+
+        // Find the lowest point that is in the range
+        closest_pos_3d.y = scalar_max(min_y, vertical_cylinder.bottom.y);
+        renderer_debug_draw_sphere((sphere_t) {
+            .center = { closest_pos_3d.x, min_y, closest_pos_3d.z },
+            .radius = 4096,
+        });
+        renderer_debug_draw_sphere((sphere_t) {
+            .center = { closest_pos_3d.x, max_y, closest_pos_3d.z },
+            .radius = 4096,
+        });
+        renderer_debug_draw_sphere((sphere_t) {
+            .center = { closest_pos_3d.x, vertical_cylinder.bottom.y, closest_pos_3d.z },
+            .radius = 2048,
+        });
+    }
+    else {
+        closest_pos_3d.y = triangle->v0.y;
+        closest_pos_3d.y = (closest_pos_3d.y + scalar_mul(v, (triangle->v1.y - triangle->v0.y)));
+        closest_pos_3d.y = (closest_pos_3d.y + scalar_mul(w, (triangle->v2.y - triangle->v0.y)));
+    }
+
 
     // Is this Y coordinate within the cylinder's range?
     const scalar_t min = vertical_cylinder.bottom.y;
     const scalar_t max = (min + vertical_cylinder.height);
     if (closest_pos_3d.y >= min && closest_pos_3d.y <= max) {
         // Return this point
+        renderer_debug_draw_line(triangle->v0, triangle->v1, pink, &id_transform);
+        renderer_debug_draw_line(triangle->v1, triangle->v2, green, &id_transform);
+        renderer_debug_draw_line(triangle->v2, triangle->v0, blue, &id_transform);
+        renderer_debug_draw_sphere((sphere_t) { .center = closest_pos_3d, .radius = 4096 });
         hit->position = closest_pos_3d;
-        hit->normal = triangle->normal;
+        if (triangle->normal.y == 0) {
+            vec2_t center_to_intersect = vec2_sub(position, closest_pos_on_triangle);
+            scalar_t magnitude_cti = vec2_magnitude(center_to_intersect);
+            center_to_intersect = vec2_divs(center_to_intersect, scalar_max(1, magnitude_cti));
+            hit->normal = (vec3_t){ center_to_intersect.x, 0, center_to_intersect.y };
+            if (vec3_dot(hit->normal, triangle->normal) < 0) {
+                hit->distance = INT32_MAX;
+                return 0;
+            }
+            hit->distance = magnitude_cti;
+        }
+        else {
+            hit->normal = triangle->normal;
+            hit->distance = scalar_sqrt(distance_to_closest_point);
+        }
         hit->triangle = triangle;
-        hit->distance = scalar_sqrt(distance_to_closest_point);
         return 1;
     }
 
@@ -759,7 +919,7 @@ void collision_clear_stats(void) {
     n_vertical_cylinder_triangle_intersects = 0;
 }
 
-int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere, rayhit_t* hit) {
+int sphere_triangle_intersect_old(collision_triangle_3d_t* triangle, sphere_t sphere, rayhit_t* hit) {
     n_sphere_triangle_intersects++;
     // Find the closest point from the sphere to the triangle
     const vec3_t triangle_to_center = vec3_sub(sphere.center, triangle->v0);
@@ -767,7 +927,7 @@ int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere
     vec3_t position = vec3_sub(sphere.center, vec3_muls(triangle->normal, distance));
 
     // If the closest point from the sphere on the plane is too far, don't bother with all the expensive math, we will never intersect
-    if (distance > sphere.radius && distance < -sphere.radius) {
+    if (distance > sphere.radius || distance < 0) {
         hit->distance = INT32_MAX;
         return 0;
     }
@@ -784,18 +944,114 @@ int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere
     closest_pos_on_triangle = vec3_shift_left(closest_pos_on_triangle, 3);
 
     // Is the hit position close enough to the plane hit? (is it within the sphere?)
-    const scalar_t distance_from_hit_squared = vec3_magnitude_squared(vec3_sub(sphere.center, closest_pos_on_triangle)); //WARN_IF("distance_from_hit_squared overflowed", is_infinity(distance_from_hit_squared));
+    vec3_t penetration_normal = vec3_sub(sphere.center, closest_pos_on_triangle);
+    scalar_t distance_from_hit_squared = vec3_magnitude_squared(penetration_normal); //WARN_IF("distance_from_hit_squared overflowed", is_infinity(distance_from_hit_squared));
 
     if (distance_from_hit_squared >= sphere.radius_squared)
     {
         hit->distance = INT32_MAX;
         return 0;
     }
+    distance_from_hit_squared = scalar_sqrt(distance_from_hit_squared);
+    penetration_normal = vec3_divs(penetration_normal, distance_from_hit_squared);
 
     hit->position = closest_pos_on_triangle;
-    hit->distance = scalar_sqrt(distance_from_hit_squared);
-    hit->normal = triangle->normal;
+    hit->distance = distance_from_hit_squared;
+    hit->normal = penetration_normal;
     hit->triangle = triangle;
     return 1;
+}
 
+vec3_t closest_point_on_line_segment(vec3_t a, vec3_t b, vec3_t point) {
+    vec3_t ab = vec3_sub(a, b);
+    scalar_t t = scalar_min(scalar_max(scalar_div(vec3_dot(vec3_sub(point, a), ab), vec3_dot(ab, ab)), 0), 1);
+    return vec3_add(a, vec3_muls(ab, t));
+}
+
+int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere, rayhit_t* hit) {
+    const vec3_t p0 = vec3_shift_right(triangle->v0, 4);
+    const vec3_t p1 = vec3_shift_right(triangle->v1, 4);
+    const vec3_t p2 = vec3_shift_right(triangle->v2, 4);
+    const vec3_t center = vec3_shift_right(sphere.center, 4);
+    const scalar_t radius = sphere.radius >> 4;
+    const scalar_t radius_squared = scalar_mul(radius, radius);
+
+    const vec3_t N = vec3_normalize(vec3_cross(vec3_sub(p1, p0), vec3_sub(p2, p0)));
+    //vec3_debug(N);
+    const scalar_t dist = vec3_dot(vec3_sub(center, p0), N);
+    if (dist > 0) return 0;
+    if (dist < -radius || dist > radius) return 0;
+    const vec3_t point0 = vec3_sub(center, vec3_muls(N, dist));
+    const vec3_t c0 = vec3_cross(vec3_sub(point0, p0), vec3_sub(p1, p0));
+    const vec3_t c1 = vec3_cross(vec3_sub(point0, p1), vec3_sub(p2, p1));
+    const vec3_t c2 = vec3_cross(vec3_sub(point0, p2), vec3_sub(p0, p2));
+    int inside = (vec3_dot(c0, N) <= 0) && (vec3_dot(c1, N) <= 0) && (vec3_dot(c2, N) <= 0);
+
+    // edge 1
+    const vec3_t point1 = closest_point_on_line_segment(p0, p1, center);
+    const vec3_t v1 = vec3_sub(center, point1);
+    const scalar_t distsq1 = vec3_dot(v1, v1);
+
+    // edge 2
+    const vec3_t point2 = closest_point_on_line_segment(p1, p2, sphere.center);
+    const vec3_t v2 = vec3_sub(center, point2);
+    const scalar_t distsq2 = vec3_dot(v2, v2);
+
+    // edge 3
+    const vec3_t point3 = closest_point_on_line_segment(p2, p0, sphere.center);
+    const vec3_t v3 = vec3_sub(center, point3);
+    const scalar_t distsq3 = vec3_dot(v3, v3);
+    int intersects = (distsq1 < radius_squared) || (distsq2 < radius_squared) || (distsq3 < radius_squared);
+
+    if (inside || intersects) {
+        vec3_t best_point = point0;
+        vec3_t intersection_vec;
+
+        if (inside) {
+            intersection_vec = vec3_sub(center, point0);
+        }
+        else {
+            vec3_t d = vec3_sub(center, point1);
+            scalar_t best_dist_squared = vec3_dot(d, d);
+            best_point = point1;
+            intersection_vec = d;
+
+            d = vec3_sub(center, point2);
+            scalar_t dist_squared = vec3_dot(d, d);
+            if (dist_squared < best_dist_squared) {
+                dist_squared = vec3_dot(d, d);
+                best_point = point2;
+                intersection_vec = d;
+            }
+
+            d = vec3_sub(center, point3);
+            dist_squared = vec3_dot(d, d);
+            if (dist_squared < best_dist_squared) {
+                dist_squared = vec3_dot(d, d);
+                best_point = point3;
+                intersection_vec = d;
+            }
+        }
+
+        const scalar_t len = scalar_sqrt(vec3_magnitude_squared(intersection_vec));
+        hit->normal = vec3_divs(intersection_vec, len);
+        hit->distance = (radius - len) << 4;
+        hit->distance_along_normal = (radius - len) << 4;
+        hit->position = vec3_shift_left(best_point, 4);
+        renderer_debug_draw_sphere((sphere_t) { .center = hit->position, .radius = sphere.radius });
+        return 1;
+    }
+
+    return 0;
+}
+
+int capsule_triangle_intersect(collision_triangle_3d_t* triangle, capsule_t capsule, rayhit_t* hit) {
+    // A capsule is just a thick line, compute the normalized vector from v0 to v1
+    const vec3_t line_dir = vec3_normalize(vec3_sub(capsule.tip, capsule.base));
+
+    // Calculate distance 
+    const vec3_t v0_to_base = vec3_sub(capsule.base, triangle->v0);
+    scalar_t distance = vec3_dot(triangle->normal, v0_to_base);
+
+    return 0;
 }

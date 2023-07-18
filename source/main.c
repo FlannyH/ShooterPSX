@@ -31,9 +31,9 @@ int main(void) {
     // Init player
     player_t player = { 0 };
 
-    player.position.x = 11705653 / 2;
-   	player.position.y = 11413985 / 2;
-    player.position.z = 2112866  / 2;
+    player.position.x = 0;//11705653 / 2;
+   	player.position.y = 400000;//11413985 / 2;
+    player.position.z = 0;//2112866  / 2;
 	player.rotation.y = 4096 * 16;
     //player.position.x = 0;
     //player.position.y = -229376;
@@ -43,14 +43,14 @@ int main(void) {
 	input_set_stick_deadzone(36);
 
 	// Load model
-    const model_t* m_level = model_load("\\ASSETS\\MODELS\\LEVEL.MSH;1");
-    const model_t* m_level_col_dbg = model_load_collision_debug("\\ASSETS\\MODELS\\LEVEL.COL;1");
-    const collision_mesh_t* m_level_col = model_load_collision("\\ASSETS\\MODELS\\LEVEL.COL;1");
+    const model_t* m_level = model_load("\\ASSETS\\MODELS\\TEST.MSH;1");
+    const model_t* m_level_col_dbg = model_load_collision_debug("\\ASSETS\\MODELS\\TEST.COL;1");
+    const collision_mesh_t* m_level_col = model_load_collision("\\ASSETS\\MODELS\\TEST.COL;1");
 
 	texture_cpu_t *tex_level;
 
 	// todo: add unload functionality for when the textures are on the gpu. we don't need these in ram.
-	const uint32_t n_textures = texture_collection_load("\\ASSETS\\MODELS\\LEVEL.TXC;1", &tex_level);
+	const uint32_t n_textures = texture_collection_load("\\ASSETS\\MODELS\\TEST.TXC;1", &tex_level);
 
 	for (uint8_t i = 0; i < n_textures; ++i) {
 	    renderer_upload_texture(&tex_level[i], i);
@@ -77,13 +77,14 @@ int main(void) {
         int delta_time = renderer_convert_dt_raw_to_ms(delta_time_raw);
 #else
         int delta_time = renderer_get_delta_time_ms();
+        delta_time = scalar_min(delta_time, 33);
 #endif
         frame_counter += delta_time;
 		if (input_pressed(PAD_SELECT, 0)) show_debug = !show_debug;
 		if (show_debug) {
 			renderer_begin_frame(&player.transform);
 			PROFILE("input", input_update(), 1);
-			PROFILE("render", renderer_draw_model_shaded(m_level, &t_level), 1);
+			PROFILE("render", renderer_draw_model_shaded(m_level_col_dbg, &t_level), 1);
 			PROFILE("player", player_update(&player, &bvh_level_model, delta_time), 1);
 			PROFILE("music", music_tick(16), 1);
 			FntPrint(-1, "dt: %i\n", delta_time);

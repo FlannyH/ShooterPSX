@@ -51,6 +51,13 @@ static vec2_t vec2_div(const vec2_t a, const vec2_t b) {
     return result;
 }
 
+static vec2_t vec2_divs(const vec2_t a, const scalar_t b) {
+    vec2_t result;
+    result.x = scalar_div(a.x, b);
+    result.y = scalar_div(a.y, b);
+    return result;
+}
+
 static scalar_t vec2_dot(const vec2_t a, const vec2_t b) {
     scalar_t result;
     result = 0;

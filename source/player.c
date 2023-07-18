@@ -7,7 +7,7 @@
 #include "input.h"
 
 const int32_t eye_height = 200 * COL_SCALE;
-const int32_t player_radius = 100 * COL_SCALE;
+const int32_t player_radius = 150 * COL_SCALE;
 const int32_t step_height = 100 * COL_SCALE;
 const int32_t terminal_velocity_down = -12400 / 8;
 const int32_t terminal_velocity_up = 40000 / 8;
@@ -19,6 +19,7 @@ const int32_t walking_drag = 32 / 8;
 const int32_t initial_jump_velocity = 8000 / 8;
 const int32_t jump_ground_threshold = 16000 / 8;
 static scalar_t player_radius_squared = 0;
+int32_t is_grounded = 0;
 
 transform_t t_level = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };
 
@@ -54,6 +55,8 @@ void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
 }
 
 void apply_gravity(player_t* self, const int dt_ms) {
+    if (is_grounded) return;
+
     self->velocity.y = (self->velocity.y + gravity * dt_ms);
     if (self->velocity.y > terminal_velocity_up) {
         self->velocity.y = terminal_velocity_up;
@@ -141,78 +144,65 @@ void handle_drag(player_t* self, const int dt_ms) {
 
 void handle_jump(player_t* self) {
     if (input_pressed(PAD_CROSS, 0)) {
-        if (self->distance_from_ground - eye_height < jump_ground_threshold) {
+        if (is_grounded) {
             self->velocity.y = initial_jump_velocity;
         }
     }
 }
 
 void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
-    for (int i = 0; i < 1; ++i) {
-        // Where are we headed this frame?
-        vec3_t velocity;
-        velocity.x = ((i + 1) * self->velocity.x / 1) * dt_ms;
-        velocity.y = 0;
-        velocity.z = ((i + 1) * self->velocity.z / 1) * dt_ms;
+    // Move the player, ask questions later
+    self->position.x += self->velocity.x * dt_ms;
+    self->position.z += self->velocity.z * dt_ms;
 
-        if ((velocity.x | velocity.y | velocity.z) == 0) {
-            break;
-        }
+    // Don't check collision if we aren't moving
+    if ((self->velocity.x | self->velocity.y | self->velocity.z) == 0) {
+        //return;
+    }
 
-        // Calculate the target position based on velocity
-        vec3_t target_position = vec3_add(self->position, velocity);
+    // Collide
+    const vertical_cylinder_t cyl = {
+        .bottom = (vec3_t){self->position.x, self->position.y - eye_height - 4096, self->position.z},
+        .height = eye_height + 4096,
+        .radius = player_radius,
+        .radius_squared = player_radius_squared,
+        .is_wall_check = 1,
+    };
+    rayhit_t hit;
+    bvh_intersect_vertical_cylinder(level_bvh, cyl, &hit);
+    renderer_debug_draw_sphere((sphere_t) {
+        .center = cyl.bottom,
+        .radius = player_radius,
+    });
+    renderer_debug_draw_sphere((sphere_t) {
+        .center = { cyl.bottom.x, cyl.bottom.y + eye_height, cyl.bottom.z },
+        .radius = player_radius,
+    });
+    // note to self: cylinder collision has false positives fucking everywhere. test with single triangle.
 
-#ifndef DEBUG_CAMERA
-        // Intersect with the geometry twice times
-        rayhit_t hit;
-        ray_t ray;
-        ray.position = vec3_sub(self->position, vec3_from_int32s(0, eye_height - step_height, 0));
-        ray.direction = vec3_normalize(velocity);
-        ray.inv_direction = vec3_div(vec3_from_scalar(4096), ray.direction);
-        ray.length = walking_max_speed * 2;
-
-        bvh_intersect_ray(level_bvh, ray, &hit);
-
-        // If the ray hit something, move towards the hit position
-        if (scalar_mul(hit.distance, hit.distance) < vec3_magnitude_squared(velocity) + player_radius_squared) {
-            //target_position = vec3_sub(hit.position, ray.direction);
-            target_position.y = self->position.y;
-            //self->velocity.x = 0;
-            //self->velocity.z = 0;
-        }
-
-        for (int j = 0; j < 4; ++j) {
-            // Create sphere
-            const sphere_t sphere = {
-                .center = target_position,
-                .radius = player_radius,
-                .radius_squared = player_radius_squared
+    // Did we hit anything?
+    if (!is_infinity(hit.distance)) {
+        scalar_debug(hit.distance);
+        int is_wall = (hit.normal.y <= 0);
+        // If this is a wall
+        if (is_wall) {
+            // Eject player out of geometry
+            const vec3_t amount_to_eject = (vec3_t){
+                scalar_mul(hit.normal.x, player_radius - hit.distance),
+                scalar_mul(hit.normal.y, hit.distance),
+                scalar_mul(hit.normal.z, player_radius - hit.distance),
             };
+            self->position = vec3_add(self->position, amount_to_eject);
 
-            bvh_intersect_sphere(level_bvh, sphere, &hit);
-
-            // If the sphere intersection hit something, move towards the hit position
-            if (hit.distance != INT32_MAX) {
-                if (vec3_dot(velocity, vec3_sub(hit.position, target_position)) > 0) {
-                    const scalar_t separation_distance = (sphere.radius - scalar_abs(hit.distance_along_normal));
-                    const vec3_t separation_vector = vec3_mul(hit.normal, vec3_from_scalar(separation_distance));
-                    target_position = vec3_add(target_position, separation_vector);
-                    target_position.y = self->position.y;
-                }
-            }
-            else {
-                break;
-            }
-        }
-
-#endif
-        // Set the position
-        if (!input_held(PAD_R1, 0)) {
-            self->position.x = target_position.x;
-            self->position.z = target_position.z;
+            // Absorb penetration force (this sounds hella sus)
+            scalar_t velocity_length = scalar_sqrt(vec3_magnitude_squared(self->velocity));
+            vec3_t velocity_normalized = vec3_divs(self->velocity, velocity_length);
+            vec3_t undesired_motion = vec3_muls(hit.normal, vec3_dot(velocity_normalized, hit.normal));
+            vec3_t desired_motion = vec3_sub(velocity_normalized, undesired_motion);
+            self->velocity = vec3_muls(desired_motion, velocity_length);
         }
     }
-    self->position.y += self->velocity.y * dt_ms; // we do this one separately to save the hassle
+    self->position.y += self->velocity.y * dt_ms;
 }
 
 void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms) {
@@ -220,6 +210,7 @@ void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms) {
         const scalar_t player_radius_scalar = player_radius;
         player_radius_squared = scalar_mul(player_radius_scalar, player_radius_scalar);
     }
+    is_grounded = 0;
 #ifndef DEBUG_CAMERA
     apply_gravity(self, dt_ms);
     check_ground_collision(self, level_bvh, dt_ms);
@@ -228,7 +219,7 @@ void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     handle_drag(self, dt_ms);
     handle_jump(self);
     handle_movement(self, level_bvh, dt_ms);
-
+    //vec3_debug(self->position);
     self->transform.position.vx = -self->position.x * (4096 / COL_SCALE);
     self->transform.position.vy = -self->position.y * (4096 / COL_SCALE);
     self->transform.position.vz = -self->position.z * (4096 / COL_SCALE);

@@ -33,7 +33,15 @@ typedef struct {
     scalar_t radius;
     scalar_t radius_squared;
     scalar_t height;
+    int is_wall_check;
 } vertical_cylinder_t;
+
+typedef struct {
+    vec3_t base;
+    vec3_t tip;
+    scalar_t radius;
+    scalar_t radius_squared;
+} capsule_t;
 
 typedef enum {
     axis_x,

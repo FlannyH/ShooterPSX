@@ -57,6 +57,8 @@ void input_update() {
     GLFWgamepadstate state2;
     glfwGetGamepadState(player1_index, &state1);
     glfwGetGamepadState(player2_index, &state2);
+    
+    // Gamepad
     if (glfwGetGamepadState(player1_index, &state1)) {
         left_stick_x[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_LEFT_X] * 127.f);
         left_stick_y[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] * 127.f);
