@@ -252,7 +252,8 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
 #if 1
 
 #endif
-    if (avg_z < TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id) {
+    const scalar_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id;
+    if (avg_z < sub2_threshold) {
         // Generate all 15 vertices
         #define vtx0 verts[0]
         #define vtx1 verts[1]
@@ -300,13 +301,30 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
         ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[13], trans_vec_xy[8], trans_vec_xy[14], trans_vec_xy[4], vtx13, vtx8, vtx14, vtx4, avg_z, 0, verts[0].tex_id);
         ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[14], trans_vec_xy[4], trans_vec_xy[10], trans_vec_xy[9], vtx14, vtx4, vtx10, vtx9, avg_z, 0, verts[0].tex_id);
 
+        // Filler triangles
+        scalar_t max_z = trans_vec_z[0];
+        if (trans_vec_z[1] > max_z) max_z = trans_vec_z[1];
+        if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2]; 
+        if (max_z >= sub2_threshold) {
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[3], vtx0, vtx1, vtx3, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[3], trans_vec_xy[6], vtx0, vtx3, vtx6, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[1], trans_vec_xy[7], vtx3, vtx1, vtx7, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[4], vtx1, vtx2, vtx4, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[1], trans_vec_xy[4], trans_vec_xy[8], vtx1, vtx4, vtx8, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[4], trans_vec_xy[2], trans_vec_xy[9], vtx4, vtx2, vtx9, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[2], trans_vec_xy[5], vtx0, vtx2, vtx5, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[5], trans_vec_xy[11], vtx0, vtx5, vtx11, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[5], trans_vec_xy[2], trans_vec_xy[10], vtx5, vtx2, vtx10, (avg_z + 8), 0, verts[0].tex_id);
+        }
+
         #undef vtx0
         #undef vtx1
         #undef vtx2
         return;
     }
 #if 1
-    if (avg_z < TRI_THRESHOLD_MUL_SUB1 * (int32_t)verts[1].tex_id) {
+    const scalar_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)verts[1].tex_id;
+    if (avg_z < sub1_threshold) {
         // Let's calculate the center of each edge
         const vertex_3d_t ab = get_halfway_point(verts[0], verts[1]);
         const vertex_3d_t bc = get_halfway_point(verts[1], verts[2]);
@@ -323,6 +341,16 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
         ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[1], trans_vec_xy[4], ab, verts[1], bc, avg_z, 0, verts[0].tex_id);
         ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[4], trans_vec_xy[5], ab, bc, ca, avg_z, 0, verts[0].tex_id);
         ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[5], trans_vec_xy[4], trans_vec_xy[2], ca, bc, verts[2], avg_z, 0, verts[0].tex_id);
+
+        // Filler triangles
+        scalar_t max_z = trans_vec_z[0];
+        if (trans_vec_z[1] > max_z) max_z = trans_vec_z[1];
+        if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2]; 
+        if (max_z >= sub1_threshold) {
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[3], verts[0], verts[1], ab, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[4], verts[1], verts[2], bc, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[2], trans_vec_xy[0], trans_vec_xy[5], verts[2], verts[0], ca, (avg_z + 8), 0, verts[0].tex_id);
+        }
         return;
     }
 #endif
@@ -429,6 +457,7 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
     dont_return:
 #endif
 #if 1
+    const scalar_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id;
     if (avg_z < TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id) {
         // Generate all 25 vertices
         #define vtx0 verts[0]
@@ -498,6 +527,26 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
         ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[22], trans_vec_xy[23], trans_vec_xy[5], trans_vec_xy[14], vtx22, vtx23, vtx5, vtx14, avg_z, 0, verts[0].tex_id);
         ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[23], trans_vec_xy[24], trans_vec_xy[14], trans_vec_xy[3], vtx23, vtx24, vtx14, vtx3, avg_z, 0, verts[0].tex_id);
 
+        // Filler triangles
+        scalar_t max_z = trans_vec_z[0];
+        if (trans_vec_z[1] > max_z) max_z = trans_vec_z[1];
+        if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2]; 
+        if (trans_vec_z[3] > max_z) max_z = trans_vec_z[3];
+        if (max_z >= sub2_threshold) {
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[4], vtx0, vtx1, vtx4, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[4], trans_vec_xy[9], vtx0, vtx4, vtx9, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[4], trans_vec_xy[1], trans_vec_xy[10], vtx4, vtx1, vtx10, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[1], trans_vec_xy[3], trans_vec_xy[8], vtx1, vtx3, vtx8, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[1], trans_vec_xy[8], trans_vec_xy[19], vtx1, vtx8, vtx19, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[8], trans_vec_xy[3], trans_vec_xy[24], vtx8, vtx3, vtx24, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[2], trans_vec_xy[5], vtx3, vtx2, vtx5, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[5], trans_vec_xy[14], vtx3, vtx5, vtx14, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[5], trans_vec_xy[2], trans_vec_xy[13], vtx5, vtx2, vtx13, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[2], trans_vec_xy[0], trans_vec_xy[7], vtx2, vtx0, vtx7, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[2], trans_vec_xy[7], trans_vec_xy[20], vtx2, vtx7, vtx20, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[7], trans_vec_xy[0], trans_vec_xy[15], vtx7, vtx0, vtx15, (avg_z + 8), 0, verts[0].tex_id);
+        }
+
         #undef vtx0
         #undef vtx1
         #undef vtx2
@@ -506,7 +555,8 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
     }
 #endif 
 #if 1
-    if (avg_z < TRI_THRESHOLD_MUL_SUB1 * (int32_t)verts[1].tex_id) {
+    const scalar_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)verts[1].tex_id;
+    if (avg_z < sub1_threshold) {
         // Let's calculate the new points we need
         const vertex_3d_t ab = get_halfway_point(verts[0], verts[1]);
         const vertex_3d_t bc = get_halfway_point(verts[1], verts[3]);
@@ -547,6 +597,20 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
         ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[4], trans_vec_xy[1], trans_vec_xy[8], trans_vec_xy[5], ab, verts[1], center, bc, avg_z_4185, 0, verts[0].tex_id);
         ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[7], trans_vec_xy[8], trans_vec_xy[2], trans_vec_xy[6], da, center, verts[2], cd, avg_z_7826, 0, verts[0].tex_id);
         ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[8], trans_vec_xy[5], trans_vec_xy[6], trans_vec_xy[3], center, bc, cd, verts[3], avg_z_8563, 0, verts[0].tex_id);
+
+        // Filler triangles
+        scalar_t max_z = trans_vec_z[0];
+        if (trans_vec_z[1] > max_z) max_z = trans_vec_z[1];
+        if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2];
+        if (trans_vec_z[3] > max_z) max_z = trans_vec_z[3];
+
+        if (max_z >= sub2_threshold) {
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[4], verts[0], verts[1], ab, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[1], trans_vec_xy[3], trans_vec_xy[5], verts[1], verts[3], bc, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[2], trans_vec_xy[6], verts[3], verts[2], cd, (avg_z + 8), 0, verts[0].tex_id);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[2], trans_vec_xy[0], trans_vec_xy[7], verts[2], verts[0], da, (avg_z + 8), 0, verts[0].tex_id);
+        }
+
         return;
     }
 #endif
