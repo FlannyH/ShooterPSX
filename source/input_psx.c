@@ -47,7 +47,6 @@ int8_t apply_deadzone(uint8_t input) {
     // Re-apply sign
     stick *= sign;
 
-
     return (int8_t)stick;
 }
 
