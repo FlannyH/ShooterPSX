@@ -25,6 +25,7 @@ void bvh_intersect_vertical_cylinder(bvh_t* bvh, vertical_cylinder_t ray, rayhit
 void bvh_intersect_capsule(bvh_t* bvh, capsule_t ray, rayhit_t* hit);
 
 // Primitive intersection
+int point_aabb_intersect(const aabb_t* aabb, vec3_t point);
 int ray_aabb_intersect(const aabb_t* aabb, ray_t ray);
 int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_t* hit);
 int sphere_aabb_intersect(const aabb_t* aabb, sphere_t sphere);

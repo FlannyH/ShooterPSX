@@ -424,6 +424,15 @@ void bvh_debug_draw(const bvh_t* bvh, const int min_depth, const int max_depth, 
     debug_draw(bvh, bvh->root, min_depth, max_depth, 0, color);
 }
 
+int point_aabb_intersect(const aabb_t* aabb, vec3_t point) {
+    return (point.x >= aabb->min.x)
+    &&     (point.y >= aabb->min.y)
+    &&     (point.z >= aabb->min.z)
+    &&     (point.x <= aabb->max.x)
+    &&     (point.y <= aabb->max.y)
+    &&     (point.z <= aabb->max.z);
+}
+
 int ray_aabb_intersect(const aabb_t* aabb, ray_t ray) {
     n_ray_aabb_intersects++;
     const scalar_t tx1 = scalar_mul(aabb->min.x - ray.position.x, ray.inv_direction.x);

@@ -49,6 +49,7 @@ int renderer_get_delta_time_ms(void);
 int renderer_convert_dt_raw_to_ms(int dt_raw);
 int renderer_should_close(void);
 vec3_t renderer_get_forward_vector(void);
+int renderer_get_level_section_from_position(const model_t *model, vec3_t position, int* sections, int max_n_sections);
 extern int n_rendered_triangles;
 extern int n_rendered_quads;
 extern int n_rendered_untex_triangles;
