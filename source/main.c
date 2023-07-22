@@ -79,14 +79,19 @@ int main(void) {
         int delta_time = renderer_get_delta_time_ms();
         delta_time = scalar_min(delta_time, 40);
 #endif
+		int sections[16];
+		int n_sections = renderer_get_level_section_from_position(m_level, player.position, &sections, 16);
         frame_counter += delta_time;
 		if (input_pressed(PAD_SELECT, 0)) show_debug = !show_debug;
 		if (show_debug) {
 			renderer_begin_frame(&player.transform);
 			PROFILE("input", input_update(), 1);
-			PROFILE("render", renderer_draw_model_shaded(m_level_col_dbg, &t_level), 1);
+			PROFILE("render", renderer_draw_model_shaded(m_level, &t_level), 1);
 			PROFILE("player", player_update(&player, &bvh_level_model, delta_time), 1);
 			PROFILE("music", music_tick(16), 1);
+			FntPrint(-1, "sections: ");
+			for (int i = 0; i < n_sections; ++i) FntPrint(-1, "%i, ", sections[i]);
+			FntPrint(-1, "\n");
 			FntPrint(-1, "dt: %i\n", delta_time);
 			FntPrint(-1, "meshes drawn: %i / %i\n", n_meshes_drawn, n_meshes_total);
 			FntFlush(-1);
