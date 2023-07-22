@@ -621,3 +621,22 @@ vec3_t renderer_get_forward_vector() {
         -view_matrix_normal[2][2]
     );
 }
+
+int renderer_get_level_section_from_position(const model_t* model, vec3_t position, int* sections, int max_n_sections) {
+    position.x = -position.x / COL_SCALE;
+    position.y = -position.y / COL_SCALE;
+    position.z = -position.z / COL_SCALE;
+    int n_sections = 0;
+    for (size_t i = 0; i < model->n_meshes; ++i) {
+        if (n_sections == max_n_sections) break;
+        if (point_aabb_intersect(&model->meshes[i].bounds, position)) {
+            renderer_debug_draw_aabb(&model->meshes[i].bounds, green, &id_transform);
+            sections[n_sections] = i;
+            n_sections += 1;
+        }
+        else {
+            renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
+        }
+    }
+    return n_sections; // -1 means no section
+}
