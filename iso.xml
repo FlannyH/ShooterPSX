@@ -69,9 +69,11 @@
 					<file name="LEVEL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level.msh" />
 					<file name="LEVEL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level.txc" />
 					<file name="LEVEL.COL"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level.col" />
+					<file name="LEVEL.VIS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level.vis" />
 					<file name="TEST.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/test.msh" />
 					<file name="TEST.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/test.txc" />
 					<file name="TEST.COL"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/test.col" />
+					<file name="TEST.VIS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/test.vis" />
 				</dir>
 				<dir name="MUSIC">
 					<dir name="SEQUENCE">

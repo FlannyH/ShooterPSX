@@ -46,6 +46,7 @@ int main(void) {
     const model_t* m_level = model_load("\\ASSETS\\MODELS\\LEVEL.MSH;1");
     const model_t* m_level_col_dbg = model_load_collision_debug("\\ASSETS\\MODELS\\LEVEL.COL;1");
     const collision_mesh_t* m_level_col = model_load_collision("\\ASSETS\\MODELS\\LEVEL.COL;1");
+	const vislist_t* v_level = model_load_vislist("\\ASSETS\\MODELS\\LEVEL.VIS");
 
 	texture_cpu_t *tex_level;
 
@@ -79,14 +80,13 @@ int main(void) {
         int delta_time = renderer_get_delta_time_ms();
         delta_time = scalar_min(delta_time, 40);
 #endif
-		int sections[16];
-		int n_sections = renderer_get_level_section_from_position(m_level, player.position, &sections, 16);
+		int n_sections = renderer_get_level_section_from_position(m_level, player.position);
         frame_counter += delta_time;
 		if (input_pressed(PAD_SELECT, 0)) show_debug = !show_debug;
 		if (show_debug) {
 			renderer_begin_frame(&player.transform);
 			PROFILE("input", input_update(), 1);
-			PROFILE("render", renderer_draw_model_shaded(m_level, &t_level), 1);
+			PROFILE("render", renderer_draw_model_shaded(m_level, &t_level, v_level), 1);
 			PROFILE("player", player_update(&player, &bvh_level_model, delta_time), 1);
 			PROFILE("music", music_tick(16), 1);
 			FntPrint(-1, "sections: ");
@@ -100,7 +100,7 @@ int main(void) {
 		else {
 			renderer_begin_frame(&player.transform);
 			input_update();
-			renderer_draw_model_shaded(m_level, &t_level);
+			renderer_draw_model_shaded(m_level, &t_level, v_level);
 			player_update(&player, &bvh_level_model, delta_time);
 			music_tick(16);
 			renderer_end_frame();

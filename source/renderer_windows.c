@@ -24,6 +24,9 @@
 #include "vec3.h"
 #define PI 3.14159265358979f
 
+int n_sections;
+int sections[N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE];
+
 #define RESOLUTION_SCALING 4
 GLFWwindow *window;
 mat4 perspective_matrix;
@@ -383,7 +386,7 @@ void renderer_end_frame() {
 	glfwPollEvents();
 }
 
-void renderer_draw_model_shaded(const model_t *model, transform_t *model_transform) {
+void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, vislist_t* vislist) {
     glViewport(0, 0, w, h);
     for (size_t i = 0; i < model->n_meshes; ++i) {
         renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
@@ -622,13 +625,13 @@ vec3_t renderer_get_forward_vector() {
     );
 }
 
-int renderer_get_level_section_from_position(const model_t* model, vec3_t position, int* sections, int max_n_sections) {
+int renderer_get_level_section_from_position(const model_t* model, vec3_t position) {
     position.x = -position.x / COL_SCALE;
     position.y = -position.y / COL_SCALE;
     position.z = -position.z / COL_SCALE;
-    int n_sections = 0;
+    n_sections = 0;
     for (size_t i = 0; i < model->n_meshes; ++i) {
-        if (n_sections == max_n_sections) break;
+        if (n_sections == N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE) break;
         if (point_aabb_intersect(&model->meshes[i].bounds, position)) {
             renderer_debug_draw_aabb(&model->meshes[i].bounds, green, &id_transform);
             sections[n_sections] = i;

@@ -17,6 +17,7 @@
 #define TRI_THRESHOLD_FADE_END 1000
 #define MESH_RENDER_DISTANCE 12000
 #define N_CLUT_FADES 16
+#define N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE 4
 
 // Define environment pairs and buffer counter
 DISPENV disp[2];
@@ -39,6 +40,9 @@ int n_meshes_total = 0;
 pixel32_t textures_avg_colors[256];
 RECT textures[256];
 RECT palettes[256];
+
+int n_sections;
+int sections[N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE];
 
 vertex_3d_t get_halfway_point(const vertex_3d_t v0, const vertex_3d_t v1) {
     return (vertex_3d_t) {
@@ -857,10 +861,31 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
 	PopMatrix();
 }
 
-void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform) {
-    for (size_t i = 0; i < model->n_meshes; ++i) {
-        renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-        //renderer_debug_draw_aabb(&model->meshes[i].bounds, white, model_transform);
+void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, vislist_t* vislist) {
+    if (vislist == NULL || n_sections == 0) {
+        for (size_t i = 0; i < model->n_meshes; ++i) {
+            renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+        }
+    }
+    else  {
+        // Determine which meshes to render
+        vislist_t combined = {0, 0, 0, 0};
+
+        // Get all the vislist bitfields and combine them together
+        for (size_t i = 0; i < n_sections; ++i) {
+            combined.sections_0_31 |= vislist[sections[i]].sections_0_31;
+            combined.sections_32_63 |= vislist[sections[i]].sections_32_63;
+            combined.sections_64_95 |= vislist[sections[i]].sections_64_95;
+            combined.sections_96_127 |= vislist[sections[i]].sections_96_127;
+        }
+
+        // Render only the meshes that are visible
+        for (size_t i = 0; i < model->n_meshes; ++i) {
+            if ((i < 32) && (combined.sections_0_31 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+            else if ((i < 64) && (combined.sections_32_63 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+            else if ((i < 96) && (combined.sections_64_95 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+            else if ((i < 128) && (combined.sections_96_127 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+        }
     }
 }
 
@@ -1049,20 +1074,16 @@ vec3_t renderer_get_forward_vector() {
     return result;
 }
 
-int renderer_get_level_section_from_position(const model_t *model, vec3_t position, int* sections, int max_n_sections) {
+int renderer_get_level_section_from_position(const model_t* model, vec3_t position) {
     position.x = -position.x / COL_SCALE;
     position.y = -position.y / COL_SCALE;
     position.z = -position.z / COL_SCALE;
-    int n_sections = 0;
+    n_sections = 0;
     for (size_t i = 0; i < model->n_meshes; ++i) {
-        if (n_sections == max_n_sections) break;
+        if (n_sections == N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE) break;
         if (point_aabb_intersect(&model->meshes[i].bounds, position)) {
-            renderer_debug_draw_aabb(&model->meshes[i].bounds, green, &id_transform);
             sections[n_sections] = i;
             n_sections += 1;
-        }
-        else {
-            renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
         }
     }
     return n_sections; // -1 means no section

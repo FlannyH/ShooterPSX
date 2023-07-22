@@ -157,6 +157,24 @@ aabb_t triangle_get_bounds(const triangle_3d_t* self) {
     return result;
 }
 
+vislist_t* model_load_vislist(const char* path) {
+    // Read the file
+    uint32_t* file_data;
+    size_t size;
+    file_read(path, &file_data, &size);
+
+    // Get header data
+    vislist_header_t* model_header = (vislist_header_t*)file_data;
+
+    // Ensure FMSH header is valid
+    if (model_header->file_magic != MAGIC_FVIS) { // "FVIS"
+        printf("[ERROR] Error loading model '%s', file header is invalid!\n", path);
+        return 0;
+    }
+
+    return (vislist_t*)(model_header + 1);
+}
+
 aabb_t collision_triangle_get_bounds(const collision_triangle_3d_t* self) {
     aabb_t result;
     result.min = vec3_min(

@@ -166,4 +166,17 @@ typedef struct {
     col_mesh_file_vert_t* verts;
 } collision_mesh_t;
 
+typedef struct {
+    uint32_t sections_0_31;
+    uint32_t sections_32_63;
+    uint32_t sections_64_95;
+    uint32_t sections_96_127;
+} vislist_t;
+
+#define MAGIC_FVIS 0x53495646
+typedef struct {
+    uint32_t file_magic; // File magic: "FVIS"
+    uint32_t n_verts; // The number of sections in this vislist header
+} vislist_header_t;
+
 #endif // STRUCTS_H
