@@ -16,7 +16,8 @@ All offsets are relative to the start of this binary section.
 | Type | Name         | Description                         |
 | ---- | ------------ | ----------------------------------- |
 | u16  | vertex_start | First vertex index for this model   |
-| u16  | n_vertices   | Number of vertices for this model   |
+| u16  | n_triangles  | Number of triangles for this model  |
+| u16  | n_quads      | Number of quads for this model      |
 | i16  | x_min        | Axis aligned bounding box minimum X |
 | i16  | x_max        | Axis aligned bounding box maximum X |
 | i16  | y_min        | Axis aligned bounding box minimum Y |
