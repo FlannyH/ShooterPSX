@@ -80,7 +80,7 @@ int main(void) {
         int delta_time = renderer_get_delta_time_ms();
         delta_time = scalar_min(delta_time, 40);
 #endif
-		int n_sections = player_get_level_section(player, m_level);
+		int n_sections = player_get_level_section(&player, m_level);
         frame_counter += delta_time;
 		if (input_pressed(PAD_SELECT, 0)) show_debug = !show_debug;
 		if (show_debug) {

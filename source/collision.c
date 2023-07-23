@@ -576,10 +576,6 @@ int sphere_aabb_intersect(const aabb_t* aabb, const sphere_t sphere) {
 // Approximation!
 int vertical_cylinder_aabb_intersect(const aabb_t* aabb, const vertical_cylinder_t vertical_cylinder) {
     n_vertical_cylinder_aabb_intersects++;
-    // Exit early if the AABB and vertical cylinder do not overlap on the Y-axis
-    if (aabb->max.y < vertical_cylinder.bottom.y - vertical_cylinder.height || aabb->min.y > vertical_cylinder.bottom.y) {
-        //return 0;
-    }
 
     // The rest can be done in 2D
     // Create a new AABB that's extended by the cylinder's radius. This is an approximation, but we use AABB's for BVH traversal only so it's fine

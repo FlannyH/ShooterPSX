@@ -12,4 +12,5 @@ typedef struct {
 } player_t;
 
 void player_update(player_t* self, bvh_t* level_bvh, int dt_ms);
+int player_get_level_section(player_t* self, const model_t* model);
 #endif // PLAYER_H

@@ -221,20 +221,19 @@ void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     self->transform.rotation.vz = -self->rotation.z;
 }
 
-
 int player_get_level_section(player_t* self, const model_t* model) {
-    self->position.x = -self->position.x / COL_SCALE;
-    self->position.y = -self->position.y / COL_SCALE;
-    self->position.z = -self->position.z / COL_SCALE;
+    vec3_t position = {
+        -self->position.x / COL_SCALE,
+        -self->position.y / COL_SCALE,
+        -self->position.z / COL_SCALE,
+    };
     n_sections = 0;
     for (size_t i = 0; i < model->n_meshes; ++i) {
         if (n_sections == N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE) break;
-        if (vertical_cylinder_aabb_intersect(&model->meshes[i].bounds, (vertical_cylinder_t){
-            .bottom = self->position,
-            .height = eye_height,
-            .radius = player_radius,
-            .radius_squared = player_radius_squared,
-        })) {
+        aabb_t bounds = model->meshes[i].bounds;
+        //bounds.min = vec3_sub(bounds.min, (vec3_t){player_radius, eye_height, player_radius})     ;       
+        //bounds.max = vec3_add(bounds.min, (vec3_t){player_radius, eye_height, player_radius})     ;       
+        if (point_aabb_intersect(&bounds, position)) {
             sections[n_sections] = i;
             n_sections += 1;
         }
