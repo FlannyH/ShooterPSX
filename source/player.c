@@ -6,6 +6,8 @@
 
 #include "input.h"
 
+transform_t t_level = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };
+
 const int32_t eye_height = 200 * COL_SCALE;
 const int32_t player_radius = 150 * COL_SCALE;
 const int32_t step_height = 100 * COL_SCALE;
@@ -20,8 +22,8 @@ const int32_t initial_jump_velocity = 8000 / 8;
 const int32_t jump_ground_threshold = 16000 / 8;
 static scalar_t player_radius_squared = 0;
 int32_t is_grounded = 0;
-
-transform_t t_level = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };
+int n_sections;
+int sections[N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE];
 
 void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     WARN_IF("player radius squared was not computed, and is equal to 0", player_radius_squared == 0);
@@ -217,4 +219,25 @@ void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     self->transform.rotation.vx = -self->rotation.x;
     self->transform.rotation.vy = -self->rotation.y;
     self->transform.rotation.vz = -self->rotation.z;
+}
+
+
+int player_get_level_section(player_t* self, const model_t* model) {
+    self->position.x = -self->position.x / COL_SCALE;
+    self->position.y = -self->position.y / COL_SCALE;
+    self->position.z = -self->position.z / COL_SCALE;
+    n_sections = 0;
+    for (size_t i = 0; i < model->n_meshes; ++i) {
+        if (n_sections == N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE) break;
+        if (vertical_cylinder_aabb_intersect(&model->meshes[i].bounds, (vertical_cylinder_t){
+            .bottom = self->position,
+            .height = eye_height,
+            .radius = player_radius,
+            .radius_squared = player_radius_squared,
+        })) {
+            sections[n_sections] = i;
+            n_sections += 1;
+        }
+    }
+    return n_sections; // -1 means no section
 }

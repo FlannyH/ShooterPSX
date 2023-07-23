@@ -7,6 +7,7 @@
 #include <inline_c.h>
 #include <string.h>
 #include <psxpad.h>
+#include "player.h"
 #include "input.h"
 #include "vec2.h"
 
@@ -40,9 +41,6 @@ int n_meshes_total = 0;
 pixel32_t textures_avg_colors[256];
 RECT textures[256];
 RECT palettes[256];
-
-int n_sections;
-int sections[N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE];
 
 vertex_3d_t get_halfway_point(const vertex_3d_t v0, const vertex_3d_t v1) {
     return (vertex_3d_t) {
@@ -1073,21 +1071,6 @@ vec3_t renderer_get_forward_vector() {
     result.y = (int32_t)view_matrix.m[2][1] >> 4;
     result.z = (int32_t)view_matrix.m[2][2] >> 4;
     return result;
-}
-
-int renderer_get_level_section_from_position(const model_t* model, vec3_t position) {
-    position.x = -position.x / COL_SCALE;
-    position.y = -position.y / COL_SCALE;
-    position.z = -position.z / COL_SCALE;
-    n_sections = 0;
-    for (size_t i = 0; i < model->n_meshes; ++i) {
-        if (n_sections == N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE) break;
-        if (point_aabb_intersect(&model->meshes[i].bounds, position)) {
-            sections[n_sections] = i;
-            n_sections += 1;
-        }
-    }
-    return n_sections; // -1 means no section
 }
 
 #endif
