@@ -823,12 +823,12 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
         SVECTOR after_max = (SVECTOR){INT16_MIN, INT16_MIN, INT16_MIN};
         
         for (size_t i = 0; i < 8; ++i) {
-            if      (vertices[i].vx < after_min.vx) after_min.vx = vertices[i].vx;
-            else if (vertices[i].vx > after_max.vx) after_max.vx = vertices[i].vx;
-            if      (vertices[i].vy < after_min.vy) after_min.vy = vertices[i].vy;
-            else if (vertices[i].vy > after_max.vy) after_max.vy = vertices[i].vy;
-            if      (vertices[i].vz < after_min.vz) after_min.vz = vertices[i].vz;
-            else if (vertices[i].vz > after_max.vz) after_max.vz = vertices[i].vz;
+            if (vertices[i].vx < after_min.vx) after_min.vx = vertices[i].vx;
+            if (vertices[i].vx > after_max.vx) after_max.vx = vertices[i].vx;
+            if (vertices[i].vy < after_min.vy) after_min.vy = vertices[i].vy;
+            if (vertices[i].vy > after_max.vy) after_max.vy = vertices[i].vy;
+            if (vertices[i].vz < after_min.vz) after_min.vz = vertices[i].vz;
+            if (vertices[i].vz > after_max.vz) after_max.vz = vertices[i].vz;
         }
 
         // If this screen aligned bounding box is off screen, do not draw this mesh
@@ -836,7 +836,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
         #define FRUSCUL_PAD_Y 0 // or for debugging.
         if (after_max.vx < 0+FRUSCUL_PAD_X) return; // mesh is to the left of the screen
         if (after_max.vy < 0+FRUSCUL_PAD_Y) return; // mesh is above the screen
-        if (after_max.vz < 0) return; // mesh is behind the screen
+        if (after_max.vz == 0) return; // mesh is behind the screen
         if (after_min.vz > MESH_RENDER_DISTANCE) return; // mesh is too far away
         if (after_min.vx > RES_X-FRUSCUL_PAD_X) return; // mesh is to the right of the screen
         if (after_min.vy > RES_Y-FRUSCUL_PAD_Y) return; // mesh is below the screen
