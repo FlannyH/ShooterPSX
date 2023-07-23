@@ -388,8 +388,31 @@ void renderer_end_frame() {
 
 void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, vislist_t* vislist) {
     glViewport(0, 0, w, h);
-    for (size_t i = 0; i < model->n_meshes; ++i) {
-        renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+    if (vislist == NULL || n_sections == 0) {
+        for (size_t i = 0; i < model->n_meshes; ++i) {
+            renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
+            renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+        }
+    }
+    else {
+        // Determine which meshes to render
+        vislist_t combined = { 0, 0, 0, 0 };
+
+        // Get all the vislist bitfields and combine them together
+        for (size_t i = 0; i < n_sections; ++i) {
+            combined.sections_0_31 |= vislist[sections[i]].sections_0_31;
+            combined.sections_32_63 |= vislist[sections[i]].sections_32_63;
+            combined.sections_64_95 |= vislist[sections[i]].sections_64_95;
+            combined.sections_96_127 |= vislist[sections[i]].sections_96_127;
+        }
+
+        // Render only the meshes that are visible
+        for (size_t i = 0; i < model->n_meshes; ++i) {
+            if ((i < 32) && (combined.sections_0_31 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+            else if ((i < 64) && (combined.sections_32_63 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+            else if ((i < 96) && (combined.sections_64_95 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+            else if ((i < 128) && (combined.sections_96_127 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+        }
     }
 }
 
@@ -467,9 +490,9 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
             (float)model_transform->position.vz,
     };
     vec3 scale = {
-            (float)model_transform->scale.vx / (float)COL_SCALE,
-            (float)model_transform->scale.vy / (float)COL_SCALE,
-            (float)model_transform->scale.vz / (float)COL_SCALE,
+            (float)model_transform->scale.vx / (float)COL_SCALE * 4096,
+            (float)model_transform->scale.vy / (float)COL_SCALE * 4096,
+            (float)model_transform->scale.vz / (float)COL_SCALE * 4096,
     };
     glm_translate(model_matrix, position);
     glm_scale(model_matrix, scale);

@@ -41,7 +41,6 @@ void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     if (hit.distance == INT32_MAX)
         return;
 
-
     // Check the Y distance from the ground to the player's feet
     const scalar_t distance = self->position.y - eye_height - hit.position.y;
     if (distance <= (-self->velocity.y * dt_ms)) {

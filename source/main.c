@@ -46,7 +46,7 @@ int main(void) {
     const model_t* m_level = model_load("\\ASSETS\\MODELS\\LEVEL.MSH;1");
     const model_t* m_level_col_dbg = model_load_collision_debug("\\ASSETS\\MODELS\\LEVEL.COL;1");
     const collision_mesh_t* m_level_col = model_load_collision("\\ASSETS\\MODELS\\LEVEL.COL;1");
-	const vislist_t* v_level = model_load_vislist("\\ASSETS\\MODELS\\LEVEL.VIS");
+	const vislist_t* v_level = model_load_vislist("\\ASSETS\\MODELS\\LEVEL.VIS;1");
 
 	texture_cpu_t *tex_level;
 
