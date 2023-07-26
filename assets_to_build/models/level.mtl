@@ -11,6 +11,16 @@ d 1.000000
 illum 2
 map_Kd level_tex/test.png
 
+newmtl blue_concrete
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/blue_concrete.png
+
 newmtl busy_wall_bl
 Ns 0.000000
 Ka 1.000000 1.000000 1.000000
@@ -51,6 +61,26 @@ d 1.000000
 illum 2
 map_Kd level_tex/busy_wall_tr.png
 
+newmtl cage
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kd level_tex/cage.png
+
+newmtl collection16
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/collection16.png
+
 newmtl floor
 Ns 0.000000
 Ka 1.000000 1.000000 1.000000
@@ -71,6 +101,16 @@ d 1.000000
 illum 2
 map_Kd E:/Network/sub nivis textures/frame.png
 
+newmtl green_line
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/green_line.png
+
 newmtl green_wall
 Ns 0.000000
 Ka 1.000000 1.000000 1.000000
@@ -81,6 +121,16 @@ d 1.000000
 illum 2
 map_Kd level_tex/green_wall.png
 
+newmtl grid_wall
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kd level_tex/grid_wall.png
+
 newmtl pattern_walls
 Ns 0.000000
 Ka 1.000000 1.000000 1.000000
@@ -90,6 +140,16 @@ Ni 1.450000
 d 1.000000
 illum 2
 map_Kd level_tex/pattern_walls.png
+
+newmtl pipes
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/pipes.png
 
 newmtl plank
 Ns 0.000000
@@ -130,6 +190,46 @@ Ni 1.450000
 d 1.000000
 illum 2
 map_Kd level_tex/red_line.png
+
+newmtl red_tech_bl
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/red_tech_bl.png
+
+newmtl red_tech_br
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/red_tech_br.png
+
+newmtl red_tech_tl
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/red_tech_tl.png
+
+newmtl red_tech_tr
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/red_tech_tr.png
 
 newmtl regular_walls
 Ns 0.000000
@@ -180,6 +280,16 @@ Ni 1.450000
 d 1.000000
 illum 2
 map_Kd level_tex/yellow_board.png
+
+newmtl yellow_tech
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/yellow_tech.png
 
 newmtl yellow_wall
 Ns 0.000000
