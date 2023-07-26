@@ -94,6 +94,8 @@ int main(void) {
 			FntPrint(-1, "\n");
 			FntPrint(-1, "dt: %i\n", delta_time);
 			FntPrint(-1, "meshes drawn: %i / %i\n", n_meshes_drawn, n_meshes_total);
+			FntPrint(-1, "number of aabb intersects: %i\n", n_vertical_cylinder_aabb_intersects);
+			collision_clear_stats();
 			FntFlush(-1);
 			renderer_end_frame();
 		}

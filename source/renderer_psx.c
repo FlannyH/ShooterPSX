@@ -862,7 +862,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
 void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, vislist_t* vislist) {
     if (vislist == NULL || n_sections == 0) {
         for (size_t i = 0; i < model->n_meshes; ++i) {
-            renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
+            //renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
             renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
         }
     }

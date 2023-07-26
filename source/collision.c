@@ -134,6 +134,25 @@ void bvh_subdivide(bvh_t* bvh, bvh_node_t* node, const int recursion_depth) {
         return;
     }
 
+    // Get the average position of all the primitives
+    int64_t avg_x = 0;
+    int64_t avg_y = 0;
+    int64_t avg_z = 0;
+    for (int i = node->left_first; i < node->left_first + node->primitive_count; i++) {
+        avg_x += bvh->primitives[bvh->indices[i]].v0.x;
+        avg_y += bvh->primitives[bvh->indices[i]].v0.y;
+        avg_z += bvh->primitives[bvh->indices[i]].v0.z;
+        avg_x += bvh->primitives[bvh->indices[i]].v1.x;
+        avg_y += bvh->primitives[bvh->indices[i]].v1.y;
+        avg_z += bvh->primitives[bvh->indices[i]].v1.z;
+        avg_x += bvh->primitives[bvh->indices[i]].v2.x;
+        avg_y += bvh->primitives[bvh->indices[i]].v2.y;
+        avg_z += bvh->primitives[bvh->indices[i]].v2.z;
+    }
+    avg_x /= node->primitive_count * 3;
+    avg_y /= node->primitive_count * 3;
+    avg_z /= node->primitive_count * 3;
+
     //Determine split axis - choose biggest axis
     axis_t split_axis = axis_x;
     scalar_t split_pos = 0;
@@ -144,24 +163,27 @@ void bvh_subdivide(bvh_t* bvh, bvh_node_t* node, const int recursion_depth) {
         && size.x > size.z)
     {
         split_axis = axis_x;
-        split_pos = (node->bounds.max.x + node->bounds.min.x);
-        split_pos = split_pos >> 1;
+        //split_pos = (node->bounds.max.x + node->bounds.min.x);
+        //split_pos = split_pos >> 1;
+        split_pos = avg_x;
     }
 
     if (size.y > size.x
         && size.y > size.z)
     {
         split_axis = axis_y;
-        split_pos = (node->bounds.max.y + node->bounds.min.y);
-        split_pos = split_pos >> 1;
+        //split_pos = (node->bounds.max.y + node->bounds.min.y);
+        //split_pos = split_pos >> 1;
+        split_pos = avg_y;
     }
 
     if (size.z > size.x
         && size.z > size.y)
     {
         split_axis = axis_z;
-        split_pos = (node->bounds.max.z + node->bounds.min.z);
-        split_pos = split_pos >> 1;
+        //split_pos = (node->bounds.max.z + node->bounds.min.z);
+        //split_pos = split_pos >> 1;
+        split_pos = avg_z;
     }
 
     //Partition the index array, and get the split position

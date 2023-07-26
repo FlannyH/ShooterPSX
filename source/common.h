@@ -46,7 +46,7 @@ static void warn_if(const char* error_if_false, const int condition, const int l
 #ifdef _WIN32
     #define PROFILE(name, function, timer) function
 #else
-    #ifdef _DEBUG
+    #ifndef _DEBUG
         #define PROFILE(name, function, timer) { \
             TIMER_CTRL(timer) = 0b0100000000;\
             TIMER_VALUE(timer) = 0;\
