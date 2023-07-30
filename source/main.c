@@ -21,7 +21,7 @@
 
 #include "texture.h"
 
-int widescreen = 1;
+int widescreen = 0;
 
 int main(void) {
 	renderer_init();
@@ -114,14 +114,13 @@ int main(void) {
 }
 
 void init(void) {
-	// todo: make this more platform indepentend
 #ifdef _PSX
 	// Init CD
 	SpuInit();
 	CdInit();
 
 	// Load the internal font texture
-	FntLoad(512, 256);
+	FntLoad(768, 256);
 	// Create the text stream
 	FntOpen(16, 16, 480, 224, 0, 512);
 
