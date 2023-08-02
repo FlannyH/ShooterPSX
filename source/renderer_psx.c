@@ -1087,7 +1087,6 @@ void renderer_upload_texture(const texture_cpu_t* texture, const uint8_t index) 
     // Load texture pixels to VRAM - starting from 0,256, spanning 512x256 VRAM pixels, stored in 16x64 blocks (for 64x64 texture)
     // This means that the grid consists of 32x4 textures
     WARN_IF("texture is not 64x64!", texture->width != 64 || texture->height != 64);
-    PANIC_IF("texture index >= 128", index >= 128);
     const RECT rect_tex = {
         0 + ((int16_t)index / 4) * 16,
         256 + (((int16_t)index) % 4) * 64,
@@ -1101,8 +1100,8 @@ void renderer_upload_texture(const texture_cpu_t* texture, const uint8_t index) 
 
     // Load palette to VRAM - starting from 512,384, spanning 256x128 VRAM pixels, stored in 16x16 blocks (for 16 16-color palettes, with fades to the average texture color for distance blur)
     const RECT rect_palette = {
-        512 + ((int16_t)index % 16) * 16,
-        384 + (((int16_t)index) / 16) * 16,
+        768 + ((int16_t)index % 16) * 16,
+        256 + (((int16_t)index) / 16) * 16,
         16,
         16
     };
@@ -1125,10 +1124,10 @@ void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t
 
     // Load palette to VRAM - starting from 512,384, spanning 256x128 VRAM pixels, stored in 256x16 blocks (for 16 256-color palettes, with fades to the average texture color for distance blur)
     const RECT rect_palette = {
-        512,
-        384 + ((int16_t)index * 16),
+        768,
+        256 + ((int16_t)index * 32),
         256,
-        16
+        1
     };
     LoadImage(&rect_palette, (uint32_t*)texture->palette);
     DrawSync(0);
