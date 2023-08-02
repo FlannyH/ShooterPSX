@@ -520,7 +520,7 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
     int p;
     gte_nclip();
     gte_stopz(&p);
-    if (p <= 0) return;
+    if (p <= -16) return;
 
     // Store transformed position, and center depth
     gte_stsxy3c(&trans_vec_xy[0]);
