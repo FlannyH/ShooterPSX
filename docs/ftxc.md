@@ -15,10 +15,10 @@ The file header is as follows
 All offsets are relative to the start of this binary section.
 
 ## TextureCellDesc
-| Type | Name                  | Description                           |
-| ---- | --------------------- | ------------------------------------- |
+| Type | Name                  | Description                                           |
+| ---- | --------------------- | ----------------------------------------------------- |
 | u8   | sector_offset_texture | Offset (in bytes*2048) into raw texture data section. |
-| u8   | palette_index         | Palette index.                        |
-| u8   | texture_width         | Texture width in pixels.              |
-| u8   | texture_height        | Texture height in pixels.             |
-| u32  | avg_color             | Average value of every pixel          |
+| u8   | palette_index         | Palette index.                                        |
+| u8   | texture_width         | Texture width in pixels. If this is 0, treat as 256   |
+| u8   | texture_height        | Texture height in pixels. If this is 0, treat as 256  |
+| u32  | avg_color             | Average value of every pixel                          |

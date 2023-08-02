@@ -1,5 +1,6 @@
 mkdir assets
 mkdir assets\models
+mkdir assets\models\ui_tex
 mkdir assets\music
 mkdir assets\music\sequence
 rem levels
@@ -16,3 +17,7 @@ tools\midi2psx.exe ./assets_to_build/music/sequence/level1.mid ./assets/music/se
 tools\midi2psx.exe ./assets_to_build/music/sequence/subnivis.mid ./assets/music/sequence/subnivis.dss
 tools\midi2psx.exe ./assets_to_build/music/sequence/level3.mid ./assets/music/sequence/level3.dss
 tools\psx_soundfont_generator.exe ./assets_to_build/music/instruments.csv ./assets/music/instr.sbk
+rem texture_pages
+tools\obj2psx --input ./assets_to_build/models/ui_tex/menu1.png --output ./assets/models/ui_tex/menu1.txc
+tools\obj2psx --input ./assets_to_build/models/ui_tex/menu2.png --output ./assets/models/ui_tex/menu2.txc
+tools\obj2psx --input ./assets_to_build/models/ui_tex/ui.png --output ./assets/models/ui_tex/ui.txc

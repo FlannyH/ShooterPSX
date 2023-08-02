@@ -76,6 +76,11 @@
 					<file name="TEST.VIS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/test.vis" />
 					<file name="ENTITY.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/entity.msh" />
 					<file name="ENTITY.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/entity.txc" />
+					<dir name="UI_TEX">
+						<file name="MENU1.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/ui_tex/menu1.txc" />
+						<file name="MENU2.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/ui_tex/menu2.txc" />
+						<file name="UI.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/ui_tex/ui.txc" />
+					</dir>
 				</dir>
 				<dir name="MUSIC">
 					<dir name="SEQUENCE">
