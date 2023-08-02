@@ -53,5 +53,6 @@ typedef struct {
 #pragma pack(pop)
 
 uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures);
+void texture_collection_unload(texture_cpu_t** textures, int n_textures);
 
 #endif
