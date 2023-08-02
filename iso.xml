@@ -74,6 +74,8 @@
 					<file name="TEST.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/test.txc" />
 					<file name="TEST.COL"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/test.col" />
 					<file name="TEST.VIS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/test.vis" />
+					<file name="ENTITY.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/entity.msh" />
+					<file name="ENTITY.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/entity.txc" />
 				</dir>
 				<dir name="MUSIC">
 					<dir name="SEQUENCE">

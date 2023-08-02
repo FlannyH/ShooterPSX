@@ -31,9 +31,9 @@ int main(void) {
     // Init player
     player_t player = { 0 };
 
-    player.position.x = 11705653 / 2;
+    player.position.x = 0;//11705653 / 2;
    	player.position.y = 11413985 / 2;
-    player.position.z = 2112866  / 2;
+    player.position.z = 0;//2112866  / 2;
 	player.rotation.y = 4096 * 16;
     //player.position.x = 0;
     //player.position.y = -229376;
@@ -43,19 +43,23 @@ int main(void) {
 	input_set_stick_deadzone(36);
 
 	// Load model
-    const model_t* m_level = model_load("\\ASSETS\\MODELS\\LEVEL.MSH;1");
-    const model_t* m_level_col_dbg = model_load_collision_debug("\\ASSETS\\MODELS\\LEVEL.COL;1");
-    const collision_mesh_t* m_level_col = model_load_collision("\\ASSETS\\MODELS\\LEVEL.COL;1");
-	const vislist_t* v_level = model_load_vislist("\\ASSETS\\MODELS\\LEVEL.VIS;1");
+    const model_t* m_level = model_load("\\ASSETS\\MODELS\\TEST.MSH;1");
+    const model_t* m_chaser = model_load("\\ASSETS\\MODELS\\ENTITY.MSH;1");
+    const model_t* m_level_col_dbg = model_load_collision_debug("\\ASSETS\\MODELS\\TEST.COL;1");
+    const collision_mesh_t* m_level_col = model_load_collision("\\ASSETS\\MODELS\\TEST.COL;1");
+	const vislist_t* v_level = model_load_vislist("\\ASSETS\\MODELS\\TEST.VIS;1");
 
 	texture_cpu_t *tex_level;
+	texture_cpu_t *entity_textures;
 
 	// todo: add unload functionality for when the textures are on the gpu. we don't need these in ram.
-	const uint32_t n_textures = texture_collection_load("\\ASSETS\\MODELS\\LEVEL.TXC;1", &tex_level);
+	const uint32_t n_level_textures = texture_collection_load("\\ASSETS\\MODELS\\TEST.TXC;1", &tex_level);
+	const uint32_t n_entity_textures = texture_collection_load("\\ASSETS\\MODELS\\ENTITY.TXC;1", &entity_textures);
 
-	for (uint8_t i = 0; i < n_textures; ++i) {
+	for (uint8_t i = 0; i < n_level_textures; ++i) {
 	    renderer_upload_texture(&tex_level[i], i);
 	}
+	render_upload_8bit_texture_page(&entity_textures[0], 3);
 
 	music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK;1");
 	music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\SUBNIVIS.DSS;1");
@@ -86,7 +90,7 @@ int main(void) {
 		if (show_debug) {
 			renderer_begin_frame(&player.transform);
 			PROFILE("input", input_update(), 1);
-			PROFILE("render", renderer_draw_model_shaded(m_level, &t_level, v_level), 1);
+			PROFILE("render", renderer_draw_model_shaded(m_level, &t_level, v_level, 0), 1);
 			PROFILE("player", player_update(&player, &bvh_level_model, delta_time), 1);
 			PROFILE("music", music_tick(16), 1);
 			FntPrint(-1, "sections: ");
@@ -101,7 +105,8 @@ int main(void) {
 		else {
 			renderer_begin_frame(&player.transform);
 			input_update();
-			renderer_draw_model_shaded(m_level, &t_level, v_level);
+			renderer_draw_model_shaded(m_level, &t_level, v_level, 0);
+			//renderer_draw_entity_shaded(&m_chaser->meshes[0], &t_level, 3);
 			player_update(&player, &bvh_level_model, delta_time);
 			music_tick(16);
 			renderer_end_frame();

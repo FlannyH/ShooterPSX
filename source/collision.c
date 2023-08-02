@@ -837,7 +837,7 @@ int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vert
     closest_pos_3d.z = closest_pos_on_triangle.y;
 
     // Edge case! If the triangle is facing horizontally, the 2D projection will be degenerate.
-    if (triangle->normal.y == 0) {
+    if (scalar_abs(triangle->normal.y) < 20) {
         // Figure out what Y range we have
         // Project v0-point onto v0-v1
         const vec2_t v0_point = vec2_sub(closest_pos_on_triangle, v0);

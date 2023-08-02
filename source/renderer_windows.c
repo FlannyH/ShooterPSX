@@ -386,7 +386,7 @@ void renderer_end_frame() {
 	glfwPollEvents();
 }
 
-void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, vislist_t* vislist) {
+void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, vislist_t* vislist, int tex_id_offset) {
     glViewport(0, 0, w, h);
     if (vislist == NULL || n_sections == 0) {
         for (size_t i = 0; i < model->n_meshes; ++i) {

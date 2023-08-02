@@ -39,12 +39,14 @@ extern int widescreen;
 void renderer_init(void); // Initializes the renderer by configuring the GPU, setting the video mode, and preparing the drawing environment
 void renderer_begin_frame(transform_t* camera_transform); // Applies the camera transform to the renderer, preparing it for a new frame
 void renderer_end_frame(void); // Draws the render queue, swaps the drawbuffer, clears the render queue, and applies the display environments
-void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, vislist_t* vislist); // Draws a 3D model at a given transform using shaded triangle primitives
+void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, vislist_t* vislist, int tex_id_offset); // Draws a 3D model at a given transform using shaded triangle primitives
 void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform); // Draws a 3D mesh at a given transform using shaded triangle primitives
+void renderer_draw_entity_shaded(const mesh_t* mesh, transform_t* model_transform, int texpage); // Same as draw_mesh, except it uses 8-bit texture pages instead of 4-bit textures
 void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t* model_transform);
 void renderer_debug_draw_aabb(const aabb_t* box, pixel32_t color, transform_t* model_transform);
 void renderer_debug_draw_sphere(sphere_t sphere);
 void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index);
+void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index);
 int renderer_get_delta_time_raw(void);
 int renderer_get_delta_time_ms(void);
 int renderer_convert_dt_raw_to_ms(int dt_raw);
