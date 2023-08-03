@@ -26,11 +26,14 @@ int widescreen = 0;
 state_t current_state = STATE_NONE;
 state_t prev_state = STATE_NONE;
 int should_transition_state = 0;
+#define FADE_SPEED 4
+#define FADE_SPEED_SLOW 2
 
 struct {
 	struct {
 		int frame_counter;
 		int show_debug;
+		int fade_level; // 255 means black, 0 means no fade
 	} global;
 	struct {
 		transform_t t_level;
@@ -144,27 +147,57 @@ void state_enter_title_screen(void) {
 	render_upload_8bit_texture_page(tex_menu1, 2);
 	render_upload_8bit_texture_page(tex_menu2, 3);
 	render_upload_8bit_texture_page(tex_ui, 4);
+	music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK;1");
+	music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\LEVEL3.DSS;1");
+	music_play_sequence(0);
+	state.global.fade_level = 255;
 }
 void state_update_title_screen(int dt) {
 	renderer_begin_frame(&id_transform);
 	input_update();
+	// Draw background
+	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, 3, 2, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, 3, 3, 1);
+
+	// Draw Sub Nivis logo
+	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 85*ONE}, (vec2_t){128*ONE, 72*ONE}, (vec2_t){0*ONE, 184*ONE}, (vec2_t){128*ONE, 255*ONE}, 2, 4, 1);
+
 	if (input_pressed(PAD_START, 0)) {
 		current_state = STATE_IN_GAME;
-		printf("switch to different state\n");
 	} 
-	FntPrint(-1, "Press start to play\n");
-	FntFlush(-1);
+	if (state.global.fade_level > 0) {
+		renderer_apply_fade(state.global.fade_level);
+		state.global.fade_level -= FADE_SPEED;
+	} 
+	music_tick(16);
 	renderer_end_frame();
 }
 void state_exit_title_screen(void) {
-	renderer_begin_frame(&id_transform);
-	input_update();
-	FntPrint(-1, "Loading...\n");
-	FntFlush(-1);
-	renderer_end_frame();
 }
 
 void state_enter_in_game(void) {
+	state.global.fade_level = 0;
+	while (state.global.fade_level < 255) {
+		renderer_begin_frame(&id_transform);
+		input_update();
+
+		// Draw background
+		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, 3, 2, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, 3, 3, 1);
+
+		// Draw Sub Nivis logo
+		renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 85*ONE}, (vec2_t){128*ONE, 72*ONE}, (vec2_t){0*ONE, 184*ONE}, (vec2_t){128*ONE, 255*ONE}, 2, 4, 1);
+
+		renderer_apply_fade(state.global.fade_level);
+
+		renderer_end_frame();
+		state.global.fade_level += FADE_SPEED_SLOW;
+		
+		music_set_volume(255 - state.global.fade_level);
+		music_tick(16);
+	}
+	state.global.fade_level = 255;
+
     // Init player
     state.in_game.player.position.x = 11705653 / 2;
    	state.in_game.player.position.y = 11413985 / 2;
@@ -191,19 +224,27 @@ void state_enter_in_game(void) {
 	}
 	texture_collection_unload(&tex_level, n_level_textures);
 	texture_collection_unload(&entity_textures, n_entity_textures);
+	
 
 	// Start music
+	music_stop();
 	music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK;1");
 	music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\SUBNIVIS.DSS;1");
 	music_play_sequence(0);
-
+	
+	music_set_volume(255);
 }
+
 void state_update_in_game(int dt) {
+	renderer_begin_frame(&state.in_game.player.transform);
+
+	// Draw crosshair
+	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 128*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){96*ONE, 40*ONE}, (vec2_t){127*ONE, 59*ONE}, 2, 4, 1);
+
 	int n_sections = player_get_level_section(&state.in_game.player, state.in_game.m_level);
 	state.global.frame_counter += dt;
 	if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
 	if (state.global.show_debug) {
-		renderer_begin_frame(&state.in_game.player.transform);
 		PROFILE("input", input_update(), 1);
 		PROFILE("render", renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0), 1);
 		PROFILE("player", player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt), 1);
@@ -215,17 +256,19 @@ void state_update_in_game(int dt) {
 		FntPrint(-1, "meshes drawn: %i / %i\n", n_meshes_drawn, n_meshes_total);
 		collision_clear_stats();
 		FntFlush(-1);
-		renderer_end_frame();
 	}
 	else {
-		renderer_begin_frame(&state.in_game.player.transform);
 		input_update();
 		renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0);
 		//renderer_draw_entity_shaded(&m_chaser->meshes[0], &t_level, 3);
 		player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt);
 		music_tick(16);
-		renderer_end_frame();
 	}
+	if (state.global.fade_level > 0) {
+		renderer_apply_fade(state.global.fade_level);
+		state.global.fade_level -= FADE_SPEED;
+	}
+	renderer_end_frame();
 }
 void state_exit_in_game(void) {
 	return;

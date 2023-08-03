@@ -38,6 +38,7 @@ int frame_counter = 0;
 int n_meshes_drawn = 0;
 int n_meshes_total = 0;
 uint8_t tex_id_start = 0;
+int drawn_first_frame = 0;
 
 pixel32_t textures_avg_colors[256];
 RECT textures[256];
@@ -107,6 +108,7 @@ void renderer_init(void) {
     gte_SetGeomScreen(120);
 
     next_primitive = primitive_buffer[0];
+    drawn_first_frame = 0;
 }
 
 static int mul = 0;
@@ -163,7 +165,7 @@ void renderer_begin_frame(transform_t* camera_transform) {
     setRGB1(new_triangle, v1.r >> 1, v1.g >> 1, v1.b >> 1);\
     setRGB2(new_triangle, v2.r >> 1, v2.g >> 1, v2.b >> 1);\
     if (is_page) {\
-        new_triangle->clut = getClut(512, 384 + (16*(tex_id)));\
+        new_triangle->clut = getClut(768, 384 + (32*(tex_id)));\
         new_triangle->tpage = getTPage(1, 0, 128 * tex_id, 256);\
         setUV3(new_triangle,\
             v0.u,\
@@ -207,7 +209,7 @@ void renderer_begin_frame(transform_t* camera_transform) {
     setRGB2(new_triangle, v2.r >> 1, v2.g >> 1, v2.b >> 1);\
     setRGB3(new_triangle, v3.r >> 1, v3.g >> 1, v3.b >> 1);\
     if (is_page) {\
-        new_triangle->clut = getClut(512, 384 + (16*(tex_id)));\
+        new_triangle->clut = getClut(768, 384 + (32*(tex_id)));\
         new_triangle->tpage = getTPage(1, 0, 128 * tex_id, 256);\
         setUV4(new_triangle,\
             v0.u,\
@@ -1158,10 +1160,13 @@ void renderer_end_frame(void) {
     PutDrawEnv(&draw[drawbuffer]);
     
     // Enable display
-    SetDispMask(1);
+    if (drawn_first_frame)
+        SetDispMask(1);
     
     // Draw Ordering Table
     DrawOTag(ord_tbl[1-drawbuffer] + ORD_TBL_LENGTH - 1);
+
+    drawn_first_frame = 1;
 }
 
 int renderer_get_delta_time_raw(void) {
@@ -1210,6 +1215,81 @@ vec3_t renderer_get_forward_vector() {
     result.y = (int32_t)view_matrix.m[2][1] >> 4;
     result.z = (int32_t)view_matrix.m[2][2] >> 4;
     return result;
+}
+
+void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, int depth, int texture_id, int is_page) {
+    const vec2_t tl = {center.x - size.x/2, center.y - size.y/2};
+    const vec2_t tr = {center.x + size.x/2, center.y - size.y/2};
+    const vec2_t bl = {center.x - size.x/2, center.y + size.y/2};
+    const vec2_t br = {center.x + size.x/2, center.y + size.y/2};
+    renderer_draw_2d_quad(tl, tr, bl, br, uv_tl, uv_br, depth, texture_id, is_page);
+}
+
+void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, int depth, int texture_id, int is_page) {
+#ifdef PAL
+    const int y_offset = 0;
+#else
+    const int y_offset = -16;
+#endif
+    POLY_GT4* new_triangle = (POLY_GT4*)next_primitive;
+    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    setPolyGT4(new_triangle); 
+    setXY4(new_triangle, 
+        tl.x / ONE, (tl.y / ONE) + y_offset,
+        tr.x / ONE, (tr.y / ONE) + y_offset,
+        bl.x / ONE, (bl.y / ONE) + y_offset,
+        br.x / ONE, (br.y / ONE) + y_offset
+    );
+    setRGB0(new_triangle, 128, 128, 128);\
+    setRGB1(new_triangle, 128, 128, 128);\
+    setRGB2(new_triangle, 128, 128, 128);\
+    setRGB3(new_triangle, 128, 128, 128);\
+    if (is_page) {
+        new_triangle->clut = getClut(768, 256 + (32*(texture_id)));
+        new_triangle->tpage = getTPage(1, 0, 128 * texture_id, 256);
+        setUV4(new_triangle,
+            uv_tl.x / ONE, uv_tl.y / ONE, // top left
+            uv_br.x / ONE, uv_tl.y / ONE, // top right
+            uv_tl.x / ONE, uv_br.y / ONE, // bottom left
+            uv_br.x / ONE, uv_br.y / ONE // bottom right
+        );
+    }
+    else {
+        const uint8_t tex_offset_x = ((texture_id) & 0b00001100) << 4;
+        const uint8_t tex_offset_y = ((texture_id) & 0b00000011) << 6;
+        new_triangle->clut = getClut(palettes[texture_id].x, palettes[texture_id].y);
+        new_triangle->tpage = getTPage(0, 0, textures[texture_id].x, textures[texture_id].y);
+        setUV4(new_triangle,
+            uv_tl.x + tex_offset_x, uv_tl.y + tex_offset_y,
+            uv_br.x + tex_offset_x, uv_tl.y + tex_offset_y,
+            uv_tl.x + tex_offset_x, uv_br.y + tex_offset_y,
+            uv_br.x + tex_offset_x, uv_br.y + tex_offset_y
+        );
+    }
+    addPrim(ord_tbl[drawbuffer] + (depth), new_triangle);
+}
+
+void renderer_apply_fade(int fade_level) {
+    if (fade_level <= 0) return;
+    if (fade_level > 255) fade_level = 255;
+    fade_level *= fade_level;
+    fade_level /= 255;
+
+    // Add rectangle
+    TILE* new_tile = (TILE*)next_primitive;
+    next_primitive += sizeof(TILE) / sizeof(*next_primitive);
+    setTile(new_tile);
+    setSemiTrans(new_tile, 1);
+    setRGB0(new_tile, fade_level, fade_level, fade_level);
+    setXY0(new_tile, 0, 0);
+    setWH(new_tile, RES_X, RES_Y);
+    addPrim(ord_tbl[drawbuffer] + 0, new_tile);
+    
+    // Set color blend mode to subtract
+    DR_TPAGE* new_tpage = (DR_TPAGE*)next_primitive;
+    next_primitive += sizeof(DR_TPAGE) / sizeof(*next_primitive);
+    setDrawTPage(new_tpage, 1, 0, 2 << 5);
+    addPrim(ord_tbl[drawbuffer] + 0, new_tpage);
 }
 
 #endif

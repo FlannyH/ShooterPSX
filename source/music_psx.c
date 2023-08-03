@@ -344,3 +344,16 @@ void music_tick(int delta_time) {
 	SpuSetKey(0, note_off);
 	SpuSetKey(1, note_on);
 }
+
+void music_set_volume(int volume) {
+
+	if (volume < 0) volume = 0;
+	if (volume > 255) volume = 255;
+	volume = (volume * volume) / 4;
+	SpuSetCommonMasterVolume(volume, volume);
+}
+
+void music_stop(void) {
+	music_playing = 0;
+	SpuSetKey(0, 0xFFFFFF); // release all keys
+}
