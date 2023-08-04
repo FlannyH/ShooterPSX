@@ -20,6 +20,7 @@ void* scheduled_frees[32];
 int n_scheduled_frees = 0;
 
 void* mem_alloc(size_t size, memory_category_t category) {
+#ifdef DEBUG
     printf("allocating %i bytes for category %s\n", size, mem_cat_strings[category]);
     void* result = NULL;
     for (size_t i = 0; i < 512; ++i) {
@@ -32,9 +33,13 @@ void* mem_alloc(size_t size, memory_category_t category) {
         }
     }
     return result;
+#else
+    return malloc(size);
+#endif
 }
 
 void mem_free(void* ptr) {
+#ifdef DEBUG
     for (size_t i = 0; i < 512; ++i) {
         if (allocated_memory_pointers[i] == ptr) {
             printf("freeing %i bytes for category %s\n", allocated_memory_size[i], mem_cat_strings[allocated_memory_category[i]]);
@@ -45,6 +50,7 @@ void mem_free(void* ptr) {
             break;
         }
     }
+#endif
     free(ptr);
 }
 
@@ -59,6 +65,7 @@ void mem_free_scheduled_frees() {
 }
 
 void mem_debug() {
+#ifdef DEBUG
     // Sum up each category
     size_t size_per_category[16] = {0};
     size_t size_total = 0;
@@ -75,4 +82,5 @@ void mem_debug() {
     printf("MEM_CAT_AUDIO:     %i bytes\n", size_per_category[MEM_CAT_AUDIO]);
     printf("MEM_CAT_FILE:      %i bytes\n", size_per_category[MEM_CAT_FILE]);
     printf("total:             %i bytes\n", size_total);
+#endif
 }
