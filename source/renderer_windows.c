@@ -4,6 +4,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "memory.h"
 #include "renderer.h"
 #include "win/debug_layer.h"
 #include <GL/gl3w.h>
@@ -179,7 +180,7 @@ bool load_shader_part(char *path, const ShaderType type, const GLuint *program) 
 		printf("[ERROR] Shader %s not found!\n", path);
 
 		// Clean up
-		free(shader_data);
+		mem_free(shader_data);
 		return false;
 	}
 
@@ -197,14 +198,14 @@ bool load_shader_part(char *path, const ShaderType type, const GLuint *program) 
 	int log_length;
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
 	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
-	char *frag_shader_error = malloc(log_length);
+	char *frag_shader_error = mem_alloc(log_length, MEM_CAT_UNDEFINED);
 	glGetShaderInfoLog(shader, log_length, NULL, &frag_shader_error[0]);
 	if (log_length > 0) {
 		// Log error
 		printf("[ERROR] File '%s':\n\n%s\n", path, &frag_shader_error[0]);
 
 		// Clean up
-		free(shader_data);
+		mem_free(shader_data);
 		return false;
 	}
 
@@ -212,7 +213,7 @@ bool load_shader_part(char *path, const ShaderType type, const GLuint *program) 
 	glAttachShader(*program, shader);
 
 	// Clean up
-	free(shader_data);
+	mem_free(shader_data);
 
 	return true;
 }
@@ -284,7 +285,7 @@ void renderer_init() {
 
 	// Zero init textures
 	//memset(textures, 0, sizeof(textures));
-    void* random_data = malloc(64 * 64 * 256 * 4);
+    void* random_data = mem_alloc(64 * 64 * 256 * 4, MEM_CAT_TEXTURE);
 	glGenTextures(1, &textures);
 	glBindTexture(GL_TEXTURE_3D, textures);
 	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, 64, 64, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, random_data);
@@ -293,7 +294,7 @@ void renderer_init() {
 	glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_3D, 0);
-    free(random_data);
+    mem_free(random_data);
 }
 
 void renderer_begin_frame(transform_t *camera_transform) {
@@ -588,8 +589,7 @@ void renderer_debug_draw_sphere(const sphere_t sphere) {
 
 void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) {
 	// This is where all the pixels will be stored
-	pixel32_t *pixels =
-			malloc((size_t)texture->width * (size_t)texture->height * 4);
+	pixel32_t *pixels = mem_alloc((size_t)texture->width * (size_t)texture->height * 4, MEM_CAT_TEXTURE);
 
 	// The texture is stored in 4bpp format, so each byte in the texture is 2
 	// pixels horizontally - Convert to 32-bit color
@@ -627,7 +627,7 @@ void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) 
 				 texture->avg_color.g, texture->avg_color.b);
 
 	// Clean up after we're done
-	free(pixels);
+	mem_free(pixels);
 }
 
 int renderer_get_delta_time_raw() { return 0; }

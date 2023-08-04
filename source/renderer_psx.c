@@ -226,7 +226,7 @@ void renderer_begin_frame(transform_t* camera_transform) {
         const uint8_t tex_offset_x = ((tex_id) & 0b00001100) << 4;\
         const uint8_t tex_offset_y = ((tex_id) & 0b00000011) << 6;\
         new_triangle->clut = getClut(palettes[tex_id].x, palettes[tex_id].y + clut_fade);\
-        new_triangle->tpage = getTPage(0, 0, textures[tex_id].x, textures[tex_id].y);\
+        new_triangle->tpage = getTPage(0, 0, textures[tex_id].x, textures[tex_id].y) & ~(1 << 9);\
         setUV4(new_triangle,\
             (v0.u >> 2) + tex_offset_x,\
             (v0.v >> 2) + tex_offset_y,\
@@ -1231,9 +1231,9 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 #else
     const int y_offset = -16;
 #endif
-    POLY_GT4* new_triangle = (POLY_GT4*)next_primitive;
-    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
-    setPolyGT4(new_triangle); 
+    POLY_FT4* new_triangle = (POLY_FT4*)next_primitive;
+    next_primitive += sizeof(POLY_FT4) / sizeof(*next_primitive);
+    setPolyFT4(new_triangle); 
     setXY4(new_triangle, 
         tl.x / ONE, (tl.y / ONE) + y_offset,
         tr.x / ONE, (tr.y / ONE) + y_offset,
@@ -1241,12 +1241,9 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
         br.x / ONE, (br.y / ONE) + y_offset
     );
     setRGB0(new_triangle, 128, 128, 128);\
-    setRGB1(new_triangle, 128, 128, 128);\
-    setRGB2(new_triangle, 128, 128, 128);\
-    setRGB3(new_triangle, 128, 128, 128);\
     if (is_page) {
         new_triangle->clut = getClut(768, 256 + (32*(texture_id)));
-        new_triangle->tpage = getTPage(1, 0, 128 * texture_id, 256);
+        new_triangle->tpage = getTPage(1, 0, 128 * texture_id, 256) & ~(1 << 9);
         setUV4(new_triangle,
             uv_tl.x / ONE, uv_tl.y / ONE, // top left
             uv_br.x / ONE, uv_tl.y / ONE, // top right
@@ -1258,7 +1255,7 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
         const uint8_t tex_offset_x = ((texture_id) & 0b00001100) << 4;
         const uint8_t tex_offset_y = ((texture_id) & 0b00000011) << 6;
         new_triangle->clut = getClut(palettes[texture_id].x, palettes[texture_id].y);
-        new_triangle->tpage = getTPage(0, 0, textures[texture_id].x, textures[texture_id].y);
+        new_triangle->tpage = getTPage(0, 0, textures[texture_id].x, textures[texture_id].y) & ~(1 << 9);
         setUV4(new_triangle,
             uv_tl.x + tex_offset_x, uv_tl.y + tex_offset_y,
             uv_br.x + tex_offset_x, uv_tl.y + tex_offset_y,

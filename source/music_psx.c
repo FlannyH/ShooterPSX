@@ -8,6 +8,7 @@
 #include "fixed_point.h"
 #include "vec2.h"
 #include "file.h"
+#include "memory.h"
 
 // Channels
 spu_channel_t spu_channel[24];
@@ -84,19 +85,19 @@ void music_load_soundbank(const char* path) {
 	SpuWrite(sample_data, sbk_header->length_sample_data);
 
 	// Copy the instruments and regions to another part in memory
-	if (instruments) free(instruments);
-	if (instrument_regions) free(instrument_regions);
+	if (instruments) mem_free(instruments);
+	if (instrument_regions) mem_free(instrument_regions);
 	uint8_t* inst_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_descs;
 	uint8_t* region_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_regions;
 	size_t inst_size = sizeof(instrument_description_t) * 256;
 	size_t region_size = sizeof(instrument_region_header_t) * sbk_header->n_samples;
-	instruments = (instrument_description_t*)malloc(inst_size);
-	instrument_regions = (instrument_region_header_t*)malloc(region_size);
+	instruments = (instrument_description_t*)mem_alloc(inst_size, MEM_CAT_AUDIO);
+	instrument_regions = (instrument_region_header_t*)mem_alloc(region_size, MEM_CAT_AUDIO);
 	memcpy(instruments, inst_data, inst_size);
 	memcpy(instrument_regions, region_data, region_size);
 
 	// Free the original file
-	free(sbk_header);
+	mem_free(sbk_header);
 }
 
 void music_load_sequence(const char* path) {
@@ -113,7 +114,7 @@ void music_load_sequence(const char* path) {
         return;
 	}
 
-	if (curr_loaded_seq) free(curr_loaded_seq);
+	if (curr_loaded_seq) mem_free(curr_loaded_seq);
 	curr_loaded_seq = (dyn_song_seq_header_t*)data; // curr_loaded_seq now owns this memory
 
 }

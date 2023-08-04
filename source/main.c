@@ -21,6 +21,7 @@
 #include "player.h"
 
 #include "texture.h"
+#include "memory.h"
 
 int widescreen = 0;
 state_t current_state = STATE_NONE;
@@ -49,6 +50,7 @@ struct {
 
 
 int main(void) {
+	mem_debug();
 	// Init systems
 	renderer_init();
 	input_init();
@@ -141,12 +143,13 @@ void state_enter_title_screen(void) {
 	texture_cpu_t *tex_menu1;
 	texture_cpu_t *tex_menu2;
 	texture_cpu_t *tex_ui;
-	texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU1.TXC;1", &tex_menu1);
-	texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU2.TXC;1", &tex_menu2);
-	texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\UI.TXC;1", &tex_ui);
+	texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU1.TXC;1", &tex_menu1, 1);
+	texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU2.TXC;1", &tex_menu2, 1);
+	texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\UI.TXC;1", &tex_ui, 1);
 	render_upload_8bit_texture_page(tex_menu1, 2);
 	render_upload_8bit_texture_page(tex_menu2, 3);
 	render_upload_8bit_texture_page(tex_ui, 4);
+	mem_free_scheduled_frees();
 	music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK;1");
 	music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\LEVEL3.DSS;1");
 	music_play_sequence(0);
@@ -217,13 +220,12 @@ void state_enter_in_game(void) {
 	// Load textures
 	texture_cpu_t *tex_level;
 	texture_cpu_t *entity_textures;
-	const uint32_t n_level_textures = texture_collection_load("\\ASSETS\\MODELS\\LEVEL.TXC;1", &tex_level);
-	const uint32_t n_entity_textures = texture_collection_load("\\ASSETS\\MODELS\\ENTITY.TXC;1", &entity_textures);
+	const uint32_t n_level_textures = texture_collection_load("\\ASSETS\\MODELS\\LEVEL.TXC;1", &tex_level, 1);
+	const uint32_t n_entity_textures = texture_collection_load("\\ASSETS\\MODELS\\ENTITY.TXC;1", &entity_textures, 1);
 	for (uint8_t i = 0; i < n_level_textures; ++i) {
 	    renderer_upload_texture(&tex_level[i], i);
 	}
-	texture_collection_unload(&tex_level, n_level_textures);
-	texture_collection_unload(&entity_textures, n_entity_textures);
+	mem_free_scheduled_frees();
 	
 
 	// Start music
@@ -233,6 +235,8 @@ void state_enter_in_game(void) {
 	music_play_sequence(0);
 	
 	music_set_volume(255);
+	
+	mem_debug();
 }
 
 void state_update_in_game(int dt) {

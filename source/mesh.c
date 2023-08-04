@@ -1,4 +1,5 @@
 #include "mesh.h"
+#include "memory.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,9 +27,9 @@ model_t* model_load(const char* path) {
     vertex_3d_t* vertex_data = (vertex_3d_t*)((intptr_t)binary_section + model_header->offset_vertex_data);
 
     // Create a model object
-    model_t* model = malloc(sizeof(model_t));
+    model_t* model = mem_alloc(sizeof(model_t), MEM_CAT_MODEL);
     model->n_meshes = model_header->n_submeshes;
-    model->meshes = malloc(sizeof(mesh_t) * model_header->n_submeshes);
+    model->meshes = mem_alloc(sizeof(mesh_t) * model_header->n_submeshes, MEM_CAT_MESH);
 
     // Loop over each submesh and create a model
     for (size_t i = 0; i < model_header->n_submeshes; ++i) {
@@ -73,12 +74,12 @@ model_t* model_load_collision_debug(const char* path) {
     }
 
     // Convert all vertices into visual vertices
-    model_t* model = malloc(sizeof(model_t));
-    model->meshes = malloc(sizeof(mesh_t));
+    model_t* model = mem_alloc(sizeof(model_t), MEM_CAT_MODEL);
+    model->meshes = mem_alloc(sizeof(mesh_t), MEM_CAT_MESH);
     model->n_meshes = 1,
     model->meshes[0].n_quads = 0;
     model->meshes[0].n_triangles = col_mesh->n_verts / 3;
-    model->meshes[0].vertices = malloc(sizeof(vertex_3d_t) * col_mesh->n_verts);
+    model->meshes[0].vertices = mem_alloc(sizeof(vertex_3d_t) * col_mesh->n_verts, MEM_CAT_MESH);
     model->meshes[0].bounds = (aabb_t) {
         .max = (vec3_t) {.x = INT32_MAX, .y = INT32_MAX, .z = INT32_MAX,},
         .min = (vec3_t) {.x = INT32_MIN, .y = INT32_MIN, .z = INT32_MIN,},
@@ -132,7 +133,7 @@ collision_mesh_t* model_load_collision(const char* path) {
     }
 
     // Return the collision model
-    collision_mesh_t* output = malloc(sizeof(collision_mesh_t));
+    collision_mesh_t* output = mem_alloc(sizeof(collision_mesh_t), MEM_CAT_COLLISION);
     output->n_verts = col_mesh->n_verts;
     output->verts = (col_mesh_file_vert_t*)(col_mesh + 1);
     return output;

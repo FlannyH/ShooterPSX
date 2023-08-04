@@ -3,8 +3,9 @@
 
 #include "file.h"
 #include "texture.h"
+#include "memory.h"
 
-uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures) { // returns number of textures loaded
+uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures, int schedule_free) { // returns number of textures loaded
     // Read the file
     uint32_t* file_data;
     size_t size;
@@ -20,7 +21,7 @@ uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures)
     }
 
     // Allocate space for TextureCPU structs
-    *out_textures = malloc(sizeof(texture_cpu_t) * tex_col_hdr->n_texture_cell);
+    *out_textures = mem_alloc(sizeof(texture_cpu_t) * tex_col_hdr->n_texture_cell, MEM_CAT_TEXTURE);
 
     // Find the data sections
     const void* binary_section = &tex_col_hdr[1];
@@ -41,9 +42,10 @@ uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures)
         texture_cpu->avg_color = tex_cell_desc->avg_color;
     }
 
-    return tex_col_hdr->n_texture_cell;
-}
+    if (schedule_free) {
+        mem_delayed_free(file_data);
+        mem_delayed_free(*out_textures);
+    }
 
-void texture_collection_unload(texture_cpu_t** textures, int n_textures) {
-    // todo
+    return tex_col_hdr->n_texture_cell;
 }

@@ -1,4 +1,5 @@
 #include "collision.h"
+#include "memory.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -18,7 +19,7 @@ int n_vertical_cylinder_triangle_intersects = 0;
 void bvh_construct(bvh_t* bvh, const col_mesh_file_tri_t* primitives, const uint16_t n_primitives) {
     // Convert triangles from the model into collision triangles
     // todo: maybe store this mesh in the file? not sure if it's worth implementing but could be nice
-    bvh->primitives = malloc(sizeof(collision_triangle_3d_t) * n_primitives);
+    bvh->primitives = mem_alloc(sizeof(collision_triangle_3d_t) * n_primitives, MEM_CAT_COLLISION);
     bvh->n_primitives = n_primitives;
     PANIC_IF("failed to allocate memory for collision model!", bvh->primitives == 0);
 
@@ -40,68 +41,18 @@ void bvh_construct(bvh_t* bvh, const col_mesh_file_tri_t* primitives, const uint
         bvh->primitives[i].center = vec3_add(bvh->primitives[i].center, bvh->primitives[i].v1);
         bvh->primitives[i].center = vec3_add(bvh->primitives[i].center, bvh->primitives[i].v2);
         bvh->primitives[i].center = vec3_muls(bvh->primitives[i].center, 1365);
-
-        // Precalculate triangle collision variables
-        vec3_t c = vec3_sub(bvh->primitives[i].v2, bvh->primitives[i].v0);
-        vec3_t b = vec3_sub(bvh->primitives[i].v1, bvh->primitives[i].v0);
-        int n_shifts_edge = 0;
-
-        // Make sure we don't overflow - we can do expensive stuff here so we don't have to do that later :)
-        while (vec3_dot(c, c) == INT32_MAX || vec3_dot(b, c) == INT32_MAX || vec3_dot(b, b) == INT32_MAX) {
-            c = vec3_shift_right(c, 1);
-            b = vec3_shift_right(b, 1);
-            ++n_shifts_edge;
-        }
-        // Shift some more for good measure - this is scuffed but will have to do
-        c = vec3_shift_right(c, 4);
-        b = vec3_shift_right(b, 4);
-        n_shifts_edge += 4;
-
-        scalar_t cc = vec3_dot(c, c);
-        scalar_t bc = vec3_dot(b, c);
-        scalar_t bb = vec3_dot(b, b);
-        int n_shifts_dot = 0;
-
-        // Make sure we don't overflow - we can do expensive stuff here so we don't have to do that later :)
-        while (scalar_mul(cc, bb) == INT32_MAX || scalar_mul(bc, bc) == INT32_MAX) {
-            cc = cc >> 1;
-            bc = bc >> 1;
-            bb = bb >> 1;
-            ++n_shifts_dot;
-        }
-
-        // Shift some more for good measure
-        cc = cc >> 4;
-        bc = bc >> 4;
-        bb = bb >> 4;
-        n_shifts_dot += 4;
-
-        //Get barycentric coordinates
-        const scalar_t cc_bb = scalar_mul(cc, bb); 
-        const scalar_t bc_bc = scalar_mul(bc, bc); 
-        const scalar_t d = cc_bb - bc_bc;
-
-        // Put it in the triangle
-        bvh->primitives[i].edge_c = c;
-        bvh->primitives[i].edge_b = b;
-        bvh->primitives[i].cc = cc; 
-        bvh->primitives[i].bc = bc;
-        bvh->primitives[i].bb = bb;
-        bvh->primitives[i].d = d;
-        bvh->primitives[i].n_shifts_edge = n_shifts_edge;
-        bvh->primitives[i].n_shifts_dot = n_shifts_dot;
     }
 
 
     // Create index array
-    bvh->indices = malloc(sizeof(uint16_t) * n_primitives);
+    bvh->indices = mem_alloc(sizeof(uint16_t) * n_primitives, MEM_CAT_COLLISION);
     for (int i = 0; i < n_primitives; i++)
     {
         bvh->indices[i] = i;
     }
 
     // Create root node
-    bvh->nodes = malloc(sizeof(bvh_node_t) * n_primitives * 2);
+    bvh->nodes = mem_alloc(sizeof(bvh_node_t) * n_primitives * 2, MEM_CAT_COLLISION);
     bvh->node_pointer = 2;
     bvh->root = &bvh->nodes[0]; // todo: maybe we can just hard code the root to be index 0 and skip this indirection?
     bvh->root->left_first = 0;

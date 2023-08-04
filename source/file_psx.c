@@ -1,5 +1,6 @@
 #ifdef _PSX
 #include "file.h"
+#include "memory.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <psxcd.h> // Disc IO
@@ -19,7 +20,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size) {
     *size = file.size;
 
     // Allocate enough bytes for the destination buffer
-    *destination = (uint32_t*)malloc(file_size);
+    *destination = (uint32_t*)mem_alloc(file_size, MEM_CAT_FILE);
 
     // Seek to the file and read it
     CdControl(CdlSetloc, &file.pos, 0);

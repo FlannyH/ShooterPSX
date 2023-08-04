@@ -70,17 +70,8 @@ typedef struct {
 
 typedef struct {
     vec3_t v0, v1, v2;
-    // precalculated values
     vec3_t normal;
     vec3_t center;
-    vec3_t edge_b;
-    vec3_t edge_c;
-    scalar_t cc;
-    scalar_t bb;
-    scalar_t bc;
-    scalar_t d;
-    uint16_t n_shifts_edge;
-    uint16_t n_shifts_dot;
 } collision_triangle_3d_t;
 
 typedef struct {

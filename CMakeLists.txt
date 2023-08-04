@@ -25,6 +25,7 @@ if (DEFINED PSN00BSDK_TARGET)
         source/collision.c
         source/fixed_point.c
         source/player.c
+        source/memory.c
     )
 
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall -Wno-unused-function")
@@ -51,6 +52,7 @@ else()
         source/collision.c
         source/fixed_point.c
         source/player.c
+        source/memory.c
         source/win/psx.c
         source/win/debug_layer.cpp
         external/source/GL/gl3w.c
