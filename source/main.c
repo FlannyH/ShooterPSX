@@ -338,6 +338,8 @@ void state_enter_in_game(void) {
 	music_play_sequence(0);
 	
 	music_set_volume(255);
+	FntLoad(256,256);
+	FntOpen(32, 32, 256, 192, 0, 512);
 	
 	mem_debug();
 }
@@ -366,13 +368,13 @@ void state_update_in_game(int dt) {
 		PROFILE("render", renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0), 1);
 		PROFILE("player", player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt), 1);
 		PROFILE("music", music_tick(16), 1);
-		//FntPrint(-1, "sections: ");
-		//for (int i = 0; i < n_sections; ++i) FntPrint(-1, "%i, ", sections[i]);
-		//FntPrint(-1, "\n");
-		//FntPrint(-1, "dt: %i\n", dt);
-		//FntPrint(-1, "meshes drawn: %i / %i\n", n_meshes_drawn, n_meshes_total);
+		FntPrint(-1, "sections: ");
+		for (int i = 0; i < n_sections; ++i) FntPrint(-1, "%i, ", sections[i]);
+		FntPrint(-1, "\n");
+		FntPrint(-1, "dt: %i\n", dt);
+		FntPrint(-1, "meshes drawn: %i / %i\n", n_meshes_drawn, n_meshes_total);
 		collision_clear_stats();
-		//FntFlush(-1);
+		FntFlush(-1);
 	}
 	else {
 		input_update();
@@ -536,6 +538,7 @@ void state_enter_credits(void) {
 }
 void state_update_credits(int dt) {
 	renderer_begin_frame(&id_transform);
+	music_tick(16);
 
 	// Draw background
 	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
@@ -547,7 +550,7 @@ void state_update_credits(int dt) {
 	}
 
 	// Scroll text
-	state.credits.scroll -= 16 * 80;
+	state.credits.scroll -= dt * 140;
 
 	//music_tick(16);
 	renderer_end_frame();
@@ -580,4 +583,5 @@ void state_exit_credits(void) {
 		renderer_end_frame();
 	}
 	state.global.fade_level = 255;
+	state.title_screen.assets_in_memory = 0;
 }
