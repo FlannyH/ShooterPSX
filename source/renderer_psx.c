@@ -1218,15 +1218,15 @@ vec3_t renderer_get_forward_vector() {
     return result;
 }
 
-void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, int depth, int texture_id, int is_page) {
+void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {
     const vec2_t tl = {center.x - size.x/2, center.y - size.y/2};
     const vec2_t tr = {center.x + size.x/2, center.y - size.y/2};
     const vec2_t bl = {center.x - size.x/2, center.y + size.y/2};
     const vec2_t br = {center.x + size.x/2, center.y + size.y/2};
-    renderer_draw_2d_quad(tl, tr, bl, br, uv_tl, uv_br, depth, texture_id, is_page);
+    renderer_draw_2d_quad(tl, tr, bl, br, uv_tl, uv_br, color, depth, texture_id, is_page);
 }
 
-void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, int depth, int texture_id, int is_page) {
+void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {
 #ifdef PAL
     const int y_offset = 0;
 #else
@@ -1241,7 +1241,7 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
         bl.x / ONE, (bl.y / ONE) + y_offset,
         br.x / ONE, (br.y / ONE) + y_offset
     );
-    setRGB0(new_triangle, 128, 128, 128);\
+    setRGB0(new_triangle, color.r, color.g, color.b);\
     if (is_page) {
         new_triangle->clut = getClut(768, 256 + (32*(texture_id)));
         new_triangle->tpage = getTPage(1, 0, 128 * texture_id, 256) & ~(1 << 9);
@@ -1291,7 +1291,7 @@ void renderer_apply_fade(int fade_level) {
 }
 
 
-void renderer_draw_text(vec2_t pos, char* text, int is_big) {
+void renderer_draw_text(vec2_t pos, char* text, int is_big, int centered) {
     // if (is_small)
     int font_x = 0;
     int font_y = 60;
@@ -1305,6 +1305,10 @@ void renderer_draw_text(vec2_t pos, char* text, int is_big) {
         font_width = 16;
         font_height = 16;
         chars_per_row = 16;
+    }
+
+    if (centered) {
+        pos.x -= ((strlen(text)) * font_width - (font_width / 2)) * ONE / 2;
     }
 
     vec2_t start_pos = pos;
@@ -1340,7 +1344,7 @@ void renderer_draw_text(vec2_t pos, char* text, int is_big) {
         top_left.y = (font_y + ((index_to_draw / chars_per_row) * font_height)) * ONE;
         vec2_t bottom_right = vec2_add(top_left, (vec2_t){(font_width-1)*ONE, (font_height-1)*ONE});
 
-        renderer_draw_2d_quad_axis_aligned(pos, (vec2_t){(font_width-1)*ONE, (font_height-1)*ONE}, top_left, bottom_right, 0, 5, 1);
+        renderer_draw_2d_quad_axis_aligned(pos, (vec2_t){(font_width-1)*ONE, (font_height-1)*ONE}, top_left, bottom_right, (pixel32_t){128, 128, 128}, 0, 5, 1);
         pos.x += font_width * ONE;
         end:
         ++text;

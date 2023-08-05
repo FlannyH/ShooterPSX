@@ -43,9 +43,9 @@ void renderer_end_frame(void); // Draws the render queue, swaps the drawbuffer, 
 void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, vislist_t* vislist, int tex_id_offset); // Draws a 3D model at a given transform using shaded triangle primitives
 void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform); // Draws a 3D mesh at a given transform using shaded triangle primitives
 void renderer_draw_entity_shaded(const mesh_t* mesh, transform_t* model_transform, int texpage); // Same as draw_mesh, except it uses 8-bit texture pages instead of 4-bit textures
-void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, int depth, int texture_id, int is_page);
-void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, int depth, int texture_id, int is_page);
-void renderer_draw_text(vec2_t pos, char* text, int is_big);
+void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page);
+void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page);
+void renderer_draw_text(vec2_t pos, char* text, int is_big, int centered);
 void renderer_apply_fade(int fade_level);
 void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t* model_transform);
 void renderer_debug_draw_aabb(const aabb_t* box, pixel32_t color, transform_t* model_transform);
