@@ -96,10 +96,15 @@ void renderer_set_video_mode(int is_pal) {
 
         gte_SetGeomOffset(CENTER_X, CENTER_Y_NTSC);
     }
+    gte_SetGeomScreen(120);
+
     // Specifies the clear color of the DRAWENV
     setRGB0(&draw[0], 16, 16, 20);
     setRGB0(&draw[1], 16, 16, 20);
-    gte_SetGeomScreen(120);
+    
+    // Enable background clear
+    draw[0].isbg = 1;
+    draw[1].isbg = 1;
 }
 
 void renderer_init(void) {

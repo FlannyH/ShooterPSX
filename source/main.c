@@ -30,7 +30,7 @@ extern int is_pal;
 state_t current_state = STATE_NONE;
 state_t prev_state = STATE_NONE;
 int should_transition_state = 0;
-#define FADE_SPEED 12
+#define FADE_SPEED 18
 #define FADE_SPEED_SLOW 5
 
 struct {
@@ -294,7 +294,7 @@ void state_exit_title_screen(void) {
 		renderer_apply_fade(state.global.fade_level);
 
 		renderer_end_frame();
-		state.global.fade_level += FADE_SPEED_SLOW;
+		state.global.fade_level += FADE_SPEED;
 		if (current_state == STATE_IN_GAME) music_set_volume(255 - state.global.fade_level);
 		music_tick(16);
 	}
@@ -421,7 +421,7 @@ void state_update_settings(int dt) {
 	for (int i = 0; i < 5; ++i) {
 		pixel32_t color = (pixel32_t){128, 128, 128};
 		if (i == state.settings.button_selected) {
-			if (state.title_screen.button_pressed) {
+			if (state.settings.button_pressed) {
 				color.r = 64;
 				color.g = 64;
 				color.b = 64;
@@ -481,7 +481,41 @@ void state_update_settings(int dt) {
 	return;
 }
 void state_exit_settings(void) {
-	return;
+	state.global.fade_level = 0;
+
+	while (state.global.fade_level < 255) {
+		renderer_begin_frame(&id_transform);
+		music_tick(16);
+		input_update();
+		// Draw background
+		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
+		
+		renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_settings[0], 1, 1);
+
+		// Draw settings text and box
+		for (int i = 0; i < 5; ++i) {
+			pixel32_t color = (pixel32_t){128, 128, 128};
+			if (i == state.settings.button_selected) {
+				if (state.settings.button_pressed) {
+					color.r = 64;
+					color.g = 64;
+					color.b = 64;
+				}
+				else {
+					color.r = 255;
+					color.g = 255;
+					color.b = 255;
+				}
+			}
+			renderer_draw_text((vec2_t){64*ONE, (96 + (24 * i))*ONE}, text_settings[i+1], 1, 0);
+			renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, (96 + (24 * i))*ONE}, (vec2_t){448*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, color, 2, 5, 1);
+		}
+		state.global.fade_level += FADE_SPEED;
+		renderer_apply_fade(state.global.fade_level);
+		renderer_end_frame();
+	}
+	state.global.fade_level = 255;
 }
 
 void state_enter_credits(void) {
