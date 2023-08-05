@@ -1344,7 +1344,7 @@ void renderer_draw_text(vec2_t pos, char* text, int is_big, int centered) {
         top_left.y = (font_y + ((index_to_draw / chars_per_row) * font_height)) * ONE;
         vec2_t bottom_right = vec2_add(top_left, (vec2_t){(font_width-1)*ONE, (font_height-1)*ONE});
 
-        renderer_draw_2d_quad_axis_aligned(pos, (vec2_t){(font_width-1)*ONE, (font_height-1)*ONE}, top_left, bottom_right, (pixel32_t){128, 128, 128}, 0, 5, 1);
+        renderer_draw_2d_quad_axis_aligned(pos, (vec2_t){(font_width-1)*ONE, (font_height-1)*ONE}, top_left, bottom_right, (pixel32_t){128, 128, 128}, 1, 5, 1);
         pos.x += font_width * ONE;
         end:
         ++text;

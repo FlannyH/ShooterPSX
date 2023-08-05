@@ -39,7 +39,11 @@ struct {
 	} global;
 	struct {
 		int button_selected;
+		int button_pressed;
 	} title_screen;
+	struct {
+		scalar_t scroll;
+	} credits;
 	struct {
 		transform_t t_level;
 		model_t* m_level;
@@ -92,6 +96,12 @@ int main(void) {
 				case STATE_TITLE_SCREEN:
 					state_exit_title_screen();
 					break;
+				case STATE_CREDITS:
+					state_exit_credits();
+					break;
+				case STATE_SETTINGS:
+					state_exit_settings();
+					break;
 				case STATE_IN_GAME:
 					state_exit_in_game();
 					break;
@@ -102,6 +112,12 @@ int main(void) {
 					break;
 				case STATE_TITLE_SCREEN:
 					state_enter_title_screen();
+					break;
+				case STATE_CREDITS:
+					state_enter_credits();
+					break;
+				case STATE_SETTINGS:
+					state_enter_settings();
 					break;
 				case STATE_IN_GAME:
 					state_enter_in_game();
@@ -116,6 +132,12 @@ int main(void) {
 				break;
 			case STATE_TITLE_SCREEN:
 				state_update_title_screen(delta_time);
+				break;
+			case STATE_CREDITS:
+				state_update_credits(delta_time);
+				break;
+			case STATE_SETTINGS:
+				state_update_settings(delta_time);
 				break;
 			case STATE_IN_GAME:
 				state_update_in_game(delta_time);
@@ -171,9 +193,16 @@ void state_update_title_screen(int dt) {
 		// Left handle, right handle, middle bar, text
 		pixel32_t color = (pixel32_t){128, 128, 128};
 		if (y == state.title_screen.button_selected) {
-			color.r = 255;
-			color.g = 255;
-			color.b = 255;
+			if (state.title_screen.button_pressed) {
+				color.r = 64;
+				color.g = 64;
+				color.b = 64;
+			}
+			else {
+				color.r = 255;
+				color.g = 255;
+				color.b = 255;
+			}
 		}
 		renderer_draw_2d_quad_axis_aligned((vec2_t){145*ONE, (148 + (24 * y))*ONE}, (vec2_t){26*ONE, 20*ONE}, (vec2_t){129*ONE, 40*ONE}, (vec2_t){155*ONE, 60*ONE}, color, 2, 5, 1);
 		renderer_draw_2d_quad_axis_aligned((vec2_t){367*ONE, (148 + (24 * y))*ONE}, (vec2_t){26*ONE, 20*ONE}, (vec2_t){155*ONE, 40*ONE}, (vec2_t){129*ONE, 60*ONE}, color, 2, 5, 1);
@@ -183,29 +212,33 @@ void state_update_title_screen(int dt) {
 	}
 
 	// Handle button navigation
-	if (input_pressed(PAD_UP, 0) && state.title_screen.button_selected > 0) state.title_screen.button_selected--;
-	if (input_pressed(PAD_DOWN, 0) && state.title_screen.button_selected < 2) state.title_screen.button_selected++;
+	if (input_pressed(PAD_UP, 0) && state.title_screen.button_selected > 0) {
+		state.title_screen.button_selected--;
+		state.title_screen.button_pressed = 0;
+	}
+	if (input_pressed(PAD_DOWN, 0) && state.title_screen.button_selected < 2) {
+		state.title_screen.button_selected++;
+		state.title_screen.button_pressed = 0;
+	}
+	if (input_pressed(PAD_CIRCLE, 0) || input_pressed(PAD_CROSS, 0)) {
+		state.title_screen.button_pressed = 1;
+	}
 
 	// Handle button presses
-	if (input_pressed(PAD_CROSS, 0) || input_pressed(PAD_CIRCLE, 0)) {
+	if (input_released(PAD_CROSS, 0) || input_released(PAD_CIRCLE, 0)) {
+		state.title_screen.button_pressed = 0;
 		switch (state.title_screen.button_selected) {
 			case 0: // start game
 				current_state = STATE_IN_GAME;
 				break;
 			case 1: // settings
-				printf("settings\n");
+				current_state = STATE_SETTINGS;
 				break;
 			case 2: // credits
-				printf("credits\n");
+				current_state = STATE_CREDITS;
 				break;
 		}
 	}
-
-	
-	// Debug
-	char text[] = "x";
-	text[0] = '0' + state.title_screen.button_selected;
-	renderer_draw_text((vec2_t){256*ONE, 192*ONE}, text, 0, 0);
 
 #ifdef _DEBUG
 	char debug_text[64];
@@ -234,9 +267,6 @@ void state_update_title_screen(int dt) {
 	renderer_end_frame();
 }
 void state_exit_title_screen(void) {
-}
-
-void state_enter_in_game(void) {
 	state.global.fade_level = 0;
 	while (state.global.fade_level < 255) {
 		renderer_begin_frame(&id_transform);
@@ -253,11 +283,13 @@ void state_enter_in_game(void) {
 
 		renderer_end_frame();
 		state.global.fade_level += FADE_SPEED_SLOW;
-		
-		music_set_volume(255 - state.global.fade_level);
+		if (current_state == STATE_IN_GAME) music_set_volume(255 - state.global.fade_level);
 		music_tick(16);
 	}
 	state.global.fade_level = 255;
+}
+
+void state_enter_in_game(void) {
 
     // Init player
     state.in_game.player.position.x = 11705653 / 2;
@@ -344,4 +376,102 @@ void state_update_in_game(int dt) {
 }
 void state_exit_in_game(void) {
 	return;
+}
+
+void state_enter_settings(void) {
+	state.global.fade_level = 255;
+	state.title_screen.button_pressed = 0;
+	while (state.global.fade_level > 0) {
+		renderer_begin_frame(&id_transform);
+		music_tick(16);
+		// Draw background
+		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
+		renderer_apply_fade(state.global.fade_level);
+		state.global.fade_level -= FADE_SPEED;
+		renderer_end_frame();
+	}
+	state.global.fade_level = 0;
+}
+void state_update_settings(int dt) {
+	renderer_begin_frame(&id_transform);
+	music_tick(16);
+	// Draw background
+	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
+	renderer_apply_fade(state.global.fade_level);
+	state.global.fade_level -= FADE_SPEED;
+	renderer_end_frame();
+	return;
+}
+void state_exit_settings(void) {
+	return;
+}
+
+void state_enter_credits(void) {
+	state.global.fade_level = 255;
+	while (state.global.fade_level > 0) {
+		renderer_begin_frame(&id_transform);
+		music_tick(16);
+		// Draw background
+		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
+		renderer_apply_fade(state.global.fade_level);
+		state.global.fade_level -= FADE_SPEED;
+		renderer_end_frame();
+	}
+	state.global.fade_level = 0;
+	state.credits.scroll = 0;
+	return;
+}
+void state_update_credits(int dt) {
+	renderer_begin_frame(&id_transform);
+
+	// Draw background
+	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
+
+	// Draw text
+	for (int i = 0; i < sizeof(text_credits) / sizeof(text_credits[0]); ++i) {
+		renderer_draw_text((vec2_t){256 * ONE, (state.credits.scroll + i * 16 * ONE) + (256 * ONE)}, text_credits[i], 1, 1);
+	}
+
+	char buf[64];
+	sprintf(buf, "scroll: %i", state.credits.scroll);
+	renderer_draw_text((vec2_t){32*ONE, 64*ONE}, buf, 0, 0);
+
+	// Scroll text
+	state.credits.scroll -= 16 * 80;
+
+	//music_tick(16);
+	renderer_end_frame();
+	input_update();
+	if (input_pressed(0xFFFF, 0) || state.credits.scroll < -5800000) {
+		current_state = STATE_TITLE_SCREEN;
+	}
+	return;
+}
+void state_exit_credits(void) {
+	music_stop();
+
+	// Fade
+	state.global.fade_level = 0;
+	while (state.global.fade_level < 255) {
+		renderer_begin_frame(&id_transform);
+		
+		// Draw background
+		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
+
+		// Draw text
+		renderer_begin_frame(&id_transform);
+		for (int i = 0; i < sizeof(text_credits) / sizeof(text_credits[0]); ++i) {
+			renderer_draw_text((vec2_t){256 * ONE, (state.credits.scroll + i * 16 * ONE) + (256 * ONE)}, text_credits[i], 1, 1);
+		}
+		input_update();
+		renderer_apply_fade(state.global.fade_level);
+		state.global.fade_level += FADE_SPEED;
+		renderer_end_frame();
+	}
+	state.global.fade_level = 255;
 }
