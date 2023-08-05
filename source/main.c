@@ -27,8 +27,8 @@ int widescreen = 0;
 state_t current_state = STATE_NONE;
 state_t prev_state = STATE_NONE;
 int should_transition_state = 0;
-#define FADE_SPEED 4
-#define FADE_SPEED_SLOW 2
+#define FADE_SPEED 8
+#define FADE_SPEED_SLOW 4
 
 struct {
 	struct {
@@ -130,10 +130,6 @@ void init(void) {
 	SpuInit();
 	CdInit();
 
-	// Load the internal font texture
-	FntLoad(768, 256);
-	// Create the text stream
-	FntOpen(16, 16, 480, 224, 0, 512);
 
 #endif
 }
@@ -146,24 +142,41 @@ void state_enter_title_screen(void) {
 	texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU1.TXC;1", &tex_menu1, 1);
 	texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU2.TXC;1", &tex_menu2, 1);
 	texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\UI.TXC;1", &tex_ui, 1);
-	render_upload_8bit_texture_page(tex_menu1, 2);
-	render_upload_8bit_texture_page(tex_menu2, 3);
-	render_upload_8bit_texture_page(tex_ui, 4);
+	render_upload_8bit_texture_page(tex_menu1, 3);
+	render_upload_8bit_texture_page(tex_menu2, 4);
+	render_upload_8bit_texture_page(tex_ui, 5);
 	mem_free_scheduled_frees();
 	music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK;1");
 	music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\LEVEL3.DSS;1");
 	music_play_sequence(0);
 	state.global.fade_level = 255;
 }
+
 void state_update_title_screen(int dt) {
 	renderer_begin_frame(&id_transform);
 	input_update();
 	// Draw background
-	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, 3, 2, 1);
-	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, 3, 3, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, 3, 3, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, 3, 4, 1);
 
 	// Draw Sub Nivis logo
-	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 85*ONE}, (vec2_t){128*ONE, 72*ONE}, (vec2_t){0*ONE, 184*ONE}, (vec2_t){128*ONE, 255*ONE}, 2, 4, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 85*ONE}, (vec2_t){128*ONE, 72*ONE}, (vec2_t){0*ONE, 184*ONE}, (vec2_t){128*ONE, 255*ONE}, 2, 5, 1);
+
+#ifdef _DEBUG
+	char debug_text[64];
+	char* curr_pointer = debug_text;
+	sprintf(curr_pointer, "DEBUG\n"); curr_pointer += strlen("DEBUG ");
+#ifdef PAL
+	sprintf(curr_pointer, "PAL\n");  curr_pointer += strlen("PAL ");
+#else
+	sprintf(curr_pointer, "NTSC\n");  curr_pointer += strlen("NTSC ");
+#endif
+#ifdef DEBUG_CAMERA
+	sprintf(curr_pointer, "FREECAM\n");  curr_pointer += strlen("FREECAM ");
+#endif
+
+	renderer_draw_text((vec2_t){32*ONE, 192*ONE}, debug_text, 0);
+#endif
 
 	if (input_pressed(PAD_START, 0)) {
 		current_state = STATE_IN_GAME;
@@ -185,11 +198,11 @@ void state_enter_in_game(void) {
 		input_update();
 
 		// Draw background
-		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, 3, 2, 1);
-		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, 3, 3, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, 3, 3, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, 3, 4, 1);
 
 		// Draw Sub Nivis logo
-		renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 85*ONE}, (vec2_t){128*ONE, 72*ONE}, (vec2_t){0*ONE, 184*ONE}, (vec2_t){128*ONE, 255*ONE}, 2, 4, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 85*ONE}, (vec2_t){128*ONE, 72*ONE}, (vec2_t){0*ONE, 184*ONE}, (vec2_t){128*ONE, 255*ONE}, 2, 5, 1);
 
 		renderer_apply_fade(state.global.fade_level);
 
@@ -243,17 +256,17 @@ void state_update_in_game(int dt) {
 	renderer_begin_frame(&state.in_game.player.transform);
 
 	// Draw crosshair
-	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 128*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){96*ONE, 40*ONE}, (vec2_t){127*ONE, 59*ONE}, 2, 4, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 128*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){96*ONE, 40*ONE}, (vec2_t){127*ONE, 59*ONE}, 2, 5, 1);
 
 	// Draw HUD - background
-	renderer_draw_2d_quad_axis_aligned((vec2_t){(121 - 16)*ONE, 236*ONE}, (vec2_t){50*ONE, 40*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){50*ONE, 40*ONE}, 2, 4, 1);
-	renderer_draw_2d_quad_axis_aligned((vec2_t){(260 - 16)*ONE, 236*ONE}, (vec2_t){228*ONE, 40*ONE}, (vec2_t){51*ONE, 0*ONE}, (vec2_t){51*ONE, 40*ONE}, 2, 4, 1);
-	renderer_draw_2d_quad_axis_aligned((vec2_t){(413 - 16)*ONE, 236*ONE}, (vec2_t){80*ONE, 40*ONE}, (vec2_t){51*ONE, 0*ONE}, (vec2_t){129*ONE, 40*ONE}, 2, 4, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){(121 - 16)*ONE, 236*ONE}, (vec2_t){50*ONE, 40*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){50*ONE, 40*ONE}, 2, 5, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){(260 - 16)*ONE, 236*ONE}, (vec2_t){228*ONE, 40*ONE}, (vec2_t){51*ONE, 0*ONE}, (vec2_t){51*ONE, 40*ONE}, 2, 5, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){(413 - 16)*ONE, 236*ONE}, (vec2_t){80*ONE, 40*ONE}, (vec2_t){51*ONE, 0*ONE}, (vec2_t){129*ONE, 40*ONE}, 2, 5, 1);
 	
 	// Draw HUD - gauges
-	renderer_draw_2d_quad_axis_aligned((vec2_t){(138 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){64*ONE, 40*ONE}, (vec2_t){96*ONE, 60*ONE}, 1, 4, 1);
-	renderer_draw_2d_quad_axis_aligned((vec2_t){(226 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){32*ONE, 40*ONE}, (vec2_t){64*ONE, 60*ONE}, 1, 4, 1);
-	renderer_draw_2d_quad_axis_aligned((vec2_t){(314 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){0*ONE, 40*ONE}, (vec2_t){32*ONE, 60*ONE}, 1, 4, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){(138 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){64*ONE, 40*ONE}, (vec2_t){96*ONE, 60*ONE}, 1, 5, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){(226 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){32*ONE, 40*ONE}, (vec2_t){64*ONE, 60*ONE}, 1, 5, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){(314 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){0*ONE, 40*ONE}, (vec2_t){32*ONE, 60*ONE}, 1, 5, 1);
 
 	int n_sections = player_get_level_section(&state.in_game.player, state.in_game.m_level);
 	state.global.frame_counter += dt;
@@ -263,13 +276,13 @@ void state_update_in_game(int dt) {
 		PROFILE("render", renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0), 1);
 		PROFILE("player", player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt), 1);
 		PROFILE("music", music_tick(16), 1);
-		FntPrint(-1, "sections: ");
-		for (int i = 0; i < n_sections; ++i) FntPrint(-1, "%i, ", sections[i]);
-		FntPrint(-1, "\n");
-		FntPrint(-1, "dt: %i\n", dt);
-		FntPrint(-1, "meshes drawn: %i / %i\n", n_meshes_drawn, n_meshes_total);
+		//FntPrint(-1, "sections: ");
+		//for (int i = 0; i < n_sections; ++i) FntPrint(-1, "%i, ", sections[i]);
+		//FntPrint(-1, "\n");
+		//FntPrint(-1, "dt: %i\n", dt);
+		//FntPrint(-1, "meshes drawn: %i / %i\n", n_meshes_drawn, n_meshes_total);
 		collision_clear_stats();
-		FntFlush(-1);
+		//FntFlush(-1);
 	}
 	else {
 		input_update();

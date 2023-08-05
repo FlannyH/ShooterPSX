@@ -6,7 +6,7 @@
 
 //#define PAL
 //#define DEBUG_CAMERA
-//#define _DEBUG
+#define _DEBUG
 
 #ifdef _WIN32
 #define ALWAYS_INLINE inline
@@ -46,12 +46,11 @@ static void warn_if(const char* error_if_false, const int condition, const int l
 #ifdef _WIN32
     #define PROFILE(name, function, timer) function
 #else
-    #ifndef _DEBUG
+    #ifdef _DEBUG
         #define PROFILE(name, function, timer) { \
             TIMER_CTRL(timer) = 0b0100000000;\
             TIMER_VALUE(timer) = 0;\
             function; \
-            FntPrint(-1, "%s: %i\n", name, TIMER_VALUE(timer) & 0xFFFF); \
         } \
 
     #else
@@ -60,3 +59,4 @@ static void warn_if(const char* error_if_false, const int condition, const int l
 #endif
 
 #endif
+            //FntPrint(-1, "%s: %i\n", name, TIMER_VALUE(timer) & 0xFFFF); \

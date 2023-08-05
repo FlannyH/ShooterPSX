@@ -10,6 +10,7 @@
 #include "player.h"
 #include "input.h"
 #include "vec2.h"
+#include "lut.h"
 
 #define TRI_THRESHOLD_MUL_SUB2 2
 #define TRI_THRESHOLD_MUL_SUB1 5
@@ -1287,6 +1288,63 @@ void renderer_apply_fade(int fade_level) {
     next_primitive += sizeof(DR_TPAGE) / sizeof(*next_primitive);
     setDrawTPage(new_tpage, 1, 0, 2 << 5);
     addPrim(ord_tbl[drawbuffer] + 0, new_tpage);
+}
+
+
+void renderer_draw_text(vec2_t pos, char* text, int is_big) {
+    // if (is_small)
+    int font_x = 0;
+    int font_y = 60;
+    int font_width = 7;
+    int font_height = 9;
+    int chars_per_row = 36;
+
+    if (is_big) {
+        font_x = 0;
+        font_y = 80;
+        font_width = 16;
+        font_height = 16;
+        chars_per_row = 16;
+    }
+
+    vec2_t start_pos = pos;
+
+    // Draw each character
+    while (*text) {
+        // Handle special cases
+        if (*text == '\n') {
+            pos.x = start_pos.x;
+            pos.y += font_height * ONE;
+            goto end;
+        }
+        
+        if (*text == '\r') {
+            pos.x = start_pos.x;
+            goto end;
+        }
+
+        if (*text == '\t') {
+            // Get X coordinate relative to start, and round the position up to the nearest multiple of 4
+            scalar_t rel_x = pos.x - start_pos.x;
+            int n_spaces = 4 - ((rel_x / font_width) % 4);
+            pos.x += n_spaces * font_width * ONE;
+            goto end;
+        }
+
+        // Get index in bitmap
+        int index_to_draw = (int)lut_font_letters[(size_t)*text];
+        
+        // Get UV coordinates
+        vec2_t top_left;
+        top_left.x = (font_x + (font_width * (index_to_draw % chars_per_row))) * ONE;
+        top_left.y = (font_y + ((index_to_draw / chars_per_row) * font_height)) * ONE;
+        vec2_t bottom_right = vec2_add(top_left, (vec2_t){(font_width-1)*ONE, (font_height-1)*ONE});
+
+        renderer_draw_2d_quad_axis_aligned(pos, (vec2_t){(font_width-1)*ONE, (font_height-1)*ONE}, top_left, bottom_right, 0, 5, 1);
+        pos.x += font_width * ONE;
+        end:
+        ++text;
+    }
 }
 
 #endif
