@@ -7,6 +7,15 @@ static const char* text_main_menu[] = {
     "CREDITS"
 };
 
+static const char* text_settings[] = {
+    "SETTINGS",
+    "FRAMERATE:",
+    "VIDEO MODE:",
+    "ASPECT RATIO:",
+    "SENSITIVITY:",
+    "BACK",
+};
+
 static const char* text_credits[] = {
     "PlayStation 1 port",
     "Lily Haverlag",

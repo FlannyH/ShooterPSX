@@ -19,13 +19,11 @@ extern "C" {
     
 #define ORD_TBL_LENGTH 4096
 #define RES_X 512
-#ifdef PAL
-#define RES_Y 256
-#else
-#define RES_Y 240
-#endif
+#define RES_Y_PAL 256
+#define RES_Y_NTSC 240
 #define CENTER_X (RES_X / 2)
-#define CENTER_Y (RES_Y / 2)
+#define CENTER_Y_PAL (RES_Y_PAL / 2)
+#define CENTER_Y_NTSC (RES_Y_NTSC / 2)
 #define N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE 4
 
 typedef struct {
@@ -52,6 +50,7 @@ void renderer_debug_draw_aabb(const aabb_t* box, pixel32_t color, transform_t* m
 void renderer_debug_draw_sphere(sphere_t sphere);
 void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index);
 void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index);
+void renderer_set_video_mode(int is_pal);
 int renderer_get_delta_time_raw(void);
 int renderer_get_delta_time_ms(void);
 int renderer_convert_dt_raw_to_ms(int dt_raw);

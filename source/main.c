@@ -25,22 +25,30 @@
 #include "text.h"
 
 int widescreen = 0;
+extern int vsync_enable;
+extern int is_pal;
 state_t current_state = STATE_NONE;
 state_t prev_state = STATE_NONE;
 int should_transition_state = 0;
-#define FADE_SPEED 8
-#define FADE_SPEED_SLOW 4
+#define FADE_SPEED 12
+#define FADE_SPEED_SLOW 5
 
 struct {
 	struct {
 		int frame_counter;
 		int show_debug;
 		int fade_level; // 255 means black, 0 means no fade
+		state_t state_to_return_to;
 	} global;
 	struct {
 		int button_selected;
 		int button_pressed;
+		int assets_in_memory;
 	} title_screen;
+	struct {
+		int button_selected;
+		int button_pressed;
+	} settings;
 	struct {
 		scalar_t scroll;
 	} credits;
@@ -161,20 +169,23 @@ void init(void) {
 }
 
 void state_enter_title_screen(void) {
-	// Load graphics data
-	texture_cpu_t *tex_menu1;
-	texture_cpu_t *tex_menu2;
-	texture_cpu_t *tex_ui;
-	texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU1.TXC;1", &tex_menu1, 1);
-	texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU2.TXC;1", &tex_menu2, 1);
-	texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\UI.TXC;1", &tex_ui, 1);
-	render_upload_8bit_texture_page(tex_menu1, 3);
-	render_upload_8bit_texture_page(tex_menu2, 4);
-	render_upload_8bit_texture_page(tex_ui, 5);
-	mem_free_scheduled_frees();
-	music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK;1");
-	music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\LEVEL3.DSS;1");
-	music_play_sequence(0);
+	if (!state.title_screen.assets_in_memory) {
+		// Load graphics data
+		texture_cpu_t *tex_menu1;
+		texture_cpu_t *tex_menu2;
+		texture_cpu_t *tex_ui;
+		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU1.TXC;1", &tex_menu1, 1);
+		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU2.TXC;1", &tex_menu2, 1);
+		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\UI.TXC;1", &tex_ui, 1);
+		render_upload_8bit_texture_page(tex_menu1, 3);
+		render_upload_8bit_texture_page(tex_menu2, 4);
+		render_upload_8bit_texture_page(tex_ui, 5);
+		mem_free_scheduled_frees();
+		state.title_screen.assets_in_memory = 1;
+		music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK;1");
+		music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\LEVEL3.DSS;1");
+		music_play_sequence(0);
+	}
 	state.global.fade_level = 255;
 }
 
@@ -244,11 +255,12 @@ void state_update_title_screen(int dt) {
 	char debug_text[64];
 	char* curr_pointer = debug_text;
 	sprintf(curr_pointer, "DEBUG\n"); curr_pointer += strlen("DEBUG ");
-#ifdef PAL
-	sprintf(curr_pointer, "PAL\n");  curr_pointer += strlen("PAL ");
-#else
-	sprintf(curr_pointer, "NTSC\n");  curr_pointer += strlen("NTSC ");
-#endif
+	if (is_pal) {
+		sprintf(curr_pointer, "PAL\n");  curr_pointer += strlen("PAL ");
+	}
+	else {
+		sprintf(curr_pointer, "NTSC\n");  curr_pointer += strlen("NTSC ");
+	}
 #ifdef DEBUG_CAMERA
 	sprintf(curr_pointer, "FREECAM\n");  curr_pointer += strlen("FREECAM ");
 #endif
@@ -290,6 +302,7 @@ void state_exit_title_screen(void) {
 }
 
 void state_enter_in_game(void) {
+	//state.title_screen.assets_in_memory = 0;
 
     // Init player
     state.in_game.player.position.x = 11705653 / 2;
@@ -379,6 +392,7 @@ void state_exit_in_game(void) {
 }
 
 void state_enter_settings(void) {
+	state.global.state_to_return_to = prev_state;
 	state.global.fade_level = 255;
 	state.title_screen.button_pressed = 0;
 	while (state.global.fade_level > 0) {
@@ -396,11 +410,73 @@ void state_enter_settings(void) {
 void state_update_settings(int dt) {
 	renderer_begin_frame(&id_transform);
 	music_tick(16);
+	input_update();
 	// Draw background
 	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
 	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
-	renderer_apply_fade(state.global.fade_level);
-	state.global.fade_level -= FADE_SPEED;
+	
+	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_settings[0], 1, 1);
+
+	// Draw settings text and box
+	for (int i = 0; i < 5; ++i) {
+		pixel32_t color = (pixel32_t){128, 128, 128};
+		if (i == state.settings.button_selected) {
+			if (state.title_screen.button_pressed) {
+				color.r = 64;
+				color.g = 64;
+				color.b = 64;
+			}
+			else {
+				color.r = 255;
+				color.g = 255;
+				color.b = 255;
+			}
+		}
+		renderer_draw_text((vec2_t){64*ONE, (96 + (24 * i))*ONE}, text_settings[i+1], 1, 0);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, (96 + (24 * i))*ONE}, (vec2_t){448*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, color, 2, 5, 1);
+	}
+
+	// Draw values
+	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 0))*ONE}, (is_pal) ? ((vsync_enable == 2) ? "25 FPS" : "50 FPS") : ((vsync_enable == 2) ? "30 FPS" : "60 FPS"), 1, 0);
+	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 1))*ONE}, is_pal ? "PAL" : "NTSC", 1, 0);
+	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 2))*ONE}, widescreen ? "16:9" : "4:3", 1, 0);
+	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 3))*ONE}, "not impl.", 1, 0);
+
+	// Handle button navigation
+	if (input_pressed(PAD_UP, 0) && state.settings.button_selected > 0) {
+		state.settings.button_selected--;
+		state.settings.button_pressed = 0;
+	}
+	if (input_pressed(PAD_DOWN, 0) && state.settings.button_selected < 4) {
+		state.settings.button_selected++;
+		state.settings.button_pressed = 0;
+	}
+	if (input_pressed(PAD_CIRCLE, 0) || input_pressed(PAD_CROSS, 0)) {
+		state.settings.button_pressed = 1;
+	}
+
+	// Handle button presses
+	if (input_released(PAD_CROSS, 0) || input_released(PAD_CIRCLE, 0)) {
+		state.settings.button_pressed = 0;
+		switch (state.settings.button_selected) {
+			case 0: // frame rate limit 30 or 60
+				if (vsync_enable == 1) vsync_enable = 2;
+				else if (vsync_enable == 2) vsync_enable = 1;
+				break;
+			case 1: // video mode pal or ntsc
+				is_pal = !is_pal;
+				renderer_set_video_mode(is_pal);
+				break;
+			case 2: // aspect ratio
+				widescreen = !widescreen;
+				break;
+			case 3: // controller sensitivity
+				break;
+			case 4: // back
+				current_state = state.global.state_to_return_to;
+				break;
+		}
+	}
 	renderer_end_frame();
 	return;
 }
@@ -435,10 +511,6 @@ void state_update_credits(int dt) {
 	for (int i = 0; i < sizeof(text_credits) / sizeof(text_credits[0]); ++i) {
 		renderer_draw_text((vec2_t){256 * ONE, (state.credits.scroll + i * 16 * ONE) + (256 * ONE)}, text_credits[i], 1, 1);
 	}
-
-	char buf[64];
-	sprintf(buf, "scroll: %i", state.credits.scroll);
-	renderer_draw_text((vec2_t){32*ONE, 64*ONE}, buf, 0, 0);
 
 	// Scroll text
 	state.credits.scroll -= 16 * 80;

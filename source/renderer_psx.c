@@ -35,11 +35,13 @@ MATRIX view_matrix;
 vec3_t camera_pos;
 vec3_t camera_dir;
 int vsync_enable = 1;
+int is_pal = 0;
 int frame_counter = 0;
 int n_meshes_drawn = 0;
 int n_meshes_total = 0;
 uint8_t tex_id_start = 0;
 int drawn_first_frame = 0;
+int curr_res_y = RES_Y_NTSC;
 
 pixel32_t textures_avg_colors[256];
 RECT textures[256];
@@ -58,32 +60,61 @@ vertex_3d_t get_halfway_point(const vertex_3d_t v0, const vertex_3d_t v1) {
     };
 }
 
+void renderer_set_video_mode(int is_pal) {
+    if (is_pal) {
+        SetVideoMode(MODE_PAL);
+        curr_res_y = RES_Y_PAL;
+
+        // Configures the pair of DISPENVs
+        SetDefDispEnv(&disp[0], 0, 0, RES_X, RES_Y_PAL);
+        SetDefDispEnv(&disp[1], 512, 0, RES_X, RES_Y_PAL);
+
+        // Configures the pair of DRAWENVs for the DISPENVs
+        SetDefDrawEnv(&draw[0], 512, 0, RES_X, RES_Y_PAL);
+        SetDefDrawEnv(&draw[1], 0, 0, RES_X, RES_Y_PAL);
+
+        gte_SetGeomOffset(CENTER_X, CENTER_Y_PAL);
+        gte_SetGeomScreen(120);
+
+        // Correction for PAL
+        disp[0].screen.y = 20;
+        disp[0].screen.h = 256;
+        disp[1].screen.y = 20;
+        disp[1].screen.h = 256;
+    }
+    else {
+        SetVideoMode(MODE_NTSC);
+        curr_res_y = RES_Y_NTSC;
+
+        // Configures the pair of DISPENVs
+        SetDefDispEnv(&disp[0], 0, 0, RES_X, RES_Y_NTSC);
+        SetDefDispEnv(&disp[1], 512, 0, RES_X, RES_Y_NTSC);
+
+        // Configures the pair of DRAWENVs for the DISPENVs
+        SetDefDrawEnv(&draw[0], 512, 0, RES_X, RES_Y_NTSC);
+        SetDefDrawEnv(&draw[1], 0, 0, RES_X, RES_Y_NTSC);
+
+        gte_SetGeomOffset(CENTER_X, CENTER_Y_NTSC);
+    }
+    // Specifies the clear color of the DRAWENV
+    setRGB0(&draw[0], 16, 16, 20);
+    setRGB0(&draw[1], 16, 16, 20);
+    gte_SetGeomScreen(120);
+}
+
 void renderer_init(void) {
     // Reset GPU and enable interrupts
     ResetGraph(0);
 
-#ifdef PAL
-    SetVideoMode(MODE_PAL);
-#else
     SetVideoMode(MODE_NTSC);
-#endif
 
     // Configures the pair of DISPENVs
-    SetDefDispEnv(&disp[0], 0, 0, RES_X, RES_Y);
-    SetDefDispEnv(&disp[1], 512, 0, RES_X, RES_Y);
-
-#ifdef PAL
-    // Correction for PAL
-    disp[0].screen.y = 20;
-    disp[0].screen.h = 256;
-    disp[1].screen.y = 20;
-    disp[1].screen.h = 256;
-#endif
-
+    SetDefDispEnv(&disp[0], 0, 0, RES_X, RES_Y_NTSC);
+    SetDefDispEnv(&disp[1], 512, 0, RES_X, RES_Y_NTSC);
 
     // Configures the pair of DRAWENVs for the DISPENVs
-    SetDefDrawEnv(&draw[0], 512, 0, RES_X, RES_Y);
-    SetDefDrawEnv(&draw[1], 0, 0, RES_X, RES_Y);
+    SetDefDrawEnv(&draw[0], 512, 0, RES_X, RES_Y_NTSC);
+    SetDefDrawEnv(&draw[1], 0, 0, RES_X, RES_Y_NTSC);
     
     // Specifies the clear color of the DRAWENV
     setRGB0(&draw[0], 16, 16, 20);
@@ -105,7 +136,7 @@ void renderer_init(void) {
     InitGeom();
 
     // Set up where we want the center of the screen to be
-    gte_SetGeomOffset(CENTER_X, CENTER_Y);
+    gte_SetGeomOffset(CENTER_X, CENTER_Y_NTSC);
     gte_SetGeomScreen(120);
 
     next_primitive = primitive_buffer[0];
@@ -339,7 +370,7 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
             trans_vec_xy[i].x >= 0 && 
             trans_vec_xy[i].x <= RES_X &&
             trans_vec_xy[i].y >= 0 && 
-            trans_vec_xy[i].y <= RES_Y 
+            trans_vec_xy[i].y <= curr_res_y 
         ) {
             goto dont_return;
         }
@@ -545,7 +576,7 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
             trans_vec_xy[i].x >= 0 && 
             trans_vec_xy[i].x <= RES_X &&
             trans_vec_xy[i].y >= 0 && 
-            trans_vec_xy[i].y <= RES_Y 
+            trans_vec_xy[i].y <= curr_res_y 
         ) {
             goto dont_return;
         }
@@ -932,7 +963,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
         if (after_max.vz == 0) return; // mesh is behind the screen
         if (after_min.vz > MESH_RENDER_DISTANCE) return; // mesh is too far away
         if (after_min.vx > RES_X-FRUSCUL_PAD_X) return; // mesh is to the right of the screen
-        if (after_min.vy > RES_Y-FRUSCUL_PAD_Y) return; // mesh is below the screen
+        if (after_min.vy > curr_res_y-FRUSCUL_PAD_Y) return; // mesh is below the screen
         #undef FRUSCUL_PAD_X
         #undef FRUSCUL_PAD_Y
     };
@@ -1186,11 +1217,10 @@ int renderer_get_delta_time_raw(void) {
 int renderer_convert_dt_raw_to_ms(int dt_raw) {
     int dt_ms;
     if (vsync_enable) {
-#ifdef PAL
-        dt_ms = 20 * dt_raw;
-#else
-        dt_ms = (16666 * dt_raw) / 1000;
-#endif
+        if (is_pal)
+            dt_ms = 20 * dt_raw;
+        else
+            dt_ms = (16666 * dt_raw) / 1000;
     }
     else {
         dt_ms = (1000 * dt_raw) / 15625; // Somehow this works for both PAL and NTSC
@@ -1227,11 +1257,7 @@ void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl
 }
 
 void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {
-#ifdef PAL
-    const int y_offset = 0;
-#else
-    const int y_offset = -16;
-#endif
+    const int y_offset = is_pal ? 0 : -16;
     POLY_FT4* new_triangle = (POLY_FT4*)next_primitive;
     next_primitive += sizeof(POLY_FT4) / sizeof(*next_primitive);
     setPolyFT4(new_triangle); 
@@ -1280,7 +1306,7 @@ void renderer_apply_fade(int fade_level) {
     setSemiTrans(new_tile, 1);
     setRGB0(new_tile, fade_level, fade_level, fade_level);
     setXY0(new_tile, 0, 0);
-    setWH(new_tile, RES_X, RES_Y);
+    setWH(new_tile, RES_X, curr_res_y);
     addPrim(ord_tbl[drawbuffer] + 0, new_tile);
     
     // Set color blend mode to subtract
