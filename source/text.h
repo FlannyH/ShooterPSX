@@ -16,6 +16,13 @@ static const char* text_settings[] = {
     "BACK",
 };
 
+static const char* text_pause_menu[] = {
+    "PAUSED",
+    "CONTINUE",
+    "SETTINGS",
+    "EXIT GAME",
+};
+
 static const char* text_credits[] = {
     "PlayStation 1 port",
     "Lily Haverlag",

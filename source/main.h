@@ -10,6 +10,7 @@ typedef enum {
     STATE_SETTINGS,
     STATE_CREDITS,
     STATE_IN_GAME,
+    STATE_PAUSE_MENU,
 } state_t;
 
 // Title screen
@@ -31,5 +32,10 @@ void state_exit_credits(void);
 void state_enter_in_game(void);
 void state_update_in_game(int dt);
 void state_exit_in_game(void);
+
+// Pause menu
+void state_enter_pause_menu(void);
+void state_update_pause_menu(int dt);
+void state_exit_pause_menu(void);
 
 #endif
