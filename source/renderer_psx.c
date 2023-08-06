@@ -62,9 +62,6 @@ vertex_3d_t get_halfway_point(const vertex_3d_t v0, const vertex_3d_t v1) {
 
 void renderer_set_video_mode(int is_pal) {
     if (is_pal) {
-        SetVideoMode(MODE_PAL);
-        curr_res_y = RES_Y_PAL;
-
         // Configures the pair of DISPENVs
         SetDefDispEnv(&disp[0], 0, 0, RES_X, RES_Y_PAL);
         SetDefDispEnv(&disp[1], 512, 0, RES_X, RES_Y_PAL);
@@ -76,6 +73,9 @@ void renderer_set_video_mode(int is_pal) {
         gte_SetGeomOffset(CENTER_X, CENTER_Y_PAL);
         gte_SetGeomScreen(120);
 
+        SetVideoMode(MODE_PAL);
+        curr_res_y = RES_Y_PAL;
+
         // Correction for PAL
         disp[0].screen.y = 20;
         disp[0].screen.h = 256;
@@ -83,9 +83,6 @@ void renderer_set_video_mode(int is_pal) {
         disp[1].screen.h = 256;
     }
     else {
-        SetVideoMode(MODE_NTSC);
-        curr_res_y = RES_Y_NTSC;
-
         // Configures the pair of DISPENVs
         SetDefDispEnv(&disp[0], 0, 0, RES_X, RES_Y_NTSC);
         SetDefDispEnv(&disp[1], 512, 0, RES_X, RES_Y_NTSC);
@@ -93,6 +90,9 @@ void renderer_set_video_mode(int is_pal) {
         // Configures the pair of DRAWENVs for the DISPENVs
         SetDefDrawEnv(&draw[0], 512, 0, RES_X, RES_Y_NTSC);
         SetDefDrawEnv(&draw[1], 0, 0, RES_X, RES_Y_NTSC);
+
+        SetVideoMode(MODE_NTSC);
+        curr_res_y = RES_Y_NTSC;
 
         gte_SetGeomOffset(CENTER_X, CENTER_Y_NTSC);
     }
