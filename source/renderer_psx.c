@@ -39,6 +39,7 @@ int is_pal = 0;
 int frame_counter = 0;
 int n_meshes_drawn = 0;
 int n_meshes_total = 0;
+int n_polygons_drawn = 0;
 uint8_t tex_id_start = 0;
 int drawn_first_frame = 0;
 int curr_res_y = RES_Y_NTSC;
@@ -186,10 +187,12 @@ void renderer_begin_frame(transform_t* camera_transform) {
 	camera_dir.z = view_matrix.m[2][2];
     n_meshes_drawn = 0;
     n_meshes_total = 0;
+	n_polygons_drawn = 0;
 }
 
 // For some reason, making this a macro improved performance by rough 8%. Can't tell you why though.
 #define ADD_TEX_TRI_TO_QUEUE(p0, p1, p2, v0, v1, v2, avg_z, clut_fade, tex_id, is_page) {       \
+	++n_polygons_drawn;\
     POLY_GT3* new_triangle = (POLY_GT3*)next_primitive;\
     next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);\
     setPolyGT3(new_triangle); \
@@ -232,6 +235,7 @@ void renderer_begin_frame(transform_t* camera_transform) {
 
 // Same as above but for quads
 #define ADD_TEX_QUAD_TO_QUEUE(p0, p1, p2, p3, v0, v1, v2, v3, avg_z, clut_fade, tex_id, is_page) {       \
+	++n_polygons_drawn;\
     POLY_GT4* new_triangle = (POLY_GT4*)next_primitive;\
     next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);\
     setPolyGT4(new_triangle); \
@@ -758,6 +762,7 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
 
     else {
         // Create primitive
+		++n_polygons_drawn;
         POLY_G4* new_quad = (POLY_G4*)next_primitive;
         next_primitive += sizeof(POLY_G4) / sizeof(*next_primitive);
 
@@ -774,9 +779,9 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
 
         pixel32_t vert_colors[4];
         for (size_t ci = 0; ci < 4; ++ci) {
-            const uint16_t r = ((((uint16_t)verts[ci].r) * ((uint16_t)textures_avg_colors[verts->tex_id].r)) >> 8);
-            const uint16_t g = ((((uint16_t)verts[ci].g) * ((uint16_t)textures_avg_colors[verts->tex_id].g)) >> 8);
-            const uint16_t b = ((((uint16_t)verts[ci].b) * ((uint16_t)textures_avg_colors[verts->tex_id].b)) >> 8);
+            const uint16_t r = ((((uint16_t)verts[ci].r)* ((uint16_t)textures_avg_colors[verts->tex_id].r)) >> 8);
+            const uint16_t g = ((((uint16_t)verts[ci].g)* ((uint16_t)textures_avg_colors[verts->tex_id].g)) >> 8);
+            const uint16_t b = ((((uint16_t)verts[ci].b)* ((uint16_t)textures_avg_colors[verts->tex_id].b)) >> 8);
             vert_colors[ci].r = (r > 255) ? 255 : r;
             vert_colors[ci].g = (g > 255) ? 255 : g;
             vert_colors[ci].b = (b > 255) ? 255 : b;
