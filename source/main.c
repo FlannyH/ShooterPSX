@@ -182,7 +182,6 @@ void init(void) {
 }
 
 void state_enter_title_screen(void) {
-	printf("do we even get here\n");
 	if (!state.title_screen.assets_in_memory) {
 		// Load graphics data
 		texture_cpu_t *tex_menu1;
