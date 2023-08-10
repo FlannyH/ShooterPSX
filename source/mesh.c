@@ -6,11 +6,11 @@
 
 #include "file.h"
 
-model_t* model_load(const char* path) {
+model_t* model_load(const char* path, int on_stack, stack_t stack) {
     // Read the file
     uint32_t* file_data;
     size_t size;
-    file_read(path, &file_data, &size);
+    file_read(path, &file_data, &size, on_stack, stack);
 
     // Get header data
     model_header_t* model_header = (model_header_t*)file_data;
@@ -27,9 +27,16 @@ model_t* model_load(const char* path) {
     vertex_3d_t* vertex_data = (vertex_3d_t*)((intptr_t)binary_section + model_header->offset_vertex_data);
 
     // Create a model object
-    model_t* model = mem_alloc(sizeof(model_t), MEM_CAT_MODEL);
+	model_t* model;
+	if (on_stack) {
+		model = mem_stack_alloc(sizeof(model_t), stack);
+		model->meshes = mem_stack_alloc(sizeof(mesh_t) * model_header->n_submeshes, stack);
+	} 
+	else {
+		model = mem_alloc(sizeof(model_t), MEM_CAT_MODEL);
+		model->meshes = mem_alloc(sizeof(mesh_t) * model_header->n_submeshes, MEM_CAT_MESH);
+	}
     model->n_meshes = model_header->n_submeshes;
-    model->meshes = mem_alloc(sizeof(mesh_t) * model_header->n_submeshes, MEM_CAT_MESH);
 
     // Loop over each submesh and create a model
     for (size_t i = 0; i < model_header->n_submeshes; ++i) {
@@ -58,11 +65,11 @@ model_t* model_load(const char* path) {
     return model;
 }
 
-model_t* model_load_collision_debug(const char* path) {
+model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stack) {
     // Read the file
     uint32_t* file_data;
     size_t size;
-    file_read(path, &file_data, &size);
+    file_read(path, &file_data, &size, on_stack, stack);
 
     // Read collision header
     collision_mesh_header_t* col_mesh = (collision_mesh_header_t*)file_data;
@@ -74,12 +81,20 @@ model_t* model_load_collision_debug(const char* path) {
     }
 
     // Convert all vertices into visual vertices
-    model_t* model = mem_alloc(sizeof(model_t), MEM_CAT_MODEL);
-    model->meshes = mem_alloc(sizeof(mesh_t), MEM_CAT_MESH);
-    model->n_meshes = 1,
+	model_t* model;
+	if (on_stack) {
+		model = mem_stack_alloc(sizeof(model_t), stack);
+		model->meshes = mem_stack_alloc(sizeof(mesh_t), stack);
+    	model->meshes[0].vertices = mem_stack_alloc(sizeof(vertex_3d_t) * col_mesh->n_verts, stack);
+	}
+	else {
+		model = mem_alloc(sizeof(model_t), MEM_CAT_MODEL);
+		model->meshes = mem_alloc(sizeof(mesh_t), MEM_CAT_MESH);
+    	model->meshes[0].vertices = mem_alloc(sizeof(vertex_3d_t) * col_mesh->n_verts, MEM_CAT_MESH);
+	}
+    model->n_meshes = 1;
     model->meshes[0].n_quads = 0;
     model->meshes[0].n_triangles = col_mesh->n_verts / 3;
-    model->meshes[0].vertices = mem_alloc(sizeof(vertex_3d_t) * col_mesh->n_verts, MEM_CAT_MESH);
     model->meshes[0].bounds = (aabb_t) {
         .max = (vec3_t) {.x = INT32_MAX, .y = INT32_MAX, .z = INT32_MAX,},
         .min = (vec3_t) {.x = INT32_MIN, .y = INT32_MIN, .z = INT32_MIN,},
@@ -117,11 +132,11 @@ model_t* model_load_collision_debug(const char* path) {
     return model;
 }
 
-collision_mesh_t* model_load_collision(const char* path) {
+collision_mesh_t* model_load_collision(const char* path, int on_stack, stack_t stack) {
     // Read the file
     uint32_t* file_data;
     size_t size;
-    file_read(path, &file_data, &size);
+    file_read(path, &file_data, &size, on_stack, stack);
 
     // Read collision header
     collision_mesh_header_t* col_mesh = (collision_mesh_header_t*)file_data;
@@ -133,7 +148,9 @@ collision_mesh_t* model_load_collision(const char* path) {
     }
 
     // Return the collision model
-    collision_mesh_t* output = mem_alloc(sizeof(collision_mesh_t), MEM_CAT_COLLISION);
+	collision_mesh_t* output;
+	if (on_stack) output = mem_stack_alloc(sizeof(collision_mesh_t), stack);
+	else output = mem_alloc(sizeof(collision_mesh_t), MEM_CAT_COLLISION);
     output->n_verts = col_mesh->n_verts;
     output->verts = (col_mesh_file_vert_t*)(col_mesh + 1);
     return output;
@@ -158,11 +175,11 @@ aabb_t triangle_get_bounds(const triangle_3d_t* self) {
     return result;
 }
 
-vislist_t* model_load_vislist(const char* path) {
+vislist_t* model_load_vislist(const char* path, int on_stack, stack_t stack) {
     // Read the file
     uint32_t* file_data;
     size_t size;
-    file_read(path, &file_data, &size);
+    file_read(path, &file_data, &size, on_stack, stack);
 
     // Get header data
     vislist_header_t* model_header = (vislist_header_t*)file_data;

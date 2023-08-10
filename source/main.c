@@ -182,18 +182,19 @@ void init(void) {
 }
 
 void state_enter_title_screen(void) {
+	printf("do we even get here\n");
 	if (!state.title_screen.assets_in_memory) {
 		// Load graphics data
 		texture_cpu_t *tex_menu1;
 		texture_cpu_t *tex_menu2;
 		texture_cpu_t *tex_ui;
-		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU1.TXC;1", &tex_menu1, 1);
-		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU2.TXC;1", &tex_menu2, 1);
-		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\UI.TXC;1", &tex_ui, 1);
+		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU1.TXC;1", &tex_menu1, 1, STACK_TEMP);
+		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU2.TXC;1", &tex_menu2, 1, STACK_TEMP);
+		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\UI.TXC;1", &tex_ui, 1, STACK_TEMP);
 		render_upload_8bit_texture_page(tex_menu1, 3);
 		render_upload_8bit_texture_page(tex_menu2, 4);
 		render_upload_8bit_texture_page(tex_ui, 5);
-		mem_free_scheduled_frees();
+		mem_stack_release(STACK_TEMP);
 		state.title_screen.assets_in_memory = 1;
 		music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK;1");
 		music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\LEVEL3.DSS;1");
@@ -316,6 +317,9 @@ void state_exit_title_screen(void) {
 
 void state_enter_in_game(void) {
 	if (prev_state == STATE_PAUSE_MENU) return;
+
+	mem_stack_release(STACK_LEVEL);
+
 	state.title_screen.assets_in_memory = 0;
 
     // Init player
@@ -325,11 +329,11 @@ void state_enter_in_game(void) {
 	state.in_game.player.rotation.y = 4096 * 16;
 
 	// Load models
-    state.in_game.m_level = model_load("\\ASSETS\\MODELS\\LEVEL.MSH;1");
-    state.in_game.m_chaser = model_load("\\ASSETS\\MODELS\\ENTITY.MSH;1");
-    state.in_game.m_level_col_dbg = model_load_collision_debug("\\ASSETS\\MODELS\\LEVEL.COL;1");
-    state.in_game.m_level_col = model_load_collision("\\ASSETS\\MODELS\\LEVEL.COL;1");
-	state.in_game.v_level = model_load_vislist("\\ASSETS\\MODELS\\LEVEL.VIS;1");
+    state.in_game.m_level = model_load("\\ASSETS\\MODELS\\LEVEL.MSH;1", 1, STACK_LEVEL);
+    state.in_game.m_chaser = model_load("\\ASSETS\\MODELS\\ENTITY.MSH;1", 1, STACK_LEVEL);
+    state.in_game.m_level_col_dbg = model_load_collision_debug("\\ASSETS\\MODELS\\LEVEL.COL;1", 1, STACK_LEVEL);
+    state.in_game.m_level_col = model_load_collision("\\ASSETS\\MODELS\\LEVEL.COL;1", 1, STACK_LEVEL);
+	state.in_game.v_level = model_load_vislist("\\ASSETS\\MODELS\\LEVEL.VIS;1", 1, STACK_LEVEL);
 
 	// Generate collision BVH
     bvh_from_model(&state.in_game.bvh_level_model, state.in_game.m_level_col);
@@ -337,12 +341,14 @@ void state_enter_in_game(void) {
 	// Load textures
 	texture_cpu_t *tex_level;
 	texture_cpu_t *entity_textures;
-	const uint32_t n_level_textures = texture_collection_load("\\ASSETS\\MODELS\\LEVEL.TXC;1", &tex_level, 1);
-	const uint32_t n_entity_textures = texture_collection_load("\\ASSETS\\MODELS\\ENTITY.TXC;1", &entity_textures, 1);
+	mem_stack_release(STACK_TEMP);
+	printf("occupied STACK_TEMP: %i / %i\n", mem_stack_get_occupied(STACK_TEMP), mem_stack_get_size(STACK_TEMP));
+	const uint32_t n_level_textures = texture_collection_load("\\ASSETS\\MODELS\\LEVEL.TXC;1", &tex_level, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_level_textures; ++i) {
 	    renderer_upload_texture(&tex_level[i], i);
 	}
-	mem_free_scheduled_frees();
+	const uint32_t n_entity_textures = texture_collection_load("\\ASSETS\\MODELS\\ENTITY.TXC;1", &entity_textures, 1, STACK_TEMP);
+	mem_stack_release(STACK_TEMP);
 
 	// Start music
 	music_stop();
@@ -375,6 +381,7 @@ void state_update_in_game(int dt) {
 
 	int n_sections = player_get_level_section(&state.in_game.player, state.in_game.m_level);
 	state.global.frame_counter += dt;
+#ifdef _DEBUG
 	if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
 	if (state.global.show_debug) {
 		PROFILE("input", input_update(), 1);
@@ -387,17 +394,28 @@ void state_update_in_game(int dt) {
 		FntPrint(-1, "dt: %i\n", dt);
 		FntPrint(-1, "meshes drawn: %i / %i\n", n_meshes_drawn, n_meshes_total);
 		FntPrint(-1, "polygons drawn: %i\n", n_polygons_drawn);
-		FntPrint(-1, "primitive occupation: %i / %i kb\n", primitive_occupation / 1024, (32768 << 3) / 1024);
+		FntPrint(-1, "primitive occ.: %i / %i KiB\n", primitive_occupation / 1024, 128);
+		for (int i = 0; i < N_STACK_TYPES; ++i) {
+			FntPrint(-1, "%s: %i / %i KiB (%i%%)\n", 
+				stack_names[i],
+				mem_stack_get_occupied(i) / KiB,
+				mem_stack_get_size(i) / KiB, 
+				(mem_stack_get_occupied(i) * 100) / mem_stack_get_size(i)
+			);
+		}
 		collision_clear_stats();
 		FntFlush(-1);
 	}
 	else {
+#endif
 		input_update();
 		renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0);
 		//renderer_draw_entity_shaded(&m_chaser->meshes[0], &t_level, 3);
 		player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt);
 		music_tick(16);
+#ifdef _DEBUG
 	}
+#endif
 	if (state.global.fade_level > 0) {
 		renderer_apply_fade(state.global.fade_level);
 		state.global.fade_level -= FADE_SPEED;
@@ -406,6 +424,9 @@ void state_update_in_game(int dt) {
 		current_state = STATE_PAUSE_MENU;
 	}
 	renderer_end_frame();
+
+	// free temporary allocations
+	mem_stack_release(STACK_TEMP);
 }
 void state_exit_in_game(void) {
 	return;

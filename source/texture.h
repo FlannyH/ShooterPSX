@@ -1,6 +1,7 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 #include <stdint.h>
+#include "memory.h"
 
 // Texture Collection file header
 #define MAGIC_FTXC 0x43585446
@@ -52,7 +53,7 @@ typedef struct {
 } texture_cpu_t;
 #pragma pack(pop)
 
-uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures, int schedule_free);
+uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures, int on_stack, stack_t stack);
 void texture_collection_unload(texture_cpu_t* textures);
 
 #endif

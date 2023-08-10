@@ -19,7 +19,7 @@ int n_vertical_cylinder_triangle_intersects = 0;
 void bvh_construct(bvh_t* bvh, const col_mesh_file_tri_t* primitives, const uint16_t n_primitives) {
     // Convert triangles from the model into collision triangles
     // todo: maybe store this mesh in the file? not sure if it's worth implementing but could be nice
-    bvh->primitives = mem_alloc(sizeof(collision_triangle_3d_t) * n_primitives, MEM_CAT_COLLISION);
+    bvh->primitives = mem_stack_alloc(sizeof(collision_triangle_3d_t) * n_primitives, STACK_LEVEL);
     bvh->n_primitives = n_primitives;
     PANIC_IF("failed to allocate memory for collision model!", bvh->primitives == 0);
 
@@ -45,14 +45,14 @@ void bvh_construct(bvh_t* bvh, const col_mesh_file_tri_t* primitives, const uint
 
 
     // Create index array
-    bvh->indices = mem_alloc(sizeof(uint16_t) * n_primitives, MEM_CAT_COLLISION);
+    bvh->indices = mem_stack_alloc(sizeof(uint16_t) * n_primitives, STACK_LEVEL);
     for (int i = 0; i < n_primitives; i++)
     {
         bvh->indices[i] = i;
     }
 
     // Create root node
-    bvh->nodes = mem_alloc(sizeof(bvh_node_t) * n_primitives * 2, MEM_CAT_COLLISION);
+    bvh->nodes = mem_stack_alloc(sizeof(bvh_node_t) * n_primitives * 2, STACK_LEVEL);
     bvh->node_pointer = 2;
     bvh->root = &bvh->nodes[0]; // todo: maybe we can just hard code the root to be index 0 and skip this indirection?
     bvh->root->left_first = 0;
@@ -653,7 +653,7 @@ vec2_t find_closest_point_on_triangle_2d(vec2_t v0, vec2_t v1, vec2_t v2, vec2_t
     }
 
     //It's impossible for all the numbers to be negative
-    WARN_IF("all barycentric coordinates ended up negative! this should be impossible", (edge0 < 0 && edge1 < 0 && edge2 < 0));
+    //WARN_IF("all barycentric coordinates ended up negative! this should be impossible", (edge0 < 0 && edge1 < 0 && edge2 < 0));
     if ((edge0 < 0 && edge1 < 0 && edge2 < 0)) {
         vec2_t error;
         error.x = INT32_MAX;

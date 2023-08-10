@@ -5,11 +5,11 @@
 #include "texture.h"
 #include "memory.h"
 
-uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures, int schedule_free) { // returns number of textures loaded
+uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures, int on_stack, stack_t stack) { // returns number of textures loaded
     // Read the file
     uint32_t* file_data;
     size_t size;
-    file_read(path, &file_data, &size);
+    file_read(path, &file_data, &size, on_stack, stack);
 
     // Read the texture collection header
     tex_col_header_t* tex_col_hdr = (tex_col_header_t*)file_data;
@@ -21,7 +21,8 @@ uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures,
     }
 
     // Allocate space for TextureCPU structs
-    *out_textures = mem_alloc(sizeof(texture_cpu_t) * tex_col_hdr->n_texture_cell, MEM_CAT_TEXTURE);
+	if (on_stack) *out_textures = mem_stack_alloc(sizeof(texture_cpu_t) * tex_col_hdr->n_texture_cell, stack);
+	else *out_textures = mem_alloc(sizeof(texture_cpu_t) * tex_col_hdr->n_texture_cell, MEM_CAT_TEXTURE);
 
     // Find the data sections
     const void* binary_section = &tex_col_hdr[1];
@@ -42,7 +43,7 @@ uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures,
         texture_cpu->avg_color = tex_cell_desc->avg_color;
     }
 
-    if (schedule_free) {
+    if (!on_stack) {
         mem_delayed_free(file_data);
         mem_delayed_free(*out_textures);
     }

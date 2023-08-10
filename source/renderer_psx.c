@@ -29,7 +29,7 @@ int delta_time_raw_curr = 0;
 int delta_time_raw_prev = 0;
 
 uint32_t ord_tbl[2][ORD_TBL_LENGTH];
-uint32_t primitive_buffer[2][(32768 << 3) / sizeof(uint32_t)];
+uint32_t primitive_buffer[2][(128 * KiB) / sizeof(uint32_t)];
 uint32_t* next_primitive;
 MATRIX view_matrix;
 vec3_t camera_pos;
@@ -564,6 +564,7 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
     int p;
     gte_nclip();
     gte_stopz(&p);
+	if (input_pressed(PAD_TRIANGLE, 0)) printf("gte_stopz: %i\n", p);
     if (p <= -16) return;
 
     // Store transformed position, and center depth
@@ -581,19 +582,17 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
     
 #if 1
     // Is this quad even on screen?
-    for (size_t i = 0; i < 4; ++i) {
-        if (
-            trans_vec_xy[i].x >= 0 && 
-            trans_vec_xy[i].x <= RES_X &&
-            trans_vec_xy[i].y >= 0 && 
-            trans_vec_xy[i].y <= curr_res_y 
-        ) {
-            goto dont_return;
-        }
+	svec2_t min = {trans_vec_xy[0].x, trans_vec_xy[0].y};
+	svec2_t max = {trans_vec_xy[0].x, trans_vec_xy[0].y};
+    for (size_t i = 1; i < 4; ++i) {
+		if (trans_vec_xy[i].x < min.x) min.x = trans_vec_xy[i].x;
+		if (trans_vec_xy[i].y < min.y) min.y = trans_vec_xy[i].y;
+		if (trans_vec_xy[i].x > max.x) max.x = trans_vec_xy[i].x;
+		if (trans_vec_xy[i].y > max.y) max.y = trans_vec_xy[i].y;
     }
-    return;
 
-    dont_return:
+	if (min.x > RES_X || min.y > curr_res_y || max.x < 0 || max.y < 0) return;
+
 #endif
 	int16_t clut_fade = ((N_CLUT_FADES-1) * (avg_z - TRI_THRESHOLD_FADE_START)) / (TRI_THRESHOLD_FADE_END - TRI_THRESHOLD_FADE_START);
 	if (clut_fade > 15) clut_fade = 15;

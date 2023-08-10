@@ -1,3 +1,5 @@
+#ifndef MEMORY
+#define MEMORY
 #include <stddef.h>
 
 typedef enum {
@@ -10,8 +12,24 @@ typedef enum {
     MEM_CAT_FILE,
 } memory_category_t;
 
+typedef enum {
+    STACK_LEVEL,
+    STACK_MUSIC,
+    STACK_TEMP,
+	N_STACK_TYPES,
+} stack_t;
+
 void* mem_alloc(size_t size, memory_category_t category);
+void* mem_stack_alloc(size_t size, stack_t stack);
+void mem_stack_release(stack_t stack);
+size_t mem_stack_get_size(stack_t stack);
+size_t mem_stack_get_occupied(stack_t stack);
+size_t mem_stack_get_free(stack_t stack);
 void mem_free(void* ptr);
 void mem_delayed_free(void* ptr);
 void mem_free_scheduled_frees();
 void mem_debug();
+
+extern char* stack_names[];
+
+#endif

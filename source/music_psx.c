@@ -30,7 +30,7 @@ void music_test_sound() {
 	// Load sound
 	uint32_t* data;
 	size_t size;
-	file_read("\\ASSETS\\AMEN.BIN;1", &data, &size);
+	file_read("\\ASSETS\\AMEN.BIN;1", &data, &size, 1, STACK_TEMP);
 	SpuSetTransferStartAddr(0x01000);
 	SpuWrite(data, size);
 
@@ -70,7 +70,7 @@ void music_load_soundbank(const char* path) {
 	// Load the SBK file
 	uint32_t* data;
 	size_t size;
-	file_read(path, &data, &size);
+	file_read(path, &data, &size, 1, STACK_TEMP);
 	
 	// Validate header
 	soundbank_header_t* sbk_header = (soundbank_header_t*)data;
@@ -85,26 +85,21 @@ void music_load_soundbank(const char* path) {
 	SpuWrite(sample_data, sbk_header->length_sample_data);
 
 	// Copy the instruments and regions to another part in memory
-	if (instruments) mem_free(instruments);
-	if (instrument_regions) mem_free(instrument_regions);
 	uint8_t* inst_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_descs;
 	uint8_t* region_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_regions;
 	size_t inst_size = sizeof(instrument_description_t) * 256;
 	size_t region_size = sizeof(instrument_region_header_t) * sbk_header->n_samples;
-	instruments = (instrument_description_t*)mem_alloc(inst_size, MEM_CAT_AUDIO);
-	instrument_regions = (instrument_region_header_t*)mem_alloc(region_size, MEM_CAT_AUDIO);
+	instruments = (instrument_description_t*)mem_stack_alloc(inst_size, STACK_MUSIC);
+	instrument_regions = (instrument_region_header_t*)mem_stack_alloc(region_size, STACK_MUSIC);
 	memcpy(instruments, inst_data, inst_size);
 	memcpy(instrument_regions, region_data, region_size);
-
-	// Free the original file
-	mem_free(sbk_header);
 }
 
 void music_load_sequence(const char* path) {
 	// Load the DSS file
 	uint32_t* data;
 	size_t size;
-	file_read(path, &data, &size);
+	file_read(path, &data, &size, 1, STACK_MUSIC);
 
 	// This one is now loaded
 	if (((dyn_song_seq_header_t*)data)->file_magic != MAGIC_FDSS) {
