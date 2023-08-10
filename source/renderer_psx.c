@@ -77,12 +77,6 @@ void renderer_set_video_mode(int is_pal) {
 
         SetVideoMode(MODE_PAL);
         curr_res_y = RES_Y_PAL;
-
-        // Correction for PAL
-        disp[0].screen.y = 20;
-        disp[0].screen.h = 256;
-        disp[1].screen.y = 20;
-        disp[1].screen.h = 256;
     }
     else {
         // Configures the pair of DISPENVs

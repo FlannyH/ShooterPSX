@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 //#define PAL
-#define DEBUG_CAMERA
-#define _DEBUG
+//#define DEBUG_CAMERA
+//#define _DEBUG
 
 #ifdef _WIN32
 #define ALWAYS_INLINE inline

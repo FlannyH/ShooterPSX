@@ -42,7 +42,9 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 	size_t* cursor;
 	size_t stack_size = 0;
 
+#ifdef _DEBUG
 	printf("stack %s (id %i) has %i bytes available and we need %i bytes... ", stack_names[stack], stack, mem_stack_get_size(stack) - mem_stack_get_occupied(stack), size);
+#endif
 	
 	switch (stack) {
 		case STACK_LEVEL:
