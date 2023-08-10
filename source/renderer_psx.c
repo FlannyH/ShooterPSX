@@ -43,6 +43,7 @@ int n_polygons_drawn = 0;
 uint8_t tex_id_start = 0;
 int drawn_first_frame = 0;
 int curr_res_y = RES_Y_NTSC;
+int primitive_occupation = 0;
 
 pixel32_t textures_avg_colors[256];
 RECT textures[256];
@@ -1187,6 +1188,8 @@ void renderer_end_frame(void) {
             VSync(0);
         frame_counter = VSync(-1);
     }
+
+	primitive_occupation = (int)(intptr_t)((uint8_t*)next_primitive - (uint8_t*)&primitive_buffer[drawbuffer]);
 
     // Flip buffer counter
     drawbuffer = !drawbuffer;

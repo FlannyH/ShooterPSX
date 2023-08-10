@@ -387,6 +387,7 @@ void state_update_in_game(int dt) {
 		FntPrint(-1, "dt: %i\n", dt);
 		FntPrint(-1, "meshes drawn: %i / %i\n", n_meshes_drawn, n_meshes_total);
 		FntPrint(-1, "polygons drawn: %i\n", n_polygons_drawn);
+		FntPrint(-1, "primitive occupation: %i / %i kb\n", primitive_occupation / 1024, (32768 << 3) / 1024);
 		collision_clear_stats();
 		FntFlush(-1);
 	}
