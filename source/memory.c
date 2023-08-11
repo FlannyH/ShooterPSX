@@ -73,8 +73,8 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 		printf("turns out we don't have that.\n");
 		return NULL;
 	}
-#endif
 	printf("which we have! move on :D\n");
+#endif
 
 	// Convert size from bytes to words
 	size_t actual_size_to_alloc = (size + 3) >> 2;
