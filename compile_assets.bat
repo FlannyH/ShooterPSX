@@ -11,7 +11,7 @@ tools\psx_vislist_generator.exe ./assets/models/test.msh ./assets/models/test.co
 tools\obj2psx.exe  --input ./assets_to_build/models/test.obj --output ./assets/models/test
 tools\obj2psx.exe  --input ./assets_to_build/models/test_col.obj --collision --output ./assets/models/test
 rem entities
-tools\obj2psx.exe  --input ./assets_to_build/models/entity.obj --output ./assets/models/entity --page
+tools\obj2psx.exe  --input ./assets_to_build/models/entity.obj --output ./assets/models/entity
 rem music
 tools\midi2psx.exe ./assets_to_build/music/sequence/level1.mid ./assets/music/sequence/level1.dss
 tools\midi2psx.exe ./assets_to_build/music/sequence/subnivis.mid ./assets/music/sequence/subnivis.dss

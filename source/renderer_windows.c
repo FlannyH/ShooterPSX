@@ -297,7 +297,7 @@ void renderer_init() {
     mem_free(random_data);
 }
 
-void renderer_begin_frame(transform_t *camera_transform) {
+void renderer_begin_frame(const transform_t *camera_transform) {
     cam_transform = camera_transform;
 	// Set up viewport
 	glfwGetWindowSize(window, &w, &h);

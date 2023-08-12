@@ -1,12 +1,92 @@
 # Blender 3.6.1 MTL File: 'entity.blend'
 # www.blender.org
 
-newmtl temp_bake
+newmtl door_locked_bl
 Ns 250.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 1.450000
+d 1.000000
 illum 2
-map_Kd entity_tex/page_entity.png
-map_d entity_tex/page_entity.png
+map_Kd entity_tex/door_locked_bl.png
+
+newmtl door_locked_br
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd entity_tex/door_locked_br.png
+
+newmtl door_locked_tl
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd entity_tex/door_locked_tl.png
+
+newmtl door_locked_tr
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd entity_tex/door_locked_tr.png
+
+newmtl door_sides
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd entity_tex/door_sides.png
+
+newmtl door_unlocked_bl
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd entity_tex/door_unlocked_bl.png
+
+newmtl door_unlocked_br
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd entity_tex/door_unlocked_br.png
+
+newmtl door_unlocked_tl
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd entity_tex/door_unlocked_tl.png
+
+newmtl door_unlocked_tr
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd entity_tex/door_unlocked_tr.png

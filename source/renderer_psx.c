@@ -145,7 +145,7 @@ void renderer_init(void) {
 }
 
 static int mul = 0;
-void renderer_begin_frame(transform_t* camera_transform) {
+void renderer_begin_frame(const transform_t* camera_transform) {
     mul ^= 1;
     // Apply camera transform
     static int scalex = 512;
@@ -750,7 +750,7 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
     }
 #endif
     if (avg_z < TRI_THRESHOLD_FADE_END) {
-        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[3], verts[0], verts[1], verts[2], verts[3], avg_z, clut_fade, verts[0].tex_id, 0);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[3], verts[0], verts[1], verts[2], verts[3], avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
         return;
     }
 
@@ -989,7 +989,14 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
 	PopMatrix();
 }
 
+void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, transform_t* model_transform, int tex_id_offset) {
+	tex_id_start = tex_id_offset;
+	renderer_draw_mesh_shaded(mesh, model_transform);
+	tex_id_start = 0;
+}
+
 void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, vislist_t* vislist, int tex_id_offset) {
+	tex_id_start = tex_id_offset;
     if (vislist == NULL || n_sections == 0) {
         for (size_t i = 0; i < model->n_meshes; ++i) {
             //renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
@@ -1016,6 +1023,7 @@ void renderer_draw_model_shaded(const model_t* model, transform_t* model_transfo
             else if ((i < 128) && (combined.sections_96_127 & (1 << (i - 96)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
         }
     }
+	tex_id_start = 0;
 }
 
 void renderer_draw_entity_shaded(const mesh_t* mesh, transform_t* model_transform, int texpage) {
@@ -1121,7 +1129,7 @@ void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, transfor
     renderer_debug_draw_line(vertex001, vertex011, color, model_transform);
 }
 
-void renderer_upload_texture(const texture_cpu_t* texture, const uint8_t index) {
+void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index) {
     // Load texture pixels to VRAM - starting from 0,256, spanning 512x256 VRAM pixels, stored in 16x64 blocks (for 64x64 texture)
     // This means that the grid consists of 32x4 textures
     WARN_IF("texture is not 64x64!", texture->width != 64 || texture->height != 64);
@@ -1323,7 +1331,7 @@ void renderer_apply_fade(int fade_level) {
 }
 
 
-void renderer_draw_text(vec2_t pos, char* text, int is_big, int centered) {
+void renderer_draw_text(vec2_t pos, const char* text, const int is_big, const int centered) {
     // if (is_small)
     int font_x = 0;
     int font_y = 60;

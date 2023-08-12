@@ -4,12 +4,14 @@
 #include <stdint.h>
 #include <stdio.h>
 
+uint32_t mem_stack_temp [512  * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_level[512 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_music[64 * KiB / sizeof(uint32_t)];
-uint32_t mem_stack_temp [512  * KiB / sizeof(uint32_t)];
+uint32_t mem_stack_entity[64 * KiB / sizeof(uint32_t)];
+size_t mem_stack_cursor_temp = 0;
 size_t mem_stack_cursor_level = 0;
 size_t mem_stack_cursor_music = 0;
-size_t mem_stack_cursor_temp = 0;
+size_t mem_stack_cursor_entity = 0;
 
 #ifdef _DEBUG
 char* mem_cat_strings[] = {
@@ -23,9 +25,10 @@ char* mem_cat_strings[] = {
 };
 
 char* stack_names[] = {
+    "STACK_TEMP",
     "STACK_LEVEL",
     "STACK_MUSIC",
-    "STACK_TEMP"
+    "STACK_ENTITY",
 };
 #endif
 
@@ -40,7 +43,7 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 	// Convert stack enum into actual pointers and cursors
 	uint32_t* base = NULL;
 	size_t* cursor;
-	size_t stack_size = 0;
+	size_t stack_size;
 
 #ifdef _DEBUG
 	printf("stack %s (id %i) has %i bytes available and we need %i bytes... ", stack_names[stack], stack, mem_stack_get_size(stack) - mem_stack_get_occupied(stack), size);
@@ -61,6 +64,11 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 			base = mem_stack_temp;
 			cursor = &mem_stack_cursor_temp;
 			stack_size = sizeof(mem_stack_temp);
+			break;
+		case STACK_ENTITY:
+			base = mem_stack_entity;
+			cursor = &mem_stack_cursor_entity;
+			stack_size = sizeof(mem_stack_entity);
 			break;
 		default:
 			printf("invalid stack allocation\n");
@@ -94,6 +102,9 @@ void mem_stack_release(stack_t stack) {
 		case STACK_TEMP:
 			mem_stack_cursor_temp = 0;
 			break;
+		case STACK_ENTITY:
+			mem_stack_cursor_entity = 0;
+			break;
 		default:
 			break;
 	}
@@ -109,6 +120,9 @@ size_t mem_stack_get_size(stack_t stack) {
 			break;
 		case STACK_TEMP:
 			return sizeof(mem_stack_temp);
+			break;
+		case STACK_ENTITY:
+			return sizeof(mem_stack_entity);
 			break;
 		default:
 			return 0;
@@ -126,6 +140,9 @@ size_t mem_stack_get_occupied(stack_t stack) {
 			break;
 		case STACK_TEMP:
 			return mem_stack_cursor_temp << 2;
+			break;
+		case STACK_ENTITY:
+			return mem_stack_cursor_entity << 2;
 			break;
 		default:
 			return 0;

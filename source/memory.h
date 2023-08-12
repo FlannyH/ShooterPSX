@@ -1,5 +1,5 @@
-#ifndef MEMORY
-#define MEMORY
+#ifndef MEMORY_H
+#define MEMORY_H
 #include <stddef.h>
 
 typedef enum {
@@ -13,9 +13,10 @@ typedef enum {
 } memory_category_t;
 
 typedef enum {
+    STACK_TEMP,
     STACK_LEVEL,
     STACK_MUSIC,
-    STACK_TEMP,
+    STACK_ENTITY,
 	N_STACK_TYPES,
 } stack_t;
 

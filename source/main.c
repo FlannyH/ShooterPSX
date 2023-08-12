@@ -23,6 +23,8 @@
 #include "texture.h"
 #include "memory.h"
 #include "text.h"
+#include "entity.h"
+#include "entities/door.h"
 
 int widescreen = 0;
 extern int vsync_enable;
@@ -55,7 +57,7 @@ struct {
 	struct {
 		transform_t t_level;
 		model_t* m_level;
-		model_t* m_chaser;
+		model_t* m_entity;
 		model_t* m_level_col_dbg;
 		collision_mesh_t* m_level_col;
 		vislist_t* v_level;
@@ -103,66 +105,33 @@ int main(void) {
 		if (current_state != prev_state) {
 			// Exit the previous state
 			switch(prev_state) {
-				case STATE_NONE:
-					break;
-				case STATE_TITLE_SCREEN:
-					state_exit_title_screen();
-					break;
-				case STATE_CREDITS:
-					state_exit_credits();
-					break;
-				case STATE_SETTINGS:
-					state_exit_settings();
-					break;
-				case STATE_IN_GAME:
-					state_exit_in_game();
-					break;
-				case STATE_PAUSE_MENU:
-					state_exit_pause_menu();
-					break;
+				case STATE_NONE:			/* nothing */ 					break;
+				case STATE_TITLE_SCREEN: 	state_exit_title_screen(); 		break;
+				case STATE_CREDITS: 		state_exit_credits(); 			break;
+				case STATE_SETTINGS: 		state_exit_settings(); 			break;
+				case STATE_IN_GAME: 		state_exit_in_game(); 			break;
+				case STATE_PAUSE_MENU: 		state_exit_pause_menu(); 		break;
 			}
 			// Enter the current state
 			switch(current_state) {
-				case STATE_NONE:
-					break;
-				case STATE_TITLE_SCREEN:
-					state_enter_title_screen();
-					break;
-				case STATE_CREDITS:
-					state_enter_credits();
-					break;
-				case STATE_SETTINGS:
-					state_enter_settings();
-					break;
-				case STATE_IN_GAME:
-					state_enter_in_game();
-					break;
-				case STATE_PAUSE_MENU:
-					state_enter_pause_menu();
-					break;
+				case STATE_NONE:			/* nothing */ 					break;
+				case STATE_TITLE_SCREEN:	state_enter_title_screen();		break;
+				case STATE_CREDITS:			state_enter_credits();			break;
+				case STATE_SETTINGS:		state_enter_settings();			break;
+				case STATE_IN_GAME:			state_enter_in_game();			break;
+				case STATE_PAUSE_MENU:		state_enter_pause_menu();		break;
 			}
 		}
 
 		// Update the current state
 		prev_state = current_state;
 		switch(current_state) {
-			case STATE_NONE:
-				break;
-			case STATE_TITLE_SCREEN:
-				state_update_title_screen(delta_time);
-				break;
-			case STATE_CREDITS:
-				state_update_credits(delta_time);
-				break;
-			case STATE_SETTINGS:
-				state_update_settings(delta_time);
-				break;
-			case STATE_IN_GAME:
-				state_update_in_game(delta_time);
-				break;
-			case STATE_PAUSE_MENU:
-				state_update_pause_menu(delta_time);
-				break;
+			case STATE_NONE:			/* nothing */ 							break;
+			case STATE_TITLE_SCREEN:	state_update_title_screen(delta_time);	break;
+			case STATE_CREDITS:			state_update_credits(delta_time);		break;
+			case STATE_SETTINGS:		state_update_settings(delta_time);		break;
+			case STATE_IN_GAME:			state_update_in_game(delta_time);		break;
+			case STATE_PAUSE_MENU:		state_update_pause_menu(delta_time);	break;
 		}
 	}
 #ifndef _PSX
@@ -326,13 +295,27 @@ void state_enter_in_game(void) {
    	state.in_game.player.position.y = 11413985 / 2;
     state.in_game.player.position.z = 2112866  / 2;
 	state.in_game.player.rotation.y = 4096 * 16;
+    state.in_game.player.position.x = 0;
+   	state.in_game.player.position.y = 0;
+    state.in_game.player.position.z = 0;
 
 	// Load models
-    state.in_game.m_level = model_load("\\ASSETS\\MODELS\\LEVEL.MSH;1", 1, STACK_LEVEL);
-    state.in_game.m_chaser = model_load("\\ASSETS\\MODELS\\ENTITY.MSH;1", 1, STACK_LEVEL);
-    state.in_game.m_level_col_dbg = model_load_collision_debug("\\ASSETS\\MODELS\\LEVEL.COL;1", 1, STACK_LEVEL);
-    state.in_game.m_level_col = model_load_collision("\\ASSETS\\MODELS\\LEVEL.COL;1", 1, STACK_LEVEL);
-	state.in_game.v_level = model_load_vislist("\\ASSETS\\MODELS\\LEVEL.VIS;1", 1, STACK_LEVEL);
+    state.in_game.m_level = model_load("\\ASSETS\\MODELS\\TEST.MSH;1", 1, STACK_LEVEL);
+    state.in_game.m_level_col_dbg = model_load_collision_debug("\\ASSETS\\MODELS\\TEST.COL;1", 1, STACK_LEVEL);
+    state.in_game.m_level_col = model_load_collision("\\ASSETS\\MODELS\\TEST.COL;1", 1, STACK_LEVEL);
+	state.in_game.v_level = model_load_vislist("\\ASSETS\\MODELS\\TEST.VIS;1", 1, STACK_LEVEL);
+
+	entity_init();
+
+	printf("-----BEFORE-----\n");
+	entity_debug();
+	// debug entity
+	entity_door_t* door = entity_door_new();
+	door->entity_header.position.x = 0;
+	door->entity_header.position.y = 0;
+	door->entity_header.position.z = 0;
+	printf("-----AFTER-----\n");
+	entity_debug();
 
 	// Generate collision BVH
     bvh_from_model(&state.in_game.bvh_level_model, state.in_game.m_level_col);
@@ -342,11 +325,14 @@ void state_enter_in_game(void) {
 	texture_cpu_t *entity_textures;
 	mem_stack_release(STACK_TEMP);
 	printf("occupied STACK_TEMP: %i / %i\n", mem_stack_get_occupied(STACK_TEMP), mem_stack_get_size(STACK_TEMP));
-	const uint32_t n_level_textures = texture_collection_load("\\ASSETS\\MODELS\\LEVEL.TXC;1", &tex_level, 1, STACK_TEMP);
+	const uint32_t n_level_textures = texture_collection_load("\\ASSETS\\MODELS\\TEST.TXC;1", &tex_level, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_level_textures; ++i) {
 	    renderer_upload_texture(&tex_level[i], i);
 	}
 	const uint32_t n_entity_textures = texture_collection_load("\\ASSETS\\MODELS\\ENTITY.TXC;1", &entity_textures, 1, STACK_TEMP);
+	for (uint8_t i = 0; i < n_entity_textures; ++i) {
+	    renderer_upload_texture(&entity_textures[i], i + 64);
+	}
 	mem_stack_release(STACK_TEMP);
 
 	// Start music
@@ -356,7 +342,7 @@ void state_enter_in_game(void) {
 	music_play_sequence(0);
 	
 	music_set_volume(255);
-	FntLoad(256,256);
+	FntLoad(320,256);
 	FntOpen(32, 32, 256, 192, 0, 512);
 	
 	mem_debug();
@@ -384,7 +370,8 @@ void state_update_in_game(int dt) {
 	if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
 	if (state.global.show_debug) {
 		PROFILE("input", input_update(), 1);
-		PROFILE("render", renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0), 1);
+		PROFILE("lvl_gfx", renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0), 1);
+		PROFILE("entity", entity_update_all(&state.in_game.player, dt), 1);
 		PROFILE("player", player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt), 1);
 		PROFILE("music", music_tick(16), 1);
 		FntPrint(-1, "sections: ");
@@ -394,6 +381,11 @@ void state_update_in_game(int dt) {
 		FntPrint(-1, "meshes drawn: %i / %i\n", n_meshes_drawn, n_meshes_total);
 		FntPrint(-1, "polygons drawn: %i\n", n_polygons_drawn);
 		FntPrint(-1, "primitive occ.: %i / %i KiB\n", primitive_occupation / 1024, 128);
+		FntPrint(-1, "player pos: %i, %i, %i\n", 
+			state.in_game.player.position.x / 4096, 
+			state.in_game.player.position.y / 4096, 
+			state.in_game.player.position.z / 4096
+		);
 		for (int i = 0; i < N_STACK_TYPES; ++i) {
 			FntPrint(-1, "%s: %i / %i KiB (%i%%)\n", 
 				stack_names[i],
@@ -409,7 +401,7 @@ void state_update_in_game(int dt) {
 #endif
 		input_update();
 		renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0);
-		//renderer_draw_entity_shaded(&m_chaser->meshes[0], &t_level, 3);
+		entity_update_all(&state.in_game.player, dt);
 		player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt);
 		music_tick(16);
 #ifdef _DEBUG
