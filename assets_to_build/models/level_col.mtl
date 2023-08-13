@@ -41,6 +41,16 @@ d 1.000000
 illum 2
 map_Kd level_tex/brown_black.png
 
+newmtl busy_grid
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/busy_grid.png
+
 newmtl busy_wall_bl
 Ns 0.000000
 Ka 1.000000 1.000000 1.000000
@@ -410,6 +420,16 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 1
+
+newmtl wall_with_bottom
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/wall_with_bottom.png
 
 newmtl yellow_board
 Ns 0.000000

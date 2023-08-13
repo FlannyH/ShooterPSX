@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 uint32_t mem_stack_temp [512  * KiB / sizeof(uint32_t)];
-uint32_t mem_stack_level[512 * KiB / sizeof(uint32_t)];
+uint32_t mem_stack_level[768 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_music[64 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_entity[64 * KiB / sizeof(uint32_t)];
 size_t mem_stack_cursor_temp = 0;
