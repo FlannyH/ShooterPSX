@@ -307,15 +307,11 @@ void state_enter_in_game(void) {
 
 	entity_init();
 
-	printf("-----BEFORE-----\n");
-	entity_debug();
 	// debug entity
 	entity_door_t* door = entity_door_new();
 	door->entity_header.position.x = 0;
 	door->entity_header.position.y = 0;
 	door->entity_header.position.z = 0;
-	printf("-----AFTER-----\n");
-	entity_debug();
 
 	// Generate collision BVH
     bvh_from_model(&state.in_game.bvh_level_model, state.in_game.m_level_col);
