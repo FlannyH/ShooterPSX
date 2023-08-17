@@ -44,6 +44,8 @@ uint8_t tex_id_start = 0;
 int drawn_first_frame = 0;
 int curr_res_y = RES_Y_NTSC;
 int primitive_occupation = 0;
+svec2_t* transformed_vertices_xy;
+scalar_t* transformed_vertices_z;
 
 pixel32_t textures_avg_colors[256];
 RECT textures[256];
@@ -339,28 +341,31 @@ __attribute__((always_inline)) inline void draw_quad_shaded_paged(vertex_3d_t* v
     ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[3], verts[0], verts[1], verts[2], verts[3], avg_z, 0, texpage, 1);
 }
 
-__attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* verts) {
+__attribute__((always_inline)) inline void draw_triangle_shaded(mesh_t* mesh, uint16_t* indices, svec2_t* trans_xy, scalar_t* trans_z, polygon_metadata_t poly_metadata) {
     // Transform the triangle vertices - there's 6 entries instead of 3, so we have enough room for subdivided triangles
     svec2_t trans_vec_xy[15];
     scalar_t trans_vec_z[15];
     scalar_t avg_z;
-    gte_ldv3(
-        &verts[0],
-        &verts[1],
-        &verts[2]
-    );
-    gte_rtpt();
+
+    // Fetch transformed coordinates
+    trans_vec_xy[0] = trans_xy[indices[0]];
+    trans_vec_xy[1] = trans_xy[indices[1]];
+    trans_vec_xy[2] = trans_xy[indices[2]];
+    trans_vec_z[0] = trans_z[indices[0]];
+    trans_vec_z[1] = trans_z[indices[1]];
+    trans_vec_z[2] = trans_z[indices[2]];
 
     // Backface culling
     int p;
+    gte_ldsxy0(*(uint32_t*)&trans_vec_xy[0]);
+    gte_ldsxy1(*(uint32_t*)&trans_vec_xy[1]);
+    gte_ldsxy2(*(uint32_t*)&trans_vec_xy[2]);
     gte_nclip();
     gte_stopz(&p);
     if (p <= 0) return;
-    (void)p; // we don't need it anymore after this
 
     // Store transformed position, and center depth
-    gte_stsxy3c(&trans_vec_xy[0]);
-    gte_stsz3c(&trans_vec_z[0]);
+    gte_ldsz3(trans_vec_z[0], trans_vec_z[1], trans_vec_z[2]);
     gte_avsz3();
     gte_stotz(&avg_z);
 
@@ -388,8 +393,14 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
 	else if (clut_fade < 0) clut_fade = 0;
 #if 1
 
+    vertex_3d_t verts[3];
+    verts[0] = mesh->vertices[indices[0]];
+    verts[1] = mesh->vertices[indices[1]];
+    verts[2] = mesh->vertices[indices[2]];
+
 #endif
-    const scalar_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id;
+
+    const scalar_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)poly_metadata.face_size;
     if (avg_z < sub2_threshold) {
         // Generate all 15 vertices
         #define vtx0 verts[0]
@@ -425,31 +436,31 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
         gte_stsz3c(&trans_vec_z[12]);
 
         // Add to queue
-        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[6], trans_vec_xy[11], vtx0, vtx6, vtx11, avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
-        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[11], trans_vec_xy[12], trans_vec_xy[5], vtx11, vtx12, vtx5, avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
-        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[5], trans_vec_xy[14], trans_vec_xy[10], vtx5, vtx14, vtx10, avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
-        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[10], trans_vec_xy[9], trans_vec_xy[2], vtx10, vtx9, vtx2, avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
-        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[6], trans_vec_xy[3], trans_vec_xy[11], trans_vec_xy[12], vtx6, vtx3, vtx11, vtx12, avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
-        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[7], trans_vec_xy[12], trans_vec_xy[13], vtx3, vtx7, vtx12, vtx13, avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
-        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[7], trans_vec_xy[1], trans_vec_xy[13], trans_vec_xy[8], vtx7, vtx1, vtx13, vtx8, avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
-        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[12], trans_vec_xy[13], trans_vec_xy[5], trans_vec_xy[14], vtx12, vtx13, vtx5, vtx14, avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
-        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[13], trans_vec_xy[8], trans_vec_xy[14], trans_vec_xy[4], vtx13, vtx8, vtx14, vtx4, avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
-        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[14], trans_vec_xy[4], trans_vec_xy[10], trans_vec_xy[9], vtx14, vtx4, vtx10, vtx9, avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[6], trans_vec_xy[11], vtx0, vtx6, vtx11, avg_z, clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[11], trans_vec_xy[12], trans_vec_xy[5], vtx11, vtx12, vtx5, avg_z, clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[5], trans_vec_xy[14], trans_vec_xy[10], vtx5, vtx14, vtx10, avg_z, clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[10], trans_vec_xy[9], trans_vec_xy[2], vtx10, vtx9, vtx2, avg_z, clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[6], trans_vec_xy[3], trans_vec_xy[11], trans_vec_xy[12], vtx6, vtx3, vtx11, vtx12, avg_z, clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[7], trans_vec_xy[12], trans_vec_xy[13], vtx3, vtx7, vtx12, vtx13, avg_z, clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[7], trans_vec_xy[1], trans_vec_xy[13], trans_vec_xy[8], vtx7, vtx1, vtx13, vtx8, avg_z, clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[12], trans_vec_xy[13], trans_vec_xy[5], trans_vec_xy[14], vtx12, vtx13, vtx5, vtx14, avg_z, clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[13], trans_vec_xy[8], trans_vec_xy[14], trans_vec_xy[4], vtx13, vtx8, vtx14, vtx4, avg_z, clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+        ADD_TEX_QUAD_TO_QUEUE(trans_vec_xy[14], trans_vec_xy[4], trans_vec_xy[10], trans_vec_xy[9], vtx14, vtx4, vtx10, vtx9, avg_z, clut_fade, poly_metadata.tex_id + tex_id_start, 0);
 
         // Filler triangles
         scalar_t max_z = trans_vec_z[0];
         if (trans_vec_z[1] > max_z) max_z = trans_vec_z[1];
         if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2]; 
         if (max_z >= sub2_threshold) {
-            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[3], vtx0, vtx1, vtx3, (avg_z + 8), clut_fade, verts[0].tex_id + tex_id_start, 0);
-            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[3], trans_vec_xy[6], vtx0, vtx3, vtx6, (avg_z + 8), clut_fade, verts[0].tex_id + tex_id_start, 0);
-            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[1], trans_vec_xy[7], vtx3, vtx1, vtx7, (avg_z + 8), clut_fade, verts[0].tex_id + tex_id_start, 0);
-            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[4], vtx1, vtx2, vtx4, (avg_z + 8), clut_fade, verts[0].tex_id + tex_id_start, 0);
-            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[1], trans_vec_xy[4], trans_vec_xy[8], vtx1, vtx4, vtx8, (avg_z + 8), clut_fade, verts[0].tex_id + tex_id_start, 0);
-            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[4], trans_vec_xy[2], trans_vec_xy[9], vtx4, vtx2, vtx9, (avg_z + 8), clut_fade, verts[0].tex_id + tex_id_start, 0);
-            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[2], trans_vec_xy[5], vtx0, vtx2, vtx5, (avg_z + 8), clut_fade, verts[0].tex_id + tex_id_start, 0);
-            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[5], trans_vec_xy[11], vtx0, vtx5, vtx11, (avg_z + 8), clut_fade, verts[0].tex_id + tex_id_start, 0);
-            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[5], trans_vec_xy[2], trans_vec_xy[10], vtx5, vtx2, vtx10, (avg_z + 8), clut_fade, verts[0].tex_id + tex_id_start, 0);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[3], vtx0, vtx1, vtx3, (avg_z + 8), clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[3], trans_vec_xy[6], vtx0, vtx3, vtx6, (avg_z + 8), clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[1], trans_vec_xy[7], vtx3, vtx1, vtx7, (avg_z + 8), clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[4], vtx1, vtx2, vtx4, (avg_z + 8), clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[1], trans_vec_xy[4], trans_vec_xy[8], vtx1, vtx4, vtx8, (avg_z + 8), clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[4], trans_vec_xy[2], trans_vec_xy[9], vtx4, vtx2, vtx9, (avg_z + 8), clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[2], trans_vec_xy[5], vtx0, vtx2, vtx5, (avg_z + 8), clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[5], trans_vec_xy[11], vtx0, vtx5, vtx11, (avg_z + 8), clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[5], trans_vec_xy[2], trans_vec_xy[10], vtx5, vtx2, vtx10, (avg_z + 8), clut_fade, poly_metadata.tex_id + tex_id_start, 0);
         }
 
         #undef vtx0
@@ -458,7 +469,7 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
         return;
     }
 #if 1
-    const scalar_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)verts[1].tex_id;
+    const scalar_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)poly_metadata.face_size;
     if (avg_z < sub1_threshold) {
         // Let's calculate the center of each edge
         const vertex_3d_t ab = get_halfway_point(verts[0], verts[1]);
@@ -472,25 +483,25 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
         gte_stsz3c(&trans_vec_z[3]);
 
         // Draw them
-        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[3], trans_vec_xy[5], verts[0], ab, ca, avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
-        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[1], trans_vec_xy[4], ab, verts[1], bc, avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
-        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[4], trans_vec_xy[5], ab, bc, ca, avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
-        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[5], trans_vec_xy[4], trans_vec_xy[2], ca, bc, verts[2], avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[3], trans_vec_xy[5], verts[0], ab, ca, avg_z, clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[1], trans_vec_xy[4], ab, verts[1], bc, avg_z, clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[3], trans_vec_xy[4], trans_vec_xy[5], ab, bc, ca, avg_z, clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[5], trans_vec_xy[4], trans_vec_xy[2], ca, bc, verts[2], avg_z, clut_fade, poly_metadata.tex_id + tex_id_start, 0);
 
         // Filler triangles
         scalar_t max_z = trans_vec_z[0];
         if (trans_vec_z[1] > max_z) max_z = trans_vec_z[1];
         if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2]; 
         if (max_z >= sub1_threshold) {
-            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[3], verts[0], verts[1], ab, (avg_z + 8), clut_fade, verts[0].tex_id + tex_id_start, 0);
-            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[4], verts[1], verts[2], bc, (avg_z + 8), clut_fade, verts[0].tex_id + tex_id_start, 0);
-            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[2], trans_vec_xy[0], trans_vec_xy[5], verts[2], verts[0], ca, (avg_z + 8), clut_fade, verts[0].tex_id + tex_id_start, 0);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[3], verts[0], verts[1], ab, (avg_z + 8), clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[4], verts[1], verts[2], bc, (avg_z + 8), clut_fade, poly_metadata.tex_id + tex_id_start, 0);
+            ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[2], trans_vec_xy[0], trans_vec_xy[5], verts[2], verts[0], ca, (avg_z + 8), clut_fade, poly_metadata.tex_id + tex_id_start, 0);
         }
         return;
     }
 #endif
     if (avg_z < TRI_THRESHOLD_FADE_END) {
-        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], verts[0], verts[1], verts[2], avg_z, clut_fade, verts[0].tex_id + tex_id_start, 0);
+        ADD_TEX_TRI_TO_QUEUE(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], verts[0], verts[1], verts[2], avg_z, clut_fade, poly_metadata.tex_id + tex_id_start, 0);
         return;
     }
 
@@ -540,34 +551,33 @@ __attribute__((always_inline)) inline void draw_triangle_shaded(vertex_3d_t* ver
         return;
     }
 }
-__attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) {
+__attribute__((always_inline)) inline void draw_quad_shaded(mesh_t* mesh, uint16_t* indices, svec2_t* trans_xy, scalar_t* trans_z, polygon_metadata_t poly_metadata) {
     // Transform the quad vertices, with enough entries in the array for subdivided quads
     svec2_t trans_vec_xy[25];
     scalar_t trans_vec_z[25];
     scalar_t avg_z;
-    gte_ldv3(
-        &verts[0],
-        &verts[1],
-        &verts[2]
-    );
-    gte_rtpt();
+
+    // Fetch transformed coordinates
+    trans_vec_xy[0] = trans_xy[indices[0]];
+    trans_vec_xy[1] = trans_xy[indices[1]];
+    trans_vec_xy[2] = trans_xy[indices[2]];
+    trans_vec_xy[3] = trans_xy[indices[3]];
+    trans_vec_z[0] = trans_z[indices[0]];
+    trans_vec_z[1] = trans_z[indices[1]];
+    trans_vec_z[2] = trans_z[indices[2]];
+    trans_vec_z[3] = trans_z[indices[3]];
 
     // Backface culling
     int p;
+    gte_ldsxy0(*(uint32_t*)&trans_vec_xy[0]); // todo - make this a union struct thingy and not a disgusting cast like this
+    gte_ldsxy1(*(uint32_t*)&trans_vec_xy[1]);
+    gte_ldsxy2(*(uint32_t*)&trans_vec_xy[2]);
     gte_nclip();
     gte_stopz(&p);
-	if (input_pressed(PAD_TRIANGLE, 0)) printf("gte_stopz: %i\n", p);
-    if (p <= -16) return;
+    if (p <= 0) return;
 
     // Store transformed position, and center depth
-    gte_stsxy3c(&trans_vec_xy[0]);
-    gte_stsz3c(&trans_vec_z[0]);
-    gte_ldv0(&verts[3]);
-    gte_rtps();
-    gte_stsxy(&trans_vec_xy[3]);
-    gte_stsz(&trans_vec_z[3]);
-    gte_avsz4();
-    gte_stotz(&avg_z);
+    avg_z = (trans_vec_z[0] + trans_vec_z[1] + trans_vec_z[2] + trans_vec_z[3]) / 16;
 
     // Depth culling
     if ((avg_z >> 0) >= ORD_TBL_LENGTH || ((avg_z >> 0) <= 0)) return;
@@ -589,6 +599,13 @@ __attribute__((always_inline)) inline void draw_quad_shaded(vertex_3d_t* verts) 
 	int16_t clut_fade = ((N_CLUT_FADES-1) * (avg_z - TRI_THRESHOLD_FADE_START)) / (TRI_THRESHOLD_FADE_END - TRI_THRESHOLD_FADE_START);
 	if (clut_fade > 15) clut_fade = 15;
 	else if (clut_fade < 0) clut_fade = 0;
+    
+    vertex_3d_t verts[4];
+    verts[0] = mesh->vertices[indices[0]];
+    verts[1] = mesh->vertices[indices[1]];
+    verts[2] = mesh->vertices[indices[2]];
+    verts[3] = mesh->vertices[indices[3]];
+
 #if 1
     const scalar_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id;
     if (avg_z < TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id) {
@@ -971,15 +988,41 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
     ++n_meshes_drawn;
     //n_total_triangles += mesh->n_vertices / 3;
 
+    // Transform each vertex
+    transformed_vertices_xy = mem_stack_alloc((mesh->n_vertices + 3) * sizeof(svec2_t), STACK_TEMP);
+    transformed_vertices_z = mem_stack_alloc((mesh->n_vertices + 3) * sizeof(scalar_t), STACK_TEMP);
+    for (size_t i = 0; i < (size_t)mesh->n_vertices; i += 3) {
+        // Transform
+        gte_ldv3(
+            &mesh->vertices[i + 0],
+            &mesh->vertices[i + 1],
+            &mesh->vertices[i + 2]
+        );
+        gte_rtpt();
+        gte_stsxy3(
+            &transformed_vertices_xy[i+0],
+            &transformed_vertices_xy[i+1],
+            &transformed_vertices_xy[i+2]
+        );
+        gte_stsz3(
+            &transformed_vertices_z[i+0],
+            &transformed_vertices_z[i+1],
+            &transformed_vertices_z[i+2]
+        );
+    }
+
     // Loop over each triangle
     size_t vert_idx = 0;
+    size_t poly_metadata = 0;
     for (size_t i = 0; i < mesh->n_triangles; ++i) {
-        draw_triangle_shaded(&mesh->vertices[vert_idx]);
+        draw_triangle_shaded(mesh, &mesh->indices[vert_idx], transformed_vertices_xy, transformed_vertices_z, mesh->polygon_metadata[poly_metadata]);
         vert_idx += 3;
+        poly_metadata++;
     }
     for (size_t i = 0; i < mesh->n_quads; ++i) {
-        draw_quad_shaded(&mesh->vertices[vert_idx]);
+        draw_quad_shaded(mesh, &mesh->indices[vert_idx], transformed_vertices_xy, transformed_vertices_z, mesh->polygon_metadata[poly_metadata]);
         vert_idx += 4;
+        poly_metadata++;
     }
 
 	PopMatrix();

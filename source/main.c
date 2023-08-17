@@ -296,15 +296,15 @@ void state_enter_in_game(void) {
    	state.in_game.player.position.y = 11413985 / 2;
     state.in_game.player.position.z = 2112866  / 2;
 	state.in_game.player.rotation.y = 4096 * 16;
-    //state.in_game.player.position.x = 0;
+    state.in_game.player.position.x = 0;
    	//state.in_game.player.position.y = 0;
-    //state.in_game.player.position.z = 0;
+    state.in_game.player.position.z = 0;
 
 	// Load models
-    state.in_game.m_level = model_load("\\ASSETS\\MODELS\\LEVEL.MSH;1", 1, STACK_LEVEL);
-    state.in_game.m_level_col_dbg = model_load_collision_debug("\\ASSETS\\MODELS\\LEVEL.COL;1", 1, STACK_LEVEL);
-    state.in_game.m_level_col = model_load_collision("\\ASSETS\\MODELS\\LEVEL.COL;1", 1, STACK_LEVEL);
-	state.in_game.v_level = model_load_vislist("\\ASSETS\\MODELS\\LEVEL.VIS;1", 1, STACK_LEVEL);
+    state.in_game.m_level = model_load("\\ASSETS\\MODELS\\TEST.MSH;1", 1, STACK_LEVEL);
+    state.in_game.m_level_col_dbg = model_load_collision_debug("\\ASSETS\\MODELS\\TEST.COL;1", 1, STACK_LEVEL);
+    state.in_game.m_level_col = model_load_collision("\\ASSETS\\MODELS\\TEST.COL;1", 1, STACK_LEVEL);
+	state.in_game.v_level = model_load_vislist("\\ASSETS\\MODELS\\TEST.VIS;1", 1, STACK_LEVEL);
 
 	entity_init();
 
@@ -322,7 +322,7 @@ void state_enter_in_game(void) {
 	texture_cpu_t *entity_textures;
 	mem_stack_release(STACK_TEMP);
 	printf("occupied STACK_TEMP: %i / %i\n", mem_stack_get_occupied(STACK_TEMP), mem_stack_get_size(STACK_TEMP));
-	const uint32_t n_level_textures = texture_collection_load("\\ASSETS\\MODELS\\LEVEL.TXC;1", &tex_level, 1, STACK_TEMP);
+	const uint32_t n_level_textures = texture_collection_load("\\ASSETS\\MODELS\\TEST.TXC;1", &tex_level, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_level_textures; ++i) {
 	    renderer_upload_texture(&tex_level[i], i);
 	}
@@ -400,7 +400,7 @@ void state_update_in_game(int dt) {
 #endif
 		input_update();
 		renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0);
-		entity_update_all(&state.in_game.player, dt);
+		//entity_update_all(&state.in_game.player, dt);
 		player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt);
 		music_tick(16);
 #ifdef _DEBUG
