@@ -296,9 +296,9 @@ void state_enter_in_game(void) {
    	state.in_game.player.position.y = 11413985 / 2;
     state.in_game.player.position.z = 2112866  / 2;
 	state.in_game.player.rotation.y = 4096 * 16;
-    //state.in_game.player.position.x = 0;
+    state.in_game.player.position.x = 0;
    	//state.in_game.player.position.y = 0;
-    //state.in_game.player.position.z = 0;
+    state.in_game.player.position.z = 0;
 
 	// Load models
     state.in_game.m_level = model_load("\\ASSETS\\MODELS\\LEVEL.MSH;1", 1, STACK_LEVEL);

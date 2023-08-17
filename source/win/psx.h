@@ -8,6 +8,8 @@ typedef struct {
     int32_t vx, vy, vz;
 } VECTOR;
 
+#define ONE 4096
+
 int hisin(int a);
 int hicos(int a);
 int FntPrint(int id, const char* fmt, ...);

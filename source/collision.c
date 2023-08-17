@@ -62,7 +62,7 @@ void bvh_construct(bvh_t* bvh, const col_mesh_file_tri_t* primitives, const uint
 
 aabb_t bvh_get_bounds(const bvh_t* bvh, const uint16_t first, const uint16_t count)
 {
-    aabb_t result;
+    aabb_t result = { 0 };
     result.max = vec3_from_int32s(INT32_MIN, INT32_MIN, INT32_MIN);
     result.min = vec3_from_int32s(INT32_MAX, INT32_MAX, INT32_MAX);
     for (int i = 0; i < count; i++)
@@ -100,9 +100,9 @@ void bvh_subdivide(bvh_t* bvh, bvh_node_t* node, const int recursion_depth) {
         avg_y += bvh->primitives[bvh->indices[i]].v2.y;
         avg_z += bvh->primitives[bvh->indices[i]].v2.z;
     }
-    avg_x /= node->primitive_count * 3;
-    avg_y /= node->primitive_count * 3;
-    avg_z /= node->primitive_count * 3;
+    avg_x /= (int64_t)node->primitive_count * 3;
+    avg_y /= (int64_t)node->primitive_count * 3;
+    avg_z /= (int64_t)node->primitive_count * 3;
 
     //Determine split axis - choose biggest axis
     axis_t split_axis = axis_x;
@@ -362,9 +362,9 @@ void bvh_partition(const bvh_t* bvh, const axis_t axis, const scalar_t pivot, co
     *split_index = i;
 }
 
-void bvh_from_mesh(bvh_t* bvh, const mesh_t* mesh) {
-    bvh_construct(bvh, (triangle_3d_t*)mesh->vertices, (uint16_t)mesh->n_triangles);
-}
+//void bvh_from_mesh(bvh_t* bvh, const mesh_t* mesh) {
+//    bvh_construct(bvh, (triangle_3d_t*)mesh->vertices, (uint16_t)mesh->n_triangles);
+//}
 
 void bvh_from_model(bvh_t* bvh, const collision_mesh_t* mesh) {
     // Construct the BVH
@@ -655,9 +655,10 @@ vec2_t find_closest_point_on_triangle_2d(vec2_t v0, vec2_t v1, vec2_t v2, vec2_t
     //It's impossible for all the numbers to be negative
     //WARN_IF("all barycentric coordinates ended up negative! this should be impossible", (edge0 < 0 && edge1 < 0 && edge2 < 0));
     if ((edge0 < 0 && edge1 < 0 && edge2 < 0)) {
-        vec2_t error;
-        error.x = INT32_MAX;
-        error.y = 1;
+        vec2_t error = {
+            .x = INT32_MAX,
+            .y = 1,
+        };
         return error;
     }
 
@@ -783,7 +784,7 @@ int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vert
     }
 
     // It does! calculate the Y coordinate
-    vec3_t closest_pos_3d;
+    vec3_t closest_pos_3d = { 0 };
     closest_pos_3d.x = closest_pos_on_triangle.x;
     closest_pos_3d.z = closest_pos_on_triangle.y;
 

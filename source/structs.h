@@ -3,6 +3,10 @@
 #define STRUCTS_H
 #include "vec3.h"
 
+#ifdef _WINDOWS
+#include "win/psx.h"
+#endif
+
 typedef struct {
     vec3_t min;
     vec3_t max;
@@ -83,9 +87,17 @@ typedef struct {
 } svec2_t;
 
 typedef struct {
+    uint8_t face_size;
+    uint8_t tex_id;
+} polygon_metadata_t;
+
+typedef struct {
     uint16_t n_triangles;
     uint16_t n_quads;
+    uint16_t n_vertices;
     vertex_3d_t* vertices;
+    uint16_t* indices;
+    polygon_metadata_t* polygon_metadata;
     aabb_t bounds;
 } mesh_t;
 
@@ -95,19 +107,23 @@ typedef struct {
     uint32_t n_submeshes;       // Number of submeshes in this model.
     uint32_t offset_mesh_desc;  // Offset into the binary section to the start of the array of MeshDesc structs.
     uint32_t offset_vertex_data;// Offset into the binary section to the start of the raw VertexPSX data.
+    uint32_t offset_index_data; // Offset into the binary section to the start of the vertex polygon indices.
+    uint32_t offset_poly_metadata; // Offset into the binary section to the start of the polygon metadata.
 } model_header_t;
 
 typedef struct {
     uint16_t vertex_start;  // First vertex index for this model.
-    uint16_t n_triangles;    // Number of vertices for this model.
-    uint16_t n_quads;    // Number of vertices for this model.
+    uint16_t n_vertices;    // Number of unique vertices for this model.
+    uint16_t index_start;    // First polygon index for this mesh.
+    uint16_t n_triangles;    // Number of triangles for this mesh.
+    uint16_t n_quads;    // Number of quads for this mesh
+    uint16_t polygon_metadata_start;    // First polygon metadata for this mesh.
     int16_t x_min;          // Axis aligned bounding box minimum X.
     int16_t x_max;          // Axis aligned bounding box maximum X.
     int16_t y_min;          // Axis aligned bounding box minimum Y.
     int16_t y_max;          // Axis aligned bounding box maximum Y.
     int16_t z_min;          // Axis aligned bounding box minimum Z.
     int16_t z_max;          // Axis aligned bounding box maximum Z.
-    int16_t _pad;          // Axis aligned bounding box maximum Z.
 } mesh_desc_t;
 
 typedef struct {

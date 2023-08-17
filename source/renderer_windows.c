@@ -50,6 +50,9 @@ int prev_h = 0;
 transform_t* cam_transform;
 vec3_t camera_pos;
 vec3_t camera_dir;
+int vsync_enable = 1;
+int is_pal = 0;
+uint8_t tex_id_start = 0;
 
 typedef enum { vertex, pixel, geometry, compute } ShaderType;
 
@@ -175,7 +178,7 @@ bool load_shader_part(char *path, const ShaderType type, const GLuint *program) 
 	size_t shader_size = 0;
 	uint32_t *shader_data = NULL;
 
-	if (file_read(path, &shader_data, &shader_size) == 0) {
+	if (file_read(path, &shader_data, &shader_size, 0, 0) == 0) {
 		// Log error
 		printf("[ERROR] Shader %s not found!\n", path);
 
@@ -391,7 +394,7 @@ void renderer_draw_model_shaded(const model_t* model, transform_t* model_transfo
     glViewport(0, 0, w, h);
     if (vislist == NULL || n_sections == 0) {
         for (size_t i = 0; i < model->n_meshes; ++i) {
-            renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
+            //renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
             renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
         }
     }
@@ -442,6 +445,52 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
 	glm_rotate_y(model_matrix, (float)model_transform->rotation.vy * 2 * PI / 131072.0f, model_matrix);
 	glm_rotate_z(model_matrix, (float)model_transform->rotation.vz * 2 * PI / 131072.0f, model_matrix);
 
+    // Transform all vertices
+    svec2_t* trans_vec_xy = mem_stack_alloc(mesh->n_vertices * sizeof(svec2_t), STACK_TEMP);
+    int16_t* trans_vec_z = mem_stack_alloc(mesh->n_vertices * sizeof(uint16_t), STACK_TEMP);
+    for (size_t i = 0; i < mesh->n_vertices; ++i) {
+        vec3 vertex_position = {
+            (float)mesh->vertices[i].x,
+            (float)mesh->vertices[i].y,
+            (float)mesh->vertices[i].z,
+        };
+        trans_vec_xy[i].x = mesh->vertices[i].x;
+        trans_vec_xy[i].y = mesh->vertices[i].y;
+        trans_vec_z[i] = mesh->vertices[i].z;
+    }
+
+    // Retrieve all triangles
+    vertex_3d_t* primitives = mem_stack_alloc(((mesh->n_triangles * 3) + (mesh->n_quads * 6)) * sizeof(vertex_3d_t), STACK_TEMP);
+    vertex_3d_t* cursor = primitives;
+
+    for (size_t i = 0; i < mesh->n_triangles; ++i) {
+        uint16_t i0 = mesh->indices[(i * 3) + 0];
+        uint16_t i1 = mesh->indices[(i * 3) + 1];
+        uint16_t i2 = mesh->indices[(i * 3) + 2];
+        vertex_3d_t v0 = mesh->vertices[i0]; v0.tex_id = mesh->polygon_metadata[i].tex_id;
+        vertex_3d_t v1 = mesh->vertices[i1]; v1.tex_id = mesh->polygon_metadata[i].tex_id;
+        vertex_3d_t v2 = mesh->vertices[i2]; v2.tex_id = mesh->polygon_metadata[i].tex_id;
+        *cursor++ = v0;
+        *cursor++ = v1;
+        *cursor++ = v2;
+    }
+    for (size_t i = 0; i < mesh->n_quads; ++i) {
+        uint16_t i0 = mesh->indices[(mesh->n_triangles * 3) + (i * 4) + 0];
+        uint16_t i1 = mesh->indices[(mesh->n_triangles * 3) + (i * 4) + 1];
+        uint16_t i2 = mesh->indices[(mesh->n_triangles * 3) + (i * 4) + 2];
+        uint16_t i3 = mesh->indices[(mesh->n_triangles * 3) + (i * 4) + 3];
+        vertex_3d_t v0 = mesh->vertices[i0]; v0.tex_id = mesh->polygon_metadata[i + mesh->n_triangles].tex_id;
+        vertex_3d_t v1 = mesh->vertices[i1]; v1.tex_id = mesh->polygon_metadata[i + mesh->n_triangles].tex_id;
+        vertex_3d_t v2 = mesh->vertices[i2]; v2.tex_id = mesh->polygon_metadata[i + mesh->n_triangles].tex_id;
+        vertex_3d_t v3 = mesh->vertices[i3]; v3.tex_id = mesh->polygon_metadata[i + mesh->n_triangles].tex_id;
+        *cursor++ = v0;
+        *cursor++ = v1;
+        *cursor++ = v2;
+        *cursor++ = v1;
+        *cursor++ = v3;
+        *cursor++ = v2;
+    }
+
 	// Bind shader
 	glUseProgram(shader);
 
@@ -461,14 +510,14 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
     glUniform1i(glGetUniformLocation(shader, "texture_bound"), mesh->vertices[0].tex_id != 255);
     
 	// Copy data into it
-	glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(vertex_3d_t), mesh->vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 6)) * sizeof(vertex_3d_t), primitives, GL_STATIC_DRAW);
 
 	// Enable depth and draw
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 	glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
-    glDrawArrays(GL_QUADS, mesh->n_triangles * 3, mesh->n_quads * 4);
+    glDrawArrays(GL_TRIANGLES, mesh->n_triangles * 3, mesh->n_quads * 6);
 
 	n_total_triangles += mesh->n_triangles;
 }
@@ -665,4 +714,31 @@ int renderer_get_level_section_from_position(const model_t* model, vec3_t positi
         }
     }
     return n_sections; // -1 means no section
+}
+
+void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {
+
+}
+void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {
+
+}
+void renderer_draw_text(vec2_t pos, const char* text, const int is_big, const int centered) {
+
+}
+void renderer_apply_fade(int fade_level) {
+
+}
+
+void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {
+
+}
+
+void renderer_set_video_mode(int is_pal) {
+
+}
+
+void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, transform_t* model_transform, int tex_id_offset) {
+    tex_id_start = tex_id_offset;
+    renderer_draw_mesh_shaded(mesh, model_transform);
+    tex_id_start = 0;
 }

@@ -3,6 +3,9 @@
 #include "../memory.h"
 #include "../vec3.h"
 #include "../renderer.h"
+#ifdef _WINDOWS
+#include "../win/psx.h"
+#endif
 
 entity_door_t* entity_door_new() {
 	// Allocate memory for the entity

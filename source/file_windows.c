@@ -4,10 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-int file_read(const char* path, uint32_t** destination, size_t* size) {
+int file_read(const char* path, uint32_t** destination, size_t* size, int on_stack, stack_t stack) {
     // Modify file name to not be CD based
     const size_t length = strlen(path) + 1; // Include the null terminator
-    char* new_path = mem_alloc(length + 1 - 2, MEM_CAT_FILE); // Length from strlen + 1 for the period at the start, -2 for the ;1 at the end, and +1 for the null terminator
+    char* new_path = mem_stack_alloc(length + 1 - 2, STACK_TEMP); // Length from strlen + 1 for the period at the start, -2 for the ;1 at the end, and +1 for the null terminator
     new_path[0] = '.';
     memcpy(&new_path[1], path, length - 2);
     new_path[length - 2] = 0;
@@ -33,7 +33,10 @@ int file_read(const char* path, uint32_t** destination, size_t* size) {
     fseek(file, 0, SEEK_SET);
 
     // Allocate memory for the data
-    *destination = (uint32_t*)mem_alloc((*size) + 1, MEM_CAT_FILE);
+    if (on_stack)
+        *destination = (uint32_t*)mem_stack_alloc((*size) + 1, stack);
+    else
+        *destination = (uint32_t*)mem_alloc((*size) + 1, MEM_CAT_FILE);
     memset(*destination, 0, (*size) + 1);
 
     // Read the data - in 2048 byte segments because for some reason reading the whole file did not work. typical
