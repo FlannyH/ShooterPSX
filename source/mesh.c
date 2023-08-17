@@ -55,20 +55,6 @@ model_t* model_load(const char* path, int on_stack, stack_t stack) {
         model->meshes[i].bounds.max.y = mesh_descriptions[i].y_max;
         model->meshes[i].bounds.min.z = mesh_descriptions[i].z_min;
         model->meshes[i].bounds.max.z = mesh_descriptions[i].z_max;
-
-        printf("Mesh %i\n", i);
-        printf("\tmodel->meshes[i].n_triangles = %i\n", mesh_descriptions[i].n_triangles);
-        printf("\tmodel->meshes[i].n_quads = %i\n", mesh_descriptions[i].n_quads);
-        printf("\tmodel->meshes[i].n_vertices = %i\n", mesh_descriptions[i].n_vertices);
-        printf("\tmodel->meshes[i].vertices = %p\n", &vertex_data[mesh_descriptions[i].vertex_start]);
-        printf("\tmodel->meshes[i].indices = %p\n", &index_buffer[mesh_descriptions[i].index_start]);
-        printf("\tmodel->meshes[i].polygon_metadata = %p\n", &poly_metadata[mesh_descriptions[i].polygon_metadata_start]);
-        printf("\tmodel->meshes[i].bounds.min.x = %i\n", mesh_descriptions[i].x_min); 
-        printf("\tmodel->meshes[i].bounds.max.x = %i\n", mesh_descriptions[i].x_max);
-        printf("\tmodel->meshes[i].bounds.min.y = %i\n", mesh_descriptions[i].y_min);
-        printf("\tmodel->meshes[i].bounds.max.y = %i\n", mesh_descriptions[i].y_max);
-        printf("\tmodel->meshes[i].bounds.min.z = %i\n", mesh_descriptions[i].z_min);
-        printf("\tmodel->meshes[i].bounds.max.z = %i\n", mesh_descriptions[i].z_max);
     }
     return model;
 }
