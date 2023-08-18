@@ -115,7 +115,7 @@ ALWAYS_INLINE fixed20_12_t scalar_clamp(fixed20_12_t a, const fixed20_12_t min, 
     return a;
 }
 
-ALWAYS_INLINE fixed20_12_t scalar_lerp(const fixed20_12_t a, const fixed20_12_t b, const fixed20_12_t t) {
+ALWAYS_INLINE static fixed20_12_t scalar_lerp(const fixed20_12_t a, const fixed20_12_t b, const fixed20_12_t t) {
 	return a + scalar_mul(b-a, t);
 }
 
