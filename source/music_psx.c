@@ -193,13 +193,21 @@ void music_tick(int delta_time) {
 					};
 					
 					// Handle channel pitch
-					int8_t key_offset = midi_chn->pitch_wheel / 1000;
-					int32_t key_fine = ((((int32_t)midi_chn->pitch_wheel) << 8) / 1000) & 0xFF;
+					int coarse_min, coarse_max, fine;
+					if (midi_chn->pitch_wheel >= 0) {
+						coarse_min = midi_chn->pitch_wheel / 1000;
+						coarse_max = coarse_min + 1;
+						fine = ((midi_chn->pitch_wheel * 256) / 1000) & 0xFF;
+					} else {
+						coarse_max = (midi_chn->pitch_wheel + 1) / 1000;
+						coarse_min = coarse_max - 1;
+						fine = ((midi_chn->pitch_wheel * 256) / 1000) & 0xFF;
+					}
 
-					// Calculate A and B for lerp - this brings the values to Q48.16
-					const uint32_t sample_rate_a = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + key_offset]) >> 8;
-					const uint32_t sample_rate_b = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + key_offset]) >> 8;
-					uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-key_fine)) + (sample_rate_b * (key_fine)))) >> 4;
+					// Calculate A and B for lerp
+					const uint32_t sample_rate_a = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + coarse_min]) >> 8;
+					const uint32_t sample_rate_b = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + coarse_max]) >> 8;
+					uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-fine)) + (sample_rate_b * (fine)))) >> 4;
 					
 					// Stage a note on event
 					staged_note_on_events[n_staged_note_on_events] = (spu_stage_on_t){
@@ -349,6 +357,11 @@ void music_tick(int delta_time) {
 		// Calculate velocity
 		spu_channel_t* spu_ch = &spu_channel[i];
 		midi_channel_t* midi_ch = &midi_channel[spu_channel[i].midi_channel];
+		if (SPU_CH_ADSR_VOL(i) == 0) continue;
+		if (note_on & (1 << i)) continue;
+		if (note_off & (1 << i)) continue;
+		if (spu_ch->key == 255) continue;
+
 		scalar_t s_velocity = ((scalar_t)spu_ch->velocity) * ONE;
 		scalar_t s_channel_volume = ((scalar_t)midi_ch->volume) * (ONE / 256) * instrument_regions[spu_ch->region].volume_multiplier;
 		s_velocity = scalar_mul(s_velocity, s_channel_volume);
@@ -358,6 +371,36 @@ void music_tick(int delta_time) {
 		};
 		SPU_CH_VOL_L(i) = stereo_volume.x >> 12;
 		SPU_CH_VOL_R(i) = stereo_volume.y >> 12;
+	}
+
+	// Handle channel pitches
+	for (size_t i = 0; i < 24; ++i) {
+		spu_channel_t* spu_ch = &spu_channel[i];
+		midi_channel_t* midi_ch = &midi_channel[spu_channel[i].midi_channel];
+
+		// We only want to update channels that have been playing and aren't going to stop soon, otherwise we have timing issues.
+		if (SPU_CH_ADSR_VOL(i) == 0) continue;
+		if (note_on & (1 << i)) continue;
+		if (note_off & (1 << i)) continue;
+		if (spu_ch->key == 255) continue;
+ 
+		// Handle channel pitch
+		int coarse_min, coarse_max, fine;
+		if (midi_ch->pitch_wheel >= 0) {
+			coarse_min = midi_ch->pitch_wheel / 1000;
+			coarse_max = coarse_min + 1;
+			fine = ((midi_ch->pitch_wheel * 256) / 1000) & 0xFF;
+		} else {
+			coarse_max = (midi_ch->pitch_wheel + 1) / 1000;
+			coarse_min = coarse_max - 1;
+			fine = ((midi_ch->pitch_wheel * 256) / 1000) & 0xFF;
+		}
+
+		// Calculate A and B for lerp
+		const uint32_t sample_rate_a = ((uint32_t)instrument_regions[spu_ch->region].sample_rate * (uint32_t)lut_note_pitch[spu_ch->key + coarse_min]) >> 8;
+		const uint32_t sample_rate_b = ((uint32_t)instrument_regions[spu_ch->region].sample_rate * (uint32_t)lut_note_pitch[spu_ch->key + coarse_max]) >> 8;
+		uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-fine)) + (sample_rate_b * (fine)))) >> 4;
+		SpuSetVoicePitch(i, sample_rate / 44100);
 	}
 }
 
