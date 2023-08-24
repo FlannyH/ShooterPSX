@@ -308,10 +308,12 @@ void state_enter_in_game(void) {
 	entity_init();
 
 	// debug entity
-	entity_door_t* door = entity_door_new();
-	door->entity_header.position.x = 1325;
-	door->entity_header.position.y = 1372;
-	door->entity_header.position.z = 1698;
+	entity_door_t* door;
+	door = entity_door_new(); door->is_locked = 0; door->entity_header.position = (vec3_t){1325 * ONE, 1372 * ONE, 1699 * ONE}; door->entity_header.rotation.y = 0;
+	door = entity_door_new(); door->is_locked = 0; door->entity_header.position = (vec3_t){1209 * ONE, 1372 * ONE, 1699 * ONE}; door->entity_header.rotation.y = 0;
+	door = entity_door_new(); door->is_locked = 1; door->entity_header.position = (vec3_t){1121 * ONE, 1372 * ONE, 1755 * ONE}; door->entity_header.rotation.y = 2048 * 16;
+	door = entity_door_new(); door->is_locked = 0; door->entity_header.position = (vec3_t){926 * ONE,  1164 * ONE, 1675 * ONE}; door->entity_header.rotation.y = 0;
+	door = entity_door_new(); door->is_locked = 1; door->entity_header.position = (vec3_t){501 * ONE,  1015 * ONE, 1944 * ONE}; door->entity_header.rotation.y = 2048 * 16;
 
 	// Generate collision BVH
     bvh_from_model(&state.in_game.bvh_level_model, state.in_game.m_level_col);
