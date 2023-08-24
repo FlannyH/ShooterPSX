@@ -1,4 +1,4 @@
-# Blender 3.6.2 MTL File: 'gun.blend'
+# Blender 3.6.2 MTL File: 'weapons.blend'
 # www.blender.org
 
 newmtl gun_back_side
@@ -9,7 +9,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd gun_tex/gun_back_side.png
+map_Kd weapons_tex/gun_back_side.png
 
 newmtl gun_middle_side
 Ns 250.000000
@@ -19,7 +19,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd gun_tex/gun_middle_side.png
+map_Kd weapons_tex/gun_middle_side.png
 
 newmtl gun_misc
 Ns 250.000000
@@ -29,4 +29,14 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd gun_tex/gun_misc.png
+map_Kd weapons_tex/gun_misc.png
+
+newmtl sword
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd C:/sword.png
