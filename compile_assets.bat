@@ -16,6 +16,9 @@ rem music
 tools\midi2psx.exe ./assets_to_build/music/sequence/level1.mid ./assets/music/sequence/level1.dss
 tools\midi2psx.exe ./assets_to_build/music/sequence/subnivis.mid ./assets/music/sequence/subnivis.dss
 tools\midi2psx.exe ./assets_to_build/music/sequence/level3.mid ./assets/music/sequence/level3.dss
+tools\midi2psx.exe ./assets_to_build/music/sequence/e1m1.mid ./assets/music/sequence/e1m1.dss
+tools\midi2psx.exe ./assets_to_build/music/sequence/e3m3.mid ./assets/music/sequence/e3m3.dss
+tools\midi2psx.exe ./assets_to_build/music/sequence/black.mid ./assets/music/sequence/black.dss
 tools\psx_soundfont_generator.exe ./assets_to_build/music/instruments.csv ./assets/music/instr.sbk
 rem texture_pages
 tools\obj2psx --input ./assets_to_build/models/ui_tex/menu1.png --output ./assets/models/ui_tex/menu1.txc

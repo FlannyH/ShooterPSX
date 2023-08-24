@@ -84,6 +84,9 @@
 				</dir>
 				<dir name="MUSIC">
 					<dir name="SEQUENCE">
+						<file name="E1M1.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/e1m1.dss" />
+						<file name="E3M3.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/e3m3.dss" />
+						<file name="BLACK.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/black.dss" />
 						<file name="LEVEL1.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/level1.dss" />
 						<file name="LEVEL3.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/level3.dss" />
 						<file name="SUBNIVIS.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/subnivis.dss" />

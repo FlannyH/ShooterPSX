@@ -49,7 +49,7 @@ typedef struct {
     uint8_t state; // see above SPU_STATE_(...)
     uint8_t key; // currently playing key
     uint8_t velocity; // currently playing velocity
-    uint8_t instrument; // currently playing instrument
+    uint8_t region; // currently playing region
     uint8_t midi_channel;
     int16_t release_time;
 } spu_channel_t;
@@ -65,6 +65,8 @@ typedef struct {
     uint16_t vol_r;
     uint8_t key;
     uint8_t midi_channel;
+    uint8_t region;
+    uint8_t velocity;
 } spu_stage_on_t;
 
 typedef struct {

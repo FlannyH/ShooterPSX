@@ -210,7 +210,9 @@ void music_tick(int delta_time) {
 						.vol_l = stereo_volume.x >> 12,
 						.vol_r = stereo_volume.y >> 12,
 						.midi_channel = command & 0x0F,
-						.key = key
+						.key = key,
+						.region = i + instruments[midi_chn->instrument].region_start_index,
+						.velocity = velocity
 					};
 					n_staged_note_on_events++;
 					break;
@@ -323,6 +325,8 @@ void music_tick(int delta_time) {
 		// Store some metadata
 		spu_channel[channel_id].key = staged_note_on_events[i].key;
 		spu_channel[channel_id].midi_channel = staged_note_on_events[i].midi_channel;
+		spu_channel[channel_id].region = staged_note_on_events[i].region;
+		spu_channel[channel_id].velocity = staged_note_on_events[i].velocity;
 	}
 
 
@@ -339,6 +343,22 @@ void music_tick(int delta_time) {
 	WARN_IF("note_off and note_on staged on same channel!", (note_off & note_on) != 0);
 	SpuSetKey(0, note_off);
 	SpuSetKey(1, note_on);
+
+	// Handle channel volumes
+	for (size_t i = 0; i < 24; ++i) {
+		// Calculate velocity
+		spu_channel_t* spu_ch = &spu_channel[i];
+		midi_channel_t* midi_ch = &midi_channel[spu_channel[i].midi_channel];
+		scalar_t s_velocity = ((scalar_t)spu_ch->velocity) * ONE;
+		scalar_t s_channel_volume = ((scalar_t)midi_ch->volume) * (ONE / 256) * instrument_regions[spu_ch->region].volume_multiplier;
+		s_velocity = scalar_mul(s_velocity, s_channel_volume);
+		vec2_t stereo_volume = {
+			scalar_mul((uint32_t)lut_panning[255 - midi_ch->panning], s_velocity),
+			scalar_mul((uint32_t)lut_panning[midi_ch->panning], s_velocity),
+		};
+		SPU_CH_VOL_L(i) = stereo_volume.x >> 12;
+		SPU_CH_VOL_R(i) = stereo_volume.y >> 12;
+	}
 }
 
 void music_set_volume(int volume) {
