@@ -309,9 +309,9 @@ void state_enter_in_game(void) {
 
 	// debug entity
 	entity_door_t* door = entity_door_new();
-	door->entity_header.position.x = 0;
-	door->entity_header.position.y = 0;
-	door->entity_header.position.z = 0;
+	door->entity_header.position.x = 1325;
+	door->entity_header.position.y = 1372;
+	door->entity_header.position.z = 1698;
 
 	// Generate collision BVH
     bvh_from_model(&state.in_game.bvh_level_model, state.in_game.m_level_col);
