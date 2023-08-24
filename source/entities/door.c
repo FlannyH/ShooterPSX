@@ -11,7 +11,8 @@ entity_door_t* entity_door_new() {
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
 	entity->curr_interpolation_value = 0;
-	entity->is_open = 1;
+	entity->is_open = 0;
+	entity->is_locked = 1;
 	entity->open_offset = (vec3_t){0, 64, 0};
 
 	// Register it in the entity list
@@ -27,7 +28,7 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	vec3_t player_pos = *(vec3_t*)&player->position;
 
 	scalar_t distance_from_door_to_player_squared = vec3_magnitude_squared(vec3_sub(door_pos, player_pos));
-	this->is_open = (distance_from_door_to_player_squared < 3 * ONE * ONE);
+	this->is_open = (distance_from_door_to_player_squared < 3 * ONE * ONE) && !this->is_locked;
 
 	// todo: implement delta time
 	this->curr_interpolation_value = scalar_lerp(this->curr_interpolation_value, this->is_open ? ONE : 0, ONE / 8);
@@ -45,5 +46,6 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	render_transform.scale.vx = this->entity_header.scale.x;
 	render_transform.scale.vy = this->entity_header.scale.x;
 	render_transform.scale.vz = this->entity_header.scale.x;
-	renderer_draw_mesh_shaded_offset(&entity_models->meshes[0], &render_transform, 64);
+	const size_t mesh_id = this->is_locked ? ENTITY_MESH_DOOR_LOCKED : ENTITY_MESH_DOOR_UNLOCKED;
+	renderer_draw_mesh_shaded_offset(&entity_models->meshes[mesh_id], &render_transform, 64);
 }

@@ -7,6 +7,7 @@ typedef struct {
 	vec3_t open_offset;
 	scalar_t curr_interpolation_value;
 	int is_open;
+	int is_locked;
 } entity_door_t;
 
 entity_door_t* entity_door_new();

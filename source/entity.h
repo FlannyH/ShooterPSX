@@ -13,6 +13,11 @@ typedef enum {
 	ENTITY_DOOR,
 } entity_type_t; // typically represented by a uint8_t
 
+typedef enum {
+	ENTITY_MESH_DOOR_LOCKED = 0,
+	ENTITY_MESH_DOOR_UNLOCKED = 1,
+} entity_mesh_id_t;
+
 // All entities are assumed have this data. Add it as the first member of an entity struct.
 typedef struct {
 	vec3_t position;
