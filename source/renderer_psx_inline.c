@@ -695,7 +695,7 @@ static inline void draw_tex_quad3d_fancy(const vertex_3d_t* verts) {
         int16_t clut_fade = ((N_CLUT_FADES-1) * (avg_z - TRI_THRESHOLD_FADE_START)) / (TRI_THRESHOLD_FADE_END - TRI_THRESHOLD_FADE_START);
         if (clut_fade > (N_CLUT_FADES-1)) clut_fade = (N_CLUT_FADES-1);
         else if (clut_fade < 0) clut_fade = 0;
-        add_tex_quad(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[3], verts[0], verts[1], verts[2], verts[3], avg_z, verts[0].tex_id, clut_fade);
+        add_tex_quad(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[3], verts[0], verts[1], verts[2], verts[3], avg_z, verts[0].tex_id + tex_id_start, clut_fade);
         return;
     }
 
