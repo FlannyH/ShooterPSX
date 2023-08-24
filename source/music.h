@@ -46,12 +46,10 @@ typedef struct {
 #define SPU_STATE_RELEASING_NOTE 3
 
 typedef struct {
-    uint8_t state; // see above SPU_STATE_(...)
     uint8_t key; // currently playing key
     uint8_t velocity; // currently playing velocity
     uint8_t region; // currently playing region
-    uint8_t midi_channel;
-    int16_t release_time;
+    uint8_t midi_channel; // the midi channel that spawned this channel
 } spu_channel_t;
 
 #define SPU_STAGE_ON 1
