@@ -77,7 +77,7 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 
 #ifdef _DEBUG
 	// Make sure there is enough space
-	if (size >= mem_stack_get_free(stack)) {
+	if (size > mem_stack_get_free(stack)) {
 		printf("turns out we don't have that.\n");
 		return NULL;
 	}
