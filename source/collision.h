@@ -31,6 +31,7 @@ int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_
 int sphere_aabb_intersect(const aabb_t* aabb, sphere_t sphere);
 int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere, rayhit_t* hit);
 int vertical_cylinder_aabb_intersect(const aabb_t* aabb, vertical_cylinder_t vertical_cylinder);
+int vertical_cylinder_aabb_intersect_fancy(const aabb_t* aabb, const vertical_cylinder_t vertical_cylinder, rayhit_t* hit);
 int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vertical_cylinder_t vertical_cylinder, rayhit_t* hit);
 int capsule_aabb_intersect(const aabb_t* aabb, capsule_t capsule);
 int capsule_triangle_intersect(collision_triangle_3d_t* triangle, capsule_t capsule, rayhit_t* hit);

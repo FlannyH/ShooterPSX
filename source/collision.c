@@ -568,6 +568,32 @@ int vertical_cylinder_aabb_intersect(const aabb_t* aabb, const vertical_cylinder
     );
 }
 
+int vertical_cylinder_aabb_intersect_fancy(const aabb_t* aabb, const vertical_cylinder_t vertical_cylinder, rayhit_t* hit) {
+    // Check the Y axis first. If this does not overlap, there can not be a collision.
+    if ((vertical_cylinder.bottom.y + vertical_cylinder.height) < aabb->min.y) return 0; // If top of cylinder is below the AABB, no intersect
+    if (vertical_cylinder.bottom.y < aabb->max.y) return 0; // If bottom of cylinder is above the AABB, no intersect
+
+    // The rest can now be done in 2D. Z becomes Y. Find the closest position on the AABB to the cylinder. 
+    const vec2_t cylinder_center_pos = (vec2_t){vertical_cylinder.bottom.x, vertical_cylinder.bottom.z};
+    const vec2_t closest_pos_on_aabb = {
+        .x = scalar_clamp(vertical_cylinder.bottom.x, aabb->min.x, aabb->max.x),
+        .y = scalar_clamp(vertical_cylinder.bottom.z, aabb->min.z, aabb->max.z),
+    };
+
+    // Now we get the distance from that point to the actual cylinder center
+    const scalar_t aabb_cyl_distance_sq = vec2_magnitude_squared(vec2_sub(closest_pos_on_aabb, cylinder_center_pos));
+    if (aabb_cyl_distance_sq < vertical_cylinder.radius_squared && (aabb_cyl_distance_sq >= 0)) {
+        const vec2_t aabb_to_cylinder = vec2_sub(cylinder_center_pos, closest_pos_on_aabb);
+        const scalar_t distance = vec2_magnitude(aabb_to_cylinder);
+        const vec2_t normal = vec2_divs(aabb_to_cylinder, distance);
+        hit->distance = vec2_magnitude(aabb_to_cylinder);
+        hit->normal = (vec3_t){normal.x, 0, normal.y};
+        hit->position = (vec3_t){closest_pos_on_aabb.x, vertical_cylinder.bottom.y, closest_pos_on_aabb.y};
+        return 1;
+    }
+    return 0;
+}
+
 // We can just make this an AABB-AABB collision lmao it's broad phase anyway
 int capsule_aabb_intersect(const aabb_t* aabb, capsule_t capsule) {
     // Create AABB from capsule

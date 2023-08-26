@@ -33,6 +33,15 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	// todo: implement delta time
 	this->curr_interpolation_value = scalar_lerp(this->curr_interpolation_value, this->is_open ? ONE : 0, ONE / 8);
 
+	// Add collision for the door
+	if (this->is_locked) {
+		const aabb_t collision_box = {
+			.min = vec3_add(door_pos, (vec3_t){-4, 0, -20}),
+			.max = vec3_add(door_pos, (vec3_t){4, 48, 20})
+		};
+		entity_register_collision_box(&collision_box);
+	}
+
 	// Render mesh - we need to shift it because my implementation of multiplication loses some precision
 	door_pos = vec3_add(door_pos, vec3_shift_right(vec3_muls(this->open_offset, this->curr_interpolation_value << 3), 3));
 	transform_t render_transform;

@@ -3,9 +3,14 @@
 #include "entities/door.h"
 
 entity_slot_t entity_list[ENTITY_LIST_LENGTH];
+aabb_t entity_aabb_queue[ENTITY_LIST_LENGTH];
+size_t entity_n_active_aabb;
 model_t* entity_models = NULL;
 
 void entity_update_all(player_t* player, int dt) {
+	// Reset counters
+	entity_n_active_aabb = 0;
+
 	// Loop over all entities
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
 		switch (entity_list[i].type) {
@@ -33,8 +38,14 @@ void entity_init() {
 	// Zero initialize the entity list
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) entity_list[i].type = ENTITY_NONE;
 
+	entity_n_active_aabb = 0;
+
 	// Load model collection
     entity_models = model_load("\\ASSETS\\MODELS\\ENTITY.MSH;1", 1, STACK_ENTITY);
+}
+
+void entity_register_collision_box(const aabb_t* box) {
+	memcpy(&entity_aabb_queue[entity_n_active_aabb++], box, sizeof(aabb_t));
 }
 
 char* entity_names[] = {

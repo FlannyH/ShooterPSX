@@ -5,6 +5,8 @@
 #endif
 
 #include "input.h"
+#include "entity.h"
+#include <string.h>
 
 transform_t t_level = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };
 
@@ -38,6 +40,12 @@ void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
         .radius_squared = player_radius_squared
     };
     bvh_intersect_vertical_cylinder(level_bvh, player, &hit);
+    for (size_t i = 0; i < entity_n_active_aabb; ++i) {
+        rayhit_t curr_hit;
+        if (!vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i], player, &curr_hit)) continue;
+        curr_hit.normal = (vec3_t){0, ONE, 0};
+        if (curr_hit.distance < hit.distance) memcpy(&hit, &curr_hit, sizeof(rayhit_t));
+    }
 
     // If nothing was hit, there is no ground below the player. Ignore the rest of this function
     if (hit.distance == INT32_MAX)
@@ -172,6 +180,12 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
         };
         rayhit_t hit;
         bvh_intersect_vertical_cylinder(level_bvh, cyl, &hit);
+        for (size_t i = 0; i < entity_n_active_aabb; ++i) {
+            rayhit_t curr_hit;
+            curr_hit.distance = INT32_MAX;
+            if (!vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i], cyl, &curr_hit)) continue;
+            if (curr_hit.distance < hit.distance) memcpy(&hit, &curr_hit, sizeof(rayhit_t));
+        }
 
         // Did we hit anything?
         if (!is_infinity(hit.distance)) {
