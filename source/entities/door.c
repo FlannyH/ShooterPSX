@@ -13,10 +13,12 @@ entity_door_t* entity_door_new() {
 	entity->curr_interpolation_value = 0;
 	entity->is_open = 0;
 	entity->is_locked = 0;
+	entity->is_big_door = 0;
+	entity->is_rotated = 0;
 	entity->open_offset = (vec3_t){0, 64 * ONE, 0};
 
 	// Register it in the entity list
-	entity_register(&entity->entity_header, ENTITY_DOOR_SMALL);
+	entity_register(&entity->entity_header, ENTITY_DOOR);
 
 	return entity;
 }
@@ -47,11 +49,53 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	// todo: implement delta time
 	this->curr_interpolation_value = scalar_lerp(this->curr_interpolation_value, this->is_open ? ONE : 0, ONE / 8);
 
+	// Find mesh to use - a bit verbose for the sake of avoiding magic numbers, preventing me from shooting myself in the foot later
+	size_t mesh_id;
+	if (this->is_rotated) {
+		if (this->is_big_door) {
+			if (this->is_locked) {
+				mesh_id = ENTITY_MESH_DOOR_BIG_LOCKED_ROTATED;
+			}
+			else {
+				mesh_id = ENTITY_MESH_DOOR_BIG_UNLOCKED_ROTATED;
+			}
+		}
+		else {
+			if (this->is_locked) {
+				mesh_id = ENTITY_MESH_DOOR_SMALL_LOCKED_ROTATED;
+			}
+			else {
+				mesh_id = ENTITY_MESH_DOOR_SMALL_UNLOCKED_ROTATED;
+			}
+		}
+	}
+	else {
+		if (this->is_big_door) {
+			if (this->is_locked) {
+				mesh_id = ENTITY_MESH_DOOR_BIG_LOCKED;
+			}
+			else {
+				mesh_id = ENTITY_MESH_DOOR_BIG_UNLOCKED;
+			}
+		}
+		else {
+			if (this->is_locked) {
+				mesh_id = ENTITY_MESH_DOOR_SMALL_LOCKED;
+			}
+			else {
+				mesh_id = ENTITY_MESH_DOOR_SMALL_UNLOCKED;
+			}
+		}
+	}
+
 	// Add collision for the door
 	if (this->is_locked) {
+		aabb_t bounds = entity_models->meshes[mesh_id].bounds;
+		bounds.min.x *= COL_SCALE; bounds.min.y *= COL_SCALE; bounds.min.z *= COL_SCALE; 
+		bounds.max.x *= COL_SCALE; bounds.max.y *= COL_SCALE; bounds.max.z *= COL_SCALE; 
 		const aabb_t collision_box = {
-			.min = vec3_add(door_pos, (vec3_t){-4, 0, -20}),
-			.max = vec3_add(door_pos, (vec3_t){4, 48, 20})
+			.min = vec3_add(door_pos, bounds.min),
+			.max = vec3_add(door_pos, bounds.max)
 		};
 		entity_register_collision_box(&collision_box);
 	}
@@ -69,22 +113,5 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	render_transform.scale.vx = this->entity_header.scale.x;
 	render_transform.scale.vy = this->entity_header.scale.x;
 	render_transform.scale.vz = this->entity_header.scale.x;
-	size_t mesh_id;
-	if (this->is_big_door) {
-		if (this->is_locked) {
-			mesh_id = ENTITY_MESH_DOOR_BIG_LOCKED;
-		}
-		else {
-			mesh_id = ENTITY_MESH_DOOR_BIG_UNLOCKED;
-		}
-	}
-	else {
-		if (this->is_locked) {
-			mesh_id = ENTITY_MESH_DOOR_SMALL_LOCKED;
-		}
-		else {
-			mesh_id = ENTITY_MESH_DOOR_SMALL_UNLOCKED;
-		}
-	}
 	renderer_draw_mesh_shaded_offset(&entity_models->meshes[mesh_id], &render_transform, 64);
 }

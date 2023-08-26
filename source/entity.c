@@ -15,7 +15,7 @@ void entity_update_all(player_t* player, int dt) {
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
 		switch (entity_list[i].type) {
 			case ENTITY_NONE: break;
-			case ENTITY_DOOR_SMALL: entity_door_update(i, player, dt); break;
+			case ENTITY_DOOR: entity_door_update(i, player, dt); break;
 		}
 	}
 }

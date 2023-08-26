@@ -9,6 +9,7 @@ typedef struct {
 	int is_open;
 	int is_locked;
 	int is_big_door;
+	int is_rotated;
 } entity_door_t;
 
 entity_door_t* entity_door_new();
