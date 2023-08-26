@@ -10,12 +10,15 @@
 
 typedef enum {
 	ENTITY_NONE,
-	ENTITY_DOOR,
+	ENTITY_DOOR_SMALL,
+	ENTITY_DOOR_BIG,
 } entity_type_t; // typically represented by a uint8_t
 
 typedef enum {
-	ENTITY_MESH_DOOR_LOCKED = 0,
-	ENTITY_MESH_DOOR_UNLOCKED = 1,
+	ENTITY_MESH_DOOR_SMALL_LOCKED = 0,
+	ENTITY_MESH_DOOR_SMALL_UNLOCKED = 1,
+	ENTITY_MESH_DOOR_BIG_LOCKED = 2,
+	ENTITY_MESH_DOOR_BIG_UNLOCKED = 3,
 } entity_mesh_id_t;
 
 // All entities are assumed have this data. Add it as the first member of an entity struct.

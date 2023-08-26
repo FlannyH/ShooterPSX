@@ -8,6 +8,7 @@ typedef struct {
 	scalar_t curr_interpolation_value;
 	int is_open;
 	int is_locked;
+	int is_big_door;
 } entity_door_t;
 
 entity_door_t* entity_door_new();

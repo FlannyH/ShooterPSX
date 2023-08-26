@@ -16,7 +16,7 @@ entity_door_t* entity_door_new() {
 	entity->open_offset = (vec3_t){0, 64 * ONE, 0};
 
 	// Register it in the entity list
-	entity_register(&entity->entity_header, ENTITY_DOOR);
+	entity_register(&entity->entity_header, ENTITY_DOOR_SMALL);
 
 	return entity;
 }
@@ -28,7 +28,21 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	vec3_t player_pos = player->position;
 
 	scalar_t distance_from_door_to_player_squared = vec3_magnitude_squared(vec3_sub(door_pos, player_pos));
-	this->is_open = (distance_from_door_to_player_squared < 9000 * ONE) && (!this->is_locked);
+	int player_close_enough = (distance_from_door_to_player_squared < 4500 * ONE) && (distance_from_door_to_player_squared > 0);
+
+	// Handle unlocking with key cards
+	if (this->is_locked && player_close_enough) {
+		if (!this->is_big_door && player->has_key_blue) {
+			this->is_locked = 0;
+			player->has_key_blue = 0;
+		}
+		else if (this->is_big_door && player->has_key_yellow) {
+			this->is_locked = 0;
+			player->has_key_yellow = 0;
+		}
+	}
+
+	this->is_open = player_close_enough && !this->is_locked;
 
 	// todo: implement delta time
 	this->curr_interpolation_value = scalar_lerp(this->curr_interpolation_value, this->is_open ? ONE : 0, ONE / 8);
@@ -55,6 +69,22 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	render_transform.scale.vx = this->entity_header.scale.x;
 	render_transform.scale.vy = this->entity_header.scale.x;
 	render_transform.scale.vz = this->entity_header.scale.x;
-	const size_t mesh_id = this->is_locked ? ENTITY_MESH_DOOR_LOCKED : ENTITY_MESH_DOOR_UNLOCKED;
+	size_t mesh_id;
+	if (this->is_big_door) {
+		if (this->is_locked) {
+			mesh_id = ENTITY_MESH_DOOR_BIG_LOCKED;
+		}
+		else {
+			mesh_id = ENTITY_MESH_DOOR_BIG_UNLOCKED;
+		}
+	}
+	else {
+		if (this->is_locked) {
+			mesh_id = ENTITY_MESH_DOOR_SMALL_LOCKED;
+		}
+		else {
+			mesh_id = ENTITY_MESH_DOOR_SMALL_UNLOCKED;
+		}
+	}
 	renderer_draw_mesh_shaded_offset(&entity_models->meshes[mesh_id], &render_transform, 64);
 }

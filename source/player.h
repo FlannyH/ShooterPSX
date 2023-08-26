@@ -9,6 +9,8 @@ typedef struct {
     vec3_t velocity;
     vec3_t rotation;
     scalar_t distance_from_ground;
+    int has_key_blue;
+    int has_key_yellow;
 } player_t;
 
 void player_update(player_t* self, bvh_t* level_bvh, int dt_ms);
