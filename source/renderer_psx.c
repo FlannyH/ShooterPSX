@@ -284,24 +284,46 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
     addPrim(ord_tbl[drawbuffer] + (depth), new_triangle);
 }
 
-void renderer_draw_text(vec2_t pos, const char* text, const int is_big, const int centered) {
+void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const int centered, const pixel32_t color) {
     // if (is_small)
-    int font_x = 0;
-    int font_y = 60;
-    int font_width = 7;
-    int font_height = 9;
-    int chars_per_row = 36;
+    int font_x;
+    int font_y;
+    int font_src_width;
+    int font_src_height;
+    int font_dst_width;
+    int font_dst_height;
+    int chars_per_row;
 
-    if (is_big) {
+    if (text_type == 0) {
+        font_x = 0;
+        font_y = 60;
+        font_src_width = 7;
+        font_src_height = 9;
+        font_dst_width = 7;
+        font_dst_height = 9;
+        chars_per_row = 36;
+    }
+    else if (text_type == 1) {
         font_x = 0;
         font_y = 80;
-        font_width = 16;
-        font_height = 16;
+        font_src_width = 16;
+        font_src_height = 16;
+        font_dst_width = 16;
+        font_dst_height = 16;
+        chars_per_row = 16;
+    }
+    else if (text_type == 2) {
+        font_x = 0;
+        font_y = 60;
+        font_src_width = 7;
+        font_src_height = 9;
+        font_dst_width = 14;
+        font_dst_height = 18;
         chars_per_row = 16;
     }
 
     if (centered) {
-        pos.x -= ((strlen(text)) * font_width - (font_width / 2)) * ONE / 2;
+        pos.x -= ((strlen(text)) * font_dst_width - (font_dst_width / 2)) * ONE / 2;
     }
 
     vec2_t start_pos = pos;
@@ -311,7 +333,7 @@ void renderer_draw_text(vec2_t pos, const char* text, const int is_big, const in
         // Handle special cases
         if (*text == '\n') {
             pos.x = start_pos.x;
-            pos.y += font_height * ONE;
+            pos.y += font_dst_height * ONE;
             goto end;
         }
         
@@ -323,8 +345,8 @@ void renderer_draw_text(vec2_t pos, const char* text, const int is_big, const in
         if (*text == '\t') {
             // Get X coordinate relative to start, and round the position up to the nearest multiple of 4
             scalar_t rel_x = pos.x - start_pos.x;
-            int n_spaces = 4 - ((rel_x / font_width) % 4);
-            pos.x += n_spaces * font_width * ONE;
+            int n_spaces = 4 - ((rel_x / font_dst_width) % 4);
+            pos.x += n_spaces * font_dst_width * ONE;
             goto end;
         }
 
@@ -333,12 +355,12 @@ void renderer_draw_text(vec2_t pos, const char* text, const int is_big, const in
         
         // Get UV coordinates
         vec2_t top_left;
-        top_left.x = (font_x + (font_width * (index_to_draw % chars_per_row))) * ONE;
-        top_left.y = (font_y + ((index_to_draw / chars_per_row) * font_height)) * ONE;
-        vec2_t bottom_right = vec2_add(top_left, (vec2_t){(font_width-1)*ONE, (font_height-1)*ONE});
+        top_left.x = (font_x + (font_src_width * (index_to_draw % chars_per_row))) * ONE;
+        top_left.y = (font_y + ((index_to_draw / chars_per_row) * font_src_height)) * ONE;
+        vec2_t bottom_right = vec2_add(top_left, (vec2_t){(font_src_width-1)*ONE, (font_src_height-1)*ONE});
 
-        renderer_draw_2d_quad_axis_aligned(pos, (vec2_t){(font_width-1)*ONE, (font_height-1)*ONE}, top_left, bottom_right, (pixel32_t){128, 128, 128}, 1, 5, 1);
-        pos.x += font_width * ONE;
+        renderer_draw_2d_quad_axis_aligned(pos, (vec2_t){(font_dst_width-1)*ONE, (font_dst_height-1)*ONE}, top_left, bottom_right, (pixel32_t){color.r/2, color.g/2, color.b/2, 255}, 1, 5, 1);
+        pos.x += font_dst_width * ONE;
         end:
         ++text;
     }

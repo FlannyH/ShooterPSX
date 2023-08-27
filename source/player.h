@@ -3,12 +3,19 @@
 #include "fixed_point.h"
 #include "renderer.h"
 
+#define MAX_HEALTH 100
+#define MAX_ARMOR 50
+#define MAX_AMMO 128
+
 typedef struct {
     transform_t transform;
     vec3_t position;
     vec3_t velocity;
     vec3_t rotation;
     scalar_t distance_from_ground;
+    uint8_t health;
+    uint8_t armor;
+    uint8_t ammo;
     int has_key_blue : 1;
     int has_key_yellow : 1;
 } player_t;

@@ -201,7 +201,7 @@ void state_update_title_screen(int dt) {
 		renderer_draw_2d_quad_axis_aligned((vec2_t){367*ONE, (148 + (24 * y))*ONE}, (vec2_t){26*ONE, 20*ONE}, (vec2_t){155*ONE, 40*ONE}, (vec2_t){129*ONE, 60*ONE}, color, 2, 5, 1);
 		renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, (148 + (24 * y))*ONE}, (vec2_t){192*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, color, 2, 5, 1);
 
-		renderer_draw_text((vec2_t){256*ONE, (148 + (24 * y))*ONE}, text_main_menu[y], 1, 1);
+		renderer_draw_text((vec2_t){256*ONE, (148 + (24 * y))*ONE}, text_main_menu[y], 1, 1, white);
 	}
 
 	// Handle button navigation
@@ -345,6 +345,12 @@ void state_enter_in_game(void) {
 	FntOpen(32, 32, 256, 192, 0, 512);
 	
 	mem_debug();
+
+	state.in_game.player.has_key_blue = 0;
+	state.in_game.player.has_key_yellow = 0;
+	state.in_game.player.health = 40;
+	state.in_game.player.armor = 0;
+	state.in_game.player.ammo = 0;
 }
 
 void state_update_in_game(int dt) {
@@ -362,6 +368,15 @@ void state_update_in_game(int dt) {
 	renderer_draw_2d_quad_axis_aligned((vec2_t){(138 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){64*ONE, 40*ONE}, (vec2_t){96*ONE, 60*ONE}, (pixel32_t){128, 128, 128}, 1, 5, 1);
 	renderer_draw_2d_quad_axis_aligned((vec2_t){(226 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){32*ONE, 40*ONE}, (vec2_t){64*ONE, 60*ONE}, (pixel32_t){128, 128, 128}, 1, 5, 1);
 	renderer_draw_2d_quad_axis_aligned((vec2_t){(314 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){0*ONE, 40*ONE}, (vec2_t){32*ONE, 60*ONE}, (pixel32_t){128, 128, 128}, 1, 5, 1);
+
+	// Draw HUD - gauge text
+	char gauge_text_buffer[4];
+	snprintf(gauge_text_buffer, 4, "%i", state.in_game.player.health);
+	renderer_draw_text((vec2_t){(138 + 24 - 16)*ONE, 236*ONE}, gauge_text_buffer, 2, 0, (pixel32_t){255, 97, 0});
+	snprintf(gauge_text_buffer, 4, "%i", state.in_game.player.armor);
+	renderer_draw_text((vec2_t){(226 + 24 - 16)*ONE, 236*ONE}, gauge_text_buffer, 2, 0, (pixel32_t){255, 97, 0});
+	snprintf(gauge_text_buffer, 4, "%i", state.in_game.player.ammo);
+	renderer_draw_text((vec2_t){(314 + 24 - 16)*ONE, 236*ONE}, gauge_text_buffer, 2, 0, (pixel32_t){255, 97, 0});
 
 	// Draw HUD - keycards
 	if (state.in_game.player.has_key_blue) renderer_draw_2d_quad_axis_aligned((vec2_t){(256 - 80 - 40)*ONE, 210*ONE}, (vec2_t){31*ONE, 20*ONE}, (vec2_t){194*ONE, 0*ONE}, (vec2_t){255*ONE, 40*ONE}, (pixel32_t){128, 128, 128}, 3, 5, 1);
@@ -450,7 +465,7 @@ void state_update_settings(int dt) {
 	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
 	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
 	
-	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_settings[0], 1, 1);
+	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_settings[0], 1, 1, white);
 
 	// Draw settings text and box
 	for (int i = 0; i < 5; ++i) {
@@ -467,15 +482,15 @@ void state_update_settings(int dt) {
 				color.b = 255;
 			}
 		}
-		renderer_draw_text((vec2_t){64*ONE, (96 + (24 * i))*ONE}, text_settings[i+1], 1, 0);
+		renderer_draw_text((vec2_t){64*ONE, (96 + (24 * i))*ONE}, text_settings[i+1], 1, 0, white);
 		renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, (96 + (24 * i))*ONE}, (vec2_t){448*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, color, 2, 5, 1);
 	}
 
 	// Draw values
-	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 0))*ONE}, (is_pal) ? ((vsync_enable == 2) ? "25 FPS" : "50 FPS") : ((vsync_enable == 2) ? "30 FPS" : "60 FPS"), 1, 0);
-	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 1))*ONE}, is_pal ? "PAL" : "NTSC", 1, 0);
-	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 2))*ONE}, widescreen ? "16:9" : "4:3", 1, 0);
-	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 3))*ONE}, "not impl.", 1, 0);
+	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 0))*ONE}, (is_pal) ? ((vsync_enable == 2) ? "25 FPS" : "50 FPS") : ((vsync_enable == 2) ? "30 FPS" : "60 FPS"), 1, 0, white);
+	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 1))*ONE}, is_pal ? "PAL" : "NTSC", 1, 0, white);
+	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 2))*ONE}, widescreen ? "16:9" : "4:3", 1, 0, white);
+	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 3))*ONE}, "not impl.", 1, 0, white);
 
 	// Handle button navigation
 	if (input_pressed(PAD_UP, 0) && state.settings.button_selected > 0) {
@@ -526,7 +541,7 @@ void state_exit_settings(void) {
 		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
 		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
 		
-		renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_settings[0], 1, 1);
+		renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_settings[0], 1, 1, white);
 
 		// Draw settings text and box
 		for (int i = 0; i < 5; ++i) {
@@ -543,7 +558,7 @@ void state_exit_settings(void) {
 					color.b = 255;
 				}
 			}
-			renderer_draw_text((vec2_t){64*ONE, (96 + (24 * i))*ONE}, text_settings[i+1], 1, 0);
+			renderer_draw_text((vec2_t){64*ONE, (96 + (24 * i))*ONE}, text_settings[i+1], 1, 0, white);
 			renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, (96 + (24 * i))*ONE}, (vec2_t){448*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, color, 2, 5, 1);
 		}
 		state.global.fade_level += FADE_SPEED;
@@ -579,7 +594,7 @@ void state_update_credits(int dt) {
 
 	// Draw text
 	for (int i = 0; i < sizeof(text_credits) / sizeof(text_credits[0]); ++i) {
-		renderer_draw_text((vec2_t){256 * ONE, (state.credits.scroll + i * 16 * ONE) + (256 * ONE)}, text_credits[i], 1, 1);
+		renderer_draw_text((vec2_t){256 * ONE, (state.credits.scroll + i * 16 * ONE) + (256 * ONE)}, text_credits[i], 1, 1, white);
 	}
 
 	// Scroll text
@@ -608,7 +623,7 @@ void state_exit_credits(void) {
 		// Draw text
 		renderer_begin_frame(&id_transform);
 		for (int i = 0; i < sizeof(text_credits) / sizeof(text_credits[0]); ++i) {
-			renderer_draw_text((vec2_t){256 * ONE, (state.credits.scroll + i * 16 * ONE) + (256 * ONE)}, text_credits[i], 1, 1);
+			renderer_draw_text((vec2_t){256 * ONE, (state.credits.scroll + i * 16 * ONE) + (256 * ONE)}, text_credits[i], 1, 1, white);
 		}
 		input_update();
 		renderer_apply_fade(state.global.fade_level);
@@ -632,7 +647,7 @@ void state_update_pause_menu(int dt) {	renderer_begin_frame(&id_transform);
 	}
 	
 	// Paused text
-	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_pause_menu[0], 1, 1);
+	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_pause_menu[0], 1, 1, white);
 
 	// Draw background
 	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
@@ -658,7 +673,7 @@ void state_update_pause_menu(int dt) {	renderer_begin_frame(&id_transform);
 		renderer_draw_2d_quad_axis_aligned((vec2_t){367*ONE, (148 + (24 * y))*ONE}, (vec2_t){26*ONE, 20*ONE}, (vec2_t){155*ONE, 40*ONE}, (vec2_t){129*ONE, 60*ONE}, color, 2, 5, 1);
 		renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, (148 + (24 * y))*ONE}, (vec2_t){192*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, color, 2, 5, 1);
 
-		renderer_draw_text((vec2_t){256*ONE, (148 + (24 * y))*ONE}, text_pause_menu[y + 1], 1, 1);
+		renderer_draw_text((vec2_t){256*ONE, (148 + (24 * y))*ONE}, text_pause_menu[y + 1], 1, 1, white);
 	}
 
 	// Handle button navigation
