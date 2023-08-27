@@ -363,6 +363,10 @@ void state_update_in_game(int dt) {
 	renderer_draw_2d_quad_axis_aligned((vec2_t){(226 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){32*ONE, 40*ONE}, (vec2_t){64*ONE, 60*ONE}, (pixel32_t){128, 128, 128}, 1, 5, 1);
 	renderer_draw_2d_quad_axis_aligned((vec2_t){(314 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){0*ONE, 40*ONE}, (vec2_t){32*ONE, 60*ONE}, (pixel32_t){128, 128, 128}, 1, 5, 1);
 
+	// Draw HUD - keycards
+	if (state.in_game.player.has_key_blue) renderer_draw_2d_quad_axis_aligned((vec2_t){(256 - 80 - 40)*ONE, 210*ONE}, (vec2_t){31*ONE, 20*ONE}, (vec2_t){194*ONE, 0*ONE}, (vec2_t){255*ONE, 40*ONE}, (pixel32_t){128, 128, 128}, 3, 5, 1);
+	if (state.in_game.player.has_key_yellow) renderer_draw_2d_quad_axis_aligned((vec2_t){(256 + 80)*ONE, 210*ONE}, (vec2_t){31*ONE, 20*ONE}, (vec2_t){130*ONE, 0*ONE}, (vec2_t){193*ONE, 40*ONE}, (pixel32_t){128, 128, 128}, 3, 5, 1);
+
 	int n_sections = player_get_level_section(&state.in_game.player, state.in_game.m_level);
 	state.global.frame_counter += dt;
 #ifdef _DEBUG
