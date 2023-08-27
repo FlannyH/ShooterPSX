@@ -8,10 +8,12 @@ uint32_t mem_stack_temp [512  * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_level[768 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_music[64 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_entity[64 * KiB / sizeof(uint32_t)];
+uint32_t mem_stack_vram_swap[128 * KiB / sizeof(uint32_t)];
 size_t mem_stack_cursor_temp = 0;
 size_t mem_stack_cursor_level = 0;
 size_t mem_stack_cursor_music = 0;
 size_t mem_stack_cursor_entity = 0;
+size_t mem_stack_cursor_vram_swap = 0;
 
 #ifdef _DEBUG
 char* mem_cat_strings[] = {
@@ -29,6 +31,7 @@ char* stack_names[] = {
     "STACK_LEVEL",
     "STACK_MUSIC",
     "STACK_ENTITY",
+    "STACK_VRAM_SWAP",
 };
 #endif
 
@@ -70,6 +73,11 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 			cursor = &mem_stack_cursor_entity;
 			stack_size = sizeof(mem_stack_entity);
 			break;
+		case STACK_VRAM_SWAP:
+			base = mem_stack_vram_swap;
+			cursor = &mem_stack_cursor_vram_swap;
+			stack_size = sizeof(mem_stack_vram_swap);
+			break;
 		default:
 			printf("invalid stack allocation\n");
 			return NULL;
@@ -105,6 +113,9 @@ void mem_stack_release(stack_t stack) {
 		case STACK_ENTITY:
 			mem_stack_cursor_entity = 0;
 			break;
+		case STACK_VRAM_SWAP:
+			mem_stack_cursor_vram_swap = 0;
+			break;
 		default:
 			break;
 	}
@@ -123,6 +134,9 @@ size_t mem_stack_get_size(stack_t stack) {
 			break;
 		case STACK_ENTITY:
 			return sizeof(mem_stack_entity);
+			break;
+		case STACK_VRAM_SWAP:
+			return sizeof(mem_stack_vram_swap);
 			break;
 		default:
 			return 0;
@@ -143,6 +157,9 @@ size_t mem_stack_get_occupied(stack_t stack) {
 			break;
 		case STACK_ENTITY:
 			return mem_stack_cursor_entity << 2;
+			break;
+		case STACK_VRAM_SWAP:
+			return mem_stack_cursor_vram_swap << 2;
 			break;
 		default:
 			return 0;
