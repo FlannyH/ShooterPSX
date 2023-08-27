@@ -1,6 +1,7 @@
 #include "entity.h"
 #include "mesh.h"
 #include "entities/door.h"
+#include <string.h>
 
 entity_slot_t entity_list[ENTITY_LIST_LENGTH];
 aabb_t entity_aabb_queue[ENTITY_LIST_LENGTH];

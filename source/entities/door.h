@@ -6,10 +6,10 @@ typedef struct {
 	entity_header_t entity_header;
 	vec3_t open_offset;
 	scalar_t curr_interpolation_value;
-	int is_open;
-	int is_locked;
-	int is_big_door;
-	int is_rotated;
+	int is_open : 1;
+	int is_locked : 1;
+	int is_big_door : 1;
+	int is_rotated : 1;
 } entity_door_t;
 
 entity_door_t* entity_door_new();
