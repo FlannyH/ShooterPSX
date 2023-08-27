@@ -341,8 +341,10 @@ void state_enter_in_game(void) {
 	music_play_sequence(0);
 	
 	music_set_volume(255);
+#ifdef _DEBUG
 	FntLoad(320,256);
 	FntOpen(32, 32, 256, 192, 0, 512);
+#endif
 	
 	mem_debug();
 
