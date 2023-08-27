@@ -90,6 +90,7 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 		return NULL;
 	}
 	printf("which we have! move on :D\n");
+	printf("allocated to %p\n", cursor);
 #endif
 
 	// Convert size from bytes to words
