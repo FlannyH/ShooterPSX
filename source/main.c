@@ -247,7 +247,7 @@ void state_update_title_screen(int dt) {
 	sprintf(curr_pointer, "FREECAM\n");  curr_pointer += strlen("FREECAM ");
 #endif
 
-	renderer_draw_text((vec2_t){32*ONE, 192*ONE}, debug_text, 0, 0);
+	renderer_draw_text((vec2_t){32*ONE, 192*ONE}, debug_text, 0, 0, white);
 #endif
 
 	if (input_pressed(PAD_START, 0)) {
