@@ -29,6 +29,8 @@ typedef struct {
     uint32_t sample_rate;          // Sample rate (Hz) at MIDI key 60 (C5)
     uint16_t reg_adsr1;            // Raw data to be written to SPU_CH_ADSR1 when enabling a note
     uint16_t reg_adsr2;            // Raw data to be written to SPU_CH_ADSR2 when enabling a note
+    uint8_t panning;
+    uint8_t pad[3];
 } instrument_region_header_t;
 
 // Dynamic Song Sequence header

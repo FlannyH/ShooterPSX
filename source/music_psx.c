@@ -174,6 +174,19 @@ void music_tick(int delta_time) {
 			const uint8_t key = *sequence_pointer++;
 			const uint8_t velocity = *sequence_pointer++;
 
+			// todo: make this cleaner
+			// Quick hack to add in looping support via the drum channel
+			if ((command & 0x0F) == 9) {
+				// Loop start
+				if (key == 0) {
+					loop_start = sequence_pointer;
+				}
+				// Loop end
+				if (key == 1) {
+					sequence_pointer = loop_start;
+				}
+			}
+
 			// These are the channels we'll be updating
 			midi_channel_t* midi_chn = &midi_channel[command & 0x0F];
 
@@ -187,9 +200,10 @@ void music_tick(int delta_time) {
 					scalar_t s_velocity = ((scalar_t)velocity) * ONE;
 					scalar_t s_channel_volume = ((scalar_t)midi_chn->volume) * (ONE / 256) * regions[i].volume_multiplier;
 					s_velocity = scalar_mul(s_velocity, s_channel_volume);
+					int panning = ((int)midi_chn->panning + (int)regions[i].panning) / 2;
 					vec2_t stereo_volume = {
-						scalar_mul((uint32_t)lut_panning[255 - midi_chn->panning], s_velocity),
-						scalar_mul((uint32_t)lut_panning[midi_chn->panning], s_velocity),
+						scalar_mul((uint32_t)lut_panning[255 - panning], s_velocity),
+						scalar_mul((uint32_t)lut_panning[panning], s_velocity),
 					};
 					
 					// Handle channel pitch
@@ -223,7 +237,6 @@ void music_tick(int delta_time) {
 						.velocity = velocity
 					};
 					n_staged_note_on_events++;
-					break;
 				}
 			}
 		}
@@ -365,9 +378,10 @@ void music_tick(int delta_time) {
 		scalar_t s_velocity = ((scalar_t)spu_ch->velocity) * ONE;
 		scalar_t s_channel_volume = ((scalar_t)midi_ch->volume) * (ONE / 256) * instrument_regions[spu_ch->region].volume_multiplier;
 		s_velocity = scalar_mul(s_velocity, s_channel_volume);
+		int panning = ((int)midi_ch->panning + (int)instrument_regions[spu_ch->region].panning) / 2;
 		vec2_t stereo_volume = {
-			scalar_mul((uint32_t)lut_panning[255 - midi_ch->panning], s_velocity),
-			scalar_mul((uint32_t)lut_panning[midi_ch->panning], s_velocity),
+			scalar_mul((uint32_t)lut_panning[255 - panning], s_velocity),
+			scalar_mul((uint32_t)lut_panning[panning], s_velocity),
 		};
 		SPU_CH_VOL_L(i) = stereo_volume.x >> 12;
 		SPU_CH_VOL_R(i) = stereo_volume.y >> 12;
