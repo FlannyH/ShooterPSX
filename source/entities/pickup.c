@@ -14,11 +14,11 @@ entity_pickup_t* entity_pickup_new() {
 void entity_pickup_update(int slot, player_t* player, int dt) {
 	entity_pickup_t* pickup = (entity_pickup_t*)entity_list[slot].data;
 	vec3_t pickup_pos = pickup->entity_header.position;
-	vec3_t player_pos = player->position;
+	vec3_t player_pos = vec3_sub(player->position, (vec3_t){0, 200 * COL_SCALE, 0});
     vec3_t pickup_to_player = vec3_sub(player_pos, pickup_pos);
-    scalar_t distance_from_door_to_player_squared = vec3_magnitude_squared(pickup_to_player);
-	int close_enough_to_home_in = (distance_from_door_to_player_squared < 2000 * ONE) && (distance_from_door_to_player_squared > 0);
-	int close_enough_to_collect = (distance_from_door_to_player_squared < 100 * ONE) && (distance_from_door_to_player_squared > 0);
+    scalar_t distance_from_pickup_to_player_squared = vec3_magnitude_squared(pickup_to_player);
+	int close_enough_to_home_in = (distance_from_pickup_to_player_squared < 2000 * ONE) && (distance_from_pickup_to_player_squared > 0);
+	int close_enough_to_collect = (distance_from_pickup_to_player_squared < 200 * ONE) && (distance_from_pickup_to_player_squared > 0);
 
     // Rendering
     size_t mesh_to_render = 0;
@@ -47,8 +47,8 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
 	renderer_draw_mesh_shaded_offset(&entity_models->meshes[mesh_to_render], &render_transform, 64);
 
     if (close_enough_to_home_in) {
-        vec3_t pickup_to_player = vec3_divs(pickup_to_player, distance_from_door_to_player_squared);
-        const scalar_t home_in_speed = 1 * ONE;
+        pickup_to_player = vec3_normalize(pickup_to_player);
+        const scalar_t home_in_speed = 3 * ONE;
         pickup->entity_header.position = vec3_add(pickup_pos, vec3_muls(pickup_to_player, home_in_speed));
     }
 
@@ -61,7 +61,6 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
             case PICKUP_TYPE_HEALTH_SMALL: player->health += 15; break;
             case PICKUP_TYPE_HEALTH_BIG: player->health += 15; break;
         }
-        printf("pickup was picked up\n");
         entity_kill(slot);
     }
 }
