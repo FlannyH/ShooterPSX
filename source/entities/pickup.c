@@ -61,7 +61,7 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
             case PICKUP_TYPE_ARMOR_SMALL: player->armor += 5; break;
             case PICKUP_TYPE_ARMOR_BIG: player->armor += 15; break;
             case PICKUP_TYPE_HEALTH_SMALL: player->health += 15; break;
-            case PICKUP_TYPE_HEALTH_BIG: player->health += 15; break;
+            case PICKUP_TYPE_HEALTH_BIG: player->health += 40; break;
             case PICKUP_TYPE_KEY_BLUE: player->has_key_blue = 1; break;
             case PICKUP_TYPE_KEY_YELLOW: player->has_key_yellow = 1; break;
         }
