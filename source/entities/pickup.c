@@ -29,6 +29,8 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
         case PICKUP_TYPE_ARMOR_BIG:    mesh_to_render = ENTITY_MESH_PICKUP_ARMOR_BIG;    break;
         case PICKUP_TYPE_HEALTH_SMALL: mesh_to_render = ENTITY_MESH_PICKUP_HEALTH_SMALL; break;
         case PICKUP_TYPE_HEALTH_BIG:   mesh_to_render = ENTITY_MESH_PICKUP_HEALTH_BIG;   break;
+        case PICKUP_TYPE_KEY_BLUE:     mesh_to_render = ENTITY_MESH_PICKUP_KEY_BLUE;     break;
+        case PICKUP_TYPE_KEY_YELLOW:   mesh_to_render = ENTITY_MESH_PICKUP_KEY_YELLOW;   break;
     }
 
     // Rotate
@@ -60,6 +62,8 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
             case PICKUP_TYPE_ARMOR_BIG: player->armor += 15; break;
             case PICKUP_TYPE_HEALTH_SMALL: player->health += 15; break;
             case PICKUP_TYPE_HEALTH_BIG: player->health += 15; break;
+            case PICKUP_TYPE_KEY_BLUE: player->has_key_blue = 1; break;
+            case PICKUP_TYPE_KEY_YELLOW: player->has_key_yellow = 1; break;
         }
         entity_kill(slot);
     }

@@ -320,12 +320,14 @@ void state_enter_in_game(void) {
 	door = entity_door_new(); door->is_locked = 1; door->entity_header.position = (vec3_t){501 * ONE,  1015 * ONE, 1944 * ONE}; door->is_big_door = 0; door->is_rotated = 1;
 
 	entity_pickup_t* pickup;
-	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 32*0)*ONE, 1294*ONE, (465+32*0)*ONE}; pickup->type = PICKUP_TYPE_AMMO_BIG;
-	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 32*0)*ONE, 1294*ONE, (465+32*1)*ONE}; pickup->type = PICKUP_TYPE_ARMOR_BIG;
-	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 32*0)*ONE, 1294*ONE, (465+32*2)*ONE}; pickup->type = PICKUP_TYPE_HEALTH_BIG;
-	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 32*1)*ONE, 1294*ONE, (465+32*0)*ONE}; pickup->type = PICKUP_TYPE_AMMO_SMALL;
-	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 32*1)*ONE, 1294*ONE, (465+32*1)*ONE}; pickup->type = PICKUP_TYPE_ARMOR_SMALL;
-	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 32*1)*ONE, 1294*ONE, (465+32*2)*ONE}; pickup->type = PICKUP_TYPE_HEALTH_SMALL;
+	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*0)*ONE, 1294*ONE, (465+64*0)*ONE}; pickup->type = PICKUP_TYPE_AMMO_BIG;
+	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*0)*ONE, 1294*ONE, (465+64*1)*ONE}; pickup->type = PICKUP_TYPE_ARMOR_BIG;
+	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*0)*ONE, 1294*ONE, (465+64*2)*ONE}; pickup->type = PICKUP_TYPE_HEALTH_BIG;
+	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*1)*ONE, 1294*ONE, (465+64*0)*ONE}; pickup->type = PICKUP_TYPE_AMMO_SMALL;
+	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*1)*ONE, 1294*ONE, (465+64*1)*ONE}; pickup->type = PICKUP_TYPE_ARMOR_SMALL;
+	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*1)*ONE, 1294*ONE, (465+64*2)*ONE}; pickup->type = PICKUP_TYPE_HEALTH_SMALL;
+	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*2)*ONE, 1294*ONE, (465+64*0)*ONE}; pickup->type = PICKUP_TYPE_KEY_BLUE;
+	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*2)*ONE, 1294*ONE, (465+64*1)*ONE}; pickup->type = PICKUP_TYPE_KEY_YELLOW;
 
 	// Generate collision BVH
     bvh_from_model(&state.in_game.bvh_level_model, state.in_game.m_level_col);
