@@ -17,6 +17,7 @@ void entity_update_all(player_t* player, int dt) {
 		switch (entity_list[i].type) {
 			case ENTITY_NONE: break;
 			case ENTITY_DOOR: entity_door_update(i, player, dt); break;
+			case ENTITY_PICKUP: entity_pickup_update(i, player, dt); break;
 		}
 	}
 }
@@ -49,9 +50,15 @@ void entity_register_collision_box(const aabb_t* box) {
 	memcpy(&entity_aabb_queue[entity_n_active_aabb++], box, sizeof(aabb_t));
 }
 
+void entity_kill(int slot) {
+	// todo: maybe support destructors?
+	entity_list[slot].type = ENTITY_NONE;
+}
+
 char* entity_names[] = {
 	"ENTITY_NONE",
-	"ENTITY_DOOR_SMALL",
+	"ENTITY_DOOR",
+	"ENTITY_PICKUP",
 };
 
 #ifdef _DEBUG

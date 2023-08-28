@@ -28,6 +28,7 @@ if (DEFINED PSN00BSDK_TARGET)
         source/memory.c
         source/entity.c
 		source/entities/door.c
+		source/entities/pickup.c
     )
 
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall -Wno-unused-function")

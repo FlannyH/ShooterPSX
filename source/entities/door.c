@@ -24,36 +24,36 @@ entity_door_t* entity_door_new() {
 }
 
 void entity_door_update(int slot, player_t* player, int dt) {
-	entity_door_t* this = (entity_door_t*)entity_list[slot].data;
+	entity_door_t* door = (entity_door_t*)entity_list[slot].data;
 
-	vec3_t door_pos = this->entity_header.position;
+	vec3_t door_pos = door->entity_header.position;
 	vec3_t player_pos = player->position;
 
 	scalar_t distance_from_door_to_player_squared = vec3_magnitude_squared(vec3_sub(door_pos, player_pos));
 	int player_close_enough = (distance_from_door_to_player_squared < 4500 * ONE) && (distance_from_door_to_player_squared > 0);
 
 	// Handle unlocking with key cards
-	if (this->is_locked && player_close_enough) {
-		if (!this->is_big_door && player->has_key_blue) {
-			this->is_locked = 0;
+	if (door->is_locked && player_close_enough) {
+		if (!door->is_big_door && player->has_key_blue) {
+			door->is_locked = 0;
 			player->has_key_blue = 0;
 		}
-		else if (this->is_big_door && player->has_key_yellow) {
-			this->is_locked = 0;
+		else if (door->is_big_door && player->has_key_yellow) {
+			door->is_locked = 0;
 			player->has_key_yellow = 0;
 		}
 	}
 
-	this->is_open = player_close_enough && !this->is_locked;
+	door->is_open = player_close_enough && !door->is_locked;
 
 	// todo: implement delta time
-	this->curr_interpolation_value = scalar_lerp(this->curr_interpolation_value, this->is_open ? ONE : 0, ONE / 8);
+	door->curr_interpolation_value = scalar_lerp(door->curr_interpolation_value, door->is_open ? ONE : 0, ONE / 8);
 
 	// Find mesh to use - a bit verbose for the sake of avoiding magic numbers, preventing me from shooting myself in the foot later
 	size_t mesh_id;
-	if (this->is_rotated) {
-		if (this->is_big_door) {
-			if (this->is_locked) {
+	if (door->is_rotated) {
+		if (door->is_big_door) {
+			if (door->is_locked) {
 				mesh_id = ENTITY_MESH_DOOR_BIG_LOCKED_ROTATED;
 			}
 			else {
@@ -61,7 +61,7 @@ void entity_door_update(int slot, player_t* player, int dt) {
 			}
 		}
 		else {
-			if (this->is_locked) {
+			if (door->is_locked) {
 				mesh_id = ENTITY_MESH_DOOR_SMALL_LOCKED_ROTATED;
 			}
 			else {
@@ -70,8 +70,8 @@ void entity_door_update(int slot, player_t* player, int dt) {
 		}
 	}
 	else {
-		if (this->is_big_door) {
-			if (this->is_locked) {
+		if (door->is_big_door) {
+			if (door->is_locked) {
 				mesh_id = ENTITY_MESH_DOOR_BIG_LOCKED;
 			}
 			else {
@@ -79,7 +79,7 @@ void entity_door_update(int slot, player_t* player, int dt) {
 			}
 		}
 		else {
-			if (this->is_locked) {
+			if (door->is_locked) {
 				mesh_id = ENTITY_MESH_DOOR_SMALL_LOCKED;
 			}
 			else {
@@ -89,7 +89,7 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	}
 
 	// Add collision for the door
-	if (this->is_locked) {
+	if (door->is_locked) {
 		aabb_t bounds = entity_models->meshes[mesh_id].bounds;
 		bounds.min.x *= COL_SCALE; bounds.min.y *= COL_SCALE; bounds.min.z *= COL_SCALE; 
 		bounds.max.x *= COL_SCALE; bounds.max.y *= COL_SCALE; bounds.max.z *= COL_SCALE; 
@@ -101,17 +101,17 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	}
 
 	// Render mesh - we need to shift it because my implementation of multiplication loses some precision
-	door_pos = vec3_add(door_pos, vec3_shift_right(vec3_muls(this->open_offset, this->curr_interpolation_value << 3), 3));
+	door_pos = vec3_add(door_pos, vec3_shift_right(vec3_muls(door->open_offset, door->curr_interpolation_value << 3), 3));
 	transform_t render_transform;
 
     render_transform.position.vx = -door_pos.x / COL_SCALE;
     render_transform.position.vy = -door_pos.y / COL_SCALE;
     render_transform.position.vz = -door_pos.z / COL_SCALE;
-    render_transform.rotation.vx = -this->entity_header.rotation.x;
-    render_transform.rotation.vy = -this->entity_header.rotation.y;
-    render_transform.rotation.vz = -this->entity_header.rotation.z;
-	render_transform.scale.vx = this->entity_header.scale.x;
-	render_transform.scale.vy = this->entity_header.scale.x;
-	render_transform.scale.vz = this->entity_header.scale.x;
+    render_transform.rotation.vx = -door->entity_header.rotation.x;
+    render_transform.rotation.vy = -door->entity_header.rotation.y;
+    render_transform.rotation.vz = -door->entity_header.rotation.z;
+	render_transform.scale.vx = door->entity_header.scale.x;
+	render_transform.scale.vy = door->entity_header.scale.x;
+	render_transform.scale.vz = door->entity_header.scale.x;
 	renderer_draw_mesh_shaded_offset(&entity_models->meshes[mesh_id], &render_transform, 64);
 }

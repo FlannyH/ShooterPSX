@@ -11,6 +11,7 @@
 typedef enum {
 	ENTITY_NONE,
 	ENTITY_DOOR,
+	ENTITY_PICKUP,
 } entity_type_t; // typically represented by a uint8_t
 
 typedef enum {
@@ -21,7 +22,18 @@ typedef enum {
 	ENTITY_MESH_DOOR_BIG_LOCKED,
 	ENTITY_MESH_DOOR_BIG_LOCKED_ROTATED,
 	ENTITY_MESH_DOOR_BIG_UNLOCKED,
-	ENTITY_MESH_DOOR_BIG_UNLOCKED_ROTATED
+	ENTITY_MESH_DOOR_BIG_UNLOCKED_ROTATED,
+	ENTITY_MESH_PICKUP_AMMO_SMALL,
+	ENTITY_MESH_PICKUP_AMMO_BIG,
+	ENTITY_MESH_PICKUP_ARMOR_SMALL,
+	ENTITY_MESH_PICKUP_ARMOR_BIG,
+	ENTITY_MESH_PICKUP_HEALTH_SMALL,
+	ENTITY_MESH_PICKUP_HEALTH_BIG,
+	ENTITY_MESH_PICKUP_KEY_BLUE,
+	ENTITY_MESH_PICKUP_KEY_YELLOW,
+	ENTITY_MESH_PICKUP_DAMAGE,
+	ENTITY_MESH_PICKUP_FIRE_RATE,
+	ENTITY_MESH_PICKUP_INVINCIBILITY,
 } entity_mesh_id_t;
 
 // All entities are assumed have this data. Add it as the first member of an entity struct.
@@ -46,6 +58,7 @@ int entity_register(entity_header_t* entity, uint8_t entity_type);
 void entity_register_collision_box(const aabb_t* box);
 
 void entity_update_all(player_t* player, int dt);
+void entity_kill(int slot);
 
 #ifdef _DEBUG
 void entity_debug();
