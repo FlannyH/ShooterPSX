@@ -18,6 +18,7 @@ typedef struct {
     uint8_t ammo;
     int has_key_blue : 1;
     int has_key_yellow : 1;
+    int has_gun : 1;
 } player_t;
 
 void player_update(player_t* self, bvh_t* level_bvh, int dt_ms);

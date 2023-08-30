@@ -60,6 +60,7 @@ struct {
 		model_t* m_level;
 		model_t* m_entity;
 		model_t* m_level_col_dbg;
+		model_t* m_weapons;
 		collision_mesh_t* m_level_col;
 		vislist_t* v_level;
     	bvh_t bvh_level_model;
@@ -307,6 +308,7 @@ void state_enter_in_game(void) {
     state.in_game.m_level_col_dbg = model_load_collision_debug("\\ASSETS\\MODELS\\LEVEL.COL;1", 1, STACK_LEVEL);
     state.in_game.m_level_col = model_load_collision("\\ASSETS\\MODELS\\LEVEL.COL;1", 1, STACK_LEVEL);
 	state.in_game.v_level = model_load_vislist("\\ASSETS\\MODELS\\LEVEL.VIS;1", 1, STACK_LEVEL);
+	state.in_game.m_weapons = model_load("\\ASSETS\\MODELS\\WEAPONS.MSH", 1, STACK_LEVEL);
 
 	entity_init();
 
@@ -335,6 +337,7 @@ void state_enter_in_game(void) {
 	// Load textures
 	texture_cpu_t *tex_level;
 	texture_cpu_t *entity_textures;
+	texture_cpu_t *weapon_textures;
 	mem_stack_release(STACK_TEMP);
 	printf("occupied STACK_TEMP: %i / %i\n", mem_stack_get_occupied(STACK_TEMP), mem_stack_get_size(STACK_TEMP));
 	const uint32_t n_level_textures = texture_collection_load("\\ASSETS\\MODELS\\LEVEL.TXC;1", &tex_level, 1, STACK_TEMP);
@@ -344,6 +347,10 @@ void state_enter_in_game(void) {
 	const uint32_t n_entity_textures = texture_collection_load("\\ASSETS\\MODELS\\ENTITY.TXC;1", &entity_textures, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_entity_textures; ++i) {
 	    renderer_upload_texture(&entity_textures[i], i + 64);
+	}
+	const uint32_t n_weapons_textures = texture_collection_load("\\ASSETS\\MODELS\\WEAPONS.TXC;1", &weapon_textures, 1, STACK_TEMP);
+	for (uint8_t i = 0; i < n_weapons_textures; ++i) {
+	    renderer_upload_texture(&weapon_textures[i], i + 100);
 	}
 	mem_stack_release(STACK_TEMP);
 
@@ -447,6 +454,22 @@ void state_update_in_game(int dt) {
 	if (input_pressed(PAD_START, 0)) {
 		current_state = STATE_PAUSE_MENU;
 	}
+
+	// We render the player's weapons last, because we need the view matrices to be reset
+	if (state.in_game.player.has_gun || 1) {
+		transform_t gun_transform;
+		gun_transform.position.vx = 145;
+		gun_transform.position.vy = 135;
+		gun_transform.position.vz = 110;
+		gun_transform.rotation.vx = 0;
+		gun_transform.rotation.vy = 4096 * 16;
+		gun_transform.rotation.vz = 0;
+		gun_transform.scale.vx = ONE;
+		gun_transform.scale.vy = ONE;
+		gun_transform.scale.vz = ONE;
+		renderer_draw_mesh_shaded_offset_local(&state.in_game.m_weapons->meshes[1], &gun_transform, 100);
+	} 
+
 	renderer_end_frame();
 
 	// free temporary allocations
