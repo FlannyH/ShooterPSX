@@ -1,0 +1,18 @@
+#ifndef CHEATS_H
+#define CHEATS_H
+#include <stdint.h>
+#include <psxpad.h>
+
+// Cheats are defined in reverse order, it was easier to implement that way
+static const uint16_t cheat_doom_mode[] = {
+    PAD_RIGHT,
+    PAD_LEFT,
+    PAD_RIGHT,
+    PAD_LEFT,
+    PAD_CIRCLE,
+    PAD_SQUARE,
+    PAD_CIRCLE,
+    PAD_SQUARE,
+};
+
+#endif

@@ -16,6 +16,7 @@
 #include "win/debug_layer.h"
 #endif
 
+#include "cheats.h"
 #include "camera.h"
 #include "fixed_point.h"
 #include "player.h"
@@ -44,6 +45,9 @@ typedef struct {
 		int fade_level; // 255 means black, 0 means no fade
 		state_t state_to_return_to;
 	} global;
+	struct {
+		int doom_mode : 1
+	} cheats;
 	struct {
 		int button_selected;
 		int button_pressed;
@@ -221,12 +225,12 @@ void state_update_title_screen(int dt) {
 		state.title_screen.button_selected++;
 		state.title_screen.button_pressed = 0;
 	}
-	if (input_pressed(PAD_CIRCLE, 0) || input_pressed(PAD_CROSS, 0)) {
+	if (input_pressed(PAD_CROSS, 0)) {
 		state.title_screen.button_pressed = 1;
 	}
 
 	// Handle button presses
-	if (input_released(PAD_CROSS, 0) || input_released(PAD_CIRCLE, 0)) {
+	if (input_released(PAD_CROSS, 0)) {
 		state.title_screen.button_pressed = 0;
 		switch (state.title_screen.button_selected) {
 			case 0: // start game
@@ -467,13 +471,19 @@ void state_update_in_game(int dt) {
 	}
 
 	// We render the player's weapons last, because we need the view matrices to be reset
-	if (state.in_game.player.has_gun) {
+	if (state.in_game.player.has_gun || 1) {
 		transform_t gun_transform;
 		vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
 		scalar_t speed_1d = vec2_magnitude(vel_2d);
-		gun_transform.position.vx = 145 + (isin(state.global.time_counter * 6) * speed_1d) / (32 * ONE); if (widescreen) gun_transform.position.vx += 30;
-		gun_transform.position.vy = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (64 * ONE);
-		gun_transform.position.vz = 110;
+		if (state.cheats.doom_mode) {
+			gun_transform.position.vx = 0 + (isin(state.global.time_counter * 6) * speed_1d) / (32 * ONE); if (widescreen) gun_transform.position.vx += 30;
+			gun_transform.position.vy = 145 + (icos(state.global.time_counter * 12) * speed_1d) / (64 * ONE);
+			gun_transform.position.vz = 110;
+		} else {
+			gun_transform.position.vx = 145 + (isin(state.global.time_counter * 6) * speed_1d) / (32 * ONE); if (widescreen) gun_transform.position.vx += 30;
+			gun_transform.position.vy = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (64 * ONE);
+			gun_transform.position.vz = 110;
+		}
 		gun_transform.rotation.vx = 0;
 		gun_transform.rotation.vy = 4096 * 16;
 		gun_transform.rotation.vz = 0;
@@ -568,12 +578,12 @@ void state_update_settings(int dt) {
 		state.settings.button_selected++;
 		state.settings.button_pressed = 0;
 	}
-	if (input_pressed(PAD_CIRCLE, 0) || input_pressed(PAD_CROSS, 0)) {
+	if (input_pressed(PAD_CROSS, 0)) {
 		state.settings.button_pressed = 1;
 	}
 
 	// Handle button presses
-	if (input_released(PAD_CROSS, 0) || input_released(PAD_CIRCLE, 0)) {
+	if (input_released(PAD_CROSS, 0)) {
 		state.settings.button_pressed = 0;
 		switch (state.settings.button_selected) {
 			case 0: // frame rate limit 30 or 60
@@ -713,6 +723,11 @@ void state_update_pause_menu(int dt) {	renderer_begin_frame(&id_transform);
 		current_state = STATE_IN_GAME;
 	}
 	
+	// Check cheats
+	if (input_check_cheat_buffer(sizeof(cheat_doom_mode) / sizeof(uint16_t), cheat_doom_mode)) {
+		state.cheats.doom_mode = 1;
+	}
+
 	// Paused text
 	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_pause_menu[0], 1, 1, white);
 
@@ -752,12 +767,12 @@ void state_update_pause_menu(int dt) {	renderer_begin_frame(&id_transform);
 		state.pause_menu.button_selected++;
 		state.pause_menu.button_pressed = 0;
 	}
-	if (input_pressed(PAD_CIRCLE, 0) || input_pressed(PAD_CROSS, 0)) {
+	if (input_pressed(PAD_CROSS, 0)) {
 		state.pause_menu.button_pressed = 1;
 	}
 
 	// Handle button presses
-	if (input_released(PAD_CROSS, 0) || input_released(PAD_CIRCLE, 0)) {
+	if (input_released(PAD_CROSS, 0)) {
 		state.pause_menu.button_pressed = 0;
 		switch (state.pause_menu.button_selected) {
 			case 0: // continue

@@ -18,6 +18,8 @@ int8_t right_stick_y_prev[2] = {0, 0};
 int8_t deadzone = 16;
 PADTYPE* pad[2] = {0, 0};
 
+uint16_t input_buffer[32];
+
 void input_init(void) {
     // Init controller
 	InitPAD(&pad_buff[0][0], 34, &pad_buff[1][0], 34);
@@ -62,6 +64,14 @@ void input_update(void) {
         // Update current
         if (!input_is_connected(i)) return;
         button_curr[i] = ~pad[i]->btn;
+
+        // Update cheat buffer
+        uint16_t buttons_pressed = (button_curr[i] ^ button_prev[i]) & button_curr[i];
+        if (buttons_pressed) {
+            for (size_t i = 31; i > 0; --i) input_buffer[i] = input_buffer[i-1];
+            input_buffer[0] = buttons_pressed;
+            printf("set vuffer 0 to %i\n", input_buffer[0]);
+        }
 
         // If we have analog sticks, update those, taking deadzone into account
         if (input_has_analog(i)) {
@@ -133,5 +143,15 @@ int8_t input_right_stick_y(const int player_id) {
 
 int8_t input_right_stick_y_relative(const int player_id) {
     return right_stick_y_curr[player_id] - left_stick_y_prev[player_id];
+}
+int input_check_cheat_buffer(int n_inputs, uint16_t* inputs_to_check) {\
+    int match = 1;
+    for (int i = 0; i < n_inputs; ++i) {
+        //printf("expect: %i, got: %i\n", inputs_to_check[i], input_buffer[i]);
+        if (inputs_to_check[i] != input_buffer[i]) {
+            match = 0;
+        }
+    }
+    return match;
 }
 #endif
