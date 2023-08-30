@@ -208,7 +208,7 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     self->position.y += self->velocity.y * dt_ms;
 }
 
-void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms) {
+void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms, const int time_counter) {
     if (player_radius_squared == 0) {
         const scalar_t player_radius_scalar = player_radius;
         player_radius_squared = scalar_mul(player_radius_scalar, player_radius_scalar);
@@ -223,8 +223,10 @@ void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     handle_jump(self);
     handle_movement(self, level_bvh, dt_ms);
     //vec3_debug(self->position);
+    vec2_t vel_2d = {self->velocity.x, self->velocity.z};
+    scalar_t speed_1d = vec2_magnitude(vel_2d);
     self->transform.position.vx = -self->position.x * (4096 / COL_SCALE);
-    self->transform.position.vy = -self->position.y * (4096 / COL_SCALE);
+    self->transform.position.vy = -self->position.y * (4096 / COL_SCALE) + isin(time_counter * 12) * speed_1d / 64;
     self->transform.position.vz = -self->position.z * (4096 / COL_SCALE);
     self->transform.rotation.vx = -self->rotation.x;
     self->transform.rotation.vy = -self->rotation.y;

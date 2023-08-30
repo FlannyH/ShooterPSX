@@ -21,6 +21,6 @@ typedef struct {
     int has_gun : 1;
 } player_t;
 
-void player_update(player_t* self, bvh_t* level_bvh, int dt_ms);
+void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms, const int time_counter);
 int player_get_level_section(player_t* self, const model_t* model);
 #endif // PLAYER_H

@@ -39,6 +39,7 @@ int should_transition_state = 0;
 typedef struct {
 	struct {
 		int frame_counter;
+		int time_counter;
 		int show_debug;
 		int fade_level; // 255 means black, 0 means no fade
 		state_t state_to_return_to;
@@ -105,6 +106,7 @@ int main(void) {
         int delta_time = renderer_get_delta_time_ms();
         delta_time = scalar_min(delta_time, 40);
 #endif
+		state.global.time_counter += delta_time;
 		// If a state change happened, transition between them
 		if (current_state != prev_state) {
 			// Exit the previous state
@@ -414,7 +416,7 @@ void state_update_in_game(int dt) {
 		PROFILE("input", input_update(), 1);
 		PROFILE("lvl_gfx", renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0), 1);
 		PROFILE("entity", entity_update_all(&state.in_game.player, dt), 1);
-		PROFILE("player", player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt), 1);
+		PROFILE("player", player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt, state.global.time_counter), 1);
 		PROFILE("music", music_tick(16), 1);
 		FntPrint(-1, "sections: ");
 		for (int i = 0; i < n_sections; ++i) FntPrint(-1, "%i, ", sections[i]);
@@ -423,6 +425,8 @@ void state_update_in_game(int dt) {
 		FntPrint(-1, "meshes drawn: %i / %i\n", n_meshes_drawn, n_meshes_total);
 		FntPrint(-1, "polygons drawn: %i\n", n_polygons_drawn);
 		FntPrint(-1, "primitive occ.: %i / %i KiB\n", primitive_occupation / 1024, 128);
+		FntPrint(-1, "frame: %i\n", state.global.frame_counter);
+		FntPrint(-1, "time: %i.%03i\n", state.global.time_counter / 1000, state.global.time_counter % 1000);
 		FntPrint(-1, "player pos: %i, %i, %i\n", 
 			state.in_game.player.position.x / 4096, 
 			state.in_game.player.position.y / 4096, 
@@ -444,7 +448,7 @@ void state_update_in_game(int dt) {
 		input_update();
 		renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0);
 		entity_update_all(&state.in_game.player, dt);
-		player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt);
+		player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt, state.global.time_counter);
 		music_tick(16);
 #ifdef _DEBUG
 	}
