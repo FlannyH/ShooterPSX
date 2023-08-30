@@ -17,6 +17,7 @@ int8_t right_stick_x_prev[2] = {0, 0};
 int8_t right_stick_y_prev[2] = {0, 0};
 int8_t deadzone = 16;
 PADTYPE* pad[2] = {0, 0};
+int button_pressed_this_frame = 0;
 
 uint16_t input_buffer[32];
 
@@ -66,11 +67,13 @@ void input_update(void) {
         button_curr[i] = ~pad[i]->btn;
 
         // Update cheat buffer
+        button_pressed_this_frame = 0;
         uint16_t buttons_pressed = (button_curr[i] ^ button_prev[i]) & button_curr[i];
         if (buttons_pressed) {
             for (size_t i = 31; i > 0; --i) input_buffer[i] = input_buffer[i-1];
             input_buffer[0] = buttons_pressed;
             printf("set vuffer 0 to %i\n", input_buffer[0]);
+            button_pressed_this_frame = 1;
         }
 
         // If we have analog sticks, update those, taking deadzone into account
@@ -145,7 +148,7 @@ int8_t input_right_stick_y_relative(const int player_id) {
     return right_stick_y_curr[player_id] - left_stick_y_prev[player_id];
 }
 int input_check_cheat_buffer(int n_inputs, uint16_t* inputs_to_check) {\
-    int match = 1;
+    int match = button_pressed_this_frame;
     for (int i = 0; i < n_inputs; ++i) {
         //printf("expect: %i, got: %i\n", inputs_to_check[i], input_buffer[i]);
         if (inputs_to_check[i] != input_buffer[i]) {

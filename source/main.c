@@ -476,12 +476,12 @@ void state_update_in_game(int dt) {
 		vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
 		scalar_t speed_1d = vec2_magnitude(vel_2d);
 		if (state.cheats.doom_mode) {
-			gun_transform.position.vx = 0 + (isin(state.global.time_counter * 6) * speed_1d) / (32 * ONE); if (widescreen) gun_transform.position.vx += 30;
-			gun_transform.position.vy = 145 + (icos(state.global.time_counter * 12) * speed_1d) / (64 * ONE);
+			gun_transform.position.vx = 0 + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE); if (widescreen) gun_transform.position.vx += 30;
+			gun_transform.position.vy = 165 + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE);
 			gun_transform.position.vz = 110;
 		} else {
-			gun_transform.position.vx = 145 + (isin(state.global.time_counter * 6) * speed_1d) / (32 * ONE); if (widescreen) gun_transform.position.vx += 30;
-			gun_transform.position.vy = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (64 * ONE);
+			gun_transform.position.vx = 145 + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE); if (widescreen) gun_transform.position.vx += 30;
+			gun_transform.position.vy = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE);
 			gun_transform.position.vz = 110;
 		}
 		gun_transform.rotation.vx = 0;
@@ -726,6 +726,11 @@ void state_update_pause_menu(int dt) {	renderer_begin_frame(&id_transform);
 	// Check cheats
 	if (input_check_cheat_buffer(sizeof(cheat_doom_mode) / sizeof(uint16_t), cheat_doom_mode)) {
 		state.cheats.doom_mode = 1;
+		music_stop();
+		mem_stack_release(STACK_MUSIC);
+		music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\E1M1.DSS");
+		music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK");
+		music_play_sequence(0);
 	}
 
 	// Paused text
