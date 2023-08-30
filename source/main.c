@@ -413,8 +413,6 @@ void state_update_in_game(int dt) {
 #ifdef _DEBUG
 	if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
 	if (state.global.show_debug) {
-		vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
-		scalar_t speed_1d = vec2_magnitude(vel_2d);
 		PROFILE("input", input_update(), 1);
 		PROFILE("lvl_gfx", renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0), 1);
 		PROFILE("entity", entity_update_all(&state.in_game.player, dt), 1);
@@ -473,7 +471,7 @@ void state_update_in_game(int dt) {
 		transform_t gun_transform;
 		vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
 		scalar_t speed_1d = vec2_magnitude(vel_2d);
-		gun_transform.position.vx = 145 + (isin(state.global.time_counter * 6) * speed_1d) / (32 * ONE);
+		gun_transform.position.vx = 145 + (isin(state.global.time_counter * 6) * speed_1d) / (32 * ONE); if (widescreen) gun_transform.position.vx += 30;
 		gun_transform.position.vy = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (64 * ONE);
 		gun_transform.position.vz = 110;
 		gun_transform.rotation.vx = 0;
@@ -483,6 +481,22 @@ void state_update_in_game(int dt) {
 		gun_transform.scale.vy = ONE;
 		gun_transform.scale.vz = ONE;
 		renderer_draw_mesh_shaded_offset_local(&state.in_game.m_weapons->meshes[1], &gun_transform, 100);
+	} 
+	// Sword
+	{
+		transform_t sword_transform;
+		vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
+		scalar_t speed_1d = vec2_magnitude(vel_2d);
+		sword_transform.position.vx = -165 + (isin(state.global.time_counter * 6) * speed_1d) / (32 * ONE); if (widescreen) sword_transform.position.vx -= 52;
+		sword_transform.position.vy = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (64 * ONE);
+		sword_transform.position.vz = 180;
+		sword_transform.rotation.vx = 1800 * 16;
+		sword_transform.rotation.vy = 4096 * 16;
+		sword_transform.rotation.vz = -2048 * 16;
+		sword_transform.scale.vx = ONE;
+		sword_transform.scale.vy = ONE;
+		sword_transform.scale.vz = ONE;
+		renderer_draw_mesh_shaded_offset_local(&state.in_game.m_weapons->meshes[0], &sword_transform, 100);
 	} 
 
 	renderer_end_frame();
