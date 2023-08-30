@@ -413,6 +413,8 @@ void state_update_in_game(int dt) {
 #ifdef _DEBUG
 	if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
 	if (state.global.show_debug) {
+		vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
+		scalar_t speed_1d = vec2_magnitude(vel_2d);
 		PROFILE("input", input_update(), 1);
 		PROFILE("lvl_gfx", renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0), 1);
 		PROFILE("entity", entity_update_all(&state.in_game.player, dt), 1);
@@ -431,6 +433,11 @@ void state_update_in_game(int dt) {
 			state.in_game.player.position.x / 4096, 
 			state.in_game.player.position.y / 4096, 
 			state.in_game.player.position.z / 4096
+		);
+		FntPrint(-1, "player velocity: %i, %i, %i\n", 
+			state.in_game.player.velocity.x, 
+			state.in_game.player.velocity.y, 
+			state.in_game.player.velocity.z
 		);
 		for (int i = 0; i < N_STACK_TYPES; ++i) {
 			FntPrint(-1, "%s: %i / %i KiB (%i%%)\n", 
@@ -464,8 +471,10 @@ void state_update_in_game(int dt) {
 	// We render the player's weapons last, because we need the view matrices to be reset
 	if (state.in_game.player.has_gun || 1) {
 		transform_t gun_transform;
-		gun_transform.position.vx = 145;
-		gun_transform.position.vy = 135;
+		vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
+		scalar_t speed_1d = vec2_magnitude(vel_2d);
+		gun_transform.position.vx = 145 + (isin(state.global.time_counter * 6) * speed_1d) / (32 * ONE);
+		gun_transform.position.vy = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (64 * ONE);
 		gun_transform.position.vz = 110;
 		gun_transform.rotation.vx = 0;
 		gun_transform.rotation.vy = 4096 * 16;
