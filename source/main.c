@@ -36,7 +36,7 @@ int should_transition_state = 0;
 #define FADE_SPEED 18
 #define FADE_SPEED_SLOW 5
 
-struct {
+typedef struct {
 	struct {
 		int frame_counter;
 		int show_debug;
@@ -70,7 +70,9 @@ struct {
 		int button_selected;
 		int button_pressed;
 	} pause_menu;
-} state;
+} state_vars_t;
+
+state_vars_t state;
 
 
 int main(void) {
