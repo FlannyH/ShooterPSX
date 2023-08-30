@@ -467,7 +467,7 @@ void state_update_in_game(int dt) {
 	}
 
 	// We render the player's weapons last, because we need the view matrices to be reset
-	if (state.in_game.player.has_gun || 1) {
+	if (state.in_game.player.has_gun) {
 		transform_t gun_transform;
 		vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
 		scalar_t speed_1d = vec2_magnitude(vel_2d);
