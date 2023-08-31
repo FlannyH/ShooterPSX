@@ -24,6 +24,7 @@
 #include "texture.h"
 #include "memory.h"
 #include "text.h"
+#include "timer.h"
 #include "entity.h"
 #include "entities/door.h"
 #include "entities/pickup.h"
@@ -86,7 +87,7 @@ int main(void) {
 	renderer_init();
 	input_init();
 	init();
-
+	setup_timers();
 	// Init state variables
 	memset(&state, 0, sizeof(state));
 	state.in_game.t_level = (transform_t){{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}};
@@ -269,7 +270,6 @@ void state_update_title_screen(int dt) {
 		renderer_apply_fade(state.global.fade_level);
 		state.global.fade_level -= FADE_SPEED;
 	} 
-	music_tick(16);
 	renderer_end_frame();
 }
 void state_exit_title_screen(void) {
@@ -290,7 +290,6 @@ void state_exit_title_screen(void) {
 		renderer_end_frame();
 		state.global.fade_level += FADE_SPEED;
 		if (current_state == STATE_IN_GAME) music_set_volume(255 - state.global.fade_level);
-		music_tick(16);
 	}
 	state.global.fade_level = 255;
 }
@@ -421,7 +420,6 @@ void state_update_in_game(int dt) {
 		PROFILE("lvl_gfx", renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0), 1);
 		PROFILE("entity", entity_update_all(&state.in_game.player, dt), 1);
 		PROFILE("player", player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt, state.global.time_counter), 1);
-		PROFILE("music", music_tick(16), 1);
 		FntPrint(-1, "sections: ");
 		for (int i = 0; i < n_sections; ++i) FntPrint(-1, "%i, ", sections[i]);
 		FntPrint(-1, "\n");
@@ -458,7 +456,6 @@ void state_update_in_game(int dt) {
 		renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0);
 		entity_update_all(&state.in_game.player, dt);
 		player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt, state.global.time_counter);
-		music_tick(16);
 #ifdef _DEBUG
 	}
 #endif
@@ -524,7 +521,6 @@ void state_enter_settings(void) {
 	state.title_screen.button_pressed = 0;
 	while (state.global.fade_level > 0) {
 		renderer_begin_frame(&id_transform);
-		music_tick(16);
 		// Draw background
 		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
 		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
@@ -536,7 +532,6 @@ void state_enter_settings(void) {
 }
 void state_update_settings(int dt) {
 	renderer_begin_frame(&id_transform);
-	music_tick(16);
 	input_update();
 	// Draw background
 	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
@@ -612,7 +607,6 @@ void state_exit_settings(void) {
 
 	while (state.global.fade_level < 255) {
 		renderer_begin_frame(&id_transform);
-		music_tick(16);
 		input_update();
 		// Draw background
 		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
@@ -649,7 +643,6 @@ void state_enter_credits(void) {
 	state.global.fade_level = 255;
 	while (state.global.fade_level > 0) {
 		renderer_begin_frame(&id_transform);
-		music_tick(16);
 		// Draw background
 		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
 		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
@@ -663,7 +656,6 @@ void state_enter_credits(void) {
 }
 void state_update_credits(int dt) {
 	renderer_begin_frame(&id_transform);
-	music_tick(16);
 
 	// Draw background
 	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
@@ -677,7 +669,6 @@ void state_update_credits(int dt) {
 	// Scroll text
 	state.credits.scroll -= dt * 140;
 
-	//music_tick(16);
 	renderer_end_frame();
 	input_update();
 	if (input_pressed(0xFFFF, 0) || state.credits.scroll < -5800000) {
@@ -717,7 +708,6 @@ void state_enter_pause_menu(void) {
 
 void state_update_pause_menu(int dt) {	renderer_begin_frame(&id_transform);
 	renderer_begin_frame(&id_transform);
-	music_tick(16);
 	input_update();
 	if (input_pressed(PAD_START, 0)) {
 		current_state = STATE_IN_GAME;

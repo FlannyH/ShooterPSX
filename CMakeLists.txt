@@ -27,6 +27,7 @@ if (DEFINED PSN00BSDK_TARGET)
         source/player.c
         source/memory.c
         source/entity.c
+        source/timer.c
 		source/entities/door.c
 		source/entities/pickup.c
     )
