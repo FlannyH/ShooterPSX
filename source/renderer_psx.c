@@ -34,7 +34,7 @@ vec3_t camera_pos;
 vec3_t camera_dir;
 
 // Settings
-int vsync_enable = 1;
+int vsync_enable = 2;
 int is_pal = 0;
 
 // Misc
