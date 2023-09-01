@@ -4,7 +4,7 @@
 #include <string.h>
 
 entity_slot_t entity_list[ENTITY_LIST_LENGTH];
-aabb_t entity_aabb_queue[ENTITY_LIST_LENGTH];
+entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
 size_t entity_n_active_aabb;
 model_t* entity_models = NULL;
 
@@ -46,8 +46,8 @@ void entity_init() {
     entity_models = model_load("\\ASSETS\\MODELS\\ENTITY.MSH;1", 1, STACK_ENTITY);
 }
 
-void entity_register_collision_box(const aabb_t* box) {
-	memcpy(&entity_aabb_queue[entity_n_active_aabb++], box, sizeof(aabb_t));
+void entity_register_collision_box(const entity_collision_box_t* box) {
+	memcpy(&entity_aabb_queue[entity_n_active_aabb++], box, sizeof(entity_collision_box_t));
 }
 
 void entity_kill(int slot) {

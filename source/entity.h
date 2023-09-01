@@ -49,13 +49,20 @@ typedef struct {
 	entity_header_t* data;
 } entity_slot_t;
 
+typedef struct {
+	aabb_t aabb; 
+	uint8_t entity_index; // which entity this one belongs to, so a signal can be sent to the entity when this box is hit
+	uint8_t box_index; // can be used to differentiate between different hitboxes, like body shot and headshot for enemies
+	int is_solid : 1; // can the player move through it or not?
+} entity_collision_box_t;
+
 extern model_t* entity_models;
 extern entity_slot_t entity_list[ENTITY_LIST_LENGTH];
-extern aabb_t entity_aabb_queue[ENTITY_LIST_LENGTH];
+extern entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
 extern size_t entity_n_active_aabb;
 void entity_init();
 int entity_register(entity_header_t* entity, uint8_t entity_type);
-void entity_register_collision_box(const aabb_t* box);
+void entity_register_collision_box(const entity_collision_box_t* box); // (*box) gets copied, can safely be freed after calling this function
 
 void entity_update_all(player_t* player, int dt);
 void entity_kill(int slot);

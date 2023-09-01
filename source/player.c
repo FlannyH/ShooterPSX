@@ -42,7 +42,8 @@ void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     bvh_intersect_vertical_cylinder(level_bvh, player, &hit);
     for (size_t i = 0; i < entity_n_active_aabb; ++i) {
         rayhit_t curr_hit;
-        if (!vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i], player, &curr_hit)) continue;
+        if (!entity_aabb_queue[i].is_solid) continue;
+        if (!vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, player, &curr_hit)) continue;
         curr_hit.normal = (vec3_t){0, ONE, 0};
         if (curr_hit.distance < hit.distance) memcpy(&hit, &curr_hit, sizeof(rayhit_t));
     }
@@ -183,7 +184,8 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
         for (size_t i = 0; i < entity_n_active_aabb; ++i) {
             rayhit_t curr_hit;
             curr_hit.distance = INT32_MAX;
-            if (!vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i], cyl, &curr_hit)) continue;
+            if (!entity_aabb_queue[i].is_solid) continue;
+            if (!vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, cyl, &curr_hit)) continue;
             if (curr_hit.distance < hit.distance) memcpy(&hit, &curr_hit, sizeof(rayhit_t));
         }
 

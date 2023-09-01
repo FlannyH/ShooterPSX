@@ -97,7 +97,13 @@ void entity_door_update(int slot, player_t* player, int dt) {
 			.min = vec3_add(door_pos, bounds.min),
 			.max = vec3_add(door_pos, bounds.max)
 		};
-		entity_register_collision_box(&collision_box);
+		const entity_collision_box_t box = {
+			.aabb = collision_box,
+			.entity_index = slot,
+			.box_index = 0,
+			.is_solid = 1,
+		};
+		entity_register_collision_box(&box);
 	}
 
 	// Render mesh - we need to shift it because my implementation of multiplication loses some precision
