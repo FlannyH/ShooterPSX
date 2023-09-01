@@ -102,6 +102,7 @@ void entity_door_update(int slot, player_t* player, int dt) {
 			.entity_index = slot,
 			.box_index = 0,
 			.is_solid = 1,
+			.is_trigger = 0,
 		};
 		entity_register_collision_box(&box);
 	}

@@ -54,6 +54,7 @@ typedef struct {
 	uint8_t entity_index; // which entity this one belongs to, so a signal can be sent to the entity when this box is hit
 	uint8_t box_index; // can be used to differentiate between different hitboxes, like body shot and headshot for enemies
 	int is_solid : 1; // can the player move through it or not?
+	int is_trigger : 1; // does it trigger any events? (e.g. text, moving geometry)
 } entity_collision_box_t;
 
 extern model_t* entity_models;
