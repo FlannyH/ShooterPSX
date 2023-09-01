@@ -131,6 +131,46 @@ d 1.000000
 illum 2
 map_Kd entity_tex/door_unlocked_tr.png
 
+newmtl enemy_chaser_parts1
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd entity_tex/enemy_chaser_parts1.png
+
+newmtl enemy_chaser_parts2
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd entity_tex/enemy_chaser_parts2.png
+
+newmtl enemy_chaser_parts3
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd entity_tex/enemy_chaser_parts3.png
+
+newmtl enemy_chaser_parts4
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd entity_tex/enemy_chaser_parts4.png
+
 newmtl health_big
 Ns 0.000000
 Ka 1.000000 1.000000 1.000000
