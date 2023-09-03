@@ -501,12 +501,13 @@ void state_update_in_game(int dt) {
 		state.in_game.gun_animation_timer_sqrt = scalar_mul(state.in_game.gun_animation_timer, state.in_game.gun_animation_timer);
 	}
 	else {
-		if (input_pressed(PAD_R2, 0)) {
+		if (input_held(PAD_R2, 0) && state.in_game.player.ammo > 0) {
 			state.in_game.gun_animation_timer = 4096;
 			state.in_game.screen_shake_intensity_position = 80000;
 			state.in_game.screen_shake_dampening_position = 200;
 			state.in_game.screen_shake_intensity_rotation = 240;
 			state.in_game.screen_shake_dampening_rotation = 2;
+			state.in_game.player.ammo--;
 		}
 	}
 
