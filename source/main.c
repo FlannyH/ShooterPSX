@@ -26,6 +26,7 @@
 #include "text.h"
 #include "timer.h"
 #include "entity.h"
+#include "random.h"
 #include "entities/door.h"
 #include "entities/pickup.h"
 
@@ -73,6 +74,10 @@ typedef struct {
 		player_t player;
 		scalar_t gun_animation_timer;
 		scalar_t gun_animation_timer_sqrt;
+		scalar_t screen_shake_intensity_rotation;
+		scalar_t screen_shake_dampening_rotation;
+		scalar_t screen_shake_intensity_position;
+		scalar_t screen_shake_dampening_position;
 	} in_game;
 	struct {
 		int button_selected;
@@ -385,7 +390,25 @@ void state_enter_in_game(void) {
 }
 
 void state_update_in_game(int dt) {
-	renderer_begin_frame(&state.in_game.player.transform);
+	if (state.in_game.screen_shake_intensity_position > 0) {
+		state.in_game.screen_shake_intensity_position -= state.in_game.screen_shake_dampening_position * dt;
+		if (state.in_game.screen_shake_intensity_position < 0) {
+			state.in_game.screen_shake_intensity_position = 0;
+		}
+	}
+	if (state.in_game.screen_shake_intensity_rotation > 0) {
+		state.in_game.screen_shake_intensity_rotation -= state.in_game.screen_shake_dampening_rotation * dt;
+		if (state.in_game.screen_shake_intensity_rotation < 0) {
+			state.in_game.screen_shake_intensity_rotation = 0;
+		}
+	}
+	transform_t camera_transform = state.in_game.player.transform;
+	camera_transform.rotation.vx += scalar_mul((random() % 8192) - 4096, state.in_game.screen_shake_intensity_rotation);
+	camera_transform.rotation.vy += scalar_mul((random() % 8192) - 4096, state.in_game.screen_shake_intensity_rotation);
+	camera_transform.position.vx += scalar_mul((random() % 8192) - 4096, state.in_game.screen_shake_intensity_position);
+	camera_transform.position.vy += scalar_mul((random() % 8192) - 4096, state.in_game.screen_shake_intensity_position);
+	camera_transform.position.vz += scalar_mul((random() % 8192) - 4096, state.in_game.screen_shake_intensity_position);
+	renderer_begin_frame(&camera_transform);
 
 	// Draw crosshair
 	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 128*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){96*ONE, 40*ONE}, (vec2_t){127*ONE, 59*ONE}, (pixel32_t){128, 128, 128}, 2, 5, 1);
@@ -470,7 +493,6 @@ void state_update_in_game(int dt) {
 		current_state = STATE_PAUSE_MENU;
 	}
 
-
 	if (state.in_game.gun_animation_timer > 0) {
 		state.in_game.gun_animation_timer -= dt * 16; 
 		if (state.in_game.gun_animation_timer < 0) {
@@ -481,6 +503,10 @@ void state_update_in_game(int dt) {
 	else {
 		if (input_pressed(PAD_R2, 0)) {
 			state.in_game.gun_animation_timer = 4096;
+			state.in_game.screen_shake_intensity_position = 80000;
+			state.in_game.screen_shake_dampening_position = 200;
+			state.in_game.screen_shake_intensity_rotation = 240;
+			state.in_game.screen_shake_dampening_rotation = 2;
 		}
 	}
 
