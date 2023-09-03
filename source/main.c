@@ -71,6 +71,8 @@ typedef struct {
 		vislist_t* v_level;
     	bvh_t bvh_level_model;
 		player_t player;
+		scalar_t gun_animation_timer;
+		scalar_t gun_animation_timer_sqrt;
 	} in_game;
 	struct {
 		int button_selected;
@@ -439,6 +441,7 @@ void state_update_in_game(int dt) {
 			state.in_game.player.velocity.y, 
 			state.in_game.player.velocity.z
 		);
+		FntPrint(-1, "gun anim timer: %i\n", state.in_game.gun_animation_timer);
 		for (int i = 0; i < N_STACK_TYPES; ++i) {
 			FntPrint(-1, "%s: %i / %i KiB (%i%%)\n", 
 				stack_names[i],
@@ -467,6 +470,20 @@ void state_update_in_game(int dt) {
 		current_state = STATE_PAUSE_MENU;
 	}
 
+
+	if (state.in_game.gun_animation_timer > 0) {
+		state.in_game.gun_animation_timer -= dt * 16; 
+		if (state.in_game.gun_animation_timer < 0) {
+			state.in_game.gun_animation_timer = 0;
+		}
+		state.in_game.gun_animation_timer_sqrt = scalar_mul(state.in_game.gun_animation_timer, state.in_game.gun_animation_timer);
+	}
+	else {
+		if (input_pressed(PAD_R2, 0)) {
+			state.in_game.gun_animation_timer = 4096;
+		}
+	}
+
 	// We render the player's weapons last, because we need the view matrices to be reset
 	if (state.in_game.player.has_gun || 1) {
 		transform_t gun_transform;
@@ -478,10 +495,10 @@ void state_update_in_game(int dt) {
 			gun_transform.position.vz = 110;
 		} else {
 			gun_transform.position.vx = 145 + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE); if (widescreen) gun_transform.position.vx += 30;
-			gun_transform.position.vy = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE);
-			gun_transform.position.vz = 110;
+			gun_transform.position.vy = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE) + scalar_mul(state.in_game.gun_animation_timer_sqrt, 50);
+			gun_transform.position.vz = 125 - scalar_mul(state.in_game.gun_animation_timer_sqrt, 225);
 		}
-		gun_transform.rotation.vx = 0;
+		gun_transform.rotation.vx = 0 + scalar_mul(state.in_game.gun_animation_timer_sqrt, 9500);
 		gun_transform.rotation.vy = 4096 * 16;
 		gun_transform.rotation.vz = 0;
 		gun_transform.scale.vx = ONE;
