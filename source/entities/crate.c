@@ -51,6 +51,13 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 }
 
 void entity_crate_on_hit(int slot, int hitbox_index) {
-	printf("hit crate\n");
+	entity_crate_t* crate = (entity_crate_t*)entity_list[slot].data;
+
+	// Spawn pickup at this crate's location
+	if (crate->pickup_to_spawn != PICKUP_TYPE_NONE) {
+		entity_pickup_t* pickup = entity_pickup_new();
+		pickup->entity_header = crate->entity_header;
+	}
+
     entity_kill(slot);
 }
