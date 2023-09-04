@@ -195,7 +195,8 @@ void handle_node_intersection_ray(bvh_t* self, const bvh_node_t* current_node, c
                     {
                         // Copy the hit info into the output hit for the BVH traversal
                         memcpy(hit, &sub_hit, sizeof(rayhit_t));
-                        hit->triangle = &self->primitives[self->indices[i]];
+                        hit->type = RAY_HIT_TYPE_TRIANGLE;
+                        hit->tri.triangle = &self->primitives[self->indices[i]];
                     }
                 }
             }
@@ -232,7 +233,8 @@ void handle_node_intersection_sphere(bvh_t* self, const bvh_node_t* current_node
                     {
                         // Copy the hit info into the output hit for the BVH traversal
                         memcpy(hit, &sub_hit, sizeof(rayhit_t));
-                        hit->triangle = &self->primitives[self->indices[i]];
+                        hit->type = RAY_HIT_TYPE_TRIANGLE;
+                        hit->tri.triangle = &self->primitives[self->indices[i]];
                     }
                 }
             }
@@ -264,7 +266,8 @@ void handle_node_intersection_vertical_cylinder(bvh_t* self, const bvh_node_t* c
                     {
                         // Copy the hit info into the output hit for the BVH traversal
                         memcpy(hit, &sub_hit, sizeof(rayhit_t));
-                        hit->triangle = &self->primitives[self->indices[i]];
+                        hit->type = RAY_HIT_TYPE_TRIANGLE;
+                        hit->tri.triangle = &self->primitives[self->indices[i]];
                     }
                 }
             }
@@ -297,7 +300,8 @@ void handle_node_intersection_capsule(bvh_t* self, const bvh_node_t* current_nod
                     {
                         // Copy the hit info into the output hit for the BVH traversal
                         memcpy(hit, &sub_hit, sizeof(rayhit_t));
-                        hit->triangle = &self->primitives[self->indices[i]];
+                        hit->type = RAY_HIT_TYPE_TRIANGLE;
+                        hit->tri.triangle = &self->primitives[self->indices[i]];
                     }
                 }
             }
@@ -402,6 +406,44 @@ int point_aabb_intersect(const aabb_t* aabb, vec3_t point) {
     &&     (point.z <= aabb->max.z);
 }
 
+int ray_aabb_intersect_fancy(const aabb_t* aabb, ray_t ray, rayhit_t* hit) {
+    n_ray_aabb_intersects++;
+    // If the ray starts inside the box, always intersect
+    if (point_aabb_intersect(aabb, ray.position)) {
+        hit->distance = 0;
+        hit->position = ray.position;
+        return 1;
+    }
+
+    // Otherwise, follow the other algorithm
+    const scalar_t tx1 = scalar_mul(aabb->min.x - ray.position.x, ray.inv_direction.x);
+    const scalar_t tx2 = scalar_mul(aabb->max.x - ray.position.x, ray.inv_direction.x);
+
+    scalar_t tmin = scalar_min(tx1, tx2);
+    scalar_t tmax = scalar_max(tx1, tx2);
+
+    const scalar_t ty1 = scalar_mul(aabb->min.y - ray.position.y, ray.inv_direction.y);
+    const scalar_t ty2 = scalar_mul(aabb->max.y - ray.position.y, ray.inv_direction.y);
+
+    tmin = scalar_max(scalar_min(ty1, ty2), tmin);
+    tmax = scalar_min(scalar_max(ty1, ty2), tmax);
+
+    const scalar_t tz1 = scalar_mul(aabb->min.z - ray.position.z, ray.inv_direction.z);
+    const scalar_t tz2 = scalar_mul(aabb->max.z - ray.position.z, ray.inv_direction.z);
+
+    tmin = scalar_max(scalar_min(tz1, tz2), tmin);
+    tmax = scalar_min(scalar_max(tz1, tz2), tmax);
+    
+    // And store the result in the rayhit
+    if (tmax >= tmin && tmax >= 0) {
+        hit->distance = tmin;
+        hit->position = vec3_add(ray.position, vec3_muls(ray.direction, tmin));
+        return 1;
+    };
+
+    return 0;
+}
+
 int ray_aabb_intersect(const aabb_t* aabb, ray_t ray) {
     n_ray_aabb_intersects++;
     const scalar_t tx1 = scalar_mul(aabb->min.x - ray.position.x, ray.inv_direction.x);
@@ -466,7 +508,8 @@ int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_
         hit->position = vec3_add(ray.position, vec3_muls(ray.direction, t << SHIFT_COUNT));
         hit->distance = t << SHIFT_COUNT;
         hit->normal = triangle->normal;
-        hit->triangle = triangle;
+        hit->type = RAY_HIT_TYPE_TRIANGLE;
+        hit->tri.triangle = triangle;
         return 1;
     }
     return 0;
@@ -835,7 +878,8 @@ int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vert
             hit->normal = triangle->normal;
             hit->distance = scalar_sqrt(distance_to_closest_point);
         }
-        hit->triangle = triangle;
+        hit->type = RAY_HIT_TYPE_TRIANGLE;
+        hit->tri.triangle = triangle;
         return 1;
     }
 
@@ -891,7 +935,8 @@ int sphere_triangle_intersect_old(collision_triangle_3d_t* triangle, sphere_t sp
     hit->position = closest_pos_on_triangle;
     hit->distance = distance_from_hit_squared;
     hit->normal = penetration_normal;
-    hit->triangle = triangle;
+    hit->type = RAY_HIT_TYPE_TRIANGLE;
+    hit->tri.triangle = triangle;
     return 1;
 }
 

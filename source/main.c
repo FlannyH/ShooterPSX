@@ -29,6 +29,7 @@
 #include "random.h"
 #include "entities/door.h"
 #include "entities/pickup.h"
+#include "entities/crate.h"
 
 int widescreen = 0;
 extern int vsync_enable;
@@ -349,6 +350,10 @@ void state_enter_in_game(void) {
 	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*2)*ONE, 1294*ONE, (465+64*0)*ONE}; pickup->type = PICKUP_TYPE_KEY_BLUE;
 	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*2)*ONE, 1294*ONE, (465+64*1)*ONE}; pickup->type = PICKUP_TYPE_KEY_YELLOW;
 
+	entity_crate_t* crate;
+	crate = entity_crate_new(); crate->entity_header.position = (vec3_t){(1338 + 64*3)*ONE, 1294*ONE, (465+64*0)*ONE}; crate->pickup_to_spawn = PICKUP_TYPE_HEALTH_BIG;
+
+
 	// Generate collision BVH
     bvh_from_model(&state.in_game.bvh_level_model, state.in_game.m_level_col);
 
@@ -533,13 +538,32 @@ void state_update_in_game(int dt) {
 			ray.inv_direction = vec3_div((vec3_t){ONE, ONE, ONE}, ray.direction);
 			rayhit_t hit;
 			bvh_intersect_ray(&state.in_game.bvh_level_model, ray, &hit);
+			for (size_t i = 0; i < entity_n_active_aabb; ++i) {
+				rayhit_t entity_hit;
+				if (ray_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, ray, &entity_hit)) {
+					printf("we did hit an entity of type %s\n", entity_names[entity_list[entity_aabb_queue[i].entity_index].type]);
+					if (entity_hit.distance < hit.distance) {
+						printf("and it was the closest one!\n");
+						hit = entity_hit;
+						hit.type = RAY_HIT_TYPE_ENTITY_HITBOX;
+						hit.entity_hitbox.box_index = entity_aabb_queue[i].box_index;
+						hit.entity_hitbox.entity_index = entity_aabb_queue[i].entity_index;
+					}
+					else {
+						printf("but it was not the closest one...\n");
+					}
+				}
+			}
 			if (!is_infinity(hit.distance)) {
 				state.debug.shoot_origin_position = ray.position;
 				state.debug.shoot_hit_position = hit.position;
-				
-				renderer_debug_draw_line(hit.triangle->v0, hit.triangle->v1, green, &id_transform);
-				renderer_debug_draw_line(hit.triangle->v1, hit.triangle->v2, green, &id_transform);
-				renderer_debug_draw_line(hit.triangle->v2, hit.triangle->v0, green, &id_transform);
+			}
+			if (!is_infinity(hit.distance) && hit.type == RAY_HIT_TYPE_ENTITY_HITBOX) {
+				switch (entity_list[hit.entity_hitbox.entity_index].type) {
+					case ENTITY_DOOR: entity_door_on_hit(hit.entity_hitbox.entity_index, hit.entity_hitbox.box_index); break;
+					case ENTITY_PICKUP: entity_pickup_on_hit(hit.entity_hitbox.entity_index, hit.entity_hitbox.box_index); break;
+					case ENTITY_CRATE: entity_crate_on_hit(hit.entity_hitbox.entity_index, hit.entity_hitbox.box_index); break;
+				}
 			}
 
 			// Start shoot animation

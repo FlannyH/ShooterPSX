@@ -128,13 +128,27 @@ typedef enum {
     none,
 } col_mat_t;
 
+typedef enum {
+    RAY_HIT_TYPE_TRIANGLE,
+    RAY_HIT_TYPE_ENTITY_HITBOX,
+} ray_hit_type_t;
+
 typedef struct {
     vec3_t position;
     vec3_t normal;
     scalar_t distance;
     scalar_t distance_along_normal;
     col_mat_t collision_material;
-    collision_triangle_3d_t* triangle;
+    ray_hit_type_t type;
+    union {
+        struct {
+            collision_triangle_3d_t* triangle;
+        } tri;
+        struct {
+            uint8_t entity_index;
+            uint8_t box_index;
+        } entity_hitbox;
+    };
 } rayhit_t;
 
 #define MAGIC_FCOL 0x4C4F4346

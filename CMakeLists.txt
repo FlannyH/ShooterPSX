@@ -30,6 +30,7 @@ if (DEFINED PSN00BSDK_TARGET)
         source/timer.c
 		source/entities/door.c
 		source/entities/pickup.c
+		source/entities/crate.c
     )
 
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall -Wno-unused-function")

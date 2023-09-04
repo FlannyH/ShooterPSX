@@ -6,12 +6,13 @@
 #include <stdio.h>
 
 #define ENTITY_NOT_SECTION_BOUND 255
-#define ENTITY_LIST_LENGTH 16
+#define ENTITY_LIST_LENGTH 64
 
 typedef enum {
 	ENTITY_NONE,
 	ENTITY_DOOR,
 	ENTITY_PICKUP,
+	ENTITY_CRATE,
 } entity_type_t; // typically represented by a uint8_t
 
 typedef enum {
@@ -34,6 +35,16 @@ typedef enum {
 	ENTITY_MESH_PICKUP_DAMAGE,
 	ENTITY_MESH_PICKUP_FIRE_RATE,
 	ENTITY_MESH_PICKUP_INVINCIBILITY,
+	ENTITY_MESH_CHASER_IDLE,
+	ENTITY_MESH_CHASER_AIM,
+	ENTITY_MESH_CHASER_HEAD_BROKEN,
+	ENTITY_MESH_CHASER_HEAD_NORMAL,
+	ENTITY_MESH_CHASER_BODY,
+	ENTITY_MESH_CHASER_ARM,
+	ENTITY_MESH_CHASER_BOTTOM1,
+	ENTITY_MESH_CHASER_BOTTOM2,
+	ENTITY_MESH_CHASER_GUN,
+	ENTITY_MESH_CRATE,
 } entity_mesh_id_t;
 
 // All entities are assumed have this data. Add it as the first member of an entity struct.
@@ -57,6 +68,7 @@ typedef struct {
 	int is_trigger : 1; // does it trigger any events? (e.g. text, moving geometry)
 } entity_collision_box_t;
 
+extern char* entity_names[];
 extern model_t* entity_models;
 extern entity_slot_t entity_list[ENTITY_LIST_LENGTH];
 extern entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];

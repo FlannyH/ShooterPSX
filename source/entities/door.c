@@ -122,3 +122,5 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	render_transform.scale.vz = door->entity_header.scale.x;
 	renderer_draw_mesh_shaded_offset(&entity_models->meshes[mesh_id], &render_transform, 64);
 }
+
+void entity_door_on_hit(int slot, int hitbox_index) {}

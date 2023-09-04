@@ -1,6 +1,8 @@
 #include "entity.h"
 #include "mesh.h"
 #include "entities/door.h"
+#include "entities/pickup.h"
+#include "entities/crate.h"
 #include <string.h>
 
 entity_slot_t entity_list[ENTITY_LIST_LENGTH];
@@ -18,6 +20,7 @@ void entity_update_all(player_t* player, int dt) {
 			case ENTITY_NONE: break;
 			case ENTITY_DOOR: entity_door_update(i, player, dt); break;
 			case ENTITY_PICKUP: entity_pickup_update(i, player, dt); break;
+			case ENTITY_CRATE: entity_crate_update(i, player, dt); break;
 		}
 	}
 }
@@ -59,6 +62,7 @@ char* entity_names[] = {
 	"ENTITY_NONE",
 	"ENTITY_DOOR",
 	"ENTITY_PICKUP",
+	"ENTITY_CRATE",
 };
 
 #ifdef _DEBUG

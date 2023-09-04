@@ -14,5 +14,6 @@ typedef struct {
 
 entity_door_t* entity_door_new();
 void entity_door_update(int slot, player_t* player, int dt);
+void entity_door_on_hit(int slot, int hitbox_index);
 
 #endif
