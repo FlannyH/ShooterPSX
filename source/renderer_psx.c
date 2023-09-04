@@ -550,6 +550,7 @@ void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t
 }
 
 void renderer_set_video_mode(int is_pal) {
+    ResetGraph(0);
     if (is_pal) {
         // Configures the pair of DISPENVs
         SetDefDispEnv(&disp[0], 0, 0, RES_X, RES_Y_PAL);
@@ -588,6 +589,7 @@ void renderer_set_video_mode(int is_pal) {
     // Enable background clear
     draw[0].isbg = 1;
     draw[1].isbg = 1;
+    drawn_first_frame = 0;
 }
 
 int renderer_get_delta_time_raw(void) {
