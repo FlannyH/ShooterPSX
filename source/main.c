@@ -423,6 +423,7 @@ void state_update_in_game(int dt) {
 
 	// Draw crosshair
 	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 128*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){96*ONE, 40*ONE}, (vec2_t){127*ONE, 59*ONE}, (pixel32_t){128, 128, 128}, 2, 5, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, (128 + 8*(!is_pal))*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){96*ONE, 40*ONE}, (vec2_t){127*ONE, 59*ONE}, (pixel32_t){128, 128, 128}, 2, 5, 1);
 
 	// Draw HUD - background
 	renderer_draw_2d_quad_axis_aligned((vec2_t){(121 - 16)*ONE, 236*ONE}, (vec2_t){50*ONE, 40*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){50*ONE, 40*ONE}, (pixel32_t){128, 128, 128}, 2, 5, 1);
