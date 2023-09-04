@@ -533,12 +533,14 @@ void state_update_in_game(int dt) {
 			//ray.position.y += eye_height;
 			ray.inv_direction = vec3_div((vec3_t){ONE, ONE, ONE}, ray.direction);
 			bvh_intersect_ray(&state.in_game.bvh_level_model, ray, &hit);
-			if (!is_infinity(hit.distance)) state.debug.shoot_origin_position = ray.position;
-			if (!is_infinity(hit.distance)) state.debug.shoot_hit_position = hit.position;
-			
-            renderer_debug_draw_line(hit.triangle->v0, hit.triangle->v1, green, &id_transform);
-            renderer_debug_draw_line(hit.triangle->v1, hit.triangle->v2, green, &id_transform);
-            renderer_debug_draw_line(hit.triangle->v2, hit.triangle->v0, green, &id_transform);
+			if (!is_infinity(hit.distance)) {
+				state.debug.shoot_origin_position = ray.position;
+				state.debug.shoot_hit_position = hit.position;
+				
+				renderer_debug_draw_line(hit.triangle->v0, hit.triangle->v1, green, &id_transform);
+				renderer_debug_draw_line(hit.triangle->v1, hit.triangle->v2, green, &id_transform);
+				renderer_debug_draw_line(hit.triangle->v2, hit.triangle->v0, green, &id_transform);
+			}
 
 			// Start shoot animation
 			state.in_game.gun_animation_timer = 4096;
