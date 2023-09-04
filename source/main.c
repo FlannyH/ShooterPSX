@@ -48,7 +48,7 @@ typedef struct {
 		state_t state_to_return_to;
 	} global;
 	struct {
-		int doom_mode : 1
+		int doom_mode : 1;
 	} cheats;
 	struct {
 		int button_selected;
@@ -83,6 +83,10 @@ typedef struct {
 		int button_selected;
 		int button_pressed;
 	} pause_menu;
+	struct {
+		vec3_t shoot_origin_position;
+		vec3_t shoot_hit_position;
+	} debug;
 } state_vars_t;
 
 state_vars_t state;
@@ -376,8 +380,10 @@ void state_enter_in_game(void) {
 	
 	music_set_volume(255);
 #ifdef _DEBUG
+#ifdef _PSX
 	FntLoad(320,256);
 	FntOpen(32, 32, 256, 192, 0, 512);
+#endif
 #endif
 	
 	mem_debug();
@@ -464,6 +470,16 @@ void state_update_in_game(int dt) {
 			state.in_game.player.velocity.y, 
 			state.in_game.player.velocity.z
 		);
+		FntPrint(-1, "origin: %i, %i, %i\n", 
+			state.debug.shoot_origin_position.x / 4096, 
+			state.debug.shoot_origin_position.y / 4096, 
+			state.debug.shoot_origin_position.z / 4096
+		);
+		FntPrint(-1, "hit: %i, %i, %i\n", 
+			state.debug.shoot_hit_position.x / 4096, 
+			state.debug.shoot_hit_position.y / 4096, 
+			state.debug.shoot_hit_position.z / 4096
+		);
 		FntPrint(-1, "gun anim timer: %i\n", state.in_game.gun_animation_timer);
 		for (int i = 0; i < N_STACK_TYPES; ++i) {
 			FntPrint(-1, "%s: %i / %i KiB (%i%%)\n", 
@@ -493,6 +509,7 @@ void state_update_in_game(int dt) {
 		current_state = STATE_PAUSE_MENU;
 	}
 
+	// Play shoot animation
 	if (state.in_game.gun_animation_timer > 0) {
 		state.in_game.gun_animation_timer -= dt * 16; 
 		if (state.in_game.gun_animation_timer < 0) {
@@ -502,11 +519,31 @@ void state_update_in_game(int dt) {
 	}
 	else {
 		if (input_held(PAD_R2, 0) && state.in_game.player.ammo > 0) {
+			// Cast ray through scene and handle entity collisions
+			scalar_t cosx = hicos(camera_transform.rotation.vx);
+			scalar_t sinx = hisin(camera_transform.rotation.vx);
+			scalar_t cosy = hicos(camera_transform.rotation.vy);
+			scalar_t siny = hisin(camera_transform.rotation.vy);
+			rayhit_t hit;
+			ray_t ray = {
+				.length = INT32_MAX,
+				.position = state.in_game.player.position,
+				.direction = {scalar_mul(siny, cosx), -sinx, scalar_mul(-cosy, cosx)},
+			};
+			//ray.position.y += eye_height;
+			ray.inv_direction = vec3_div((vec3_t){ONE, ONE, ONE}, ray.direction);
+			bvh_intersect_ray(&state.in_game.bvh_level_model, ray, &hit);
+			if (!is_infinity(hit.distance)) state.debug.shoot_origin_position = ray.position;
+			if (!is_infinity(hit.distance)) state.debug.shoot_hit_position = hit.position;
+
+			// Start shoot animation
 			state.in_game.gun_animation_timer = 4096;
 			state.in_game.screen_shake_intensity_position = 80000;
 			state.in_game.screen_shake_dampening_position = 200;
 			state.in_game.screen_shake_intensity_rotation = 240;
 			state.in_game.screen_shake_dampening_rotation = 2;
+
+			// Reduce ammo count
 			state.in_game.player.ammo--;
 		}
 	}

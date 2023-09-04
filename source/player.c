@@ -6,22 +6,11 @@
 
 #include "input.h"
 #include "entity.h"
+#include "common.h"
 #include <string.h>
 
 transform_t t_level = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };
 
-const int32_t eye_height = 200 * COL_SCALE;
-const int32_t player_radius = 150 * COL_SCALE;
-const int32_t step_height = 100 * COL_SCALE;
-const int32_t terminal_velocity_down = -12400 / 8;
-const int32_t terminal_velocity_up = 40000 / 8;
-const int32_t gravity = -5;
-const int32_t walking_acceleration = 50 / 8;
-const int32_t walking_max_speed = 6660 / 8;
-const int32_t stick_sensitivity = 3200;
-const int32_t walking_drag = 32 / 8;
-const int32_t initial_jump_velocity = 8000 / 8;
-const int32_t jump_ground_threshold = 16000 / 8;
 static scalar_t player_radius_squared = 0;
 int32_t is_grounded = 0;
 int n_sections;

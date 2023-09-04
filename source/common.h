@@ -5,7 +5,7 @@
 
 //#define PAL
 //#define DEBUG_CAMERA
-//#define _DEBUG
+#define _DEBUG
 
 #ifdef _WIN32
 #define ALWAYS_INLINE inline
@@ -16,6 +16,7 @@
 #define KiB (1024)
 #define MiB (1024 * KiB)
 #define GiB (1024 * MiB)
+#define ONE (1 << 12)
 
 static void panic_if(const char* error_if_false, const int condition, const int line, const char* file) {
 #ifdef _DEBUG

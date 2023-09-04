@@ -190,6 +190,9 @@ void handle_node_intersection_ray(bvh_t* self, const bvh_node_t* current_node, c
             {
                 // If hit
                 if (ray_triangle_intersect(&self->primitives[self->indices[i]], ray, &sub_hit)) {
+                    renderer_debug_draw_line(sub_hit.triangle->v0, sub_hit.triangle->v1, green, &id_transform);
+                    renderer_debug_draw_line(sub_hit.triangle->v1, sub_hit.triangle->v2, green, &id_transform);
+                    renderer_debug_draw_line(sub_hit.triangle->v2, sub_hit.triangle->v0, green, &id_transform);
                     // If lowest distance
                     if (sub_hit.distance < hit->distance && sub_hit.distance >= 0)
                     {
@@ -362,10 +365,6 @@ void bvh_partition(const bvh_t* bvh, const axis_t axis, const scalar_t pivot, co
     *split_index = i;
 }
 
-void bvh_from_mesh(bvh_t* bvh, const mesh_t* mesh) {
-    bvh_construct(bvh, (triangle_3d_t*)mesh->vertices, (uint16_t)mesh->n_triangles);
-}
-
 void bvh_from_model(bvh_t* bvh, const collision_mesh_t* mesh) {
     // Construct the BVH
     bvh_construct(bvh, mesh->verts, mesh->n_verts / 3);
@@ -443,8 +442,7 @@ int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_
 
     // If all of them are too far away, we didn't hit it, skip
     const scalar_t distance_min = scalar_min(scalar_min(distance_p_v0, distance_p_v1), distance_p_v2);
-    if (distance_min < scalar_mul(ray.length, ray.length)) {
-
+    if (!is_infinity(ray.length) && distance_min < scalar_mul(ray.length, ray.length)) {
         hit->distance = INT32_MAX;
         return 0;
     }
@@ -475,9 +473,9 @@ int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_
     const vec3_t position = vec3_add(ray.position, vec3_muls(ray.direction, distance));
 
     // Shift it to the right by 4 - to avoid overflow with bigger triangles at the cost of some precision
-    v0 = vec3_shift_right(v0, 4);
-    v1 = vec3_shift_right(v1, 4);
-    v2 = vec3_shift_right(v2, 4);
+    v0 = vec3_shift_right(v0, 2);
+    v1 = vec3_shift_right(v1, 2);
+    v2 = vec3_shift_right(v2, 2);
 
     // Get edges
     const vec3_t c = vec3_sub(v2, v0);
@@ -485,14 +483,14 @@ int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_
 
     // Get more vectors
     vec3_t p = vec3_sub(position, triangle->v0);
-    p = vec3_shift_right(p, 4);
+    p = vec3_shift_right(p, 2);
 
     //Get dots
-    const scalar_t cc = vec3_dot(c, c) >> 6; WARN_IF("vec3_dot(c, c) overflowed", is_infinity(vec3_dot(c, c)));
-    const scalar_t bc = vec3_dot(b, c) >> 6; WARN_IF("vec3_dot(b, c) overflowed", is_infinity(vec3_dot(b, c)));
-    const scalar_t pc = vec3_dot(c, p) >> 6; WARN_IF("vec3_dot(c, p) overflowed", is_infinity(vec3_dot(c, p)));
-    const scalar_t bb = vec3_dot(b, b) >> 6; WARN_IF("vec3_dot(b, b) overflowed", is_infinity(vec3_dot(b, b)));
-    const scalar_t pb = vec3_dot(b, p) >> 6; WARN_IF("vec3_dot(b, p) overflowed", is_infinity(vec3_dot(b, p)));
+    const scalar_t cc = vec3_dot(c, c) >> 2; WARN_IF("vec3_dot(c, c) overflowed", is_infinity(vec3_dot(c, c)));
+    const scalar_t bc = vec3_dot(b, c) >> 2; WARN_IF("vec3_dot(b, c) overflowed", is_infinity(vec3_dot(b, c)));
+    const scalar_t pc = vec3_dot(c, p) >> 2; WARN_IF("vec3_dot(c, p) overflowed", is_infinity(vec3_dot(c, p)));
+    const scalar_t bb = vec3_dot(b, b) >> 2; WARN_IF("vec3_dot(b, b) overflowed", is_infinity(vec3_dot(b, b)));
+    const scalar_t pb = vec3_dot(b, p) >> 2; WARN_IF("vec3_dot(b, p) overflowed", is_infinity(vec3_dot(b, p)));
 
     //Get barycentric coordinates
     const scalar_t cc_bb = scalar_mul(cc, bb); WARN_IF("cc_bb overflowed", cc_bb == INT32_MAX || cc_bb == -INT32_MAX);
@@ -507,8 +505,8 @@ int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_
     u = scalar_div(u, d);
     v = scalar_div(v, d);
 
-    // If the point is inside the triangle, store the this result - we shift the 4 bits back out here too
-    if ((u >= 0) && (v >= 0) && ((u + v) <= 4096 << 4))
+    // If the point is inside the triangle, store the this result - we also mess with the numbers a bit to make collision a bit more lenient because lmao fixed point
+    if ((u >= -200) && (v >= -200) && ((u + v) <= (4096 + 200)))
     {
         hit->distance = distance;
         hit->position = position;

@@ -8,7 +8,7 @@ uint32_t mem_stack_temp [512  * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_level[768 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_music[64 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_entity[64 * KiB / sizeof(uint32_t)];
-uint32_t mem_stack_vram_swap[128 * KiB / sizeof(uint32_t)];
+uint32_t mem_stack_vram_swap[1 * KiB / sizeof(uint32_t)];
 size_t mem_stack_cursor_temp = 0;
 size_t mem_stack_cursor_level = 0;
 size_t mem_stack_cursor_music = 0;
@@ -46,7 +46,6 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 	// Convert stack enum into actual pointers and cursors
 	uint32_t* base = NULL;
 	size_t* cursor;
-	size_t stack_size;
 
 #ifdef _DEBUG
 	printf("stack %s (id %i) has %i bytes available and we need %i bytes... ", stack_names[stack], stack, mem_stack_get_size(stack) - mem_stack_get_occupied(stack), size);
@@ -56,27 +55,22 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 		case STACK_LEVEL:
 			base = mem_stack_level;
 			cursor = &mem_stack_cursor_level;
-			stack_size = sizeof(mem_stack_level);
 			break;
 		case STACK_MUSIC:
 			base = mem_stack_music;
 			cursor = &mem_stack_cursor_music;
-			stack_size = sizeof(mem_stack_music);
 			break;
 		case STACK_TEMP:
 			base = mem_stack_temp;
 			cursor = &mem_stack_cursor_temp;
-			stack_size = sizeof(mem_stack_temp);
 			break;
 		case STACK_ENTITY:
 			base = mem_stack_entity;
 			cursor = &mem_stack_cursor_entity;
-			stack_size = sizeof(mem_stack_entity);
 			break;
 		case STACK_VRAM_SWAP:
 			base = mem_stack_vram_swap;
 			cursor = &mem_stack_cursor_vram_swap;
-			stack_size = sizeof(mem_stack_vram_swap);
 			break;
 		default:
 			printf("invalid stack allocation\n");

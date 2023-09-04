@@ -21,6 +21,19 @@ typedef struct {
     int has_gun : 1;
 } player_t;
 
+const static int32_t eye_height = 200 * COL_SCALE;
+const static int32_t player_radius = 150 * COL_SCALE;
+const static int32_t step_height = 100 * COL_SCALE;
+const static int32_t terminal_velocity_down = -12400 / 8;
+const static int32_t terminal_velocity_up = 40000 / 8;
+const static int32_t gravity = -5;
+const static int32_t walking_acceleration = 50 / 8;
+const static int32_t walking_max_speed = 6660 / 8;
+const static int32_t stick_sensitivity = 3200;
+const static int32_t walking_drag = 32 / 8;
+const static int32_t initial_jump_velocity = 8000 / 8;
+const static int32_t jump_ground_threshold = 16000 / 8;
+
 void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms, const int time_counter);
 int player_get_level_section(player_t* self, const model_t* model);
 #endif // PLAYER_H

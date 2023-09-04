@@ -434,8 +434,69 @@ void renderer_apply_fade(int fade_level) {
     addPrim(ord_tbl[drawbuffer] + 0, new_tpage);
 }
 
-void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t* model_transform) {}
-void renderer_debug_draw_aabb(const aabb_t* box, pixel32_t color, transform_t* model_transform) {}
+void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t* model_transform) {
+    // Set rotation and translation matrix
+    MATRIX model_matrix;
+    HiRotMatrix(&model_transform->rotation, &model_matrix);
+    TransMatrix(&model_matrix, &model_transform->position);
+    CompMatrixLV(&view_matrix, &model_matrix, &model_matrix);
+
+    // Send it to the GTE
+	PushMatrix();
+    gte_SetRotMatrix(&model_matrix);
+    gte_SetTransMatrix(&model_matrix);
+
+    // Transform line to screen space
+    int16_t v0_tr[2];
+    int16_t v1_tr[2];
+    svec3_t sv0 = {v0.x / -COL_SCALE, v0.y / -COL_SCALE, v0.z / -COL_SCALE};
+    svec3_t sv1 = {v1.x / -COL_SCALE, v1.y / -COL_SCALE, v1.z / -COL_SCALE};
+    int depth = 0;
+    gte_ldv3(&sv0.x, &sv1.x, &sv1.x);
+    gte_rtpt();
+    gte_stsxy3(v0_tr, v1_tr, v1_tr);
+    gte_avsz3();
+    gte_stotz(&depth);
+    if (depth <= 0) return;
+
+    // Add to queue
+    LINE_F2* new_line = (LINE_F2*)next_primitive;
+    next_primitive += sizeof(LINE_F2) / sizeof(*next_primitive);
+    setLineF2(new_line);
+    setXY2(new_line,
+        v0_tr[0], v0_tr[1],
+        v1_tr[0], v1_tr[1]
+    );
+    setColor0(new_line, *(uint32_t*)&color); // ugly but eh it's debug anyway
+    addPrim(ord_tbl[drawbuffer] + 0, new_line);
+
+    PopMatrix();
+}
+void renderer_debug_draw_aabb(const aabb_t* box, pixel32_t color, transform_t* model_transform) {
+    // Create 8 vertices
+    const vec3_t vertex000 = { box->min.x, box->min.y, box->min.z };
+    const vec3_t vertex001 = { box->min.x, box->min.y, box->max.z };
+    const vec3_t vertex010 = { box->min.x, box->max.y, box->min.z };
+    const vec3_t vertex011 = { box->min.x, box->max.y, box->max.z };
+    const vec3_t vertex100 = { box->max.x, box->min.y, box->min.z };
+    const vec3_t vertex101 = { box->max.x, box->min.y, box->max.z };
+    const vec3_t vertex110 = { box->max.x, box->max.y, box->min.z };
+    const vec3_t vertex111 = { box->max.x, box->max.y, box->max.z };
+
+    // Draw the lines
+    renderer_debug_draw_line(vertex000, vertex100, color, model_transform);
+    renderer_debug_draw_line(vertex100, vertex101, color, model_transform);
+    renderer_debug_draw_line(vertex101, vertex001, color, model_transform);
+    renderer_debug_draw_line(vertex001, vertex000, color, model_transform);
+    renderer_debug_draw_line(vertex010, vertex110, color, model_transform);
+    renderer_debug_draw_line(vertex110, vertex111, color, model_transform);
+    renderer_debug_draw_line(vertex111, vertex011, color, model_transform);
+    renderer_debug_draw_line(vertex011, vertex010, color, model_transform);
+    renderer_debug_draw_line(vertex000, vertex010, color, model_transform);
+    renderer_debug_draw_line(vertex100, vertex110, color, model_transform);
+    renderer_debug_draw_line(vertex101, vertex111, color, model_transform);
+    renderer_debug_draw_line(vertex001, vertex011, color, model_transform);
+}
 void renderer_debug_draw_sphere(sphere_t sphere) {}
 
 void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index) {
