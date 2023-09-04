@@ -531,10 +531,10 @@ void state_update_in_game(int dt) {
 			scalar_t siny = hisin(camera_transform.rotation.vy);
 			ray_t ray = {
 				.length = INT32_MAX,
-				.position = state.in_game.player.position,
+				.position = (vec3_t){camera_transform.position.vx, camera_transform.position.vy, camera_transform.position.vz},
 				.direction = {scalar_mul(siny, cosx), -sinx, scalar_mul(-cosy, cosx)},
 			};
-			ray.position.y += eye_height;
+			ray.position = vec3_muls(ray.position, -COL_SCALE);
 			ray.inv_direction = vec3_div((vec3_t){ONE, ONE, ONE}, ray.direction);
 			rayhit_t hit;
 			bvh_intersect_ray(&state.in_game.bvh_level_model, ray, &hit);
@@ -554,6 +554,7 @@ void state_update_in_game(int dt) {
 					}
 				}
 			}
+			
 			if (!is_infinity(hit.distance)) {
 				state.debug.shoot_origin_position = ray.position;
 				state.debug.shoot_hit_position = hit.position;
