@@ -527,7 +527,7 @@ void state_update_in_game(int dt) {
 			rayhit_t hit;
 			ray_t ray = {
 				.length = INT32_MAX,
-				.position = state.in_game.player.position,
+				.position = (vec3_t){state.in_game.player.position.x, state.in_game.player.position.y + eye_height, state.in_game.player.position.z},
 				.direction = {scalar_mul(siny, cosx), -sinx, scalar_mul(-cosy, cosx)},
 			};
 			//ray.position.y += eye_height;
