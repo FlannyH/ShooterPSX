@@ -430,86 +430,44 @@ int ray_aabb_intersect(const aabb_t* aabb, ray_t ray) {
 
 int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_t* hit) {
     n_ray_triangle_intersects++;
-    //Get vectors
-    vec3_t v0 = triangle->v0;
-    vec3_t v1 = triangle->v1;
-    vec3_t v2 = triangle->v2;
 
-    // Get distance to each point
-    const scalar_t distance_p_v0 = vec3_magnitude_squared(vec3_sub(v0, ray.position));
-    const scalar_t distance_p_v1 = vec3_magnitude_squared(vec3_sub(v1, ray.position));
-    const scalar_t distance_p_v2 = vec3_magnitude_squared(vec3_sub(v2, ray.position));
+    vec3_t vtx0 = vec3_shift_right(triangle->v0, 4);
+    vec3_t vtx1 = vec3_shift_right(triangle->v1, 4);
+    vec3_t vtx2 = vec3_shift_right(triangle->v2, 4);
+    vec3_t ray_pos = vec3_shift_right(ray.position, 4);
 
-    // If all of them are too far away, we didn't hit it, skip
-    const scalar_t distance_min = scalar_min(scalar_min(distance_p_v0, distance_p_v1), distance_p_v2);
-    if (!is_infinity(ray.length) && distance_min < scalar_mul(ray.length, ray.length)) {
+    vec3_t edge1 = vec3_sub(vtx1, vtx0);
+    vec3_t edge2 = vec3_sub(vtx2, vtx0);
+    vec3_t h = vec3_cross(ray.direction, edge2);
+    scalar_t det = vec3_dot(edge1, h);
+
+    if (det == 0) {
         hit->distance = INT32_MAX;
         return 0;
     }
 
-    // Calculate normal
-    const vec3_t normal_normalized = vec3_neg(triangle->normal);
-    const scalar_t dot_dir_nrm = vec3_dot(ray.direction, normal_normalized);
+    scalar_t inv_det = scalar_div(ONE, det);
+    vec3_t v0_ray = vec3_sub(ray_pos, vtx0);
+    scalar_t u = scalar_mul(inv_det, vec3_dot(v0_ray, h));
 
-    // If the ray is perfectly parallel to the plane, we did not hit it
-    if (dot_dir_nrm == 0)
-    {
+    if (u < 0 || u > ONE) {
         hit->distance = INT32_MAX;
         return 0;
     }
 
-    //Get distance to intersection point
-    const vec3_t temp = vec3_sub(triangle->center, ray.position);
-    scalar_t distance = vec3_dot(temp, normal_normalized);
-    distance = scalar_div(distance, dot_dir_nrm);
+    vec3_t q = vec3_cross(v0_ray, edge1);
+    scalar_t v = scalar_mul(inv_det, vec3_dot(ray.direction, q));
 
-    // If the distance is negative, the plane is behind the ray origin, so we did not hit it
-    if (distance < 0) {
+    if (v < 0 || u + v > ONE) {
         hit->distance = INT32_MAX;
         return 0;
     }
 
-    //Get position
-    const vec3_t position = vec3_add(ray.position, vec3_muls(ray.direction, distance));
+    scalar_t t = scalar_mul(inv_det, vec3_dot(edge2, q));
 
-    // Shift it to the right by 4 - to avoid overflow with bigger triangles at the cost of some precision
-    v0 = vec3_shift_right(v0, 2);
-    v1 = vec3_shift_right(v1, 2);
-    v2 = vec3_shift_right(v2, 2);
-
-    // Get edges
-    const vec3_t c = vec3_sub(v2, v0);
-    const vec3_t b = vec3_sub(v1, v0);
-
-    // Get more vectors
-    vec3_t p = vec3_sub(position, triangle->v0);
-    p = vec3_shift_right(p, 2);
-
-    //Get dots
-    const scalar_t cc = vec3_dot(c, c) >> 2; WARN_IF("vec3_dot(c, c) overflowed", is_infinity(vec3_dot(c, c)));
-    const scalar_t bc = vec3_dot(b, c) >> 2; WARN_IF("vec3_dot(b, c) overflowed", is_infinity(vec3_dot(b, c)));
-    const scalar_t pc = vec3_dot(c, p) >> 2; WARN_IF("vec3_dot(c, p) overflowed", is_infinity(vec3_dot(c, p)));
-    const scalar_t bb = vec3_dot(b, b) >> 2; WARN_IF("vec3_dot(b, b) overflowed", is_infinity(vec3_dot(b, b)));
-    const scalar_t pb = vec3_dot(b, p) >> 2; WARN_IF("vec3_dot(b, p) overflowed", is_infinity(vec3_dot(b, p)));
-
-    //Get barycentric coordinates
-    const scalar_t cc_bb = scalar_mul(cc, bb); WARN_IF("cc_bb overflowed", cc_bb == INT32_MAX || cc_bb == -INT32_MAX);
-    const scalar_t bc_bc = scalar_mul(bc, bc); WARN_IF("bc_bc overflowed", bc_bc == INT32_MAX || bc_bc == -INT32_MAX);
-    const scalar_t bb_pc = scalar_mul(bb, pc); WARN_IF("bb_pc overflowed", bb_pc == INT32_MAX || bb_pc == -INT32_MAX);
-    const scalar_t bc_pb = scalar_mul(bc, pb); WARN_IF("bc_pb overflowed", bc_pb == INT32_MAX || bc_pb == -INT32_MAX);
-    const scalar_t cc_pb = scalar_mul(cc, pb); WARN_IF("cc_pb overflowed", cc_pb == INT32_MAX || cc_pb == -INT32_MAX);
-    const scalar_t bc_pc = scalar_mul(bc, pc); WARN_IF("bc_pc overflowed", bc_pc == INT32_MAX || bc_pc == -INT32_MAX);
-    const scalar_t d = cc_bb - bc_bc;
-    scalar_t u = bb_pc - bc_pb;
-    scalar_t v = cc_pb - bc_pc;
-    u = scalar_div(u, d);
-    v = scalar_div(v, d);
-
-    // If the point is inside the triangle, store the this result - we also mess with the numbers a bit to make collision a bit more lenient because lmao fixed point
-    if ((u >= -200) && (v >= -200) && ((u + v) <= (4096 + 200)))
-    {
-        hit->distance = distance;
-        hit->position = position;
+    if (t > 0) {
+        hit->position = vec3_add(ray.position, vec3_muls(ray.direction, t));
+        hit->distance = t;
         hit->normal = triangle->normal;
         hit->triangle = triangle;
         return 1;
