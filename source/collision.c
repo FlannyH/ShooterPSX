@@ -427,11 +427,11 @@ int ray_aabb_intersect(const aabb_t* aabb, ray_t ray) {
 
 int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_t* hit) {
     n_ray_triangle_intersects++;
-
-    vec3_t vtx0 = vec3_shift_right(triangle->v0, 5);
-    vec3_t vtx1 = vec3_shift_right(triangle->v1, 5);
-    vec3_t vtx2 = vec3_shift_right(triangle->v2, 5);
-    vec3_t ray_pos = vec3_shift_right(ray.position, 5);
+#define SHIFT_COUNT 5
+    vec3_t vtx0 = vec3_shift_right(triangle->v0, SHIFT_COUNT);
+    vec3_t vtx1 = vec3_shift_right(triangle->v1, SHIFT_COUNT);
+    vec3_t vtx2 = vec3_shift_right(triangle->v2, SHIFT_COUNT);
+    vec3_t ray_pos = vec3_shift_right(ray.position, SHIFT_COUNT);
 
     vec3_t edge1 = vec3_sub(vtx1, vtx0);
     vec3_t edge2 = vec3_sub(vtx2, vtx0);
@@ -463,13 +463,14 @@ int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_
     scalar_t t = scalar_mul(inv_det, vec3_dot(edge2, q));
 
     if (t > 0) {
-        hit->position = vec3_add(ray.position, vec3_muls(ray.direction, t));
-        hit->distance = t;
+        hit->position = vec3_add(ray.position, vec3_muls(ray.direction, t << SHIFT_COUNT));
+        hit->distance = t << SHIFT_COUNT;
         hit->normal = triangle->normal;
         hit->triangle = triangle;
         return 1;
     }
     return 0;
+#undef SHIFT_COUNT
 }
 
 int sphere_aabb_intersect(const aabb_t* aabb, const sphere_t sphere) {

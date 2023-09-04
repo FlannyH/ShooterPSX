@@ -524,14 +524,14 @@ void state_update_in_game(int dt) {
 			scalar_t sinx = hisin(camera_transform.rotation.vx);
 			scalar_t cosy = hicos(camera_transform.rotation.vy);
 			scalar_t siny = hisin(camera_transform.rotation.vy);
-			rayhit_t hit;
 			ray_t ray = {
 				.length = INT32_MAX,
-				.position = (vec3_t){state.in_game.player.position.x, state.in_game.player.position.y + eye_height, state.in_game.player.position.z},
+				.position = state.in_game.player.position,
 				.direction = {scalar_mul(siny, cosx), -sinx, scalar_mul(-cosy, cosx)},
 			};
-			//ray.position.y += eye_height;
+			ray.position.y += eye_height;
 			ray.inv_direction = vec3_div((vec3_t){ONE, ONE, ONE}, ray.direction);
+			rayhit_t hit;
 			bvh_intersect_ray(&state.in_game.bvh_level_model, ray, &hit);
 			if (!is_infinity(hit.distance)) {
 				state.debug.shoot_origin_position = ray.position;
