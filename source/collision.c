@@ -190,9 +190,6 @@ void handle_node_intersection_ray(bvh_t* self, const bvh_node_t* current_node, c
             {
                 // If hit
                 if (ray_triangle_intersect(&self->primitives[self->indices[i]], ray, &sub_hit)) {
-                    renderer_debug_draw_line(sub_hit.triangle->v0, sub_hit.triangle->v1, green, &id_transform);
-                    renderer_debug_draw_line(sub_hit.triangle->v1, sub_hit.triangle->v2, green, &id_transform);
-                    renderer_debug_draw_line(sub_hit.triangle->v2, sub_hit.triangle->v0, green, &id_transform);
                     // If lowest distance
                     if (sub_hit.distance < hit->distance && sub_hit.distance >= 0)
                     {
@@ -431,10 +428,10 @@ int ray_aabb_intersect(const aabb_t* aabb, ray_t ray) {
 int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_t* hit) {
     n_ray_triangle_intersects++;
 
-    vec3_t vtx0 = vec3_shift_right(triangle->v0, 4);
-    vec3_t vtx1 = vec3_shift_right(triangle->v1, 4);
-    vec3_t vtx2 = vec3_shift_right(triangle->v2, 4);
-    vec3_t ray_pos = vec3_shift_right(ray.position, 4);
+    vec3_t vtx0 = vec3_shift_right(triangle->v0, 5);
+    vec3_t vtx1 = vec3_shift_right(triangle->v1, 5);
+    vec3_t vtx2 = vec3_shift_right(triangle->v2, 5);
+    vec3_t ray_pos = vec3_shift_right(ray.position, 5);
 
     vec3_t edge1 = vec3_sub(vtx1, vtx0);
     vec3_t edge2 = vec3_sub(vtx2, vtx0);

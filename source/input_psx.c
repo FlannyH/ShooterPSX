@@ -72,7 +72,6 @@ void input_update(void) {
         if (buttons_pressed) {
             for (size_t i = 31; i > 0; --i) input_buffer[i] = input_buffer[i-1];
             input_buffer[0] = buttons_pressed;
-            printf("set vuffer 0 to %i\n", input_buffer[0]);
             button_pressed_this_frame = 1;
         }
 
