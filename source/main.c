@@ -542,16 +542,11 @@ void state_update_in_game(int dt) {
 			for (size_t i = 0; i < entity_n_active_aabb; ++i) {
 				rayhit_t entity_hit;
 				if (ray_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, ray, &entity_hit)) {
-					printf("we did hit an entity of type %s\n", entity_names[entity_list[entity_aabb_queue[i].entity_index].type]);
 					if (entity_hit.distance < hit.distance) {
-						printf("and it was the closest one!\n");
 						hit = entity_hit;
 						hit.type = RAY_HIT_TYPE_ENTITY_HITBOX;
 						hit.entity_hitbox.box_index = entity_aabb_queue[i].box_index;
 						hit.entity_hitbox.entity_index = entity_aabb_queue[i].entity_index;
-					}
-					else {
-						printf("but it was not the closest one...\n");
 					}
 				}
 			}
@@ -577,6 +572,11 @@ void state_update_in_game(int dt) {
 
 			// Reduce ammo count
 			state.in_game.player.ammo--;
+		}
+		if (state.global.show_debug) {
+			for (size_t i = 0; i < entity_n_active_aabb; ++i) {
+				renderer_debug_draw_aabb(&entity_aabb_queue[i].aabb, pink, &id_transform);
+			}
 		}
 	}
 
