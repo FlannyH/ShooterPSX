@@ -7,6 +7,7 @@ entity_crate_t* entity_crate_new() {
 	entity->entity_header.position = (vec3_t){0, 0, 0};
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
+	entity->entity_header.mesh = model_find_mesh(entity_models, "28_crate");
     entity->pickup_to_spawn = PICKUP_TYPE_NONE;
 
 	// Register it in the entity list
@@ -47,7 +48,7 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 	render_transform.scale.vx = crate->entity_header.scale.x;
 	render_transform.scale.vy = crate->entity_header.scale.x;
 	render_transform.scale.vz = crate->entity_header.scale.x;
-	renderer_draw_mesh_shaded_offset(&entity_models->meshes[ENTITY_MESH_CRATE], &render_transform, tex_entity_start);
+	renderer_draw_mesh_shaded_offset(crate->entity_header.mesh, &render_transform, tex_entity_start);
 }
 
 void entity_crate_on_hit(int slot, int hitbox_index) {
@@ -57,6 +58,7 @@ void entity_crate_on_hit(int slot, int hitbox_index) {
 	if (crate->pickup_to_spawn != PICKUP_TYPE_NONE) {
 		entity_pickup_t* pickup = entity_pickup_new();
 		pickup->entity_header = crate->entity_header;
+		pickup->entity_header.mesh = NULL;
 	}
 
     entity_kill(slot);
