@@ -7,6 +7,7 @@ entity_pickup_t* entity_pickup_new() {
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
     entity->type = PICKUP_TYPE_AMMO_SMALL;
+    entity->entity_header.mesh = NULL;
     entity_register(&entity->entity_header, ENTITY_PICKUP);
     return entity;
 }
@@ -22,15 +23,17 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
 
     // Rendering
     size_t mesh_to_render = 0;
-    switch (pickup->type) {
-        case PICKUP_TYPE_AMMO_SMALL:   mesh_to_render = ENTITY_MESH_PICKUP_AMMO_SMALL;   break;
-        case PICKUP_TYPE_AMMO_BIG:     mesh_to_render = ENTITY_MESH_PICKUP_AMMO_BIG;     break;
-        case PICKUP_TYPE_ARMOR_SMALL:  mesh_to_render = ENTITY_MESH_PICKUP_ARMOR_SMALL;  break;
-        case PICKUP_TYPE_ARMOR_BIG:    mesh_to_render = ENTITY_MESH_PICKUP_ARMOR_BIG;    break;
-        case PICKUP_TYPE_HEALTH_SMALL: mesh_to_render = ENTITY_MESH_PICKUP_HEALTH_SMALL; break;
-        case PICKUP_TYPE_HEALTH_BIG:   mesh_to_render = ENTITY_MESH_PICKUP_HEALTH_BIG;   break;
-        case PICKUP_TYPE_KEY_BLUE:     mesh_to_render = ENTITY_MESH_PICKUP_KEY_BLUE;     break;
-        case PICKUP_TYPE_KEY_YELLOW:   mesh_to_render = ENTITY_MESH_PICKUP_KEY_YELLOW;   break;
+    if (pickup->entity_header.mesh == NULL) {
+        switch (pickup->type) {
+            case PICKUP_TYPE_AMMO_SMALL:   pickup->entity_header.mesh = model_find_mesh(entity_models, "08_pickup_ammo_small");   break;
+            case PICKUP_TYPE_AMMO_BIG:     pickup->entity_header.mesh = model_find_mesh(entity_models, "09_pickup_ammo_big");     break;
+            case PICKUP_TYPE_ARMOR_SMALL:  pickup->entity_header.mesh = model_find_mesh(entity_models, "10_pickup_armor_small");  break;
+            case PICKUP_TYPE_ARMOR_BIG:    pickup->entity_header.mesh = model_find_mesh(entity_models, "11_pickup_armor_big");    break;
+            case PICKUP_TYPE_HEALTH_SMALL: pickup->entity_header.mesh = model_find_mesh(entity_models, "12_pickup_health_small"); break;
+            case PICKUP_TYPE_HEALTH_BIG:   pickup->entity_header.mesh = model_find_mesh(entity_models, "13_pickup_health_big");   break;
+            case PICKUP_TYPE_KEY_BLUE:     pickup->entity_header.mesh = model_find_mesh(entity_models, "14_pickup_key_blue");     break;
+            case PICKUP_TYPE_KEY_YELLOW:   pickup->entity_header.mesh = model_find_mesh(entity_models, "15_pickup_key_yellow");   break;
+        }
     }
 
     // Rotate
@@ -46,7 +49,7 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
 	render_transform.scale.vx = pickup->entity_header.scale.x;
 	render_transform.scale.vy = pickup->entity_header.scale.x;
 	render_transform.scale.vz = pickup->entity_header.scale.x;
-	renderer_draw_mesh_shaded_offset(&entity_models->meshes[mesh_to_render], &render_transform, tex_entity_start);
+	renderer_draw_mesh_shaded_offset(pickup->entity_header.mesh, &render_transform, tex_entity_start);
 
     if (close_enough_to_home_in) {
         pickup_to_player = vec3_normalize(pickup_to_player);
