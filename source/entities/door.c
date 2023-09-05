@@ -23,6 +23,47 @@ entity_door_t* entity_door_new() {
 	return entity;
 }
 
+mesh_t* update_mesh(entity_door_t* door) {	
+	mesh_t* mesh;
+	if (door->is_rotated) {
+		if (door->is_big_door) {
+			if (door->is_locked) {
+				mesh = model_find_mesh(entity_models, "05_door_big_locked_rotated");
+			}
+			else {
+				mesh = model_find_mesh(entity_models, "07_door_big_unlocked_rotated");
+			}
+		}
+		else {
+			if (door->is_locked) {
+				mesh = model_find_mesh(entity_models, "01_door_small_locked_rotated");
+			}
+			else {
+				mesh = model_find_mesh(entity_models, "03_door_small_unlocked_rotated");
+			}
+		}
+	}
+	else {
+		if (door->is_big_door) {
+			if (door->is_locked) {
+				mesh = model_find_mesh(entity_models, "04_door_big_locked");
+			}
+			else {
+				mesh = model_find_mesh(entity_models, "06_door_big_unlocked");
+			}
+		}
+		else {
+			if (door->is_locked) {
+				mesh = model_find_mesh(entity_models, "00_door_small_locked");
+			}
+			else {
+				mesh = model_find_mesh(entity_models, "02_door_small_unlocked");
+			}
+		}
+	}
+	return mesh;
+}
+
 void entity_door_update(int slot, player_t* player, int dt) {
 	entity_door_t* door = (entity_door_t*)entity_list[slot].data;
 
@@ -32,15 +73,18 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	scalar_t distance_from_door_to_player_squared = vec3_magnitude_squared(vec3_sub(door_pos, player_pos));
 	int player_close_enough = (distance_from_door_to_player_squared < 4500 * ONE) && (distance_from_door_to_player_squared > 0);
 
+	int state_changed = 0;
 	// Handle unlocking with key cards
 	if (door->is_locked && player_close_enough) {
 		if (!door->is_big_door && player->has_key_blue) {
 			door->is_locked = 0;
 			player->has_key_blue = 0;
+			state_changed = 1;
 		}
 		else if (door->is_big_door && player->has_key_yellow) {
 			door->is_locked = 0;
 			player->has_key_yellow = 0;
+			state_changed = 1;
 		}
 	}
 
@@ -50,47 +94,12 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	door->curr_interpolation_value = scalar_lerp(door->curr_interpolation_value, door->is_open ? ONE : 0, ONE / 8);
 
 	// Find mesh to use - a bit verbose for the sake of avoiding magic numbers, preventing me from shooting myself in the foot later
-	size_t mesh_id;
-	if (door->is_rotated) {
-		if (door->is_big_door) {
-			if (door->is_locked) {
-				mesh_id = ENTITY_MESH_DOOR_BIG_LOCKED_ROTATED;
-			}
-			else {
-				mesh_id = ENTITY_MESH_DOOR_BIG_UNLOCKED_ROTATED;
-			}
-		}
-		else {
-			if (door->is_locked) {
-				mesh_id = ENTITY_MESH_DOOR_SMALL_LOCKED_ROTATED;
-			}
-			else {
-				mesh_id = ENTITY_MESH_DOOR_SMALL_UNLOCKED_ROTATED;
-			}
-		}
-	}
-	else {
-		if (door->is_big_door) {
-			if (door->is_locked) {
-				mesh_id = ENTITY_MESH_DOOR_BIG_LOCKED;
-			}
-			else {
-				mesh_id = ENTITY_MESH_DOOR_BIG_UNLOCKED;
-			}
-		}
-		else {
-			if (door->is_locked) {
-				mesh_id = ENTITY_MESH_DOOR_SMALL_LOCKED;
-			}
-			else {
-				mesh_id = ENTITY_MESH_DOOR_SMALL_UNLOCKED;
-			}
-		}
-	}
+	if (state_changed) door->entity_header.mesh = update_mesh(door);
+	if (!door->entity_header.mesh) door->entity_header.mesh = update_mesh(door);
 
 	// Add collision for the door
 	if (door->is_locked) {
-		aabb_t bounds = entity_models->meshes[mesh_id].bounds;
+		aabb_t bounds = door->entity_header.mesh->bounds;
 		bounds.min.x *= COL_SCALE; bounds.min.y *= COL_SCALE; bounds.min.z *= COL_SCALE; 
 		bounds.max.x *= COL_SCALE; bounds.max.y *= COL_SCALE; bounds.max.z *= COL_SCALE; 
 		const aabb_t collision_box = {
@@ -120,7 +129,7 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	render_transform.scale.vx = door->entity_header.scale.x;
 	render_transform.scale.vy = door->entity_header.scale.x;
 	render_transform.scale.vz = door->entity_header.scale.x;
-	renderer_draw_mesh_shaded_offset(&entity_models->meshes[mesh_id], &render_transform, tex_entity_start);
+	renderer_draw_mesh_shaded_offset(door->entity_header.mesh, &render_transform, tex_entity_start);
 }
 
 void entity_door_on_hit(int slot, int hitbox_index) {}

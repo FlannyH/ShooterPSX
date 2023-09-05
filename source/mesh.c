@@ -238,3 +238,22 @@ aabb_t collision_triangle_get_bounds(const collision_triangle_3d_t* self) {
     );
     return result;
 }
+
+int strings_are_equal(const char* a, const char* b) {
+    while (*a != '\0' && *b != '\0') {
+        if (*a != *b) return 0;
+        ++a;
+        ++b;
+    }
+    return (*a == '\0' && *b == '\0');
+}
+
+mesh_t* model_find_mesh(const model_t* model, const char* mesh_name) {
+    for (size_t i = 0; i < model->n_meshes; ++i) {
+        const mesh_t* mesh = &model->meshes[i];
+        if (strings_are_equal(mesh->name, mesh_name)) {
+            return mesh;
+        }
+    }
+    return 0;
+}
