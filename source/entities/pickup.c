@@ -46,7 +46,7 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
 	render_transform.scale.vx = pickup->entity_header.scale.x;
 	render_transform.scale.vy = pickup->entity_header.scale.x;
 	render_transform.scale.vz = pickup->entity_header.scale.x;
-	renderer_draw_mesh_shaded_offset(&entity_models->meshes[mesh_to_render], &render_transform, 64);
+	renderer_draw_mesh_shaded_offset(&entity_models->meshes[mesh_to_render], &render_transform, tex_entity_start);
 
     if (close_enough_to_home_in) {
         pickup_to_player = vec3_normalize(pickup_to_player);

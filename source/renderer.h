@@ -66,6 +66,9 @@ extern int n_meshes_total;
 extern int n_polygons_drawn;
 extern int n_sections;
 extern int primitive_occupation;
+extern int tex_level_start;
+extern int tex_entity_start;
+extern int tex_weapon_start;
 extern int sections[N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE];
 #ifdef __cplusplus
 }

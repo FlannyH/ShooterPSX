@@ -363,17 +363,20 @@ void state_enter_in_game(void) {
 	texture_cpu_t *weapon_textures;
 	mem_stack_release(STACK_TEMP);
 	printf("occupied STACK_TEMP: %i / %i\n", mem_stack_get_occupied(STACK_TEMP), mem_stack_get_size(STACK_TEMP));
+	tex_level_start = 0;
 	const uint32_t n_level_textures = texture_collection_load("\\ASSETS\\MODELS\\LEVEL.TXC;1", &tex_level, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_level_textures; ++i) {
-	    renderer_upload_texture(&tex_level[i], i);
+	    renderer_upload_texture(&tex_level[i], i + tex_level_start);
 	}
+	tex_entity_start = tex_level_start + n_level_textures;
 	const uint32_t n_entity_textures = texture_collection_load("\\ASSETS\\MODELS\\ENTITY.TXC;1", &entity_textures, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_entity_textures; ++i) {
-	    renderer_upload_texture(&entity_textures[i], i + 64);
+	    renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
 	}
+	tex_weapon_start = tex_entity_start + n_entity_textures;
 	const uint32_t n_weapons_textures = texture_collection_load("\\ASSETS\\MODELS\\WEAPONS.TXC;1", &weapon_textures, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_weapons_textures; ++i) {
-	    renderer_upload_texture(&weapon_textures[i], i + 100);
+	    renderer_upload_texture(&weapon_textures[i], i + tex_weapon_start);
 	}
 	mem_stack_release(STACK_TEMP);
 
@@ -599,7 +602,7 @@ void state_update_in_game(int dt) {
 		gun_transform.scale.vx = ONE;
 		gun_transform.scale.vy = ONE;
 		gun_transform.scale.vz = ONE;
-		renderer_draw_mesh_shaded_offset_local(&state.in_game.m_weapons->meshes[1], &gun_transform, 100);
+		renderer_draw_mesh_shaded_offset_local(&state.in_game.m_weapons->meshes[1], &gun_transform, tex_weapon_start);
 	} 
 	// Sword
 	{
@@ -615,7 +618,7 @@ void state_update_in_game(int dt) {
 		sword_transform.scale.vx = ONE;
 		sword_transform.scale.vy = ONE;
 		sword_transform.scale.vz = ONE;
-		renderer_draw_mesh_shaded_offset_local(&state.in_game.m_weapons->meshes[0], &sword_transform, 100);
+		renderer_draw_mesh_shaded_offset_local(&state.in_game.m_weapons->meshes[0], &sword_transform, tex_weapon_start);
 	} 
 
 	renderer_end_frame();

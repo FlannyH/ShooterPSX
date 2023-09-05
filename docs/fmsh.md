@@ -9,6 +9,7 @@ This file contains a model with a certain amount of submeshes. Submeshes could b
 | u32     | n_submeshes        | Number of submeshes in this model.                                            |
 | u32     | offset_mesh_desc   | Offset into the binary section to the start of the array of MeshDesc structs. |
 | u32     | offset_vertex_data | Offset into the binary section to the start of the raw VertexPSX data.        |
+| u32     | offset_mesh_names  | Offset into the binary section to the start of the mesh name table.           |
 
 All offsets are relative to the start of this binary section.
 
@@ -37,3 +38,8 @@ All offsets are relative to the start of this binary section.
 | u8   | u             | Texture Coordinate U                                                           |
 | u8   | v             | Texture Coordinate V                                                           |
 | u8   | (...)         | In the first vertex, this is an index into the texture collection, which determines which texture to use. In the second vertex, this is the size of the triangle.|
+
+## Mesh name table entry
+| Type | Name   | Description                               |
+| u32  | length | String length in bytes                    |
+| u8[] | data   | String data, padded to 32 bits at the end |

@@ -39,7 +39,32 @@ model_t* model_load(const char* path, int on_stack, stack_t stack) {
     model->n_meshes = model_header->n_submeshes;
 
     // Loop over each submesh and create a model
+    uint8_t* mesh_name_cursor = (uint8_t*)((intptr_t)binary_section + model_header->offset_mesh_names);
     for (size_t i = 0; i < model_header->n_submeshes; ++i) {
+        // Get mesh name length
+        uint32_t mesh_name_length = *mesh_name_cursor++;
+        mesh_name_length |= (*mesh_name_cursor++) << 8;
+        mesh_name_length |= (*mesh_name_cursor++) << 16;
+        mesh_name_length |= (*mesh_name_cursor++) << 24;
+
+        // Allocate memory for mesh name
+        char* string;
+        if (on_stack) {
+            string = mem_stack_alloc(mesh_name_length + 1, stack);
+        } 
+        else {
+            string = mem_alloc(mesh_name_length + 1, MEM_CAT_MODEL);
+        }
+
+        // Copy the data into it
+        for (size_t i = 0; i < mesh_name_length; ++i) {
+            string[i] = *mesh_name_cursor++;
+        }
+
+        // Null-terminate it
+        string[mesh_name_length] = 0;
+        printf("mesh with name: %s\n", string);
+
         // Create a mesh object
         model->meshes[i].n_triangles = mesh_descriptions[i].n_triangles;
         model->meshes[i].n_quads = mesh_descriptions[i].n_quads;
@@ -50,6 +75,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack) {
         model->meshes[i].bounds.max.y = mesh_descriptions[i].y_max;
         model->meshes[i].bounds.min.z = mesh_descriptions[i].z_min;
         model->meshes[i].bounds.max.z = mesh_descriptions[i].z_max;
+        model->meshes[i].name = string;
 
 #ifdef _WIN32
         // Swizzle the quads
@@ -62,6 +88,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack) {
         }
 #endif
     }
+    printf("done with model %s\n", path);
     return model;
 }
 

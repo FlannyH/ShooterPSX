@@ -87,6 +87,7 @@ typedef struct {
     uint16_t n_quads;
     vertex_3d_t* vertices;
     aabb_t bounds;
+    char* name;
 } mesh_t;
 
 #define MAGIC_FMSH 0x48534D46
@@ -95,6 +96,7 @@ typedef struct {
     uint32_t n_submeshes;       // Number of submeshes in this model.
     uint32_t offset_mesh_desc;  // Offset into the binary section to the start of the array of MeshDesc structs.
     uint32_t offset_vertex_data;// Offset into the binary section to the start of the raw VertexPSX data.
+    uint32_t offset_mesh_names; // Offset into the binary section to the start of the mesh names
 } model_header_t;
 
 typedef struct {

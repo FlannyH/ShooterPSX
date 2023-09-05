@@ -47,7 +47,7 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 	render_transform.scale.vx = crate->entity_header.scale.x;
 	render_transform.scale.vy = crate->entity_header.scale.x;
 	render_transform.scale.vz = crate->entity_header.scale.x;
-	renderer_draw_mesh_shaded_offset(&entity_models->meshes[ENTITY_MESH_CRATE], &render_transform, 64);
+	renderer_draw_mesh_shaded_offset(&entity_models->meshes[ENTITY_MESH_CRATE], &render_transform, tex_entity_start);
 }
 
 void entity_crate_on_hit(int slot, int hitbox_index) {
