@@ -310,6 +310,7 @@ void state_enter_in_game(void) {
 	if (prev_state == STATE_PAUSE_MENU) return;
 
 	mem_stack_release(STACK_LEVEL);
+	mem_stack_release(STACK_ENTITY);
 
 	state.title_screen.assets_in_memory = 0;
 
