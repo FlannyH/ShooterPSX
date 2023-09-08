@@ -18,4 +18,5 @@
 |u16|type|Type of entity. Determines the size of the struct that follows it
 |i16[3]|position|Spawn position of the entity, in model space |
 |i32[3]|rotation|Spawn rotation of the entity, 0x20000 = 360 degrees
+
 After this entry header, the raw entity data after the header as defined in `/source/entities/*.h` follows.
