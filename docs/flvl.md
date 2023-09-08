@@ -5,8 +5,8 @@
 | ------- | ------------------------- | ----------------------------------------------------------------------------------------- |
 | char[4] | file_magic                | File magic: "FLVL"                                                                        |
 | u32     | music_name_offset | Offset to string containing the path to the music sequence file (.dss) to play in this level
-| u32     | bank_name_offset | Offset to string containing the path to the soundbank file (.sbk) to play in this level
-| u32     | model_name_offset | Offset to string containing the path to the level model file (.msh) to play in this level
+| u32     | bank_name_offset | Offset to string containing the path to the soundbank file (.sbk) to use in this level
+| u32     | model_name_offset | Offset to string containing the path to the level model file (.msh) to load in this level
 | u32     | level_name_offset | Offset to string containing display name of the level as shown in game to the player
 | i16[3]  | player_spawn              | Where in the map the player spawns, in model space units                |
 | u16 | n_entities | Number of predefined entities in this map
