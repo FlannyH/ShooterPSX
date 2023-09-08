@@ -563,10 +563,16 @@ void renderer_set_video_mode(int is_pal) {
         SetDefDrawEnv(&draw[0], 512, 0, RES_X, RES_Y_PAL);
         SetDefDrawEnv(&draw[1], 0, 0, RES_X, RES_Y_PAL);
 
+        // Seems like I have to do this in order to actually set the display
+        // resolution to the right value?
+        disp[0].screen.h = RES_Y_PAL;
+        disp[1].screen.h = RES_Y_PAL;
+
         gte_SetGeomOffset(CENTER_X, CENTER_Y_PAL);
         gte_SetGeomScreen(120);
 
         SetVideoMode(MODE_PAL);
+
         curr_res_y = RES_Y_PAL;
     }
     else {
