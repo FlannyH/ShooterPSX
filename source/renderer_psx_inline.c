@@ -54,7 +54,7 @@ static inline int frustrum_cull_aabb(const vec3_t min, const vec3_t max) {
     if (after_max.vy < 0+FRUSCUL_PAD_Y) return 1; // mesh is above the screen
     if (after_max.vz == 0) return 1; // mesh is behind the screen
     if (after_min.vz > MESH_RENDER_DISTANCE) return 1; // mesh is too far away
-    if (after_min.vx > RES_X-FRUSCUL_PAD_X) return 1; // mesh is to the right of the screen
+    if (after_min.vx > res_x-FRUSCUL_PAD_X) return 1; // mesh is to the right of the screen
     if (after_min.vy > curr_res_y-FRUSCUL_PAD_Y) return 1; // mesh is below the screen
     #undef FRUSCUL_PAD_X
     #undef FRUSCUL_PAD_Y
@@ -202,7 +202,7 @@ static inline void add_untex_triangle(
 // Queues untextured quad primitive
 static inline void add_untex_quad(
     const svec2_t p0, 
-    const svec2_t p1, 
+    const svec2_t p1,
     const svec2_t p2, 
     const svec2_t p3, 
     const vertex_3d_t v0, 
@@ -448,7 +448,7 @@ static inline void draw_tex_triangle3d_fancy(const vertex_3d_t* verts) {
     for (size_t i = 0; i < 3; ++i) {
         if (
             trans_vec_xy[i].x >= 0 && 
-            trans_vec_xy[i].x <= RES_X &&
+            trans_vec_xy[i].x <= res_x &&
             trans_vec_xy[i].y >= 0 && 
             trans_vec_xy[i].y <= curr_res_y 
         ) {
@@ -518,7 +518,7 @@ static inline void draw_tex_triangle3d_fast(const vertex_3d_t* verts) {
     for (size_t i = 0; i < 3; ++i) {
         if (
             trans_vec_xy[i].x >= 0 && 
-            trans_vec_xy[i].x <= RES_X &&
+            trans_vec_xy[i].x <= res_x &&
             trans_vec_xy[i].y >= 0 && 
             trans_vec_xy[i].y <= curr_res_y 
         ) {
@@ -793,7 +793,7 @@ static inline void draw_tex_quad3d_fancy(const vertex_3d_t* verts) {
     for (size_t i = 0; i < 4; ++i) {
         if (
             trans_vec_xy[i].x >= 0 && 
-            trans_vec_xy[i].x <= RES_X &&
+            trans_vec_xy[i].x <= res_x &&
             trans_vec_xy[i].y >= 0 && 
             trans_vec_xy[i].y <= curr_res_y 
         ) {
@@ -869,7 +869,7 @@ static inline void draw_tex_quad3d_fast(const vertex_3d_t* verts) {
     for (size_t i = 0; i < 4; ++i) {
         if (
             trans_vec_xy[i].x >= 0 && 
-            trans_vec_xy[i].x <= RES_X &&
+            trans_vec_xy[i].x <= res_x &&
             trans_vec_xy[i].y >= 0 && 
             trans_vec_xy[i].y <= curr_res_y 
         ) {

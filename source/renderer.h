@@ -19,12 +19,9 @@ extern "C" {
 #include "structs.h"
     
 #define ORD_TBL_LENGTH 4096
-#define RES_X 512
+#define RES_X 384
 #define RES_Y_PAL 256
 #define RES_Y_NTSC 240
-#define CENTER_X (RES_X / 2)
-#define CENTER_Y_PAL (RES_Y_PAL / 2)
-#define CENTER_Y_NTSC (RES_Y_NTSC / 2)
 #define N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE 4
 
 const static transform_t id_transform = { {0,0,0},{0,0,0}, {-4096, -4096, -4096} };
@@ -55,6 +52,7 @@ int renderer_convert_dt_raw_to_ms(int dt_raw);
 int renderer_should_close(void);
 vec3_t renderer_get_forward_vector(void);
 int renderer_get_level_section_from_position(const model_t *model, vec3_t position);
+void renderer_cycle_res_x(void);
 extern int n_rendered_triangles;
 extern int n_rendered_quads;
 extern int n_rendered_untex_triangles;

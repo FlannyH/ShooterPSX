@@ -34,6 +34,7 @@
 int widescreen = 0;
 extern int vsync_enable;
 extern int is_pal;
+extern int res_x;
 state_t current_state = STATE_NONE;
 state_t prev_state = STATE_NONE;
 int should_transition_state = 0;
@@ -454,6 +455,7 @@ void state_update_in_game(int dt) {
 	int n_sections = player_get_level_section(&state.in_game.player, state.in_game.m_level);
 	state.global.frame_counter += dt;
 #ifdef _DEBUG
+	if (input_pressed(PAD_SQUARE, 0)) renderer_cycle_res_x();
 	if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
 	if (state.global.show_debug) {
 		PROFILE("input", input_update(), 1);
@@ -675,10 +677,12 @@ void state_update_settings(int dt) {
 	}
 
 	// Draw values
+	char num_display[4];
+	snprintf(num_display, 4, "%i", res_x);
 	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 0))*ONE}, (is_pal) ? ((vsync_enable == 2) ? "25 FPS" : "50 FPS") : ((vsync_enable == 2) ? "30 FPS" : "60 FPS"), 1, 0, white);
 	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 1))*ONE}, is_pal ? "PAL" : "NTSC", 1, 0, white);
 	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 2))*ONE}, widescreen ? "16:9" : "4:3", 1, 0, white);
-	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 3))*ONE}, "not impl.", 1, 0, white);
+	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 3))*ONE}, num_display, 1, 0, white);
 
 	// Handle button navigation
 	if (input_pressed(PAD_UP, 0) && state.settings.button_selected > 0) {
@@ -709,6 +713,7 @@ void state_update_settings(int dt) {
 				widescreen = !widescreen;
 				break;
 			case 3: // controller sensitivity
+				renderer_cycle_res_x();
 				break;
 			case 4: // back
 				current_state = state.global.state_to_return_to;
@@ -834,7 +839,7 @@ void state_update_pause_menu(int dt) {	renderer_begin_frame(&id_transform);
 		state.cheats.doom_mode = 1;
 		music_stop();
 		mem_stack_release(STACK_MUSIC);
-		music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\E1M1.DSS");
+		music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\JUSTICE.DSS");
 		music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK");
 		music_play_sequence(0);
 	}

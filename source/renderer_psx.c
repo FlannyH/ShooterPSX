@@ -34,6 +34,8 @@ vec3_t camera_pos;
 vec3_t camera_dir;
 
 // Settings
+int horizontal_resolutions[] = {256, 320, 368, 512};
+int res_x = 512;
 int vsync_enable = 2;
 int is_pal = 0;
 
@@ -58,6 +60,13 @@ RECT palettes[256];
 // Import inline helper functions
 #include "renderer_psx_inline.c"
 
+void renderer_cycle_res_x(void) {
+    static int index = 0;
+    res_x = horizontal_resolutions[index++];
+    index %= 4;
+    renderer_set_video_mode(is_pal);
+}
+
 void renderer_init(void) {
     // Reset GPU and enable interrupts
     ResetGraph(0);
@@ -65,12 +74,12 @@ void renderer_init(void) {
     SetVideoMode(MODE_NTSC);
 
     // Configures the pair of DISPENVs
-    SetDefDispEnv(&disp[0], 0, 0, RES_X, RES_Y_NTSC);
-    SetDefDispEnv(&disp[1], 512, 0, RES_X, RES_Y_NTSC);
+    SetDefDispEnv(&disp[0], 0, 0, res_x, RES_Y_NTSC);
+    SetDefDispEnv(&disp[1], res_x, 0, res_x, RES_Y_NTSC);
 
     // Configures the pair of DRAWENVs for the DISPENVs
-    SetDefDrawEnv(&draw[0], 512, 0, RES_X, RES_Y_NTSC);
-    SetDefDrawEnv(&draw[1], 0, 0, RES_X, RES_Y_NTSC);
+    SetDefDrawEnv(&draw[0], res_x, 0, res_x, RES_Y_NTSC);
+    SetDefDrawEnv(&draw[1], 0, 0, res_x, RES_Y_NTSC);
     
     // Specifies the clear color of the DRAWENV
     setRGB0(&draw[0], 16, 16, 20);
@@ -92,7 +101,7 @@ void renderer_init(void) {
     InitGeom();
 
     // Set up where we want the center of the screen to be
-    gte_SetGeomOffset(CENTER_X, CENTER_Y_NTSC);
+    gte_SetGeomOffset(res_x / 2, curr_res_y / 2);
     gte_SetGeomScreen(120);
 
     next_primitive = primitive_buffer[0];
@@ -113,7 +122,7 @@ void renderer_begin_frame(const transform_t* camera_transform) {
     // Scale by aspect ratio
     aspect_matrix = (MATRIX){
         .m = {
-            {(ONE * RES_X) / (widescreen ? 427 : 320), 0, 0},
+            {(ONE * res_x) / (widescreen ? 427 : 320), 0, 0},
             {0, ONE, 0},
             {0, 0, ONE},
         },
@@ -255,7 +264,7 @@ void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, transform_t* mod
     // Scale by aspect ratio
     aspect_matrix = (MATRIX){
         .m = {
-            {(ONE * RES_X) / (widescreen ? 427 : 320), 0, 0},
+            {(ONE * res_x) / (widescreen ? 427 : 320), 0, 0},
             {0, ONE, 0},
             {0, 0, ONE},
         },
@@ -301,10 +310,10 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
     next_primitive += sizeof(POLY_FT4) / sizeof(*next_primitive);
     setPolyFT4(new_triangle); 
     setXY4(new_triangle, 
-        tl.x / ONE, (tl.y / ONE) + y_offset,
-        tr.x / ONE, (tr.y / ONE) + y_offset,
-        bl.x / ONE, (bl.y / ONE) + y_offset,
-        br.x / ONE, (br.y / ONE) + y_offset
+        (tl.x * res_x) / (512 * ONE), (tl.y / ONE) + y_offset,
+        (tr.x * res_x) / (512 * ONE), (tr.y / ONE) + y_offset,
+        (bl.x * res_x) / (512 * ONE), (bl.y / ONE) + y_offset,
+        (br.x * res_x) / (512 * ONE), (br.y / ONE) + y_offset
     );
     setRGB0(new_triangle, color.r, color.g, color.b);\
     if (is_page) {
@@ -427,7 +436,7 @@ void renderer_apply_fade(int fade_level) {
     setSemiTrans(new_tile, 1);
     setRGB0(new_tile, fade_level, fade_level, fade_level);
     setXY0(new_tile, 0, 0);
-    setWH(new_tile, RES_X, curr_res_y);
+    setWH(new_tile, res_x, curr_res_y);
     addPrim(ord_tbl[drawbuffer] + 0, new_tile);
     
     // Set color blend mode to subtract
@@ -556,39 +565,35 @@ void renderer_set_video_mode(int is_pal) {
     ResetGraph(0);
     if (is_pal) {
         // Configures the pair of DISPENVs
-        SetDefDispEnv(&disp[0], 0, 0, RES_X, RES_Y_PAL);
-        SetDefDispEnv(&disp[1], 512, 0, RES_X, RES_Y_PAL);
+        SetDefDispEnv(&disp[0], 0, 0, res_x, RES_Y_PAL);
+        SetDefDispEnv(&disp[1], res_x, 0, res_x, RES_Y_PAL);
 
         // Configures the pair of DRAWENVs for the DISPENVs
-        SetDefDrawEnv(&draw[0], 512, 0, RES_X, RES_Y_PAL);
-        SetDefDrawEnv(&draw[1], 0, 0, RES_X, RES_Y_PAL);
+        SetDefDrawEnv(&draw[0], res_x, 0, res_x, RES_Y_PAL);
+        SetDefDrawEnv(&draw[1], 0, 0, res_x, RES_Y_PAL);
 
         // Seems like I have to do this in order to actually set the display
         // resolution to the right value?
         disp[0].screen.h = RES_Y_PAL;
         disp[1].screen.h = RES_Y_PAL;
 
-        gte_SetGeomOffset(CENTER_X, CENTER_Y_PAL);
-        gte_SetGeomScreen(120);
-
         SetVideoMode(MODE_PAL);
-
         curr_res_y = RES_Y_PAL;
     }
     else {
         // Configures the pair of DISPENVs
-        SetDefDispEnv(&disp[0], 0, 0, RES_X, RES_Y_NTSC);
-        SetDefDispEnv(&disp[1], 512, 0, RES_X, RES_Y_NTSC);
+        SetDefDispEnv(&disp[0], 0, 0, res_x, RES_Y_NTSC);
+        SetDefDispEnv(&disp[1], res_x, 0, res_x, RES_Y_NTSC);
 
         // Configures the pair of DRAWENVs for the DISPENVs
-        SetDefDrawEnv(&draw[0], 512, 0, RES_X, RES_Y_NTSC);
-        SetDefDrawEnv(&draw[1], 0, 0, RES_X, RES_Y_NTSC);
+        SetDefDrawEnv(&draw[0], res_x, 0, res_x, RES_Y_NTSC);
+        SetDefDrawEnv(&draw[1], 0, 0, res_x, RES_Y_NTSC);
 
         SetVideoMode(MODE_NTSC);
         curr_res_y = RES_Y_NTSC;
 
-        gte_SetGeomOffset(CENTER_X, CENTER_Y_NTSC);
     }
+    gte_SetGeomOffset(res_x / 2, curr_res_y / 2);
     gte_SetGeomScreen(120);
 
     // Specifies the clear color of the DRAWENV

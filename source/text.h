@@ -12,7 +12,7 @@ static const char* text_settings[] = {
     "FRAMERATE:",
     "VIDEO MODE:",
     "ASPECT RATIO:",
-    "SENSITIVITY:",
+    "RES X:",
     "BACK",
 };
 
