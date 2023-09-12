@@ -19,6 +19,7 @@ tools\midi2psx.exe ./assets_to_build/music/sequence/subnivis.mid ./assets/music/
 tools\midi2psx.exe ./assets_to_build/music/sequence/level3.mid ./assets/music/sequence/level3.dss
 tools\midi2psx.exe ./assets_to_build/music/sequence/e1m1.mid ./assets/music/sequence/e1m1.dss
 tools\midi2psx.exe ./assets_to_build/music/sequence/e3m3.mid ./assets/music/sequence/e3m3.dss
+tools\midi2psx.exe ./assets_to_build/music/sequence/justice.mid ./assets/music/sequence/justice.dss
 rem tools\midi2psx.exe ./assets_to_build/music/sequence/black.mid ./assets/music/sequence/black.dss
 tools\midi2psx.exe ./assets_to_build/music/sequence/pitchtst.mid ./assets/music/sequence/pitchtst.dss
 tools\psx_soundfont_generator.exe ./assets_to_build/music/instruments.csv ./assets/music/instr.sbk

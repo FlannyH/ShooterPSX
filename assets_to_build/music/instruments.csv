@@ -1,5 +1,5 @@
 # Instrument ID;# Key Min;# Key Max;# Attack Mode;# Attack Shift;# Attack Step;#Decay Shift;# Sustain level;# Sustain Mode;# Sustain Direction;# Sustain Shift;# Sustain Step;# Release Step;# Release Mode;# Release Shift;# Volume;# Panning;# Sample Source
-128;36;36;0;0;0;15;15;0;0;0;0;0;0;15;300;127;samples/kick.wav
+128;35;36;0;0;0;15;15;0;0;0;0;0;0;15;300;127;samples/kick.wav
 128;40;40;0;0;0;15;15;0;0;0;0;0;0;15;300;127;samples/snare.wav
 128;41;41;0;0;0;15;15;0;0;0;0;0;0;15;300;97;samples/low_tom1.wav
 128;42;42;0;0;0;15;15;0;0;0;0;0;0;15;300;127;samples/chh.wav

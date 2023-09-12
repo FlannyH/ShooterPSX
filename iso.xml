@@ -87,6 +87,7 @@
 				<dir name="MUSIC">
 					<dir name="SEQUENCE">
 						<file name="E1M1.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/e1m1.dss" />
+						<file name="JUSTICE.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/justice.dss" />
 						<file name="E3M3.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/e3m3.dss" />
 						<file name="BLACK.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/black.dss" />
 						<file name="PITCHTST.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/pitchtst.dss" />
