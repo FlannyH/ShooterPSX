@@ -11,4 +11,8 @@ static uint32_t random() {
     return random_state;
 }
 
+static int32_t random_range(int32_t min_inclusive, int32_t max_exclusive) {
+    return ((int32_t)random() % (max_exclusive - min_inclusive) + min_inclusive);
+}
+
 #endif
