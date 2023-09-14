@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "particles.h"
 #include <psxgte.h>
 #include <psxgpu.h>
 #include <string.h>
@@ -646,3 +647,42 @@ int renderer_should_close(void) {
 }
 vec3_t renderer_get_forward_vector(void);
 int renderer_get_level_section_from_position(const model_t *model, vec3_t position);
+
+void renderer_draw_particle_system(particle_system_t* system, scalar_t dt) {
+    // Loop over the particles in chunks of 3
+    for (size_t i = 0; i < system->params->n_particles_max; ++i) {
+        particle_t* p = &system->particle_buffer[i];
+
+        // If none of these are active, don't render them
+        if (p->time_alive > p->total_lifetime) continue;
+
+        // Transform the point
+        gte_ldv0(&p->position);
+        gte_rtps_b();
+
+        // While it's transforming, we update the particle's data
+        p->velocity = vec3_mul(p->velocity, system->params->velocity_multiplier_over_time);
+        p->velocity = vec3_add(p->velocity, vec3_muls(system->params->constant_acceleration, dt));
+        p->position = vec3_add(p->position, vec3_muls(p->velocity, dt));
+        p->scale = vec2_mul(p->scale, system->params->scale_multiplier_over_time);
+        p->curr_frame += dt * system->params->animation_frame_rate;
+        p->curr_frame -= ((p->curr_frame / ONE) > system->params->n_animation_frames) ? system->params->loop_start * ONE : 0;
+
+        // Let's get the transformed point, and base the size on the Z component. The number here is a bit hacky but eh it works right
+        svec2_t scenter;
+        scalar_t depth;
+        gte_stsxy(&scenter);
+        gte_stsz(depth);
+        vec2_t size = vec2_divs(p->scale, depth);
+        vec2_t center = (vec2_t){scenter.x * ONE, scenter.y * ONE};
+        pixel32_t color = {
+            .r = scalar_lerp(p->start_colour.r, p->end_colour.r, scalar_div(p->time_alive, p->total_lifetime)),
+            .g = scalar_lerp(p->start_colour.g, p->end_colour.g, scalar_div(p->time_alive, p->total_lifetime)),
+            .b = scalar_lerp(p->start_colour.b, p->end_colour.b, scalar_div(p->time_alive, p->total_lifetime)),
+            .a = 255,
+        };
+
+        // Render quad
+        renderer_draw_2d_quad_axis_aligned(center, size, (vec2_t){0, 0}, (vec2_t){63, 63}, color, depth, system->params->texture_id + p->curr_frame / ONE, 0);
+    }
+}
