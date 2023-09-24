@@ -175,7 +175,7 @@ bool load_shader_part(char *path, const ShaderType type, const GLuint *program) 
 	size_t shader_size = 0;
 	uint32_t *shader_data = NULL;
 
-	if (file_read(path, &shader_data, &shader_size) == 0) {
+	if (file_read(path, &shader_data, &shader_size, 0, 0) == 0) {
 		// Log error
 		printf("[ERROR] Shader %s not found!\n", path);
 
@@ -310,14 +310,14 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 
 	// Convert from PS1 to GLM
     vec3 position = {
-        -(float)(camera_transform->position.vx >> 12),
-        -(float)(camera_transform->position.vy >> 12),
-        -(float)(camera_transform->position.vz >> 12)
+        -(float)(camera_transform->position.x >> 12),
+        -(float)(camera_transform->position.y >> 12),
+        -(float)(camera_transform->position.z >> 12)
     };
 	const vec3 rotation = {
-			(float)camera_transform->rotation.vx * (2 * PI / 131072.0f),
-			-(float)camera_transform->rotation.vy * (2 * PI / 131072.0f) + PI,
-			(float)camera_transform->rotation.vz * (2 * PI / 131072.0f) + PI
+			(float)camera_transform->rotation.x * (2 * PI / 131072.0f),
+			-(float)camera_transform->rotation.y * (2 * PI / 131072.0f) + PI,
+			(float)camera_transform->rotation.z * (2 * PI / 131072.0f) + PI
 	};
 
 	// Set view matrix
@@ -427,20 +427,20 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
 	// Apply translation
 	// Apply scale
     vec3 position = {
-            (float)model_transform->position.vx,
-            (float)model_transform->position.vy,
-            (float)model_transform->position.vz,
+            (float)model_transform->position.x,
+            (float)model_transform->position.y,
+            (float)model_transform->position.z,
     };
     vec3 scale = {
-            (float)model_transform->scale.vx / 4096.0f,
-            (float)model_transform->scale.vy / 4096.0f,
-            (float)model_transform->scale.vz / 4096.0f,
+            (float)model_transform->scale.x / 4096.0f,
+            (float)model_transform->scale.y / 4096.0f,
+            (float)model_transform->scale.z / 4096.0f,
     };
 	glm_translate(model_matrix, position);
     glm_scale(model_matrix, scale);
-	glm_rotate_x(model_matrix, (float)model_transform->rotation.vx * 2 * PI / 131072.0f, model_matrix);
-	glm_rotate_y(model_matrix, (float)model_transform->rotation.vy * 2 * PI / 131072.0f, model_matrix);
-	glm_rotate_z(model_matrix, (float)model_transform->rotation.vz * 2 * PI / 131072.0f, model_matrix);
+	glm_rotate_x(model_matrix, (float)model_transform->rotation.x * 2 * PI / 131072.0f, model_matrix);
+	glm_rotate_y(model_matrix, (float)model_transform->rotation.y * 2 * PI / 131072.0f, model_matrix);
+	glm_rotate_z(model_matrix, (float)model_transform->rotation.z * 2 * PI / 131072.0f, model_matrix);
 
 	// Bind shader
 	glUseProgram(shader);
@@ -486,20 +486,20 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
     // Apply translation
     // Apply scale
     vec3 position = {
-            (float)model_transform->position.vx,
-            (float)model_transform->position.vy,
-            (float)model_transform->position.vz,
+            (float)model_transform->position.x,
+            (float)model_transform->position.y,
+            (float)model_transform->position.z,
     };
     vec3 scale = {
-            (float)model_transform->scale.vx / (float)COL_SCALE * 4096,
-            (float)model_transform->scale.vy / (float)COL_SCALE * 4096,
-            (float)model_transform->scale.vz / (float)COL_SCALE * 4096,
+            (float)model_transform->scale.x / (float)COL_SCALE * 4096,
+            (float)model_transform->scale.y / (float)COL_SCALE * 4096,
+            (float)model_transform->scale.z / (float)COL_SCALE * 4096,
     };
     glm_translate(model_matrix, position);
     glm_scale(model_matrix, scale);
-    glm_rotate_x(model_matrix, (float)model_transform->rotation.vx * 2 * PI / 131072.0f, model_matrix);
-    glm_rotate_y(model_matrix, (float)model_transform->rotation.vy * 2 * PI / 131072.0f, model_matrix);
-    glm_rotate_z(model_matrix, (float)model_transform->rotation.vz * 2 * PI / 131072.0f, model_matrix);
+    glm_rotate_x(model_matrix, (float)model_transform->rotation.x * 2 * PI / 131072.0f, model_matrix);
+    glm_rotate_y(model_matrix, (float)model_transform->rotation.y * 2 * PI / 131072.0f, model_matrix);
+    glm_rotate_z(model_matrix, (float)model_transform->rotation.z * 2 * PI / 131072.0f, model_matrix);
 
     // Bind shader
     glUseProgram(shader);

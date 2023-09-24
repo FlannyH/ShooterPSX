@@ -1,7 +1,11 @@
 #ifndef CHEATS_H
 #define CHEATS_H
 #include <stdint.h>
+#ifdef _PSX
 #include <psxpad.h>
+#else
+#include "win/psx.h"
+#endif
 
 // Cheats are defined in reverse order, it was easier to implement that way
 static const uint16_t cheat_doom_mode[] = {
