@@ -113,9 +113,9 @@ void particle_system_update(particle_system_t* system, transform_t* transform) {
         }
 
         // Move to entity transform
-        system->particle_buffer[system->curr_spawn_index].position.x += transform->position.vx;
-        system->particle_buffer[system->curr_spawn_index].position.y += transform->position.vy;
-        system->particle_buffer[system->curr_spawn_index].position.z += transform->position.vz;
+        system->particle_buffer[system->curr_spawn_index].position.x += transform->position.x;
+        system->particle_buffer[system->curr_spawn_index].position.y += transform->position.y;
+        system->particle_buffer[system->curr_spawn_index].position.z += transform->position.z;
 
         // Update spawn rate
         system->curr_spawn_rate = scalar_lerp(params->spawn_rate_start, params->spawn_rate_end, scalar_div(system->time_since_first_particle_seconds, params->system_lifetime));
