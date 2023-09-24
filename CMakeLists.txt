@@ -60,6 +60,8 @@ else()
         source/memory.c
         source/entity.c
 		source/entities/door.c
+		source/entities/pickup.c
+		source/entities/crate.c
         source/win/psx.c
         source/win/debug_layer.cpp
         external/source/GL/gl3w.c

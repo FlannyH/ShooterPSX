@@ -14,6 +14,8 @@ uint16_t button_curr[2] = { 0, 0 };
 int8_t deadzone = 24;
 int player1_index = -1;
 int player2_index = -1;
+int button_pressed_this_frame = 0;
+uint16_t input_buffer[32];
 
 void input_init() {
 }
@@ -103,6 +105,15 @@ void input_update() {
         button_curr[1] |= (PAD_CROSS)*      state2.buttons[GLFW_GAMEPAD_BUTTON_CROSS];
         button_curr[1] |= (PAD_SQUARE)*     state2.buttons[GLFW_GAMEPAD_BUTTON_SQUARE];
     }
+    
+    // Update cheat buffer
+    button_pressed_this_frame = 0;
+    uint16_t buttons_pressed = (button_curr[0] ^ button_prev[0]) & button_curr[0];
+    if (buttons_pressed) {
+        for (size_t i = 31; i > 0; --i) input_buffer[i] = input_buffer[i-1];
+        input_buffer[0] = buttons_pressed;
+        button_pressed_this_frame = 1;
+    }
 }
 
 void input_set_stick_deadzone(int8_t new_deadzone) {
@@ -177,4 +188,15 @@ int8_t input_right_stick_y(const int player_id) {
 
 int8_t input_right_stick_y_relative(int player_id) {
     return 0;
+}
+
+int input_check_cheat_buffer(int n_inputs, uint16_t* inputs_to_check) {\
+    int match = button_pressed_this_frame;
+    for (int i = 0; i < n_inputs; ++i) {
+        //printf("expect: %i, got: %i\n", inputs_to_check[i], input_buffer[i]);
+        if (inputs_to_check[i] != input_buffer[i]) {
+            match = 0;
+        }
+    }
+    return match;
 }

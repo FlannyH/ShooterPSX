@@ -666,3 +666,12 @@ int renderer_get_level_section_from_position(const model_t* model, vec3_t positi
     }
     return n_sections; // -1 means no section
 }
+
+// todo
+void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, transform_t* model_transform, int tex_id_offset) {}
+void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {}
+void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const int centered, const pixel32_t color) {}
+void renderer_apply_fade(int fade_level) {}
+void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {}
+void renderer_set_video_mode(int is_pal) {}
+void renderer_cycle_res_x(void) {}
