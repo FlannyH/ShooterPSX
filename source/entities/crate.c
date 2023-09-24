@@ -39,15 +39,15 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 
 	// Render
 	transform_t render_transform;
-    render_transform.position.vx = -crate_pos.x / COL_SCALE;
-    render_transform.position.vy = -crate_pos.y / COL_SCALE;
-    render_transform.position.vz = -crate_pos.z / COL_SCALE;
-    render_transform.rotation.vx = -crate->entity_header.rotation.x;
-    render_transform.rotation.vy = -crate->entity_header.rotation.y;
-    render_transform.rotation.vz = -crate->entity_header.rotation.z;
-	render_transform.scale.vx = crate->entity_header.scale.x;
-	render_transform.scale.vy = crate->entity_header.scale.x;
-	render_transform.scale.vz = crate->entity_header.scale.x;
+    render_transform.position.x = -crate_pos.x / COL_SCALE;
+    render_transform.position.y = -crate_pos.y / COL_SCALE;
+    render_transform.position.z = -crate_pos.z / COL_SCALE;
+    render_transform.rotation.x = -crate->entity_header.rotation.x;
+    render_transform.rotation.y = -crate->entity_header.rotation.y;
+    render_transform.rotation.z = -crate->entity_header.rotation.z;
+	render_transform.scale.x = crate->entity_header.scale.x;
+	render_transform.scale.y = crate->entity_header.scale.x;
+	render_transform.scale.z = crate->entity_header.scale.x;
 	renderer_draw_mesh_shaded_offset(crate->entity_header.mesh, &render_transform, tex_entity_start);
 }
 

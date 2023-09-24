@@ -40,15 +40,15 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
     pickup->entity_header.rotation.y += dt * 50;
 
 	transform_t render_transform;
-    render_transform.position.vx = -pickup_pos.x / COL_SCALE;
-    render_transform.position.vy = -pickup_pos.y / COL_SCALE;
-    render_transform.position.vz = -pickup_pos.z / COL_SCALE;
-    render_transform.rotation.vx = -pickup->entity_header.rotation.x;
-    render_transform.rotation.vy = -pickup->entity_header.rotation.y;
-    render_transform.rotation.vz = -pickup->entity_header.rotation.z;
-	render_transform.scale.vx = pickup->entity_header.scale.x;
-	render_transform.scale.vy = pickup->entity_header.scale.x;
-	render_transform.scale.vz = pickup->entity_header.scale.x;
+    render_transform.position.x = -pickup_pos.x / COL_SCALE;
+    render_transform.position.y = -pickup_pos.y / COL_SCALE;
+    render_transform.position.z = -pickup_pos.z / COL_SCALE;
+    render_transform.rotation.x = -pickup->entity_header.rotation.x;
+    render_transform.rotation.y = -pickup->entity_header.rotation.y;
+    render_transform.rotation.z = -pickup->entity_header.rotation.z;
+	render_transform.scale.x = pickup->entity_header.scale.x;
+	render_transform.scale.y = pickup->entity_header.scale.x;
+	render_transform.scale.z = pickup->entity_header.scale.x;
 	renderer_draw_mesh_shaded_offset(pickup->entity_header.mesh, &render_transform, tex_entity_start);
 
     if (close_enough_to_home_in) {

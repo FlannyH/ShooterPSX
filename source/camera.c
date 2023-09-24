@@ -21,33 +21,33 @@ void camera_update_flycam(transform_t* camera_transform, int dt_ms) {
         if (input_has_analog(0)) {
 
             // Moving forwards and backwards
-            camera_transform->position.vx -= (((hisin(camera_transform->rotation.vy) * hicos(camera_transform->rotation.vx)) >> 12) * (input_left_stick_y(0))) * (MOVEMENT_SPEED * dt_ms) >> 12;
-            camera_transform->position.vy += (hisin(camera_transform->rotation.vx) * (input_left_stick_y(0))) * (MOVEMENT_SPEED * dt_ms) >> 12;
-            camera_transform->position.vz += (((hicos(camera_transform->rotation.vy) * hicos(camera_transform->rotation.vx)) >> 12) * (input_left_stick_y(0))) * (MOVEMENT_SPEED * dt_ms) >> 12;
+            camera_transform->position.x -= (((hisin(camera_transform->rotation.y) * hicos(camera_transform->rotation.x)) >> 12) * (input_left_stick_y(0))) * (MOVEMENT_SPEED * dt_ms) >> 12;
+            camera_transform->position.y += (hisin(camera_transform->rotation.x) * (input_left_stick_y(0))) * (MOVEMENT_SPEED * dt_ms) >> 12;
+            camera_transform->position.z += (((hicos(camera_transform->rotation.y) * hicos(camera_transform->rotation.x)) >> 12) * (input_left_stick_y(0))) * (MOVEMENT_SPEED * dt_ms) >> 12;
 
             // Strafing left and right
-            camera_transform->position.vx -= (hicos(camera_transform->rotation.vy) * (input_left_stick_x(0))) * (MOVEMENT_SPEED * dt_ms) >> 12;
-            camera_transform->position.vz -= (hisin(camera_transform->rotation.vy) * (input_left_stick_x(0))) * (MOVEMENT_SPEED * dt_ms) >> 12;
+            camera_transform->position.x -= (hicos(camera_transform->rotation.y) * (input_left_stick_x(0))) * (MOVEMENT_SPEED * dt_ms) >> 12;
+            camera_transform->position.z -= (hisin(camera_transform->rotation.y) * (input_left_stick_x(0))) * (MOVEMENT_SPEED * dt_ms) >> 12;
 
             // Look up and down
-            camera_transform->rotation.vx += (int32_t)(input_right_stick_y(0)) * (STICK_SENSITIVITY * dt_ms) >> 12;
+            camera_transform->rotation.x += (int32_t)(input_right_stick_y(0)) * (STICK_SENSITIVITY * dt_ms) >> 12;
 
             // Look left and right
-            camera_transform->rotation.vy -= (int32_t)(input_right_stick_x(0)) * (STICK_SENSITIVITY * dt_ms) >> 12;
+            camera_transform->rotation.y -= (int32_t)(input_right_stick_x(0)) * (STICK_SENSITIVITY * dt_ms) >> 12;
         }
         if (input_held(PAD_R1, 0)) {
             // Slide up
-            camera_transform->position.vx -= ((hisin(camera_transform->rotation.vy) * hisin(camera_transform->rotation.vx))) * (MOVEMENT_SPEED * dt_ms) >> 12;
-            camera_transform->position.vy -= hicos(camera_transform->rotation.vx) * (MOVEMENT_SPEED * dt_ms) >> 12;
-            camera_transform->position.vz += ((hicos(camera_transform->rotation.vy) * hisin(camera_transform->rotation.vx))) * (MOVEMENT_SPEED * dt_ms) >> 12;
+            camera_transform->position.x -= ((hisin(camera_transform->rotation.y) * hisin(camera_transform->rotation.x))) * (MOVEMENT_SPEED * dt_ms) >> 12;
+            camera_transform->position.y -= hicos(camera_transform->rotation.x) * (MOVEMENT_SPEED * dt_ms) >> 12;
+            camera_transform->position.z += ((hicos(camera_transform->rotation.y) * hisin(camera_transform->rotation.x))) * (MOVEMENT_SPEED * dt_ms) >> 12;
         }
 
         if (input_held(PAD_R2, 0)) {
 
             // Slide down
-            camera_transform->position.vx += ((hisin(camera_transform->rotation.vy) * hisin(camera_transform->rotation.vx))) * (MOVEMENT_SPEED * dt_ms) >> 12;
-            camera_transform->position.vy += hicos(camera_transform->rotation.vx) * (MOVEMENT_SPEED * dt_ms) >> 12;
-            camera_transform->position.vz -= ((hicos(camera_transform->rotation.vy) * hisin(camera_transform->rotation.vx))) * (MOVEMENT_SPEED * dt_ms) >> 12;
+            camera_transform->position.x += ((hisin(camera_transform->rotation.y) * hisin(camera_transform->rotation.x))) * (MOVEMENT_SPEED * dt_ms) >> 12;
+            camera_transform->position.y += hicos(camera_transform->rotation.x) * (MOVEMENT_SPEED * dt_ms) >> 12;
+            camera_transform->position.z -= ((hicos(camera_transform->rotation.y) * hisin(camera_transform->rotation.x))) * (MOVEMENT_SPEED * dt_ms) >> 12;
         }
     }
 }
