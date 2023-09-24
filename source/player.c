@@ -216,12 +216,12 @@ void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms, const int 
     //vec3_debug(self->position);
     vec2_t vel_2d = {self->velocity.x, self->velocity.z};
     scalar_t speed_1d = vec2_magnitude(vel_2d);
-    self->transform.position.vx = -self->position.x * (4096 / COL_SCALE);
-    self->transform.position.vy = -self->position.y * (4096 / COL_SCALE) + isin(time_counter * 12) * speed_1d / 64;
-    self->transform.position.vz = -self->position.z * (4096 / COL_SCALE);
-    self->transform.rotation.vx = -self->rotation.x;
-    self->transform.rotation.vy = -self->rotation.y;
-    self->transform.rotation.vz = -self->rotation.z;
+    self->transform.position.x = -self->position.x * (4096 / COL_SCALE);
+    self->transform.position.y = -self->position.y * (4096 / COL_SCALE) + isin(time_counter * 12) * speed_1d / 64;
+    self->transform.position.z = -self->position.z * (4096 / COL_SCALE);
+    self->transform.rotation.x = -self->rotation.x;
+    self->transform.rotation.y = -self->rotation.y;
+    self->transform.rotation.z = -self->rotation.z;
 }
 
 int player_get_level_section(player_t* self, const model_t* model) {

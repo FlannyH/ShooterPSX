@@ -419,11 +419,11 @@ void state_update_in_game(int dt) {
 		}
 	}
 	transform_t camera_transform = state.in_game.player.transform;
-	camera_transform.rotation.vx += scalar_mul((random() % 8192) - 4096, state.in_game.screen_shake_intensity_rotation);
-	camera_transform.rotation.vy += scalar_mul((random() % 8192) - 4096, state.in_game.screen_shake_intensity_rotation);
-	camera_transform.position.vx += scalar_mul((random() % 8192) - 4096, state.in_game.screen_shake_intensity_position);
-	camera_transform.position.vy += scalar_mul((random() % 8192) - 4096, state.in_game.screen_shake_intensity_position);
-	camera_transform.position.vz += scalar_mul((random() % 8192) - 4096, state.in_game.screen_shake_intensity_position);
+	camera_transform.rotation.x += scalar_mul((random() % 8192) - 4096, state.in_game.screen_shake_intensity_rotation);
+	camera_transform.rotation.y += scalar_mul((random() % 8192) - 4096, state.in_game.screen_shake_intensity_rotation);
+	camera_transform.position.x += scalar_mul((random() % 8192) - 4096, state.in_game.screen_shake_intensity_position);
+	camera_transform.position.y += scalar_mul((random() % 8192) - 4096, state.in_game.screen_shake_intensity_position);
+	camera_transform.position.z += scalar_mul((random() % 8192) - 4096, state.in_game.screen_shake_intensity_position);
 	renderer_begin_frame(&camera_transform);
 
 	// Draw crosshair
@@ -531,13 +531,13 @@ void state_update_in_game(int dt) {
 	else {
 		if (input_held(PAD_R2, 0) && state.in_game.player.ammo > 0) {
 			// Cast ray through scene and handle entity collisions
-			scalar_t cosx = hicos(camera_transform.rotation.vx);
-			scalar_t sinx = hisin(camera_transform.rotation.vx);
-			scalar_t cosy = hicos(camera_transform.rotation.vy);
-			scalar_t siny = hisin(camera_transform.rotation.vy);
+			scalar_t cosx = hicos(camera_transform.rotation.x);
+			scalar_t sinx = hisin(camera_transform.rotation.x);
+			scalar_t cosy = hicos(camera_transform.rotation.y);
+			scalar_t siny = hisin(camera_transform.rotation.y);
 			ray_t ray = {
 				.length = INT32_MAX,
-				.position = (vec3_t){camera_transform.position.vx, camera_transform.position.vy, camera_transform.position.vz},
+				.position = (vec3_t){camera_transform.position.x, camera_transform.position.y, camera_transform.position.z},
 				.direction = {scalar_mul(siny, cosx), -sinx, scalar_mul(-cosy, cosx)},
 			};
 			ray.position = vec3_muls(ray.position, -COL_SCALE);
@@ -591,20 +591,20 @@ void state_update_in_game(int dt) {
 		vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
 		scalar_t speed_1d = vec2_magnitude(vel_2d);
 		if (state.cheats.doom_mode) {
-			gun_transform.position.vx = 0 + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE); if (widescreen) gun_transform.position.vx += 30;
-			gun_transform.position.vy = 165 + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE);
-			gun_transform.position.vz = 110;
+			gun_transform.position.x = 0 + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE); if (widescreen) gun_transform.position.x += 30;
+			gun_transform.position.y = 165 + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE);
+			gun_transform.position.z = 110;
 		} else {
-			gun_transform.position.vx = 145 + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE); if (widescreen) gun_transform.position.vx += 30;
-			gun_transform.position.vy = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE) + scalar_mul(state.in_game.gun_animation_timer_sqrt, 50);
-			gun_transform.position.vz = 125 - scalar_mul(state.in_game.gun_animation_timer_sqrt, 225);
+			gun_transform.position.x = 145 + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE); if (widescreen) gun_transform.position.x += 30;
+			gun_transform.position.y = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE) + scalar_mul(state.in_game.gun_animation_timer_sqrt, 50);
+			gun_transform.position.z = 125 - scalar_mul(state.in_game.gun_animation_timer_sqrt, 225);
 		}
-		gun_transform.rotation.vx = 0 + scalar_mul(state.in_game.gun_animation_timer_sqrt, 9500);
-		gun_transform.rotation.vy = 4096 * 16;
-		gun_transform.rotation.vz = 0;
-		gun_transform.scale.vx = ONE;
-		gun_transform.scale.vy = ONE;
-		gun_transform.scale.vz = ONE;
+		gun_transform.rotation.x = 0 + scalar_mul(state.in_game.gun_animation_timer_sqrt, 9500);
+		gun_transform.rotation.y = 4096 * 16;
+		gun_transform.rotation.z = 0;
+		gun_transform.scale.x = ONE;
+		gun_transform.scale.y = ONE;
+		gun_transform.scale.z = ONE;
 		renderer_draw_mesh_shaded_offset_local(&state.in_game.m_weapons->meshes[1], &gun_transform, tex_weapon_start);
 	} 
 	// Sword
@@ -612,15 +612,15 @@ void state_update_in_game(int dt) {
 		transform_t sword_transform;
 		vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
 		scalar_t speed_1d = vec2_magnitude(vel_2d);
-		sword_transform.position.vx = -165 + (isin(state.global.time_counter * 6) * speed_1d) / (32 * ONE); if (widescreen) sword_transform.position.vx -= 52;
-		sword_transform.position.vy = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (64 * ONE);
-		sword_transform.position.vz = 180;
-		sword_transform.rotation.vx = 1800 * 16;
-		sword_transform.rotation.vy = 4096 * 16;
-		sword_transform.rotation.vz = -2048 * 16;
-		sword_transform.scale.vx = ONE;
-		sword_transform.scale.vy = ONE;
-		sword_transform.scale.vz = ONE;
+		sword_transform.position.x = -165 + (isin(state.global.time_counter * 6) * speed_1d) / (32 * ONE); if (widescreen) sword_transform.position.x -= 52;
+		sword_transform.position.y = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (64 * ONE);
+		sword_transform.position.z = 180;
+		sword_transform.rotation.x = 1800 * 16;
+		sword_transform.rotation.y = 4096 * 16;
+		sword_transform.rotation.z = -2048 * 16;
+		sword_transform.scale.x = ONE;
+		sword_transform.scale.y = ONE;
+		sword_transform.scale.z = ONE;
 		renderer_draw_mesh_shaded_offset_local(&state.in_game.m_weapons->meshes[0], &sword_transform, tex_weapon_start);
 	} 
 

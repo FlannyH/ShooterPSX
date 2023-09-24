@@ -111,7 +111,7 @@ void renderer_init(void) {
 
 void renderer_begin_frame(const transform_t* camera_transform) {
     // Get camera position
-    VECTOR position = camera_transform->position;
+    VECTOR position = *(VECTOR*)&camera_transform->position;
     memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
     position.vx = -position.vx >> 12;
     position.vy = -position.vy >> 12;

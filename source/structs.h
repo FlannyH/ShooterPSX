@@ -187,9 +187,9 @@ typedef struct {
 } vislist_header_t;
 
 typedef struct {
-    VECTOR position; // Position (4096 is 1.0 meter)
-    VECTOR rotation; // Angles in fixed-point format (4194304 = 360 degrees)
-    VECTOR scale; // Scale (4096 = 1.0)
+    vec3_t position; // Position (4096 is 1.0 meter)
+    vec3_t rotation; // Angles in fixed-point format (4194304 = 360 degrees)
+    vec3_t scale; // Scale (4096 = 1.0)
 } transform_t;
 
 #endif // STRUCTS_H
