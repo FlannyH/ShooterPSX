@@ -50,6 +50,7 @@ int prev_h = 0;
 transform_t* cam_transform;
 vec3_t camera_pos;
 vec3_t camera_dir;
+int tex_id_start;
 
 typedef enum { vertex, pixel, geometry, compute } ShaderType;
 
@@ -455,6 +456,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
 	glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
 
     glUniform1i(glGetUniformLocation(shader, "texture_bound"), mesh->vertices[0].tex_id != 255);
+    glUniform1i(glGetUniformLocation(shader, "texture_offset"), tex_id_start);
     
 	// Copy data into it
 	glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(vertex_3d_t), mesh->vertices, GL_STATIC_DRAW);
@@ -467,6 +469,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
     glDrawArrays(GL_QUADS, mesh->n_triangles * 3, mesh->n_quads * 4);
 
 	n_total_triangles += mesh->n_triangles;
+    tex_id_start = 0;
 }
 
 void renderer_draw_triangles_shaded_2d(const vertex_2d_t *vertex_buffer, uint16_t n_verts, int16_t x, int16_t y) {
@@ -671,4 +674,7 @@ void renderer_apply_fade(int fade_level) {}
 void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {}
 void renderer_set_video_mode(int is_pal) {}
 void renderer_cycle_res_x(void) {}
-void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, transform_t* model_transform, int tex_id_offset) {}
+void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, transform_t* model_transform, int tex_id_offset) {
+    tex_id_start = tex_id_offset;
+    renderer_draw_mesh_shaded(mesh, model_transform);
+}

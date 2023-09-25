@@ -13,11 +13,12 @@ out float out_texture;
 uniform mat4 proj_matrix;
 uniform mat4 view_matrix;
 uniform mat4 model_matrix;
+uniform int texture_offset;
 
 void main()
 {
 	gl_Position = proj_matrix * view_matrix * model_matrix * vec4(in_position, 1.0);
 	out_color = in_color;
 	out_texcoord = in_texcoord.xy;
-	out_texture = in_texture;
+	out_texture = in_texture + float(texture_offset);
 }
