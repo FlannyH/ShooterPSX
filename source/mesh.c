@@ -78,28 +78,38 @@ model_t* model_load(const char* path, int on_stack, stack_t stack) {
         model->meshes[i].name = string;
 
 #ifdef _WIN32
-        // Swizzle the quads
+        // Convert quads to triangles
         mesh_t* mesh = &model->meshes[i];
-        for (size_t i = 0; i < mesh->n_quads; ++i) {
-            const size_t index = (mesh->n_triangles * 3) + (i * 4);
-            vertex_3d_t temp = mesh->vertices[index + 2];
-            mesh->vertices[index + 2] = mesh->vertices[index + 3];
-            mesh->vertices[index + 3] = temp;
-        }
+        vertex_3d_t* new_verts = mem_alloc(((mesh->n_triangles * 3) + (mesh->n_quads * 6)) * sizeof(vertex_3d_t), MEM_CAT_MODEL);
 
         // Copy the vertex texture ids to each vertex instead of just the first. OpenGL is annoying about this.
         size_t k = 0;
+        size_t l = 0;
         for (size_t j = 0; j < mesh->n_triangles; ++j) {
             mesh->vertices[k + 1].tex_id = mesh->vertices[k + 0].tex_id;
             mesh->vertices[k + 2].tex_id = mesh->vertices[k + 0].tex_id;
+            new_verts[l + 0] = mesh->vertices[k + 0];
+            new_verts[l + 1] = mesh->vertices[k + 1];
+            new_verts[l + 2] = mesh->vertices[k + 2];
             k += 3;
+            l += 3;
         }
         for (size_t j = 0; j < mesh->n_quads; ++j) {
             mesh->vertices[k + 1].tex_id = mesh->vertices[k + 0].tex_id;
             mesh->vertices[k + 2].tex_id = mesh->vertices[k + 0].tex_id;
             mesh->vertices[k + 3].tex_id = mesh->vertices[k + 0].tex_id;
+            new_verts[l + 0] = mesh->vertices[k + 0];
+            new_verts[l + 1] = mesh->vertices[k + 1];
+            new_verts[l + 2] = mesh->vertices[k + 2];
+            new_verts[l + 3] = mesh->vertices[k + 2];
+            new_verts[l + 4] = mesh->vertices[k + 1];
+            new_verts[l + 5] = mesh->vertices[k + 3];
             k += 4;
+            l += 6;
         }
+        mesh->vertices = new_verts;
+        mesh->n_triangles += mesh->n_quads * 2;
+        mesh->n_quads = 0;
 #endif
     }
     printf("done with model %s\n", path);
