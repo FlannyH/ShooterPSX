@@ -24,6 +24,7 @@ int8_t input_right_stick_x_relative(int player_id);
 int8_t input_right_stick_y(int player_id);
 int8_t input_right_stick_y_relative(int player_id);
 int input_check_cheat_buffer(int n_inputs, uint16_t* inputs_to_check);
+void input_rumble(uint8_t left_strength, uint8_t right_enable);
 
 #ifdef __cplusplus
 }

@@ -605,6 +605,7 @@ void state_update_in_game(int dt) {
 		gun_transform.scale.x = ONE;
 		gun_transform.scale.y = ONE;
 		gun_transform.scale.z = ONE;
+        input_rumble(state.in_game.gun_animation_timer_sqrt > 0 * 255, 0);
 		renderer_draw_mesh_shaded_offset_local(&state.in_game.m_weapons->meshes[1], &gun_transform, tex_weapon_start);
 	} 
 	// Sword
