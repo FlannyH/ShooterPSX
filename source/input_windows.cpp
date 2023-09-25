@@ -83,7 +83,6 @@ void input_update() {
     right_stick_x[0] = static_cast<int8_t>(std::clamp(button_state.stickRX * 127.0f, -127.0f, 127.0f));
     right_stick_y[0] = static_cast<int8_t>(std::clamp(button_state.stickRY * -127.0f, -127.0f, 127.0f));
 
-    
     // Update cheat buffer
     button_pressed_this_frame = 0;
     uint16_t buttons_pressed = (button_curr[0] ^ button_prev[0]) & button_curr[0];
