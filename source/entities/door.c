@@ -61,6 +61,7 @@ mesh_t* update_mesh(entity_door_t* door) {
 			}
 		}
 	}
+    printf("door mesh updated: %x\n", door->entity_header.mesh);
 	return mesh;
 }
 

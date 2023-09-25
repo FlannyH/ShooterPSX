@@ -10,6 +10,8 @@ typedef struct {
 
 int hisin(int a);
 int hicos(int a);
+int isin(int a);
+int icos(int a);
 int FntPrint(int id, const char* fmt, ...);
 char* FntFlush(int id);
 

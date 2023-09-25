@@ -6,6 +6,13 @@
 #include "texture.h"
 #include "memory.h"
 
+int vsync_enable = 2;
+int res_x = 512;
+int is_pal = 0;
+int tex_level_start = 0;
+int tex_entity_start = 0;
+int tex_weapon_start = 0;
+
 uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures, int on_stack, stack_t stack) { // returns number of textures loaded
     // Read the file
     uint32_t* file_data;
@@ -22,7 +29,8 @@ uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures,
     }
 
     // Allocate space for TextureCPU structs
-    *out_textures = mem_alloc(sizeof(texture_cpu_t) * tex_col_hdr->n_texture_cell, MEM_CAT_TEXTURE);
+    if (on_stack) *out_textures = mem_stack_alloc(sizeof(texture_cpu_t) * tex_col_hdr->n_texture_cell, stack);
+    else *out_textures = mem_alloc(sizeof(texture_cpu_t) * tex_col_hdr->n_texture_cell, MEM_CAT_TEXTURE);
 
     // Find the data sections
     void* binary_section = &tex_col_hdr[1];

@@ -175,7 +175,7 @@ bool load_shader_part(char *path, const ShaderType type, const GLuint *program) 
 	size_t shader_size = 0;
 	uint32_t *shader_data = NULL;
 
-	if (file_read(path, &shader_data, &shader_size, 0, 0) == 0) {
+	if (file_read(path, &shader_data, &shader_size, 1, STACK_TEMP) == 0) {
 		// Log error
 		printf("[ERROR] Shader %s not found!\n", path);
 
@@ -198,7 +198,7 @@ bool load_shader_part(char *path, const ShaderType type, const GLuint *program) 
 	int log_length;
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
 	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
-	char *frag_shader_error = mem_alloc(log_length, MEM_CAT_UNDEFINED);
+	char *frag_shader_error = malloc(log_length);
 	glGetShaderInfoLog(shader, log_length, NULL, &frag_shader_error[0]);
 	if (log_length > 0) {
 		// Log error
@@ -211,9 +211,6 @@ bool load_shader_part(char *path, const ShaderType type, const GLuint *program) 
 
 	// Attach to program
 	glAttachShader(*program, shader);
-
-	// Clean up
-	mem_free(shader_data);
 
 	return true;
 }
@@ -458,7 +455,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
 	glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
 
     // If no texture is bound, don't use it in the shader
-    glUniform1i(glGetUniformLocation(shader, "texture_bound"), mesh->vertices[0].tex_id != 255);
+    glUniform1i(glGetUniformLocation(shader, "texture_bound"), mesh->vertices[0].tex_id);
     
 	// Copy data into it
 	glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(vertex_3d_t), mesh->vertices, GL_STATIC_DRAW);
@@ -675,3 +672,4 @@ void renderer_apply_fade(int fade_level) {}
 void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {}
 void renderer_set_video_mode(int is_pal) {}
 void renderer_cycle_res_x(void) {}
+void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, transform_t* model_transform, int tex_id_offset) {}
