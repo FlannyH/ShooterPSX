@@ -47,7 +47,7 @@ else()
     set(CMAKE_CXX_STANDARD 17)
     add_executable (ShooterPSX
         source/file_windows.c 
-        source/input_windows.c 
+        "source/input_windows.cpp" 
         source/renderer_windows.c 
         source/music_windows.c
         source/texture_windows.c
@@ -77,6 +77,7 @@ else()
             ShooterPSX 
             ${CMAKE_CURRENT_SOURCE_DIR}/external/libraries/glfw3.lib
             ${CMAKE_CURRENT_SOURCE_DIR}/external/libraries/cimgui.lib
+            ${CMAKE_CURRENT_SOURCE_DIR}/external/libraries/JoyShockLibrary.lib
         )
         add_custom_command(
             TARGET ShooterPSX POST_BUILD
