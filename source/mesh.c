@@ -86,6 +86,20 @@ model_t* model_load(const char* path, int on_stack, stack_t stack) {
             mesh->vertices[index + 2] = mesh->vertices[index + 3];
             mesh->vertices[index + 3] = temp;
         }
+
+        // Copy the vertex texture ids to each vertex instead of just the first. OpenGL is annoying about this.
+        size_t k = 0;
+        for (size_t j = 0; j < mesh->n_triangles; ++j) {
+            mesh->vertices[k + 1].tex_id = mesh->vertices[k + 0].tex_id;
+            mesh->vertices[k + 2].tex_id = mesh->vertices[k + 0].tex_id;
+            k += 3;
+        }
+        for (size_t j = 0; j < mesh->n_quads; ++j) {
+            mesh->vertices[k + 1].tex_id = mesh->vertices[k + 0].tex_id;
+            mesh->vertices[k + 2].tex_id = mesh->vertices[k + 0].tex_id;
+            mesh->vertices[k + 3].tex_id = mesh->vertices[k + 0].tex_id;
+            k += 4;
+        }
 #endif
     }
     printf("done with model %s\n", path);
