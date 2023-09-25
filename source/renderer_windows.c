@@ -591,8 +591,8 @@ void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) 
 	// pixels horizontally - Convert to 32-bit color
 	for (size_t i = 0; i < (texture->width * texture->height / 2); ++i) {
 		// Get indices from texture
-		const uint8_t color_index_left = (texture->data[i] >> 4) & 0x0F;
-		const uint8_t color_index_right = (texture->data[i] >> 0) & 0x0F;
+		const uint8_t color_index_left = (texture->data[i] >> 0) & 0x0F;
+		const uint8_t color_index_right = (texture->data[i] >> 4) & 0x0F;
 
 		// Get 16-bit color values from palette
 		const pixel16_t pixel_left = texture->palette[color_index_left];
