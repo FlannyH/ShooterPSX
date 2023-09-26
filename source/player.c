@@ -78,6 +78,10 @@ void handle_stick_input(player_t* self, const int dt_ms) {
 
         // Look up and down
         self->rotation.x -= (int32_t)(input_right_stick_y(0)) * (stick_sensitivity * dt_ms) >> 12;
+#ifdef _WINDOWS
+        self->rotation.x += (int32_t)scalar_mul((input_gyro_x(0)), (stick_sensitivity * dt_ms)) >> 12;
+        self->rotation.y += (int32_t)scalar_mul((input_gyro_y(0)), (stick_sensitivity * dt_ms)) >> 12;
+#endif
         if (self->rotation.x > 32768) {
             self->rotation.x = 32768;
         }

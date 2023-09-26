@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <algorithm>
 
+#include "fixed_point.h"
 #include "input.h"
 #include "win/psx.h"
 #include "JSL/JoyShockLibrary.h"
@@ -11,6 +12,8 @@ int8_t right_stick_x[2] = { 0, 0 };
 int8_t right_stick_y[2] = { 0, 0 };
 uint16_t button_prev[2] = { 0, 0 };
 uint16_t button_curr[2] = { 0, 0 };
+float gyro_x[2] = { 0.0, 0.0 };
+float gyro_y[2] = { 0.0, 0.0 };
 int8_t deadzone = 24;
 int player1_index = -1;
 int player2_index = -1;
@@ -32,21 +35,12 @@ void input_update() {
         JslGetConnectedDeviceHandles(devices_connected, n_devices_connected);
         for (int i = 0; i < n_devices_connected; ++i) {
             const auto button_state = JslGetSimpleState(i);
-            
-            if (button_state.buttons != 0 ||
-                button_state.lTrigger != 0.0 ||
-                button_state.rTrigger != 0.0 ||
-                button_state.stickLX != 0.0 ||
-                button_state.stickLY != 0.0 ||
-                button_state.stickRX != 0.0 ||
-                button_state.stickRY != 0.0
-                )
-            {
-                player1_index = i;
-                JslSetPlayerNumber(i, 1);
-                printf("Controller found!\n");
-                break;
-            }
+            player1_index = i;
+            JslSetPlayerNumber(i, 1);
+            JslSetAutomaticCalibration(player1_index, true);
+            printf("Controller found!\n");
+            break;
+        
             return;
         }
     }
@@ -82,6 +76,11 @@ void input_update() {
     left_stick_y[0] = static_cast<int8_t>(std::clamp(button_state.stickLY * -127.0f, -127.0f, 127.0f));
     right_stick_x[0] = static_cast<int8_t>(std::clamp(button_state.stickRX * 127.0f, -127.0f, 127.0f));
     right_stick_y[0] = static_cast<int8_t>(std::clamp(button_state.stickRY * -127.0f, -127.0f, 127.0f));
+    // Gyro
+    float x, y, z;
+    JslGetAndFlushAccumulatedGyro(player1_index, x, y, z);
+    gyro_x[0] = x * 2.0f;
+    gyro_y[0] = -y * 2.0f;
 
     // Update cheat buffer
     button_pressed_this_frame = 0;
@@ -91,6 +90,14 @@ void input_update() {
         input_buffer[0] = buttons_pressed;
         button_pressed_this_frame = 1;
     }
+}
+
+scalar_t input_gyro_x(int player_id) {
+    return scalar_from_float(gyro_x[player_id]);
+}
+
+scalar_t input_gyro_y(int player_id) {
+    return scalar_from_float(gyro_y[player_id]);
 }
 
 void input_set_stick_deadzone(int8_t new_deadzone) {
