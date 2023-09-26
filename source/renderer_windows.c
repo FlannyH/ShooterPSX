@@ -204,9 +204,6 @@ bool load_shader_part(char *path, const ShaderType type, const GLuint *program) 
 	if (log_length > 0) {
 		// Log error
 		printf("[ERROR] File '%s':\n\n%s\n", path, &frag_shader_error[0]);
-
-		// Clean up
-		mem_free(shader_data);
 		return false;
 	}
 
@@ -283,15 +280,15 @@ void renderer_init() {
 
 	// Zero init textures
 	//memset(textures, 0, sizeof(textures));
-    void* random_data = mem_alloc(64 * 64 * 256 * 4, MEM_CAT_TEXTURE);
+    void* random_data = mem_alloc(2048 * 512 * 4, MEM_CAT_TEXTURE);
 	glGenTextures(1, &textures);
-	glBindTexture(GL_TEXTURE_3D, textures);
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, 64, 64, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, random_data);
-	glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_3D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_3D, 0);
+	glBindTexture(GL_TEXTURE_2D, textures);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 2048, 512, 0, GL_RGBA, GL_UNSIGNED_BYTE, random_data);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
     mem_free(random_data);
 }
 
@@ -444,7 +441,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
 	glUseProgram(shader);
 
 	// Bind texture
-	glBindTexture(GL_TEXTURE_3D, textures);
+	glBindTexture(GL_TEXTURE_2D, textures);
 
 	// Bind vertex buffers
 	glBindVertexArray(vao);
@@ -504,7 +501,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
     glUseProgram(shader);
 
     // Bind texture
-    glBindTexture(GL_TEXTURE_3D, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glUniform1i(glGetUniformLocation(shader, "texture_bound"), 0);
 
     // Bind vertex buffers
@@ -605,18 +602,23 @@ void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) 
 		pixels[i * 2 + 0].r = pixel_left.r << 3;
 		pixels[i * 2 + 0].g = pixel_left.g << 3;
 		pixels[i * 2 + 0].b = pixel_left.b << 3;
-		pixels[i * 2 + 0].a = pixel_left.a << 7;
+		pixels[i * 2 + 0].a = pixel_left.a * 255;
 
 		// And on the right side as well
 		pixels[i * 2 + 1].r = pixel_right.r << 3;
 		pixels[i * 2 + 1].g = pixel_right.g << 3;
 		pixels[i * 2 + 1].b = pixel_right.b << 3;
-		pixels[i * 2 + 1].a = pixel_right.a << 7;
+		pixels[i * 2 + 1].a = pixel_right.a * 255;
 	}
 
 	// Upload texture
-	glBindTexture(GL_TEXTURE_3D, textures);
-	glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, index, texture->width, texture->height, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	glBindTexture(GL_TEXTURE_2D, textures);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 
+	((int16_t)index / 4) * 64, 
+	(((int16_t)index) % 4) * 64, 
+	texture->width, 
+	texture->height, 
+	GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
 	// Store texture resolution
 	tex_res[(size_t)index * 2 + 0] = (float)texture->width;
@@ -670,7 +672,47 @@ int renderer_get_level_section_from_position(const model_t* model, vec3_t positi
 void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {}
 void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const int centered, const pixel32_t color) {}
 void renderer_apply_fade(int fade_level) {}
-void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {}
+void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {
+    // This is where all the pixels will be stored
+    size_t width = texture->width == 0 ? 256 : texture->width;
+    size_t height = texture->height == 0 ? 256 : texture->height;
+    pixel32_t* pixels = mem_alloc((size_t)width * (size_t)height * 4, MEM_CAT_TEXTURE);
+    // The texture is stored in 8bpp format
+    // pixels horizontally - Convert to 32-bit color
+    for (size_t i = 0; i < ((size_t)width * (size_t)height); ++i) {
+        // Get indices from texture
+        const uint8_t color_index = texture->data[i];
+
+        // Get 16-bit color values from palette
+        const pixel16_t pixel = texture->palette[color_index];
+
+        // Expand to 32-bit color
+        pixels[i].r = pixel.r << 3;
+        pixels[i].g = pixel.g << 3;
+        pixels[i].b = pixel.b << 3;
+        pixels[i].a = pixel.a * 255;
+    }
+
+    // Upload texture
+    glBindTexture(GL_TEXTURE_2D, textures);
+    glTexSubImage2D(GL_TEXTURE_2D, 0,
+        256 * (int)index,
+        256,
+        width,
+        height,
+        GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+    // Store texture resolution
+    tex_res[(size_t)index * 2 + 0] = (float)width;
+    tex_res[(size_t)index * 2 + 1] = (float)height;
+
+    printf("texture %d has avg color: %d, %d, %d\n", index, texture->avg_color.r,
+        texture->avg_color.g, texture->avg_color.b);
+
+    // Clean up after we're done
+    mem_free(pixels);
+}
+
 void renderer_set_video_mode(int is_pal) {}
 void renderer_cycle_res_x(void) {}
 void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, transform_t* model_transform, int tex_id_offset) {
@@ -707,7 +749,7 @@ void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, transform_t* mod
     glUseProgram(shader);
 
     // Bind texture
-    glBindTexture(GL_TEXTURE_3D, textures);
+    glBindTexture(GL_TEXTURE_2D, textures);
 
     // Bind vertex buffers
     glBindVertexArray(vao);
