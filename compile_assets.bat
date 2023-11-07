@@ -4,7 +4,7 @@ mkdir assets\models\ui_tex
 mkdir assets\music
 mkdir assets\music\sequence
 rem levels
-tools\obj2psx.exe  --input ./assets_to_build/models/level.obj --output ./assets/models/level
+tools\obj2psx.exe  --input ./assets_to_build/models/level.obj --output ./assets/models/level --split
 tools\obj2psx.exe  --input ./assets_to_build/models/level_col.obj --collision --output ./assets/models/level
 tools\psx_vislist_generator.exe ./assets/models/level.msh ./assets/models/level.col ./assets/models/level.vis
 tools\psx_vislist_generator.exe ./assets/models/test.msh ./assets/models/test.col ./assets/models/test.vis

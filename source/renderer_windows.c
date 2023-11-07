@@ -382,17 +382,17 @@ void renderer_end_frame() {
 	glfwPollEvents();
 }
 
-void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, vislist_t* vislist, int tex_id_offset) {
+void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, visfield_t* vislist, int tex_id_offset) {
     glViewport(0, 0, w, h);
     if (vislist == NULL || n_sections == 0) {
         for (size_t i = 0; i < model->n_meshes; ++i) {
-            renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
+            //renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
             renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
         }
     }
     else {
         // Determine which meshes to render
-        vislist_t combined = { 0, 0, 0, 0 };
+        visfield_t combined = { 0, 0, 0, 0 };
 
         // Get all the vislist bitfields and combine them together
         for (size_t i = 0; i < n_sections; ++i) {
@@ -403,12 +403,14 @@ void renderer_draw_model_shaded(const model_t* model, transform_t* model_transfo
         }
 
         // Render only the meshes that are visible
+		printf("rendering meshes: ");
         for (size_t i = 0; i < model->n_meshes; ++i) {
-            if ((i < 32) && (combined.sections_0_31 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-            else if ((i < 64) && (combined.sections_32_63 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-            else if ((i < 96) && (combined.sections_64_95 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-            else if ((i < 128) && (combined.sections_96_127 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+            if ((i < 32) && (combined.sections_0_31 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform), printf("A-%i, ", i);
+            else if ((i >= 32) && (i < 64) && (combined.sections_32_63 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform), printf("B-%i, ", i);
+            else if ((i >= 64) && (i < 96) && (combined.sections_64_95 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform), printf("C-%i, ", i);
+            else if ((i >= 96) && (i < 128) && (combined.sections_96_127 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform), printf("D-%i, ", i);
         }
+		printf("\n");
     }
 }
 
@@ -487,9 +489,9 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
             (float)model_transform->position.z,
     };
     vec3 scale = {
-            (float)model_transform->scale.x / (float)COL_SCALE * 4096,
-            (float)model_transform->scale.y / (float)COL_SCALE * 4096,
-            (float)model_transform->scale.z / (float)COL_SCALE * 4096,
+            (float)model_transform->scale.x / (float)COL_SCALE,
+            (float)model_transform->scale.y / (float)COL_SCALE,
+            (float)model_transform->scale.z / (float)COL_SCALE,
     };
     glm_translate(model_matrix, position);
     glm_scale(model_matrix, scale);
@@ -773,7 +775,6 @@ void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, transform_t* mod
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
     glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
-    glDrawArrays(GL_QUADS, mesh->n_triangles * 3, mesh->n_quads * 4);
 
     n_total_triangles += mesh->n_triangles;
     tex_id_start = 0;

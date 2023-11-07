@@ -228,22 +228,101 @@ void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms, const int 
     self->transform.rotation.z = -self->rotation.z;
 }
 
-int player_get_level_section(player_t* self, const model_t* model) {
-    vec3_t position = {
+void draw_structure(const vislist_t vis) {
+    uint32_t node_stack[32] = {0};
+    uint32_t node_handle_ptr = 0;
+    uint32_t node_add_ptr = 1;
+
+    while ((node_handle_ptr != node_add_ptr) && (n_sections < N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE)) {
+        // check a node
+        visbvh_node_t* node = &vis.bvh_root[node_stack[node_handle_ptr]];
+        aabb_t aabb = {
+            .min = {
+                .x = (scalar_t)(-node->min.x) * COL_SCALE,
+                .y = (scalar_t)(-node->min.y) * COL_SCALE,
+                .z = (scalar_t)(-node->min.z) * COL_SCALE,
+            },
+            .max = {
+                .x = (scalar_t)(-node->max.x) * COL_SCALE,
+                .y = (scalar_t)(-node->max.y) * COL_SCALE,
+                .z = (scalar_t)(-node->max.z) * COL_SCALE,
+            },
+        };
+        renderer_debug_draw_aabb(&aabb, white, &id_transform);
+
+            // If the node is an interior node
+            if ((node->child_or_vis_index & 0x80000000) == 0) {
+                // Add the 2 children to the stack
+                node_stack[node_add_ptr] = node->child_or_vis_index;
+                node_add_ptr = (node_add_ptr + 1) % 32;
+                node_stack[node_add_ptr] = node->child_or_vis_index + 1;
+                node_add_ptr = (node_add_ptr + 1) % 32;
+            }
+            else {
+                // Add this node index to the list
+                sections[n_sections++] = node->child_or_vis_index & 0x7fffffff;
+            }
+        
+        
+
+        node_handle_ptr = (node_handle_ptr + 1) % 32;
+    }
+
+}
+
+int player_get_level_section(player_t* self, const vislist_t vis) {
+    // Get player position
+    svec3_t position = {
         -self->position.x / COL_SCALE,
         -self->position.y / COL_SCALE,
         -self->position.z / COL_SCALE,
     };
     n_sections = 0;
-    for (size_t i = 0; i < model->n_meshes; ++i) {
-        if (n_sections == N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE) break;
-        aabb_t bounds = model->meshes[i].bounds;
-        //bounds.min = vec3_sub(bounds.min, (vec3_t){player_radius, eye_height, player_radius})     ;       
-        //bounds.max = vec3_add(bounds.min, (vec3_t){player_radius, eye_height, player_radius})     ;       
-        if (point_aabb_intersect(&bounds, position)) {
-            sections[n_sections] = i;
-            n_sections += 1;
+
+    // Find all the vis leaf nodes we're currently inside of
+    uint32_t node_stack[32] = {0};
+    uint32_t node_handle_ptr = 0;
+    uint32_t node_add_ptr = 1;
+
+    while ((node_handle_ptr != node_add_ptr) && (n_sections < N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE)) {
+        // check a node
+        visbvh_node_t* node = &vis.bvh_root[node_stack[node_handle_ptr]];
+        aabb_t aabb = {
+            .min = {
+                .x = (scalar_t)(-node->min.x) * COL_SCALE,
+                .y = (scalar_t)(-node->min.y) * COL_SCALE,
+                .z = (scalar_t)(-node->min.z) * COL_SCALE,
+            },
+            .max = {
+                .x = (scalar_t)(-node->max.x) * COL_SCALE,
+                .y = (scalar_t)(-node->max.y) * COL_SCALE,
+                .z = (scalar_t)(-node->max.z) * COL_SCALE,
+            },
+        };
+
+        // If a node was hit
+        if (
+            position.x >= node->min.x &&  position.x <= node->max.x &&
+            position.y >= node->min.y &&  position.y <= node->max.y &&
+            position.z >= node->min.z &&  position.z <= node->max.z
+        ) {
+            // If the node is an interior node
+            if ((node->child_or_vis_index & 0x80000000) == 0) {
+                // Add the 2 children to the stack
+                node_stack[node_add_ptr] = node->child_or_vis_index;
+                node_add_ptr = (node_add_ptr + 1) % 32;
+                node_stack[node_add_ptr] = node->child_or_vis_index + 1;
+                node_add_ptr = (node_add_ptr + 1) % 32;
+            }
+            else {
+                // Add this node index to the list
+                sections[n_sections++] = node->child_or_vis_index & 0x7fffffff;
+            }
         }
+        
+
+        node_handle_ptr = (node_handle_ptr + 1) % 32;
     }
+
     return n_sections; // -1 means no section
 }

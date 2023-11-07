@@ -174,19 +174,6 @@ typedef struct {
 } collision_mesh_t;
 
 typedef struct {
-    uint32_t sections_0_31;
-    uint32_t sections_32_63;
-    uint32_t sections_64_95;
-    uint32_t sections_96_127;
-} vislist_t;
-
-#define MAGIC_FVIS 0x53495646
-typedef struct {
-    uint32_t file_magic; // File magic: "FVIS"
-    uint32_t n_verts; // The number of sections in this vislist header
-} vislist_header_t;
-
-typedef struct {
     vec3_t position; // Position (4096 is 1.0 meter)
     vec3_t rotation; // Angles in fixed-point format (4194304 = 360 degrees)
     vec3_t scale; // Scale (4096 = 1.0)

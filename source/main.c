@@ -71,7 +71,7 @@ typedef struct {
 		model_t* m_level_col_dbg;
 		model_t* m_weapons;
 		collision_mesh_t* m_level_col;
-		vislist_t* v_level;
+		vislist_t v_level;
     	bvh_t bvh_level_model;
 		player_t player;
 		scalar_t gun_animation_timer;
@@ -328,7 +328,7 @@ void state_enter_in_game(void) {
     state.in_game.m_level = model_load("\\ASSETS\\MODELS\\LEVEL.MSH;1", 1, STACK_LEVEL);
     state.in_game.m_level_col_dbg = model_load_collision_debug("\\ASSETS\\MODELS\\LEVEL.COL;1", 1, STACK_LEVEL);
     state.in_game.m_level_col = model_load_collision("\\ASSETS\\MODELS\\LEVEL.COL;1", 1, STACK_LEVEL);
-	state.in_game.v_level = model_load_vislist("\\ASSETS\\MODELS\\LEVEL.VIS;1", 1, STACK_LEVEL);
+	state.in_game.v_level = vislist_load("\\ASSETS\\MODELS\\LEVEL.VIS;1", 1, STACK_LEVEL);
 	state.in_game.m_weapons = model_load("\\ASSETS\\MODELS\\WEAPONS.MSH;1", 1, STACK_LEVEL);
 
 	entity_init();
@@ -452,14 +452,14 @@ void state_update_in_game(int dt) {
 	if (state.in_game.player.has_key_blue) renderer_draw_2d_quad_axis_aligned((vec2_t){(256 - 80 - 40)*ONE, 210*ONE}, (vec2_t){31*ONE, 20*ONE}, (vec2_t){194*ONE, 0*ONE}, (vec2_t){255*ONE, 40*ONE}, (pixel32_t){128, 128, 128}, 3, 5, 1);
 	if (state.in_game.player.has_key_yellow) renderer_draw_2d_quad_axis_aligned((vec2_t){(256 + 80)*ONE, 210*ONE}, (vec2_t){31*ONE, 20*ONE}, (vec2_t){130*ONE, 0*ONE}, (vec2_t){193*ONE, 40*ONE}, (pixel32_t){128, 128, 128}, 3, 5, 1);
 
-	int n_sections = player_get_level_section(&state.in_game.player, state.in_game.m_level);
+	int n_sections = player_get_level_section(&state.in_game.player, state.in_game.v_level);
 	state.global.frame_counter += dt;
 #ifdef _DEBUG
 	if (input_pressed(PAD_SQUARE, 0)) renderer_cycle_res_x();
 	if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
 	if (state.global.show_debug) {
 		PROFILE("input", input_update(), 1);
-		PROFILE("lvl_gfx", renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0), 1);
+		PROFILE("lvl_gfx", renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level.vislists, 0), 1);
 		PROFILE("entity", entity_update_all(&state.in_game.player, dt), 1);
 		PROFILE("player", player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt, state.global.time_counter), 1);
 		FntPrint(-1, "sections: ");
@@ -506,7 +506,7 @@ void state_update_in_game(int dt) {
 	else {
 #endif
 		input_update();
-		renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level, 0);
+		renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level.vislists, 0);
 		entity_update_all(&state.in_game.player, dt);
 		player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt, state.global.time_counter);
 #ifdef _DEBUG

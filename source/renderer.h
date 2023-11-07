@@ -17,6 +17,7 @@ extern "C" {
 #include "texture.h"
 #include "vec2.h"
 #include "structs.h"
+#include "vislist.h"
     
 #define ORD_TBL_LENGTH 4096
 #define RES_X 384
@@ -31,7 +32,7 @@ extern int widescreen;
 void renderer_init(void); // Initializes the renderer by configuring the GPU, setting the video mode, and preparing the drawing environment
 void renderer_begin_frame(const transform_t* camera_transform); // Applies the camera transform to the renderer, preparing it for a new frame
 void renderer_end_frame(void); // Draws the render queue, swaps the drawbuffer, clears the render queue, and applies the display environments
-void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, vislist_t* vislist, int tex_id_offset); // Draws a 3D model at a given transform using shaded triangle primitives
+void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, visfield_t* vislist, int tex_id_offset); // Draws a 3D model at a given transform using shaded triangle primitives
 void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform); // Draws a 3D mesh at a given transform using shaded triangle primitives
 void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, transform_t* model_transform, int tex_id_offset); // Same as above, except applies a texture id offset
 void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, transform_t* model_transform, int tex_id_offset); // Same as above, except always renders from 0, 0, 0. Useful for 3D HUD elements since camera position is not taken into account

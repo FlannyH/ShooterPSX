@@ -176,7 +176,7 @@ void renderer_end_frame(void) {
     drawn_first_frame = 1;
 }
 
-void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, vislist_t* vislist, int tex_id_offset) {
+void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, visfield_t* vislist, int tex_id_offset) {
     tex_id_start = tex_id_offset;
     if (vislist == NULL || n_sections == 0) {
         for (size_t i = 0; i < model->n_meshes; ++i) {
@@ -186,7 +186,7 @@ void renderer_draw_model_shaded(const model_t* model, transform_t* model_transfo
     }
     else  {
         // Determine which meshes to render
-        vislist_t combined = {0, 0, 0, 0};
+        visfield_t combined = {0, 0, 0, 0};
 
         // Get all the vislist bitfields and combine them together
         for (size_t i = 0; i < n_sections; ++i) {
@@ -199,9 +199,9 @@ void renderer_draw_model_shaded(const model_t* model, transform_t* model_transfo
         // Render only the meshes that are visible
         for (size_t i = 0; i < model->n_meshes; ++i) {
             if ((i < 32) && (combined.sections_0_31 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-            else if ((i < 64) && (combined.sections_32_63 & (1 << (i - 32)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-            else if ((i < 96) && (combined.sections_64_95 & (1 << (i - 64)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-            else if ((i < 128) && (combined.sections_96_127 & (1 << (i - 96)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+            else if ((i >= 32) && (i < 64) && (combined.sections_32_63 & (1 << (i - 32)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+            else if ((i >= 64) && (i < 96) && (combined.sections_64_95 & (1 << (i - 64)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+            else if ((i >= 96) && (i < 128) && (combined.sections_96_127 & (1 << (i - 96)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
         }
     }
 	tex_id_start = 0;
