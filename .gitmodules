@@ -1,0 +1,12 @@
+[submodule "tools/obj2psx"]
+	path = tools/obj2psx
+	url = https://github.com/FlannyH/obj2psx.git
+[submodule "tools/midi2psx"]
+	path = tools/midi2psx
+	url = https://github.com/FlannyH/midi2psx.git
+[submodule "tools/psx_vislist_generator"]
+	path = tools/psx_vislist_generator
+	url = https://github.com/FlannyH/psx_vislist_generator.git
+[submodule "tools/psx_soundfont_generator"]
+	path = tools/psx_soundfont_generator
+	url = https://github.com/FlannyH/psx_soundfont_generator.git
