@@ -1,11 +1,14 @@
-D:
-
-cd D:/Projects/Git/obj2psx
+cd tools
+cd obj2psx
 cargo build --release
-copy D:\Projects\Git\obj2psx\target\release\deps\obj2psx.exe D:\Projects\Git\ShooterPSX\tools\obj2psx.exe /Y
-
-cd D:/Projects/Git/psx_vislist_generator
+cd ..
+cd midi2psx
 cargo build --release
-copy D:\Projects\Git\psx_vislist_generator\target\release\deps\psx_vislist_generator.exe D:\Projects\Git\ShooterPSX\tools\psx_vislist_generator.exe /Y
-
-cd D:/Projects/Git/ShooterPSX
+cd ..
+cd psx_vislist_generator
+cargo build --release
+cd ..
+cd ..
+copy .\tools\obj2psx\target\release\deps\obj2psx.exe .\tools\obj2psx.exe /Y
+copy .\tools\midi2psx\target\release\deps\midi2psx.exe .\tools\midi2psx.exe /Y
+copy .\tools\psx_vislist_generator\target\release\deps\psx_vislist_generator.exe .\tools\psx_vislist_generator.exe /Y
