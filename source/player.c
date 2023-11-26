@@ -108,6 +108,11 @@ void handle_stick_input(player_t* self, const int dt_ms) {
         const int32_t dpad_y = ((int32_t)(input_held(PAD_UP, 0) != 0) * -127) + ((int32_t)(input_held(PAD_DOWN, 0) != 0) * 127);
         self->velocity.x += hisin(self->rotation.y) * dpad_y * (walking_acceleration * dt_ms) >> 12;
         self->velocity.z += hicos(self->rotation.y) * dpad_y * (walking_acceleration * dt_ms) >> 12;
+
+        // Strafing left and right
+        const int32_t shoulder_x = ((int32_t)(input_held(PAD_L1, 0) != 0) * -127) + ((int32_t)(input_held(PAD_R1, 0) != 0) * 127);
+        self->velocity.x -= hicos(self->rotation.y) * shoulder_x * (walking_acceleration * dt_ms) >> 12;
+        self->velocity.z += hisin(self->rotation.y) * shoulder_x * (walking_acceleration * dt_ms) >> 12;
     }
 }
 
