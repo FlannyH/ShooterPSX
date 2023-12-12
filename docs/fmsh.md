@@ -37,7 +37,7 @@ All offsets are relative to the start of this binary section.
 | u8   | b             | Color B                                                                        |
 | u8   | u             | Texture Coordinate U                                                           |
 | u8   | v             | Texture Coordinate V                                                           |
-| u8   | (...)         | In the first vertex, this is an index into the texture collection, which determines which texture to use. In the second vertex, this is the size of the triangle.|
+| u8   | (...)         | In the first vertex, this is an index into the texture collection, which determines which texture to use. In the second vertex, this indicates the size of the triangle, which is used to determine from what distance to tesselate a polygon. This value does not have a fixed unit.|
 
 ## Mesh name table entry
 | Type | Name   | Description                               |
