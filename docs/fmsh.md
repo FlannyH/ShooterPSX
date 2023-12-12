@@ -41,5 +41,6 @@ All offsets are relative to the start of this binary section.
 
 ## Mesh name table entry
 | Type | Name   | Description                               |
+------------------------------------------------------------
 | u32  | length | String length in bytes                    |
 | u8[] | data   | String data, padded to 32 bits at the end |
