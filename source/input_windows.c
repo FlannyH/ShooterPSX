@@ -200,3 +200,7 @@ int input_check_cheat_buffer(int n_inputs, uint16_t* inputs_to_check) {\
     }
     return match;
 }
+
+void input_rumble(uint8_t left_strength, uint8_t right_enable) {
+    // todo
+}
