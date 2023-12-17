@@ -5,10 +5,6 @@
 
 #include "fixed_point.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void input_init(void);
 void input_update(void);
 void input_set_stick_deadzone(int8_t new_deadzone);
@@ -30,10 +26,6 @@ void input_rumble(uint8_t left_strength, uint8_t right_enable);
 #ifdef _WINDOWS
 scalar_t input_gyro_x(int player_id);
 scalar_t input_gyro_y(int player_id);
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif
