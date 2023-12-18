@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-uint32_t mem_stack_temp [512  * KiB / sizeof(uint32_t)];
-uint32_t mem_stack_level[768 * KiB / sizeof(uint32_t)];
+uint32_t mem_stack_temp [448  * KiB / sizeof(uint32_t)];
+uint32_t mem_stack_level[960 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_music[64 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_entity[64 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_vram_swap[1 * KiB / sizeof(uint32_t)];
