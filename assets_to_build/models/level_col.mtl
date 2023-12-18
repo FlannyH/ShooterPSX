@@ -1,4 +1,4 @@
-# Blender 3.6.1 MTL File: 'level.blend'
+# Blender 4.0.2 MTL File: 'level.blend'
 # www.blender.org
 
 newmtl Material
@@ -20,6 +20,16 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 1
+
+newmtl black
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/black.png
 
 newmtl blue_concrete
 Ns 0.000000
@@ -101,6 +111,16 @@ d 1.000000
 illum 1
 map_Kd level_tex/cage.png
 
+newmtl ceiling_grid
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/ceiling_grid.png
+
 newmtl collection16
 Ns 250.000000
 Ka 1.000000 1.000000 1.000000
@@ -180,6 +200,16 @@ Ni 1.450000
 d 1.000000
 illum 1
 map_Kd level_tex/grid_wall.png
+
+newmtl orange_tech
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/orange_tech.png
 
 newmtl pattern_walls
 Ns 0.000000
@@ -320,6 +350,26 @@ Ni 1.450000
 d 1.000000
 illum 2
 map_Kd level_tex/soft_ground.png
+
+newmtl tech_smooth
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/tech_smooth.png
+
+newmtl tech_tile
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/tech_tile.png
 
 newmtl techflat1_ylw1
 Ns 0.000000
