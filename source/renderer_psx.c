@@ -541,7 +541,7 @@ void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index) {
 }
 
 void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {
-    WARN_IF("texture is not a full page!", texture->width != 256 || texture->height != 256);
+    WARN_IF("texture is not a full page!", texture->width != 0 || texture->height != 0); // 0 is interpreted as 256
     const RECT rect_page = {
         index * 256 / (16 / 8), // X: 256 pixels, 8bpp
         256, // Y: fixed at 256, which is where textures are stored,
