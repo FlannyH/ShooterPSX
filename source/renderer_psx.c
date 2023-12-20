@@ -8,9 +8,9 @@
 #define TRI_THRESHOLD_MUL_SUB2 2
 #define TRI_THRESHOLD_MUL_SUB1 4
 #define TRI_THRESHOLD_NORMAL 500
-#define TRI_THRESHOLD_FADE_START 700
-#define TRI_THRESHOLD_FADE_END 1000
-#define MESH_RENDER_DISTANCE 12000
+#define TRI_THRESHOLD_FADE_START 600
+#define TRI_THRESHOLD_FADE_END 900
+#define MESH_RENDER_DISTANCE 9600
 #define N_CLUT_FADES 16
 #define N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE 4
 
@@ -485,6 +485,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
 
     PopMatrix();
 }
+
 void renderer_debug_draw_aabb(const aabb_t* box, pixel32_t color, transform_t* model_transform) {
     // Create 8 vertices
     const vec3_t vertex000 = { box->min.x, box->min.y, box->min.z };
