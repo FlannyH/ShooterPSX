@@ -671,7 +671,97 @@ int renderer_get_level_section_from_position(const model_t* model, vec3_t positi
 }
 
 // todo
-void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {}
+void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {
+	const vec2_t tl = { center.x - size.x / 2, center.y - size.y / 2 };
+	const vec2_t tr = { center.x + size.x / 2, center.y - size.y / 2 };
+	const vec2_t bl = { center.x - size.x / 2, center.y + size.y / 2 };
+	const vec2_t br = { center.x + size.x / 2, center.y + size.y / 2 };
+	renderer_draw_2d_quad(tl, tr, bl, br, uv_tl, uv_br, color, depth, texture_id, is_page);
+}
+
+void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color,
+    int depth, int texture_id, int is_page) {
+	vertex_3d_t verts[4];
+	// Top left
+	verts[0].x = tl.x / ONE;
+	verts[0].y = tl.y / ONE;
+	verts[0].u = uv_tl.x / ONE;
+	verts[0].v = uv_tl.y / ONE;
+
+	// Top right
+	verts[1].x = br.x / ONE;
+	verts[1].y = tl.y / ONE;
+	verts[1].u = uv_br.x / ONE;
+	verts[1].v = uv_tl.y / ONE;
+
+	// Bottom right
+	verts[2].x = br.x / ONE;
+	verts[2].y = br.y / ONE;
+	verts[2].u = uv_br.x / ONE;
+	verts[2].v = uv_br.y / ONE;
+
+	// Bottom left
+	verts[3].x = tl.x / ONE;
+	verts[3].y = br.y / ONE;
+	verts[3].u = uv_tl.x / ONE;
+	verts[3].v = uv_br.y / ONE;
+
+	for (size_t i = 0; i < 4; ++i) {
+		verts[i].x -= 512 / 2;
+		verts[i].y -= 240 / 2;
+		verts[i].r = color.r;
+		verts[i].g = color.g;
+		verts[i].b = color.b;
+		verts[i].tex_id = texture_id;
+		verts[i].z = depth;
+		if (!is_page) {
+			verts[i].u /= 4;
+			verts[i].v /= 4;
+		}
+	}
+
+	vertex_3d_t triangulated[6] = {
+		verts[0], verts[1], verts[2],
+		verts[0], verts[2], verts[3]
+	};
+
+	// Bind shader
+	glUseProgram(shader);
+
+	// Bind texture
+	glBindTexture(GL_TEXTURE_2D, textures);
+
+	// Bind vertex buffers
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+	// Set matrices
+	mat4 id_matrix;
+	glm_mat4_identity(id_matrix);
+	mat4 screen_matrix;
+	glm_mat4_identity(screen_matrix);
+	screen_matrix[0][0] = 1.0f / 256.0f;
+	screen_matrix[1][1] = -2.0f / 240.0f;
+	screen_matrix[2][2] = 1.0f / 256.0f;
+	glUniformMatrix4fv(glGetUniformLocation(shader, "proj_matrix"), 1, GL_FALSE, &id_matrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE, &screen_matrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE, &id_matrix[0][0]);
+
+	glUniform1i(glGetUniformLocation(shader, "texture_bound"), texture_id != 255);
+	glUniform1i(glGetUniformLocation(shader, "texture_offset"), 0);
+	glUniform1i(glGetUniformLocation(shader, "texture_is_page"), is_page);
+
+	// Copy data into it
+	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(vertex_3d_t), triangulated, GL_STATIC_DRAW);
+
+	// Enable depth and draw
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+}
+
 void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const int centered, const pixel32_t color) {}
 void renderer_apply_fade(int fade_level) {}
 void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {
@@ -692,7 +782,7 @@ void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t
         pixels[i].r = pixel.r << 3;
         pixels[i].g = pixel.g << 3;
         pixels[i].b = pixel.b << 3;
-        pixels[i].a = pixel.a * 255;
+        pixels[i].a = 255 * ((pixel.r | pixel.g | pixel.b) != 0);
     }
 
     // Upload texture

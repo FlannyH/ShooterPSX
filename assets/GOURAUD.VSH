@@ -18,7 +18,7 @@ uniform int texture_offset;
 void main()
 {
 	gl_Position = proj_matrix * view_matrix * model_matrix * vec4(in_position, 1.0);
-	out_color = in_color;
+	out_color = in_color * 2;
 	out_texcoord = in_texcoord.xy;
 	out_texture = in_texture + float(texture_offset);
 }
