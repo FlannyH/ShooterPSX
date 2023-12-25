@@ -456,6 +456,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
 
     glUniform1i(glGetUniformLocation(shader, "texture_bound"), mesh->vertices[0].tex_id != 255);
     glUniform1i(glGetUniformLocation(shader, "texture_offset"), tex_id_start);
+	glUniform1i(glGetUniformLocation(shader, "texture_is_page"), 0);
     
 	// Copy data into it
 	glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(vertex_3d_t), mesh->vertices, GL_STATIC_DRAW);
