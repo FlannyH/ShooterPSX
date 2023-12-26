@@ -266,7 +266,7 @@ int input_mouse_connected() {
 
 void input_lock_mouse() {
     mouse_lock = 1;
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 void input_unlock_mouse() {
     mouse_lock = 0;
