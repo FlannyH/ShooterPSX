@@ -118,10 +118,8 @@ void input_update() {
     static double cursor_pos_prev_y = 0.0;
     double cursor_pos_x, cursor_pos_y;
     glfwGetCursorPos(window, &cursor_pos_x, &cursor_pos_y);
-    printf("%f, %f\n", cursor_pos_x, cursor_pos_y);
     right_stick_x[0] = (int8_t)(cursor_pos_x - cursor_pos_prev_x);
     right_stick_y[0] = (int8_t)(cursor_pos_y - cursor_pos_prev_y);
-    printf("%f, %f\n", cursor_pos_x - cursor_pos_prev_x, cursor_pos_y - cursor_pos_prev_y);
 
     if (mouse_lock) {
         int w, h;
