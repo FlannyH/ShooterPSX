@@ -856,7 +856,6 @@ int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vert
         closest_pos_3d.y = (closest_pos_3d.y + scalar_mul(w, (triangle->v2.y - triangle->v0.y)));
     }
 
-
     // Is this Y coordinate within the cylinder's range?
     const scalar_t min = vertical_cylinder.bottom.y;
     const scalar_t max = (min + vertical_cylinder.height);
