@@ -12,9 +12,12 @@ int8_t right_stick_y[2] = { 0, 0 };
 uint16_t button_prev[2] = { 0, 0 };
 uint16_t button_curr[2] = { 0, 0 };
 int8_t deadzone = 24;
+int8_t currently_active_deadzone = 24;
+int keyboard_focus = 1;
 int player1_index = -1;
 int player2_index = -1;
 int button_pressed_this_frame = 0;
+int mouse_lock = 0;
 uint16_t input_buffer[32];
 
 void input_init() {
@@ -82,6 +85,10 @@ void input_update() {
         button_curr[0] |= (PAD_CIRCLE)*     state1.buttons[GLFW_GAMEPAD_BUTTON_CIRCLE];
         button_curr[0] |= (PAD_CROSS)*      state1.buttons[GLFW_GAMEPAD_BUTTON_CROSS];
         button_curr[0] |= (PAD_SQUARE)*     state1.buttons[GLFW_GAMEPAD_BUTTON_SQUARE];
+        if (button_curr) keyboard_focus = 0;
+    }
+    else {
+        keyboard_focus = 1;
     }
     if (glfwGetGamepadState(player2_index, &state2)) {
         left_stick_x[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_LEFT_X] * 127.f);
@@ -105,7 +112,55 @@ void input_update() {
         button_curr[1] |= (PAD_CROSS)*      state2.buttons[GLFW_GAMEPAD_BUTTON_CROSS];
         button_curr[1] |= (PAD_SQUARE)*     state2.buttons[GLFW_GAMEPAD_BUTTON_SQUARE];
     }
-    
+
+    // Keyboard & mouse input
+    static double cursor_pos_prev_x = 0.0;
+    static double cursor_pos_prev_y = 0.0;
+    double cursor_pos_x, cursor_pos_y;
+    glfwGetCursorPos(window, &cursor_pos_x, &cursor_pos_y);
+    printf("%f, %f\n", cursor_pos_x, cursor_pos_y);
+    right_stick_x[0] = (int8_t)(cursor_pos_x - cursor_pos_prev_x);
+    right_stick_y[0] = (int8_t)(cursor_pos_y - cursor_pos_prev_y);
+    printf("%f, %f\n", cursor_pos_x - cursor_pos_prev_x, cursor_pos_y - cursor_pos_prev_y);
+
+    if (mouse_lock) {
+        int w, h;
+        glfwGetWindowSize(window, &w, &h);
+        w /= 2;
+        h /= 2;
+        glfwSetCursorPos(window, w, h);
+        cursor_pos_prev_x = w;
+        cursor_pos_prev_y = h;
+    }
+    else {
+        cursor_pos_prev_x = cursor_pos_x;
+        cursor_pos_prev_y = cursor_pos_y;
+    }
+    left_stick_x[0] = 0;
+    left_stick_y[0] = 0;
+    if (glfwGetKey(window, GLFW_KEY_W)) { left_stick_y[0] += 127; }
+    if (glfwGetKey(window, GLFW_KEY_S)) { left_stick_y[0] -= 127; }
+    if (glfwGetKey(window, GLFW_KEY_A)) { left_stick_x[0] += 127; }
+    if (glfwGetKey(window, GLFW_KEY_D)) { left_stick_x[0] -= 127; }
+    button_curr[0] |= (PAD_SELECT)*glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT);
+    //button_curr[0] |= (PAD_L3)*       glfwGetKey(window, GLFW_KEY_)   
+    //button_curr[0] |= (PAD_R3)*       glfwGetKey(window, GLFW_KEY_)   
+    button_curr[0] |= (PAD_START)*glfwGetKey(window, GLFW_KEY_ESCAPE);
+    button_curr[0] |= (PAD_UP)*glfwGetKey(window, GLFW_KEY_UP);
+    button_curr[0] |= (PAD_RIGHT)*glfwGetKey(window, GLFW_KEY_RIGHT);
+    button_curr[0] |= (PAD_DOWN)*glfwGetKey(window, GLFW_KEY_DOWN);
+    button_curr[0] |= (PAD_LEFT)*glfwGetKey(window, GLFW_KEY_LEFT);
+    //button_curr[0] |= (PAD_L1)*glfwGetKey(window, GLFW_KEY_)
+    //button_curr[0] |= (PAD_R1)*glfwGetKey(window, GLFW_KEY_)
+    button_curr[0] |= (PAD_L2)*glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+    button_curr[0] |= (PAD_R2)*glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
+    //button_curr[0] |= (PAD_TRIANGLE)* glfwGetKey(window, GLFW_KEY_)   
+    button_curr[0] |= (PAD_CIRCLE)*glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL);
+    button_curr[0] |= (PAD_CROSS)*glfwGetKey(window, GLFW_KEY_SPACE);
+    button_curr[0] |= (PAD_SQUARE)*glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
+
+    currently_active_deadzone = keyboard_focus ? 0 : deadzone;
+
     // Update cheat buffer
     button_pressed_this_frame = 0;
     uint16_t buttons_pressed = (button_curr[0] ^ button_prev[0]) & button_curr[0];
@@ -148,8 +203,8 @@ int input_released(const uint16_t button_mask, const int player_id) {
 
 int8_t input_left_stick_x(const int player_id) {
     const int8_t value = left_stick_x[player_id];
-    if (value < -deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)deadzone) / (127 - (int16_t)deadzone));
-    if (value > deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)deadzone) / (127 - (int16_t)deadzone));
+    if (value < -currently_active_deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)deadzone));
+    if (value > currently_active_deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)deadzone));
     return 0;
 }
 
@@ -159,8 +214,8 @@ int8_t input_left_stick_x_relative(int player_id) {
 
 int8_t input_left_stick_y(const int player_id) {
     const int8_t value = left_stick_y[player_id];
-    if (value < -deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)deadzone) / (127 - (int16_t)deadzone));
-    if (value > deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)deadzone) / (127 - (int16_t)deadzone));
+    if (value < -currently_active_deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)deadzone));
+    if (value > currently_active_deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)deadzone));
     return 0;
 }
 
@@ -170,8 +225,8 @@ int8_t input_left_stick_y_relative(int player_id) {
 
 int8_t input_right_stick_x(const int player_id) {
     const int8_t value = right_stick_x[player_id];
-    if (value < -deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)deadzone) / (127 - (int16_t)deadzone));
-    if (value > deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)deadzone) / (127 - (int16_t)deadzone));
+    if (value < -currently_active_deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
+    if (value > currently_active_deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
     return 0;
 }
 
@@ -181,8 +236,8 @@ int8_t input_right_stick_x_relative(int player_id) {
 
 int8_t input_right_stick_y(const int player_id) {
     const int8_t value = right_stick_y[player_id];
-    if (value < -deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)deadzone) / (127 - (int16_t)deadzone));
-    if (value > deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)deadzone) / (127 - (int16_t)deadzone));
+    if (value < -currently_active_deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
+    if (value > currently_active_deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
     return 0;
 }
 
@@ -203,4 +258,17 @@ int input_check_cheat_buffer(int n_inputs, uint16_t* inputs_to_check) {\
 
 void input_rumble(uint8_t left_strength, uint8_t right_enable) {
     // todo
+}
+
+int input_mouse_connected() {
+    return keyboard_focus;
+}
+
+void input_lock_mouse() {
+    mouse_lock = 1;
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+}
+void input_unlock_mouse() {
+    mouse_lock = 0;
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }

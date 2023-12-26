@@ -308,6 +308,7 @@ void state_exit_title_screen(void) {
 }
 
 void state_enter_in_game(void) {
+	input_lock_mouse();
 	if (prev_state == STATE_PAUSE_MENU) return;
 
 	mem_stack_release(STACK_LEVEL);
@@ -631,6 +632,7 @@ void state_update_in_game(int dt) {
 	mem_stack_release(STACK_TEMP);
 }
 void state_exit_in_game(void) {
+	input_unlock_mouse();
 	return;
 }
 
