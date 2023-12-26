@@ -20,7 +20,7 @@ void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     WARN_IF("player radius squared was not computed, and is equal to 0", player_radius_squared == 0);
 
     // Cast a cylinder from the player's feet + step height, down to the ground
-    int32_t distance_to_check = 12000000;
+    int32_t distance_to_check = 120000;
     rayhit_t hit = { 0 };
     const vertical_cylinder_t player = {
         .bottom = vec3_sub(self->position, vec3_from_int32s(0, distance_to_check, 0)),
