@@ -709,7 +709,7 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 
 	for (size_t i = 0; i < 4; ++i) {
 		verts[i].x -= 512 / 2;
-		verts[i].y -= 240 / 2;
+		verts[i].y -= 272 / 2;
 		verts[i].r = color.r;
 		verts[i].g = color.g;
 		verts[i].b = color.b;
