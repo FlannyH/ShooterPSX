@@ -9,6 +9,8 @@ out vec4 frag_color;
 uniform sampler2D tex;
 uniform int texture_bound;
 uniform int texture_is_page;
+uniform int texture_blend_mode;
+uniform float alpha;
 
 void main()
 {
@@ -27,9 +29,8 @@ void main()
             256.0 + out_texcoord.y
         );
     }
-
-	frag_color = vec4(out_color, 1.0f) * (texture_bound == 1 ? texture(tex, vec2(pixel_coord / vec2(2048.0f, 512.0f))) : vec4(1.0f, 1.0f, 1.0f, 1.0f));
-    if (frag_color.a < 0.5f) {
+	frag_color = vec4(out_color, alpha) * (texture_bound == 1 ? texture(tex, vec2(pixel_coord / vec2(2048.0f, 512.0f))) : vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    if (frag_color.a < 0.001f) {
         discard;
     }
 }

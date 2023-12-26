@@ -201,16 +201,16 @@ void state_update_title_screen(int dt) {
 	renderer_begin_frame(&id_transform);
 	input_update();
 	// Draw background
-	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
-	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
 
 	// Draw Sub Nivis logo
-	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 85*ONE}, (vec2_t){128*ONE, 72*ONE}, (vec2_t){0*ONE, 184*ONE}, (vec2_t){128*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 2, 5, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 85*ONE}, (vec2_t){128*ONE, 72*ONE}, (vec2_t){0*ONE, 184*ONE}, (vec2_t){128*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, 1);
 
 	// Draw buttons
 	for (int y = 0; y < 3; ++y) {
 		// Left handle, right handle, middle bar, text
-		pixel32_t color = (pixel32_t){128, 128, 128};
+		pixel32_t color = (pixel32_t){128, 128, 128, 255};
 		if (y == state.title_screen.button_selected) {
 			if (state.title_screen.button_pressed) {
 				color.r = 64;
@@ -292,11 +292,11 @@ void state_exit_title_screen(void) {
 		input_update();
 
 		// Draw background
-		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
-		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
 
 		// Draw Sub Nivis logo
-		renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 85*ONE}, (vec2_t){128*ONE, 72*ONE}, (vec2_t){0*ONE, 184*ONE}, (vec2_t){128*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 2, 5, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 85*ONE}, (vec2_t){128*ONE, 72*ONE}, (vec2_t){0*ONE, 184*ONE}, (vec2_t){128*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, 1);
 
 		renderer_apply_fade(state.global.fade_level);
 
@@ -428,17 +428,17 @@ void state_update_in_game(int dt) {
 	renderer_begin_frame(&camera_transform);
 
 	// Draw crosshair
-	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, (128 + 8*(!is_pal))*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){96*ONE, 40*ONE}, (vec2_t){127*ONE, 59*ONE}, (pixel32_t){128, 128, 128}, 2, 5, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, (128 + 8*(!is_pal))*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){96*ONE, 40*ONE}, (vec2_t){127*ONE, 59*ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, 1);
 
 	// Draw HUD - background
-	renderer_draw_2d_quad_axis_aligned((vec2_t){(121 - 16)*ONE, 236*ONE}, (vec2_t){50*ONE, 40*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){50*ONE, 40*ONE}, (pixel32_t){128, 128, 128}, 2, 5, 1);
-	renderer_draw_2d_quad_axis_aligned((vec2_t){(260 - 16)*ONE, 236*ONE}, (vec2_t){228*ONE, 40*ONE}, (vec2_t){51*ONE, 0*ONE}, (vec2_t){51*ONE, 40*ONE}, (pixel32_t){128, 128, 128}, 2, 5, 1);
-	renderer_draw_2d_quad_axis_aligned((vec2_t){(413 - 16)*ONE, 236*ONE}, (vec2_t){80*ONE, 40*ONE}, (vec2_t){51*ONE, 0*ONE}, (vec2_t){129*ONE, 40*ONE}, (pixel32_t){128, 128, 128}, 2, 5, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){(121 - 16)*ONE, 236*ONE}, (vec2_t){50*ONE, 40*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){50*ONE, 40*ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){(260 - 16)*ONE, 236*ONE}, (vec2_t){228*ONE, 40*ONE}, (vec2_t){51*ONE, 0*ONE}, (vec2_t){51*ONE, 40*ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){(413 - 16)*ONE, 236*ONE}, (vec2_t){80*ONE, 40*ONE}, (vec2_t){51*ONE, 0*ONE}, (vec2_t){129*ONE, 40*ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, 1);
 	
 	// Draw HUD - gauges
-	renderer_draw_2d_quad_axis_aligned((vec2_t){(138 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){64*ONE, 40*ONE}, (vec2_t){96*ONE, 60*ONE}, (pixel32_t){128, 128, 128}, 1, 5, 1);
-	renderer_draw_2d_quad_axis_aligned((vec2_t){(226 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){32*ONE, 40*ONE}, (vec2_t){64*ONE, 60*ONE}, (pixel32_t){128, 128, 128}, 1, 5, 1);
-	renderer_draw_2d_quad_axis_aligned((vec2_t){(314 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){0*ONE, 40*ONE}, (vec2_t){32*ONE, 60*ONE}, (pixel32_t){128, 128, 128}, 1, 5, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){(138 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){64*ONE, 40*ONE}, (vec2_t){96*ONE, 60*ONE}, (pixel32_t){128, 128, 128, 255}, 1, 5, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){(226 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){32*ONE, 40*ONE}, (vec2_t){64*ONE, 60*ONE}, (pixel32_t){128, 128, 128, 255}, 1, 5, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){(314 - 16)*ONE, 236*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){0*ONE, 40*ONE}, (vec2_t){32*ONE, 60*ONE}, (pixel32_t){128, 128, 128, 255}, 1, 5, 1);
 
 	// Draw HUD - gauge text
 	char gauge_text_buffer[4];
@@ -450,8 +450,8 @@ void state_update_in_game(int dt) {
 	renderer_draw_text((vec2_t){(314 + 24 - 16)*ONE, 236*ONE}, gauge_text_buffer, 2, 0, (pixel32_t){255, 97, 0});
 
 	// Draw HUD - keycards
-	if (state.in_game.player.has_key_blue) renderer_draw_2d_quad_axis_aligned((vec2_t){(256 - 80 - 40)*ONE, 210*ONE}, (vec2_t){31*ONE, 20*ONE}, (vec2_t){194*ONE, 0*ONE}, (vec2_t){255*ONE, 40*ONE}, (pixel32_t){128, 128, 128}, 3, 5, 1);
-	if (state.in_game.player.has_key_yellow) renderer_draw_2d_quad_axis_aligned((vec2_t){(256 + 80)*ONE, 210*ONE}, (vec2_t){31*ONE, 20*ONE}, (vec2_t){130*ONE, 0*ONE}, (vec2_t){193*ONE, 40*ONE}, (pixel32_t){128, 128, 128}, 3, 5, 1);
+	if (state.in_game.player.has_key_blue) renderer_draw_2d_quad_axis_aligned((vec2_t){(256 - 80 - 40)*ONE, 210*ONE}, (vec2_t){31*ONE, 20*ONE}, (vec2_t){194*ONE, 0*ONE}, (vec2_t){255*ONE, 40*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 5, 1);
+	if (state.in_game.player.has_key_yellow) renderer_draw_2d_quad_axis_aligned((vec2_t){(256 + 80)*ONE, 210*ONE}, (vec2_t){31*ONE, 20*ONE}, (vec2_t){130*ONE, 0*ONE}, (vec2_t){193*ONE, 40*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 5, 1);
 
 	int n_sections = player_get_level_section(&state.in_game.player, state.in_game.v_level);
 	state.global.frame_counter += dt;
@@ -643,8 +643,8 @@ void state_enter_settings(void) {
 	while (state.global.fade_level > 0) {
 		renderer_begin_frame(&id_transform);
 		// Draw background
-		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
-		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
 		renderer_apply_fade(state.global.fade_level);
 		state.global.fade_level -= FADE_SPEED;
 		renderer_end_frame();
@@ -655,14 +655,14 @@ void state_update_settings(int dt) {
 	renderer_begin_frame(&id_transform);
 	input_update();
 	// Draw background
-	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
-	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
 	
 	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_settings[0], 1, 1, white);
 
 	// Draw settings text and box
 	for (int i = 0; i < 5; ++i) {
-		pixel32_t color = (pixel32_t){128, 128, 128};
+		pixel32_t color = (pixel32_t){128, 128, 128, 255};
 		if (i == state.settings.button_selected) {
 			if (state.settings.button_pressed) {
 				color.r = 64;
@@ -733,14 +733,14 @@ void state_exit_settings(void) {
 		renderer_begin_frame(&id_transform);
 		input_update();
 		// Draw background
-		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
-		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
 		
 		renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_settings[0], 1, 1, white);
 
 		// Draw settings text and box
 		for (int i = 0; i < 5; ++i) {
-			pixel32_t color = (pixel32_t){128, 128, 128};
+			pixel32_t color = (pixel32_t){128, 128, 128, 255};
 			if (i == state.settings.button_selected) {
 				if (state.settings.button_pressed) {
 					color.r = 64;
@@ -768,8 +768,8 @@ void state_enter_credits(void) {
 	while (state.global.fade_level > 0) {
 		renderer_begin_frame(&id_transform);
 		// Draw background
-		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
-		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
 		renderer_apply_fade(state.global.fade_level);
 		state.global.fade_level -= FADE_SPEED;
 		renderer_end_frame();
@@ -782,8 +782,8 @@ void state_update_credits(int dt) {
 	renderer_begin_frame(&id_transform);
 
 	// Draw background
-	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
-	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
 
 	// Draw text
 	for (int i = 0; i < sizeof(text_credits) / sizeof(text_credits[0]); ++i) {
@@ -809,8 +809,8 @@ void state_exit_credits(void) {
 		renderer_begin_frame(&id_transform);
 		
 		// Draw background
-		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
-		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
 
 		// Draw text
 		renderer_begin_frame(&id_transform);
@@ -851,13 +851,13 @@ void state_update_pause_menu(int dt) {	renderer_begin_frame(&id_transform);
 	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_pause_menu[0], 1, 1, white);
 
 	// Draw background
-	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 3, 1);
-	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128}, 3, 4, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
 
 	// Draw buttons
 	for (int y = 0; y < 3; ++y) {
 		// Left handle, right handle, middle bar, text
-		pixel32_t color = (pixel32_t){128, 128, 128};
+		pixel32_t color = (pixel32_t){128, 128, 128, 255};
 		if (y == state.pause_menu.button_selected) {
 			if (state.pause_menu.button_pressed) {
 				color.r = 64;

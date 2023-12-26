@@ -458,6 +458,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
     glUniform1i(glGetUniformLocation(shader, "texture_bound"), mesh->vertices[0].tex_id != 255);
     glUniform1i(glGetUniformLocation(shader, "texture_offset"), tex_id_start);
 	glUniform1i(glGetUniformLocation(shader, "texture_is_page"), 0);
+	glUniform1f(glGetUniformLocation(shader, "alpha"), 1.0f);
     
 	// Copy data into it
 	glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(vertex_3d_t), mesh->vertices, GL_STATIC_DRAW);
@@ -516,6 +517,8 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
     glUniformMatrix4fv(glGetUniformLocation(shader, "proj_matrix"), 1, GL_FALSE, &perspective_matrix[0][0]);
     glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE, &view_matrix[0][0]);
     glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
+	glUniform1i(glGetUniformLocation(shader, "texture_is_page"), 0);
+	glUniform1f(glGetUniformLocation(shader, "alpha"), 1.0f);
 
     // Copy data into it
     line_3d_t line;
@@ -752,16 +755,19 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 	glUniform1i(glGetUniformLocation(shader, "texture_bound"), texture_id != 255);
 	glUniform1i(glGetUniformLocation(shader, "texture_offset"), 0);
 	glUniform1i(glGetUniformLocation(shader, "texture_is_page"), is_page);
+	glUniform1f(glGetUniformLocation(shader, "alpha"), ((float)color.a) / 255.0f);
 
 	// Copy data into it
 	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(vertex_3d_t), triangulated, GL_STATIC_DRAW);
 
 	// Enable depth and draw
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-
+	glDisable(GL_BLEND);
 }
 
 void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const int centered, const pixel32_t color) {
@@ -845,7 +851,17 @@ void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const
 	}
 
 }
-void renderer_apply_fade(int fade_level) {}
+void renderer_apply_fade(int fade_level) {
+	renderer_draw_2d_quad_axis_aligned(
+		(vec2_t){ 256 * ONE, 128 * ONE}, 
+		(vec2_t){ 512 * ONE, 256 * ONE }, 
+		(vec2_t){ 0, 0 }, 
+		(vec2_t){ 0, 0 }, 
+		(pixel32_t){ 0, 0, 0, fade_level }, 
+		0, 255, 0
+	);
+}
+
 void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {
     // This is where all the pixels will be stored
     size_t width = texture->width == 0 ? 256 : texture->width;
@@ -938,6 +954,8 @@ void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, transform_t* mod
 
     glUniform1i(glGetUniformLocation(shader, "texture_bound"), mesh->vertices[0].tex_id != 255);
     glUniform1i(glGetUniformLocation(shader, "texture_offset"), tex_id_start);
+	glUniform1i(glGetUniformLocation(shader, "texture_is_page"), 0);
+	glUniform1f(glGetUniformLocation(shader, "alpha"), 1.0f);
 
     // Copy data into it
     glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(vertex_3d_t), mesh->vertices, GL_STATIC_DRAW);
