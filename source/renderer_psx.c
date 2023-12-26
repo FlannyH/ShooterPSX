@@ -343,7 +343,6 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 }
 
 void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const int centered, const pixel32_t color) {
-    // if (is_small)
     int font_x;
     int font_y;
     int font_src_width;
