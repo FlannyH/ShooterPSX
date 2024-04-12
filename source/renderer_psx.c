@@ -469,7 +469,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
     gte_stsxy3(v0_tr, v1_tr, v1_tr);
     gte_avsz3();
     gte_stotz(&depth);
-    if (depth <= 0) return;
+    if (depth >= ORD_TBL_LENGTH || (depth <= 0)) return;
 
     // Add to queue
     LINE_F2* new_line = (LINE_F2*)next_primitive;
@@ -480,7 +480,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
         v1_tr[0], v1_tr[1]
     );
     setColor0(new_line, *(uint32_t*)&color); // ugly but eh it's debug anyway
-    addPrim(ord_tbl[drawbuffer] + 0, new_line);
+    addPrim(ord_tbl[drawbuffer] + depth, new_line);
 
     PopMatrix();
 }
