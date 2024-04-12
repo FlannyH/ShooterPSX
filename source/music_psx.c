@@ -26,46 +26,6 @@ uint8_t music_playing = 0;
 int16_t wait_timer = 0;
 uint16_t tempo = 0; // Tempo in BPM, in @9.3 fixed point. Values go from 0.0 to 511.875
 
-void music_test_sound() {
-	// Load sound
-	uint32_t* data;
-	size_t size;
-	file_read("\\ASSETS\\AMEN.BIN;1", &data, &size, 1, STACK_TEMP);
-	SpuSetTransferStartAddr(0x01000);
-	SpuWrite(data, size);
-
-	// Play sound
-    SpuSetVoiceStartAddr(0, 0x01000);
-	SpuSetVoicePitch(0, getSPUSampleRate(18900));
-	SPU_CH_ADSR1(0) = 0x00ff;
-	SPU_CH_ADSR2(0) = 0x0000;
-	SPU_CH_VOL_L(0) = 0x3fff;
-	SPU_CH_VOL_R(0) = 0x3fff;
-	SpuSetKey(1, 1 << 0);
-}
-
-void music_test_instr_region(int region) {
-	// Play sound
-	printf("testing region %i: ", region);
-	printf("key: %i - %i, sls: %i, ss: %i, sr: %i, regs: %i, %i\n", 
-		instrument_regions[region].key_min,
-		instrument_regions[region].key_max,
-		instrument_regions[region].volume_multiplier,
-		instrument_regions[region].sample_start,
-		instrument_regions[region].sample_rate,
-		instrument_regions[region].reg_adsr1,
-		instrument_regions[region].reg_adsr2
-	);
-
-    SpuSetVoiceStartAddr(0, 0x01000 + instrument_regions[region].sample_start);
-	SpuSetVoicePitch(0, getSPUSampleRate(32000));
-	SPU_CH_ADSR1(0) = instrument_regions[region].reg_adsr1;
-	SPU_CH_ADSR2(0) = instrument_regions[region].reg_adsr2;
-	SPU_CH_VOL_L(0) = 0x3fff;
-	SPU_CH_VOL_R(0) = 0x3fff;
-	SpuSetKey(1, 1 << 0);
-}
-
 void music_load_soundbank(const char* path) {
 	// Load the SBK file
 	uint32_t* data;
@@ -419,14 +379,17 @@ void music_tick(int delta_time) {
 }
 
 void music_set_volume(int volume) {
-
 	if (volume < 0) volume = 0;
 	if (volume > 255) volume = 255;
 	volume = (volume * volume) / 4;
 	SpuSetCommonMasterVolume(volume, volume);
 }
 
+// We get a warning from the way the PSn00bSDK made this header. We can safely ignore it
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-value"
 void music_stop(void) {
 	music_playing = 0;
 	SpuSetKey(0, 0xFFFFFF); // release all keys
 }
+#pragma GCC diagnostic pop

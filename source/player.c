@@ -289,18 +289,6 @@ int player_get_level_section(player_t* self, const vislist_t vis) {
     while ((node_handle_ptr != node_add_ptr) && (n_sections < N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE)) {
         // check a node
         visbvh_node_t* node = &vis.bvh_root[node_stack[node_handle_ptr]];
-        aabb_t aabb = {
-            .min = {
-                .x = (scalar_t)(-node->min.x) * COL_SCALE,
-                .y = (scalar_t)(-node->min.y) * COL_SCALE,
-                .z = (scalar_t)(-node->min.z) * COL_SCALE,
-            },
-            .max = {
-                .x = (scalar_t)(-node->max.x) * COL_SCALE,
-                .y = (scalar_t)(-node->max.y) * COL_SCALE,
-                .z = (scalar_t)(-node->max.z) * COL_SCALE,
-            },
-        };
 
         // If a node was hit
         if (

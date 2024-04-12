@@ -116,7 +116,7 @@ void renderer_begin_frame(const transform_t* camera_transform) {
     position.vx = -position.vx >> 12;
     position.vy = -position.vy >> 12;
     position.vz = -position.vz >> 12;
-    HiRotMatrix(&camera_transform->rotation, &view_matrix);
+    HiRotMatrix((VECTOR*)&camera_transform->rotation, &view_matrix); // VECTOR and vec3_t are identical bit-wise
     ApplyMatrixLV(&view_matrix, &position, &position);
     TransMatrix(&view_matrix, &position);
 
@@ -176,7 +176,7 @@ void renderer_end_frame(void) {
     drawn_first_frame = 1;
 }
 
-void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, visfield_t* vislist, int tex_id_offset) {
+void renderer_draw_model_shaded(const model_t* model, const transform_t* model_transform, visfield_t* vislist, int tex_id_offset) {
     tex_id_start = tex_id_offset;
     if (vislist == NULL || n_sections == 0) {
         for (size_t i = 0; i < model->n_meshes; ++i) {
@@ -207,7 +207,7 @@ void renderer_draw_model_shaded(const model_t* model, transform_t* model_transfo
 	tex_id_start = 0;
 }
 
-void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform) {
+void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform) {
     ++n_meshes_total;
     if (!mesh) {
         printf("renderer_draw_mesh_shaded: mesh was null!\n");
@@ -216,8 +216,8 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
 
     // Set rotation and translation matrix
     MATRIX model_matrix;
-    HiRotMatrix(&model_transform->rotation, &model_matrix);
-    TransMatrix(&model_matrix, &model_transform->position);
+    HiRotMatrix((VECTOR*)&model_transform->rotation, &model_matrix); // VECTOR and vec3_t are identical bitwise
+    TransMatrix(&model_matrix, (VECTOR*)&model_transform->position); 
     CompMatrixLV(&view_matrix, &model_matrix, &model_matrix);
 
     // Send it to the GTE
@@ -244,12 +244,12 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, transform_t* model_transform)
 	PopMatrix();
 }
 
-void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, transform_t* model_transform, int tex_id_offset) {
+void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, const transform_t* model_transform, int tex_id_offset) {
     tex_id_start = tex_id_offset;
     renderer_draw_mesh_shaded(mesh, model_transform);
 }
 
-void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, transform_t* model_transform, int tex_id_offset) {
+void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, const transform_t* model_transform, int tex_id_offset) {
     tex_id_start = tex_id_offset;
     
     ++n_meshes_total;
@@ -260,8 +260,8 @@ void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, transform_t* mod
 
     // Set rotation and translation matrix
     MATRIX model_matrix;
-    HiRotMatrix(&model_transform->rotation, &model_matrix);
-    TransMatrix(&model_matrix, &model_transform->position);
+    HiRotMatrix((VECTOR*)&model_transform->rotation, &model_matrix); // VECTOR and vec3_t are identical bitwise
+    TransMatrix(&model_matrix, (VECTOR*)&model_transform->position);
     // Scale by aspect ratio
     aspect_matrix = (MATRIX){
         .m = {
@@ -343,24 +343,16 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 }
 
 void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const int centered, const pixel32_t color) {
-    int font_x;
-    int font_y;
-    int font_src_width;
-    int font_src_height;
-    int font_dst_width;
-    int font_dst_height;
-    int chars_per_row;
+    // Set to text_type == 0 by default. This way the variables are always initialized
+    int font_x = 0;
+    int font_y = 60;
+    int font_src_width = 7;
+    int font_src_height = 9;
+    int font_dst_width = 7;
+    int font_dst_height = 9;
+    int chars_per_row = 36;
 
-    if (text_type == 0) {
-        font_x = 0;
-        font_y = 60;
-        font_src_width = 7;
-        font_src_height = 9;
-        font_dst_width = 7;
-        font_dst_height = 9;
-        chars_per_row = 36;
-    }
-    else if (text_type == 1) {
+    if (text_type == 1) {
         font_x = 0;
         font_y = 80;
         font_src_width = 16;
@@ -446,11 +438,11 @@ void renderer_apply_fade(int fade_level) {
     addPrim(ord_tbl[drawbuffer] + 0, new_tpage);
 }
 
-void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t* model_transform) {
+void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const transform_t* model_transform) {
     // Set rotation and translation matrix
     MATRIX model_matrix;
-    HiRotMatrix(&model_transform->rotation, &model_matrix);
-    TransMatrix(&model_matrix, &model_transform->position);
+    HiRotMatrix((VECTOR*)&model_transform->rotation, &model_matrix); // VECTOR and vec3_t are identical bitwise
+    TransMatrix(&model_matrix, (VECTOR*)&model_transform->position);
     CompMatrixLV(&view_matrix, &model_matrix, &model_matrix);
 
     // Send it to the GTE
@@ -485,7 +477,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
     PopMatrix();
 }
 
-void renderer_debug_draw_aabb(const aabb_t* box, pixel32_t color, transform_t* model_transform) {
+void renderer_debug_draw_aabb(const aabb_t* box, pixel32_t color, const transform_t* model_transform) {
     // Create 8 vertices
     const vec3_t vertex000 = { box->min.x, box->min.y, box->min.z };
     const vec3_t vertex001 = { box->min.x, box->min.y, box->max.z };
@@ -672,7 +664,7 @@ void renderer_draw_particle_system(particle_system_t* system, scalar_t dt) {
         svec2_t scenter;
         scalar_t depth;
         gte_stsxy(&scenter);
-        gte_stsz(depth);
+        gte_stsz(&depth);
         vec2_t size = vec2_divs(p->scale, depth);
         vec2_t center = (vec2_t){scenter.x * ONE, scenter.y * ONE};
         pixel32_t color = {

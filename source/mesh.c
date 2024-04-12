@@ -256,7 +256,7 @@ int strings_are_equal(const char* a, const char* b) {
 
 mesh_t* model_find_mesh(const model_t* model, const char* mesh_name) {
     for (size_t i = 0; i < model->n_meshes; ++i) {
-        const mesh_t* mesh = &model->meshes[i];
+        mesh_t* mesh = &model->meshes[i];
         if (strings_are_equal(mesh->name, mesh_name)) {
             return mesh;
         }

@@ -32,8 +32,6 @@ void debug_layer_update() {
     ImGui::Text("FPS: %f", 1.0 / dt_smooth);
     ImGui::Text("n_ray_aabb_intersects: %i\n", n_ray_aabb_intersects);
     ImGui::Text("n_ray_triangle_intersects: %i\n", n_ray_triangle_intersects);
-    ImGui::Text("n_sphere_aabb_intersects: %i\n", n_sphere_aabb_intersects);
-    ImGui::Text("n_sphere_triangle_intersects: %i\n", n_sphere_triangle_intersects);
     ImGui::Text("n_vertical_cylinder_aabb_intersects: %i\n", n_vertical_cylinder_aabb_intersects);
     ImGui::Text("n_vertical_cylinder_triangle_intersects: %i\n", n_vertical_cylinder_triangle_intersects);
     ImGui::Text("n_ray_aabb_intersects: %i\n", n_ray_aabb_intersects);

@@ -20,30 +20,22 @@ void bvh_debug_draw(const bvh_t* bvh, int min_depth, int max_depth, pixel32_t co
 
 // BVH intersection
 void bvh_intersect_ray(bvh_t* self, ray_t ray, rayhit_t* hit);
-void bvh_intersect_sphere(bvh_t* bvh, sphere_t ray, rayhit_t* hit);
 void bvh_intersect_vertical_cylinder(bvh_t* bvh, vertical_cylinder_t ray, rayhit_t* hit);
-void bvh_intersect_capsule(bvh_t* bvh, capsule_t ray, rayhit_t* hit);
 
 // Primitive intersection
 int point_aabb_intersect(const aabb_t* aabb, vec3_t point);
 int ray_aabb_intersect(const aabb_t* aabb, ray_t ray);
 int ray_aabb_intersect_fancy(const aabb_t* aabb, ray_t ray, rayhit_t* hit);
 int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_t* hit);
-int sphere_aabb_intersect(const aabb_t* aabb, sphere_t sphere);
-int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere, rayhit_t* hit);
 int vertical_cylinder_aabb_intersect(const aabb_t* aabb, vertical_cylinder_t vertical_cylinder);
 int vertical_cylinder_aabb_intersect_fancy(const aabb_t* aabb, const vertical_cylinder_t vertical_cylinder, rayhit_t* hit);
 int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vertical_cylinder_t vertical_cylinder, rayhit_t* hit);
-int capsule_aabb_intersect(const aabb_t* aabb, capsule_t capsule);
-int capsule_triangle_intersect(collision_triangle_3d_t* triangle, capsule_t capsule, rayhit_t* hit);
 
 
 // Statistics
 void collision_clear_stats(void);
 extern int n_ray_aabb_intersects;
 extern int n_ray_triangle_intersects;
-extern int n_sphere_aabb_intersects;
-extern int n_sphere_triangle_intersects;
 extern int n_vertical_cylinder_aabb_intersects;
 extern int n_vertical_cylinder_triangle_intersects;
 

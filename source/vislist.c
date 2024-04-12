@@ -1,4 +1,5 @@
 #include "vislist.h"
+#include "file.h"
 
 #define MAGIC_FVIS 0x53495646
 typedef struct {

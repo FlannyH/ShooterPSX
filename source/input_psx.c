@@ -146,7 +146,7 @@ int8_t input_right_stick_y(const int player_id) {
 int8_t input_right_stick_y_relative(const int player_id) {
     return right_stick_y_curr[player_id] - left_stick_y_prev[player_id];
 }
-int input_check_cheat_buffer(int n_inputs, uint16_t* inputs_to_check) {\
+int input_check_cheat_buffer(int n_inputs, const uint16_t* inputs_to_check) {\
     int match = button_pressed_this_frame;
     for (int i = 0; i < n_inputs; ++i) {
         //printf("expect: %i, got: %i\n", inputs_to_check[i], input_buffer[i]);

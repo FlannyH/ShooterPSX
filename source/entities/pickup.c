@@ -22,7 +22,6 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
 	int close_enough_to_collect = (distance_from_pickup_to_player_squared < 200 * ONE) && (distance_from_pickup_to_player_squared > 0);
 
     // Rendering
-    size_t mesh_to_render = 0;
     if (pickup->entity_header.mesh == NULL) {
         switch (pickup->type) {
             case PICKUP_TYPE_AMMO_SMALL:   pickup->entity_header.mesh = model_find_mesh(entity_models, "08_pickup_ammo_small");   break;

@@ -383,7 +383,7 @@ void renderer_end_frame() {
 	glfwPollEvents();
 }
 
-void renderer_draw_model_shaded(const model_t* model, transform_t* model_transform, visfield_t* vislist, int tex_id_offset) {
+void renderer_draw_model_shaded(const model_t* model, const transform_t* model_transform, visfield_t* vislist, int tex_id_offset) {
     glViewport(0, 0, w, h);
     if (vislist == NULL || n_sections == 0) {
         for (size_t i = 0; i < model->n_meshes; ++i) {
@@ -478,7 +478,7 @@ void renderer_draw_triangles_shaded_2d(const vertex_2d_t *vertex_buffer, uint16_
 
 }
 
-void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t* model_transform) {
+void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const transform_t* model_transform) {
     // Calculate model matrix
     mat4 model_matrix;
     glm_mat4_identity(model_matrix);
@@ -544,7 +544,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, transform_t
     glDrawArrays(GL_LINES, 0, 2);
 }
 
-void renderer_debug_draw_bvh_triangles(const bvh_t* box, const pixel32_t color, transform_t* model_transform) {
+void renderer_debug_draw_bvh_triangles(const bvh_t* box, const pixel32_t color, const transform_t* model_transform) {
     for (size_t i = 0; i < box->n_primitives; ++i) {
         const collision_triangle_3d_t* tri = &box->primitives[i];
         renderer_debug_draw_line(tri->v0, tri->v1, color, model_transform);
@@ -553,7 +553,7 @@ void renderer_debug_draw_bvh_triangles(const bvh_t* box, const pixel32_t color, 
     }
 }
 
-void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, transform_t* model_transform) {
+void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, const transform_t* model_transform) {
     // Create 8 vertices
     const vec3_t vertex000 = {box->min.x, box->min.y, box->min.z};
     const vec3_t vertex001 = {box->min.x, box->min.y, box->max.z};
@@ -905,12 +905,12 @@ void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t
 
 void renderer_set_video_mode(int is_pal) {}
 void renderer_cycle_res_x(void) {}
-void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, transform_t* model_transform, int tex_id_offset) {
+void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, const transform_t* model_transform, int tex_id_offset) {
     tex_id_start = tex_id_offset;
     renderer_draw_mesh_shaded(mesh, model_transform);
 }
 
-void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, transform_t* model_transform, int tex_id_offset) {
+void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, const transform_t* model_transform, int tex_id_offset) {
     tex_id_start = tex_id_offset;
     // Calculate model matrix
     mat4 model_matrix;

@@ -5,6 +5,7 @@
 #include "vec2.h"
 #include "vec3.h"
 #include "structs.h"
+#include "random.h"
 
 enum BlendMode
 {
@@ -67,6 +68,9 @@ particle_system_t* particle_system_new(particle_system_params_t* params) {
     params->n_particles_max = ((params->n_particles_max + 2) / 3) * 3; // align to grid of 3, allows for neat gte_rtpt in rendering
     particle_system->params = params;
     particle_system->particle_buffer = mem_stack_alloc(sizeof(particle_t) * params->n_particles_max, STACK_ENTITY);
+
+    // todo
+    return NULL;
 }
 
 void particle_system_update(particle_system_t* system, transform_t* transform) {
