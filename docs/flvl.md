@@ -12,7 +12,7 @@
 | u16             | n_entities        | Number of predefined entities in this map                                                    |
 | u32[n_entities] | entity_offsets    | List of offsets to all the enemy data.                                                       |
 
-All offsets are relative to the start of this binary section.
+All offsets are relative to the start of the binary section, which is located right after the header.
 
 ## Entity list entry
 | Type   | Name     | Description                                                       |
