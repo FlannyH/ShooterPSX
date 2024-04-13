@@ -175,6 +175,7 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
             .is_wall_check = 1,
         };
         rayhit_t hit;
+#ifndef DEBUG_CAMERA
         bvh_intersect_vertical_cylinder(level_bvh, cyl, &hit);
         for (size_t i = 0; i < entity_n_active_aabb; ++i) {
             rayhit_t curr_hit;
@@ -183,6 +184,9 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
             if (!vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, cyl, &curr_hit)) continue;
             if (curr_hit.distance < hit.distance) memcpy(&hit, &curr_hit, sizeof(rayhit_t));
         }
+#else
+        hit.distance = INT32_MAX;
+#endif
 
         // Did we hit anything?
         if (!is_infinity(hit.distance)) {
