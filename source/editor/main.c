@@ -3,8 +3,7 @@
 #include "../memory.h"
 #include "../player.h"
 #include "../entity.h"
-#include "../entities/crate.h"
-#include "../entities/pickup.h"
+#include "../entities/door.h"
 #include "../win/debug_layer.h"
 
 typedef struct {
@@ -121,6 +120,11 @@ int main(void) {
         {
             renderer_draw_model_shaded(level.graphics, &level.transform, NULL, 0);
             entity_update_all(&player, 0);
+            
+            debug_layer_begin();
+            debug_layer_update_editor();
+            debug_layer_manipulate_entity(&player.transform, &crate->entity_header);
+            debug_layer_end();
         }
         renderer_end_frame();
     }
