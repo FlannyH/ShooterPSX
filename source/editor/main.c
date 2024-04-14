@@ -2,6 +2,10 @@
 #include "../input.h"
 #include "../memory.h"
 #include "../player.h"
+#include "../entity.h"
+#include "../entities/crate.h"
+#include "../entities/pickup.h"
+#include "../win/debug_layer.h"
 
 typedef struct {
     model_t* graphics;
@@ -33,9 +37,18 @@ level_t load_level(const char* path) {
 
     // Load level textures
 	texture_cpu_t *tex_level;
+    tex_level_start = 0;
 	const uint32_t n_level_textures = texture_collection_load(path_textures, &tex_level, 1, STACK_TEMP);
     for (uint8_t i = 0; i < n_level_textures; ++i) {
 	    renderer_upload_texture(&tex_level[i], i + tex_level_start);
+	}
+
+    // Load entity textures
+	texture_cpu_t *entity_textures;
+    tex_entity_start = tex_level_start + n_level_textures;
+	const uint32_t n_entity_textures = texture_collection_load("\\ASSETS\\MODELS\\ENTITY.TXC;1", &entity_textures, 1, STACK_TEMP);
+	for (uint8_t i = 0; i < n_entity_textures; ++i) {
+	    renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
 	}
 
     size_t mem_before = mem_stack_get_occupied(STACK_LEVEL);
@@ -58,6 +71,7 @@ level_t load_level(const char* path) {
 int main(void) {
     renderer_init();
     input_init();
+	entity_init();
     input_set_stick_deadzone(36);
     
     level_t level = load_level("\\ASSETS\\MODELS\\LEVEL.LVL;1");
@@ -73,7 +87,15 @@ int main(void) {
     int mouse_lock = 0;
     input_unlock_mouse();
 
+
+    // temp    
+	entity_crate_t* crate;
+	crate = entity_crate_new(); crate->entity_header.position = (vec3_t){(1338 + 64*3)*ONE, 1294*ONE, (465+64*0)*ONE}; crate->pickup_to_spawn = PICKUP_TYPE_HEALTH_BIG;
+
+
     while (!renderer_should_close()) {
+	    mem_stack_release(STACK_TEMP);
+
         // Delta time
         dt = renderer_get_delta_time_ms();
         dt = scalar_min(dt, 40);
@@ -98,6 +120,7 @@ int main(void) {
         renderer_begin_frame(&player.transform);
         {
             renderer_draw_model_shaded(level.graphics, &level.transform, NULL, 0);
+            entity_update_all(&player, 0);
         }
         renderer_end_frame();
     }
