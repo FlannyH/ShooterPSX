@@ -44,7 +44,7 @@ if (DEFINED PSN00BSDK_TARGET)
     )
 elseif (DEFINED LEVEL_EDITOR_TARGET)
     project ("ShooterPSX")
-    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD 20)
     add_executable (ShooterPSX
         # New code for the editor
         source/editor/main.c
