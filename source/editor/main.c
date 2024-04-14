@@ -1,0 +1,105 @@
+#include "../renderer.h"
+#include "../input.h"
+#include "../memory.h"
+#include "../player.h"
+
+typedef struct {
+    model_t* graphics;
+    model_t* collision_mesh_debug;
+    collision_mesh_t* collision_mesh;
+    transform_t transform;
+    vislist_t vislist;
+    bvh_t collision_bvh;
+    // todo: add other fields as specified in FLVL documentation
+} level_t;
+
+/// Load level from path, including .LVL;1 extension.
+level_t load_level(const char* path) {
+    // Get file names
+    const size_t len_path = strlen(path) + 1; // include null character
+    const size_t extension_offset = len_path - 6;
+    char* path_graphics = mem_stack_alloc(len_path, STACK_TEMP);
+    char* path_textures = mem_stack_alloc(len_path, STACK_TEMP);
+    char* path_collision = mem_stack_alloc(len_path, STACK_TEMP);
+    char* path_vislist = mem_stack_alloc(len_path, STACK_TEMP);
+    strcpy(path_graphics, path);
+    strcpy(path_textures, path);
+    strcpy(path_collision, path);
+    strcpy(path_vislist, path);
+    memcpy(path_graphics + extension_offset, "MSH", 3);
+    memcpy(path_textures + extension_offset, "TXC", 3);
+    memcpy(path_collision + extension_offset, "COL", 3);
+    memcpy(path_vislist + extension_offset, "VIS", 3);
+
+    // Load level textures
+	texture_cpu_t *tex_level;
+	const uint32_t n_level_textures = texture_collection_load(path_textures, &tex_level, 1, STACK_TEMP);
+    for (uint8_t i = 0; i < n_level_textures; ++i) {
+	    renderer_upload_texture(&tex_level[i], i + tex_level_start);
+	}
+
+    size_t mem_before = mem_stack_get_occupied(STACK_LEVEL);
+
+    level_t level = (level_t) {
+        .graphics = model_load(path_graphics, 1, STACK_LEVEL),
+        .collision_mesh_debug = model_load_collision_debug(path_collision, 1, STACK_LEVEL),
+        .collision_mesh = model_load_collision(path_collision, 1, STACK_LEVEL),
+        .transform = (transform_t){{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}},
+        .vislist = vislist_load(path_vislist, 1, STACK_LEVEL),
+    };
+    bvh_from_model(&level.collision_bvh, level.collision_mesh);
+
+    size_t mem_allocated_in_this_function = mem_stack_get_occupied(STACK_LEVEL) - mem_before;
+    printf("Loaded level '%s', using %zi KB", path, mem_allocated_in_this_function / KiB);
+
+    return level;
+}
+
+int main(void) {
+    renderer_init();
+    input_init();
+    input_set_stick_deadzone(36);
+    
+    level_t level = load_level("\\ASSETS\\MODELS\\LEVEL.LVL;1");
+    player_t player = (player_t){};
+    player.position.x = 11705653 / 2;
+   	player.position.y = 11413985 / 2;
+    player.position.z = 2112866  / 2;
+	player.rotation.y = 4096 * 16;
+
+    int dt = 40;
+    int time_counter = 0;
+    int mouse_lock = 1;
+    input_lock_mouse();
+
+    while (!renderer_should_close()) {
+        // Delta time
+        dt = renderer_get_delta_time_ms();
+        dt = scalar_min(dt, 40);
+        time_counter += dt;
+
+        // Allow locking and unlocking the mouse
+        if (input_pressed(PAD_L2, 0)) {
+            mouse_lock = 1;
+            input_lock_mouse();
+        }
+        if (input_pressed(PAD_START, 0)) {
+            mouse_lock = 0;
+            input_unlock_mouse();
+        }
+
+        // Update camera
+        input_update();
+        if (mouse_lock) {
+            player_update(&player, &level.collision_bvh, dt, time_counter);
+        }
+        
+        renderer_begin_frame(&player.transform);
+        {
+            renderer_draw_model_shaded(level.graphics, &level.transform, NULL, 0);
+        }
+        renderer_end_frame();
+    }
+
+    return 0;
+}

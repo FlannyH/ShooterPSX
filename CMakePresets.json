@@ -1,10 +1,10 @@
 {
-	"version": 3,
-	"cmakeMinimumRequired": {
-		"major": 3,
-		"minor": 21,
-		"patch": 0
-	},
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
     "configurePresets": [
         {
             "name": "psx-debug",
@@ -93,28 +93,17 @@
             "name": "windows-x64-release"
         },
         {
-            "name": "linux-x64-debug",
-            "displayName": "Linux Debug (OpenGL)",
-            "inherits": "linux-base",
+            "name": "level-editor-x64-debug",
+            "displayName": "Level Editor Debug (OpenGL)",
+            "inherits": "windows-base",
             "architecture": {
                 "value": "x64",
                 "strategy": "external"
             },
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug",
+                "LEVEL_EDITOR_TARGET": "true"
             }
-        },
-        {
-            "architecture": {
-                "value": "x64",
-                "strategy": "external"
-            },
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
-            },
-            "displayName": "Linux Release (OpenGL)",
-            "inherits": "linux-base",
-            "name": "linux-x64-release"
         }
     ]
 }
