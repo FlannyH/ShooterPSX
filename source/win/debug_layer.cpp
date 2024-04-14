@@ -17,12 +17,20 @@ void debug_layer_init(GLFWwindow* window) {
     ImGui::LoadIniSettingsFromDisk("imgui_layout.ini");
 }
 
-void debug_layer_update() {
+void debug_layer_begin() {
     // Begin a new frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+}
 
+void debug_layer_end() {
+    // Render
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void debug_layer_update_gameplay() {
     // Update deltatime
     dt_smooth = dt_smooth + ((static_cast<double>(renderer_get_delta_time_ms()) / 1000.) - dt_smooth) * 0.01;
 
@@ -37,11 +45,12 @@ void debug_layer_update() {
     ImGui::Text("n_ray_aabb_intersects: %i\n", n_ray_aabb_intersects);
     ImGui::Text("n_ray_aabb_intersects: %i\n", n_ray_aabb_intersects);
     ImGui::End();
-
-    // Render
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     collision_clear_stats();
+}
+
+void debug_layer_update_editor() {
+    ImGui::Begin("Entity Editor");
+    ImGui::End();
 }
 
 void debug_layer_close() {
