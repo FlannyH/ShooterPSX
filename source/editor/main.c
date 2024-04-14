@@ -66,11 +66,12 @@ int main(void) {
    	player.position.y = 11413985 / 2;
     player.position.z = 2112866  / 2;
 	player.rotation.y = 4096 * 16;
+    player_update(&player, &level.collision_bvh, 0, 0);
 
     int dt = 40;
     int time_counter = 0;
-    int mouse_lock = 1;
-    input_lock_mouse();
+    int mouse_lock = 0;
+    input_unlock_mouse();
 
     while (!renderer_should_close()) {
         // Delta time
@@ -79,11 +80,11 @@ int main(void) {
         time_counter += dt;
 
         // Allow locking and unlocking the mouse
-        if (input_pressed(PAD_L2, 0)) {
+        if (input_pressed(PAD_R2, 0)) {
             mouse_lock = 1;
             input_lock_mouse();
         }
-        if (input_pressed(PAD_START, 0)) {
+        if (input_released(PAD_R2, 0)) {
             mouse_lock = 0;
             input_unlock_mouse();
         }
