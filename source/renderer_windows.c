@@ -53,6 +53,12 @@ vec3_t camera_pos;
 vec3_t camera_dir;
 int tex_id_start;
 
+#ifdef _LEVEL_EDITOR
+GLuint fbo;
+GLuint fb_texture;
+GLuint fb_depth;
+#endif
+
 typedef enum { vertex, pixel, geometry, compute } ShaderType;
 
 static void DebugCallbackFunc(GLenum source, GLenum type, GLuint id,
@@ -271,7 +277,6 @@ void renderer_init() {
 	glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(vertex_3d_t), (const void *)offsetof(vertex_3d_t, r));
 	glVertexAttribPointer(2, 2, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(vertex_3d_t), (const void *)offsetof(vertex_3d_t, u));
 	glVertexAttribPointer(3, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(vertex_3d_t), (const void *)offsetof(vertex_3d_t, tex_id));
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// Initialize delta time clock
 	dt_clock = clock();
@@ -291,12 +296,43 @@ void renderer_init() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
     mem_free(random_data);
+
+	#ifdef _LEVEL_EDITOR // Create separate framebuffer
+	// Generate fbo
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	// Generate color attachment
+	glGenTextures(1, &fb_texture);
+	glBindTexture(GL_TEXTURE_2D, fb_texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 	
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fb_texture, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Generate depth attachment
+	glGenTextures(1, &fb_depth);
+	glBindTexture(GL_TEXTURE_2D, fb_depth);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 	
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+	glfwGetWindowSize(window, &w, &h);
+	#endif
 }
 
 void renderer_begin_frame(const transform_t *camera_transform) {
     cam_transform = camera_transform;
 	// Set up viewport
+#ifdef _LEVEL_EDITOR
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+#else
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glfwGetWindowSize(window, &w, &h);
+#endif
 	glViewport(0, 0, w, h);
 
 	if (w != prev_w || h != prev_h) {
@@ -377,13 +413,6 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 
 void renderer_end_frame() {
 	update_delta_time_ms();
-	debug_layer_begin();
-#ifdef _LEVEL_EDITOR
-	debug_layer_update_editor();
-#else
-	debug_layer_update_gameplay();
-#endif
-	debug_layer_end();
 	// Flip buffers
 	glfwSwapBuffers(window);
 	glfwPollEvents();
