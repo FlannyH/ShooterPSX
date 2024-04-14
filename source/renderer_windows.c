@@ -157,9 +157,10 @@ static void DebugCallbackFunc(GLenum source, GLenum type, GLuint id,
 	}
 
 	printf("GL Debug Callback:\n source: %i:%s \n type: %i:%s \n id: %i \n "
-				 "severity: %i:%s \n	message: %s",
-				 source, sourceString, type, typeString, id, severity, severityString,
-				 message);
+				"severity: %i:%s \n	message: %s",
+				source, sourceString, type, typeString, id, severity, severityString,
+				message);
+	exit(1);
 }
 
 void update_delta_time_ms(void) {
