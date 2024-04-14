@@ -227,7 +227,11 @@ void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms, const int 
     vec2_t vel_2d = {self->velocity.x, self->velocity.z};
     scalar_t speed_1d = vec2_magnitude(vel_2d);
     self->transform.position.x = -self->position.x * (4096 / COL_SCALE);
+#ifdef DEBUG_CAMERA
+    self->transform.position.y = -self->position.y * (4096 / COL_SCALE);
+#else
     self->transform.position.y = -self->position.y * (4096 / COL_SCALE) + isin(time_counter * 12) * speed_1d / 64;
+#endif
     self->transform.position.z = -self->position.z * (4096 / COL_SCALE);
     self->transform.rotation.x = -self->rotation.x;
     self->transform.rotation.y = -self->rotation.y;
