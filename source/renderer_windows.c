@@ -377,7 +377,13 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 
 void renderer_end_frame() {
 	update_delta_time_ms();
-	debug_layer_update();
+	debug_layer_begin();
+#ifdef _LEVEL_EDITOR
+	debug_layer_update_editor();
+#else
+	debug_layer_update_gameplay();
+#endif
+	debug_layer_end();
 	// Flip buffers
 	glfwSwapBuffers(window);
 	glfwPollEvents();
