@@ -89,8 +89,8 @@ int main(void) {
 
 
     // temp    
-	entity_crate_t* crate;
-	crate = entity_crate_new(); crate->entity_header.position = (vec3_t){(1338 + 64*3)*ONE, 1294*ONE, (465+64*0)*ONE}; crate->pickup_to_spawn = PICKUP_TYPE_HEALTH_BIG;
+	entity_door_t* crate;
+	crate = entity_door_new(); crate->entity_header.position = (vec3_t){(1338 + 64*3)*ONE, 1294*ONE, (465+64*0)*ONE}; crate->is_big_door = 1;
 
 
     while (!renderer_should_close()) {
