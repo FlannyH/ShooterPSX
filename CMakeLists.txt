@@ -75,6 +75,7 @@ elseif (DEFINED LEVEL_EDITOR_TARGET)
         external/include/imgui/imgui_draw.cpp
         external/include/imgui/imgui_impl_glfw.cpp
         external/include/imgui/imgui_impl_opengl3.cpp
+        external/include/imguizmo/ImGuizmo.cpp
     )
     if(WIN32)
         target_link_libraries(
@@ -104,6 +105,7 @@ elseif (DEFINED LEVEL_EDITOR_TARGET)
     endif()
     include_directories(external/include/)
     include_directories(external/include/imgui)
+    include_directories(external/include/imguizmo)
     
     add_custom_target(game_copy_assets ALL
         COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -151,6 +153,7 @@ else()
         external/include/imgui/imgui_draw.cpp
         external/include/imgui/imgui_impl_glfw.cpp
         external/include/imgui/imgui_impl_opengl3.cpp
+        external/include/imguizmo/ImGuizmo.cpp
     )
     if(WIN32)
         target_link_libraries(
@@ -180,6 +183,7 @@ else()
     endif()
     include_directories(external/include/)
     include_directories(external/include/imgui)
+    include_directories(external/include/imguizmo)
     
     add_custom_target(game_copy_assets ALL
         COMMAND ${CMAKE_COMMAND} -E copy_directory
