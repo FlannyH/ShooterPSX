@@ -509,7 +509,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
 	glEnable(GL_CULL_FACE);
 	glStencilMask(0xFF);
 	glStencilFunc(GL_ALWAYS, drawing_entity_id, 0xFF);
-	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	glCullFace(GL_FRONT);
 	glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
     glDrawArrays(GL_QUADS, mesh->n_triangles * 3, mesh->n_quads * 4);
