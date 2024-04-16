@@ -5,6 +5,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define ENTITY_NOT_SECTION_BOUND 255
 #define ENTITY_LIST_LENGTH 64
 
@@ -84,6 +88,10 @@ void entity_kill(int slot);
 #ifdef _DEBUG
 void entity_debug();
 int entity_how_many_active();
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

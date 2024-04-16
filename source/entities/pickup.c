@@ -48,6 +48,9 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
 	render_transform.scale.x = pickup->entity_header.scale.x;
 	render_transform.scale.y = pickup->entity_header.scale.x;
 	render_transform.scale.z = pickup->entity_header.scale.x;
+#ifdef _LEVEL_EDITOR
+	drawing_entity_id = slot;
+#endif
 	renderer_draw_mesh_shaded_offset(pickup->entity_header.mesh, &render_transform, tex_entity_start);
 
     if (close_enough_to_home_in) {

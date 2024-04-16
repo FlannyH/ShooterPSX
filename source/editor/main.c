@@ -88,8 +88,12 @@ int main(void) {
 
 
     // temp    
-	entity_door_t* crate;
-	crate = entity_door_new(); crate->entity_header.position = (vec3_t){(1338 + 64*3)*ONE, 1294*ONE, (465+64*0)*ONE}; crate->is_big_door = 1;
+    entity_header_t* selected_entity = NULL;
+    entity_header_t* hovered_entity = NULL;
+	entity_door_t* crate1;
+	entity_door_t* crate2;
+	crate1 = entity_door_new(); crate1->entity_header.position = (vec3_t){(1338 + 64*2)*ONE, 1294*ONE, (465+64*0)*ONE}; crate1->is_big_door = 1;
+	crate2 = entity_door_new(); crate2->entity_header.position = (vec3_t){(1338 + 64*3)*ONE, 1294*ONE, (465+64*0)*ONE}; crate2->is_big_door = 1;
 
 
     while (!renderer_should_close()) {
@@ -122,8 +126,8 @@ int main(void) {
             entity_update_all(&player, 0);
             
             debug_layer_begin();
-            debug_layer_update_editor();
-            debug_layer_manipulate_entity(&player.transform, &crate->entity_header);
+            debug_layer_get_hovered_entity(&player.transform, &hovered_entity);
+            debug_layer_manipulate_entity(&player.transform, selected_entity);
             debug_layer_end();
         }
         renderer_end_frame();

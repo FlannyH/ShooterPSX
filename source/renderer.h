@@ -27,6 +27,9 @@ extern "C" {
 
 const static transform_t id_transform = { {0,0,0},{0,0,0}, {-4096, -4096, -4096} };
 extern int widescreen;
+#ifdef _LEVEL_EDITOR
+extern int drawing_entity_id;
+#endif
 
 // Functions
 void renderer_init(void); // Initializes the renderer by configuring the GPU, setting the video mode, and preparing the drawing environment
