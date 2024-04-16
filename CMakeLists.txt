@@ -125,7 +125,7 @@ elseif (DEFINED LEVEL_EDITOR_TARGET)
     add_compile_definitions(DEBUG_CAMERA)
 else()
     project ("ShooterPSX")
-    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD 20)
     add_executable (ShooterPSX
         source/file_windows.c 
         source/input_windows.c 

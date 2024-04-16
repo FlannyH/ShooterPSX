@@ -48,6 +48,9 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 	render_transform.scale.x = crate->entity_header.scale.x;
 	render_transform.scale.y = crate->entity_header.scale.x;
 	render_transform.scale.z = crate->entity_header.scale.x;
+#ifdef _LEVEL_EDITOR
+	drawing_entity_id = slot;
+#endif
 	renderer_draw_mesh_shaded_offset(crate->entity_header.mesh, &render_transform, tex_entity_start);
 }
 

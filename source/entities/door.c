@@ -130,6 +130,9 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	render_transform.scale.x = door->entity_header.scale.x;
 	render_transform.scale.y = door->entity_header.scale.x;
 	render_transform.scale.z = door->entity_header.scale.x;
+#ifdef _LEVEL_EDITOR
+	drawing_entity_id = slot;
+#endif
 	renderer_draw_mesh_shaded_offset(door->entity_header.mesh, &render_transform, tex_entity_start);
 }
 

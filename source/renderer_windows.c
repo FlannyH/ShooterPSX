@@ -319,6 +319,7 @@ void renderer_init() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 	
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
 	glfwGetWindowSize(window, &w, &h);
@@ -388,9 +389,11 @@ void renderer_begin_frame(const transform_t *camera_transform) {
     glm_translate(view_matrix_third_person, position);
 
 	// Clear screen
+	glStencilMask(0xFF);
 	glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 	glClearDepth(1.0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearStencil(255);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     if (input_held(PAD_SQUARE, 0)) {
         memcpy(view_matrix, view_matrix_topdown, sizeof(view_matrix_topdown));
@@ -418,8 +421,9 @@ void renderer_end_frame() {
 	glfwSwapBuffers(window);
 	glfwPollEvents();
 }
-
+int drawing_entity_id = 255;
 void renderer_draw_model_shaded(const model_t* model, const transform_t* model_transform, visfield_t* vislist, int tex_id_offset) {
+	drawing_entity_id = 255;
     glViewport(0, 0, w, h);
     if (vislist == NULL || n_sections == 0) {
         for (size_t i = 0; i < model->n_meshes; ++i) {
@@ -501,13 +505,18 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
 
 	// Enable depth and draw
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_STENCIL_TEST);
 	glEnable(GL_CULL_FACE);
+	glStencilMask(0xFF);
+	glStencilFunc(GL_ALWAYS, drawing_entity_id, 0xFF);
+	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 	glCullFace(GL_FRONT);
 	glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
     glDrawArrays(GL_QUADS, mesh->n_triangles * 3, mesh->n_quads * 4);
 
 	n_total_triangles += mesh->n_triangles;
     tex_id_start = 0;
+	drawing_entity_id = 255;
 }
 
 void renderer_draw_triangles_shaded_2d(const vertex_2d_t *vertex_buffer, uint16_t n_verts, int16_t x, int16_t y) {

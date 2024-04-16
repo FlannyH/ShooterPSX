@@ -14,8 +14,8 @@ void debug_layer_end(void);
 void debug_layer_update_gameplay(void);
 void debug_layer_update_editor(void);
 void debug_layer_close(void);
-
-void debug_layer_manipulate_entity(transform_t* camera, entity_header_t* entity);
+void debug_layer_get_hovered_entity(transform_t* camera, entity_header_t* selected_entity);
+void debug_layer_manipulate_entity(transform_t* camera, entity_header_t* selected_entity);
 
 #ifdef __cplusplus
 }
