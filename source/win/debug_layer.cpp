@@ -185,8 +185,18 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
     // Entity spawn menu
     ImGui::Begin("Entity spawning");
     {
-        static size_t curr_selected_entity_type = 1;
+        // Entity count:
+        int entity_count = 0;
+        for (size_t i = 0; i < ENTITY_LIST_LENGTH; ++i) {
+            if (entity_list[i].type != ENTITY_NONE) {
+                ++entity_count;
+            }
+        }
+
+        ImGui::Text("Entities: %i / %i", entity_count, ENTITY_LIST_LENGTH);
+
         // Entity select dropdown
+        static size_t curr_selected_entity_type = 1;
         curr_selected_entity_type = inspect_enum(curr_selected_entity_type, entity_names, "Entity type");
 
         if (ImGui::Button("Spawn")) {
