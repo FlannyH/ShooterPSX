@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-uint32_t mem_stack_temp [400  * KiB / sizeof(uint32_t)];
+uint32_t mem_stack_temp [350  * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_level[960 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_music[64 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_entity[64 * KiB / sizeof(uint32_t)];
