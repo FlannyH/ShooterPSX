@@ -21,10 +21,10 @@ level_t load_level(const char* path) {
     // Get file names
     const size_t len_path = strlen(path) + 1; // include null character
     const size_t extension_offset = len_path - 6;
-    char* path_graphics = mem_stack_alloc(len_path, STACK_TEMP);
-    char* path_textures = mem_stack_alloc(len_path, STACK_TEMP);
-    char* path_collision = mem_stack_alloc(len_path, STACK_TEMP);
-    char* path_vislist = mem_stack_alloc(len_path, STACK_TEMP);
+    char* path_graphics = mem_alloc(len_path, MEM_CAT_UNDEFINED);
+    char* path_textures = mem_alloc(len_path, MEM_CAT_UNDEFINED);
+    char* path_collision = mem_alloc(len_path, MEM_CAT_UNDEFINED);
+    char* path_vislist = mem_alloc(len_path, MEM_CAT_UNDEFINED);
     strcpy(path_graphics, path);
     strcpy(path_textures, path);
     strcpy(path_collision, path);
@@ -41,7 +41,6 @@ level_t load_level(const char* path) {
     for (uint8_t i = 0; i < n_level_textures; ++i) {
 	    renderer_upload_texture(&tex_level[i], i + tex_level_start);
 	}
-    mem_stack_release(STACK_TEMP);
 
     // Load entity textures
 	texture_cpu_t *entity_textures;
@@ -50,9 +49,6 @@ level_t load_level(const char* path) {
 	for (uint8_t i = 0; i < n_entity_textures; ++i) {
 	    renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
 	}
-    mem_stack_release(STACK_TEMP);
-
-    size_t mem_before = mem_stack_get_occupied(STACK_LEVEL);
 
     level_t level = (level_t) {
         .graphics = model_load(path_graphics, 1, STACK_LEVEL),
@@ -63,8 +59,10 @@ level_t load_level(const char* path) {
     };
     bvh_from_model(&level.collision_bvh, level.collision_mesh);
 
-    size_t mem_allocated_in_this_function = mem_stack_get_occupied(STACK_LEVEL) - mem_before;
-    printf("Loaded level '%s', using %zi KB\n", path, mem_allocated_in_this_function / KiB);
+    mem_free(path_graphics);
+    mem_free(path_textures);
+    mem_free(path_collision);
+    mem_free(path_vislist);
 
     return level;
 }
