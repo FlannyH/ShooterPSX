@@ -8,6 +8,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <format>
 
 #include "../renderer.h"
 #include "../input.h"
@@ -216,6 +217,19 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
     // Entity inspector menu
     ImGui::Begin("Inspector", NULL, ImGuiWindowFlags_None);
     {
+        if (ImGui::TreeNode("All entities")) {
+            for (size_t i = 0; i < ENTITY_LIST_LENGTH; ++i) {
+                if (entity_list[i].type != ENTITY_NONE) {
+                    static std::string tree_nodes[ENTITY_LIST_LENGTH];
+                    tree_nodes[i] = std::format("{} - {}", i, entity_names[entity_list[i].type]);
+                    if (ImGui::TreeNode(tree_nodes[i].c_str())) {
+                        inspect_entity(i);
+                        ImGui::TreePop();
+                    }
+                }
+            }
+            ImGui::TreePop();
+        }
         if (selected_entity_slot) {
             ImGui::Text("Selected entity");
             ImGui::Spacing();
