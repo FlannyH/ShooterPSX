@@ -71,7 +71,7 @@ extern "C" {
 }
 
 #define PI 3.14159265358979f
-void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** selected_entity) {
+void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** selected_entity, int* mouse_over_viewport) {
     int flags = ImGuiWindowFlags_NoResize;
     flags |= ImGuizmo::IsOver() || ImGuizmo::IsUsingAny() ? ImGuiWindowFlags_NoMove : 0;
 
@@ -165,6 +165,8 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** select
         && nrm_mouse_y >= -1.0f
         && nrm_mouse_y <= 1.0f
         ) {
+            *mouse_over_viewport = 1;
+
             if (input_pressed(PAD_L2, 0)) {
                 // Read stencil buffer
                 uint8_t entity_index = 255;
@@ -179,6 +181,9 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** select
                     }
                 }
             }
+        }
+        else {
+            *mouse_over_viewport = 0;
         }
     }
     ImGui::End();
