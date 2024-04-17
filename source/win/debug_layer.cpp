@@ -8,6 +8,7 @@
 #include <cmath>
 
 #include "../renderer.h"
+#include "../input.h"
 
 static double dt_smooth = 0.0f;
 
@@ -75,7 +76,7 @@ void debug_layer_get_hovered_entity(transform_t* camera, entity_header_t* select
 }
 
 #define PI 3.14159265358979f
-void debug_layer_manipulate_entity(transform_t* camera, entity_header_t* selected_entity) {
+void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** selected_entity) {
     int flags = ImGuiWindowFlags_NoResize;
     flags |= ImGuizmo::IsOver() || ImGuizmo::IsUsingAny() ? ImGuiWindowFlags_NoMove : 0;
 
@@ -98,21 +99,6 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t* selecte
         float nrm_mouse_x = (rel_mouse_pos.x / window_width) * 2.0 - 1.0;
         float nrm_mouse_y = (rel_mouse_pos.y / window_width) * 2.0 - 1.0;
         
-        // If the mouse is inside the window, check for entities under the cursor
-        if (nrm_mouse_x >= -1.0f 
-        && nrm_mouse_x <= 1.0f
-        && nrm_mouse_y >= -1.0f
-        && nrm_mouse_y <= 1.0f
-        ) {
-            // Read stencil buffer
-            uint8_t entity_index = 255;
-            glReadPixels((GLint)rel_mouse_pos.x, (GLint)(h-rel_mouse_pos.y), 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &entity_index);
-            if (entity_index != 255) printf("hovering over entity %i\n", entity_index);
-            else {
-                printf("%.f, %.f: not hovering over any entity\n", rel_mouse_pos.x, h-rel_mouse_pos.y);
-            }
-        }
-        
         // Draw the viewport
         ImGui::Image((ImTextureID)fb_texture, wsize, ImVec2(0, 1), ImVec2(1, 0));
 
@@ -122,22 +108,22 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t* selecte
         ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, window_width, window_height);
         mat4 delta;
         
-        if (selected_entity) {
+        if (*selected_entity) {
                 // Transform to world units
                 transform_t render_transform;
-                render_transform.position.x = -selected_entity->position.x / COL_SCALE;
-                render_transform.position.y = -selected_entity->position.y / COL_SCALE;
-                render_transform.position.z = -selected_entity->position.z / COL_SCALE;
-                render_transform.rotation.x = -selected_entity->rotation.x;
-                render_transform.rotation.y = -selected_entity->rotation.y;
-                render_transform.rotation.z = -selected_entity->rotation.z;
-                render_transform.scale.x = selected_entity->scale.x;
-                render_transform.scale.y = selected_entity->scale.x;
-                render_transform.scale.z = selected_entity->scale.x;
+                render_transform.position.x = -(*selected_entity)->position.x / COL_SCALE;
+                render_transform.position.y = -(*selected_entity)->position.y / COL_SCALE;
+                render_transform.position.z = -(*selected_entity)->position.z / COL_SCALE;
+                render_transform.rotation.x = -(*selected_entity)->rotation.x;
+                render_transform.rotation.y = -(*selected_entity)->rotation.y;
+                render_transform.rotation.z = -(*selected_entity)->rotation.z;
+                render_transform.scale.x = (*selected_entity)->scale.x;
+                render_transform.scale.y = (*selected_entity)->scale.x;
+                render_transform.scale.z = (*selected_entity)->scale.x;
 
                 const aabb_t collision_box = {
-                    .min = vec3_sub(selected_entity->position, selected_entity->mesh->bounds.min),
-                    .max = vec3_sub(selected_entity->position, selected_entity->mesh->bounds.max)
+                    .min = vec3_sub((*selected_entity)->position, (*selected_entity)->mesh->bounds.min),
+                    .max = vec3_sub((*selected_entity)->position, (*selected_entity)->mesh->bounds.max)
                 };
 
                 // Calculate model matrix
@@ -172,9 +158,34 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t* selecte
             )) {
                 vec3 translation, rotation, scale;
                 ImGuizmo::DecomposeMatrixToComponents(&delta[0][0], &translation[0], &rotation[0], &scale[0]);
-                selected_entity->position.x -= (scalar_t)(translation[0] * (float)COL_SCALE);
-                selected_entity->position.y -= (scalar_t)(translation[1] * (float)COL_SCALE);
-                selected_entity->position.z -= (scalar_t)(translation[2] * (float)COL_SCALE);
+                (*selected_entity)->position.x -= (scalar_t)(translation[0] * (float)COL_SCALE);
+                (*selected_entity)->position.y -= (scalar_t)(translation[1] * (float)COL_SCALE);
+                (*selected_entity)->position.z -= (scalar_t)(translation[2] * (float)COL_SCALE);
+            }
+        }
+        
+        // If the mouse is inside the window, check for entities under the cursor
+        if (nrm_mouse_x >= -1.0f 
+        && nrm_mouse_x <= 1.0f
+        && nrm_mouse_y >= -1.0f
+        && nrm_mouse_y <= 1.0f
+        ) {
+            if (input_pressed(PAD_L2, 0)) {
+                // Read stencil buffer
+                uint8_t entity_index = 255;
+                glReadPixels((GLint)rel_mouse_pos.x, (GLint)(h-rel_mouse_pos.y), 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &entity_index);
+                
+                if (ImGuizmo::IsOver() || ImGuizmo::IsUsingAny()) {
+                    printf("ignoring select/deselect\n");
+                }
+                else if (entity_index != 255) {
+                    printf("selected entity %i\n", entity_index);
+                    *selected_entity = entity_list[(size_t)entity_index].data;
+                }
+                else {
+                    printf("deselected entity\n");
+                    *selected_entity = NULL;
+                }
             }
         }
     }
