@@ -74,9 +74,24 @@ extern "C" {
 #define PI 3.14159265358979f
 void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** selected_entity, int* mouse_over_viewport) {
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+
+    // Entity spawn menu
+    ImGui::Begin("Entity spawning", NULL, ImGuiWindowFlags_None);
+    {
+
+    }
+    ImGui::End();
+
+    // Entity inspector menu
+    ImGui::Begin("Inspector", NULL, ImGuiWindowFlags_None);
+    {
+
+    }
+    ImGui::End();
+
+    // Viewport with gizmos
     int flags = ImGuiWindowFlags_NoResize;
     flags |= ImGuizmo::IsOver() || ImGuizmo::IsUsingAny() ? ImGuiWindowFlags_NoMove : 0;
-
     ImGui::Begin("Viewport", NULL, flags);
     {
         // Set viewport
