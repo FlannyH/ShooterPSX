@@ -696,8 +696,8 @@ void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) 
 	tex_res[(size_t)index * 2 + 0] = (float)texture->width;
 	tex_res[(size_t)index * 2 + 1] = (float)texture->height;
 
-	printf("texture %d has avg color: %d, %d, %d\n", index, texture->avg_color.r,
-				 texture->avg_color.g, texture->avg_color.b);
+	// printf("texture %d has avg color: %d, %d, %d\n", index, texture->avg_color.r,
+				//  texture->avg_color.g, texture->avg_color.b);
 
 	// Clean up after we're done
 	mem_free(pixels);
