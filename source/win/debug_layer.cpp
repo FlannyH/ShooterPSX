@@ -14,7 +14,8 @@ static double dt_smooth = 0.0f;
 
 void debug_layer_init(GLFWwindow* window) {
     ImGui::CreateContext();
-    [[maybe_unused]] ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 430");
@@ -72,6 +73,7 @@ extern "C" {
 
 #define PI 3.14159265358979f
 void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** selected_entity, int* mouse_over_viewport) {
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
     int flags = ImGuiWindowFlags_NoResize;
     flags |= ImGuizmo::IsOver() || ImGuizmo::IsUsingAny() ? ImGuiWindowFlags_NoMove : 0;
 
