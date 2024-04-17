@@ -170,16 +170,13 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** select
                 uint8_t entity_index = 255;
                 glReadPixels((GLint)rel_mouse_pos.x, (GLint)(h-rel_mouse_pos.y), 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &entity_index);
                 
-                if (ImGuizmo::IsOver() || ImGuizmo::IsUsingAny()) {
-                    printf("ignoring select/deselect\n");
-                }
-                else if (entity_index != 255) {
-                    printf("selected entity %i\n", entity_index);
-                    *selected_entity = entity_list[(size_t)entity_index].data;
-                }
-                else {
-                    printf("deselected entity\n");
-                    *selected_entity = NULL;
+                if (!ImGuizmo::IsOver() && !ImGuizmo::IsUsingAny()) {
+                    if (entity_index != 255) {
+                        *selected_entity = entity_list[(size_t)entity_index].data;
+                    }
+                    else {
+                        *selected_entity = NULL;
+                    }
                 }
             }
         }
