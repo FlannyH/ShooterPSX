@@ -126,7 +126,6 @@ int main(void) {
             entity_update_all(&player, 0);
             
             debug_layer_begin();
-            debug_layer_get_hovered_entity(&player.transform, &hovered_entity);
             debug_layer_manipulate_entity(&player.transform, &selected_entity);
             debug_layer_end();
         }
