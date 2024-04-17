@@ -146,6 +146,11 @@ void inspect_entity(size_t entity_id) {
                 pickup->entity_header.mesh = NULL; // force refresh mesh data
             }
         }
+        
+        if (entity_slot->type == ENTITY_CRATE) {
+            entity_crate_t* crate = (entity_crate_t*)entity_data;
+            crate->pickup_to_spawn = inspect_enum((size_t)crate->pickup_to_spawn, pickup_names, "Pickup type to spawn");
+        }
         ImGui::TreePop();
     }
 }
