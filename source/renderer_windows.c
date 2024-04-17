@@ -338,8 +338,28 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 	glViewport(0, 0, w, h);
 
 	if (w != prev_w || h != prev_h) {
+		// Recreate projection matrix
 		glm_perspective(glm_rad(90.0f), (float)w / (float)h, 0.1f, 1000000.f,
 										perspective_matrix);
+
+#ifdef _LEVEL_EDITOR
+	// Resize color attachment
+	glBindTexture(GL_TEXTURE_2D, fb_texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 	
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fb_texture, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Resize depth attachment
+	glBindTexture(GL_TEXTURE_2D, fb_depth);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 	
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+#endif
 	}
 
 	// Convert from PS1 to GLM
