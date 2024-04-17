@@ -2,6 +2,10 @@
 #define PICKUP_H
 #include "../entity.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
 	PICKUP_TYPE_NONE,
 	PICKUP_TYPE_AMMO_SMALL,
@@ -25,5 +29,9 @@ typedef struct {
 entity_pickup_t* entity_pickup_new();
 void entity_pickup_update(int slot, player_t* player, int dt);
 void entity_pickup_on_hit(int slot, int hitbox_index);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

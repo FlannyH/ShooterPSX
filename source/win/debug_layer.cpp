@@ -13,6 +13,8 @@
 #include "../input.h"
 #include "../entity.h"
 #include "../entities/door.h"
+#include "../entities/crate.h"
+#include "../entities/pickup.h"
 
 static double dt_smooth = 0.0f;
 static std::vector<std::string> entity_type_names;
@@ -83,8 +85,34 @@ float world_space_to_collision_space(scalar_t a) {
     return (float)a * ((float)COL_SCALE / (float)ONE);
 }
 
+void inspect_entity(size_t entity_id) {
+    entity_slot_t* entity_slot = &entity_list[entity_id];
+    if (entity_slot->type == ENTITY_NONE) return;
+
+    entity_header_t* entity_data = entity_slot->data;
+            
+    float position[] =  {
+        scalar_to_float(entity_data->position.x),
+        scalar_to_float(entity_data->position.y),
+        scalar_to_float(entity_data->position.z),
+    };
+    float rotation[] =  {
+        scalar_to_float(entity_data->rotation.x) / 16.f * 90.f,
+        scalar_to_float(entity_data->rotation.y) / 16.f * 90.f,
+        scalar_to_float(entity_data->rotation.z) / 16.f * 90.f,
+    };
+    float scale[] =  {
+        scalar_to_float(entity_data->scale.x),
+        scalar_to_float(entity_data->scale.y),
+        scalar_to_float(entity_data->scale.z),
+    };
+    if (ImGui::DragFloat3("Position", position)) { entity_data->position = vec3_from_floats(position[0], position[1], position[2]); }
+    if (ImGui::DragFloat3("Rotation", rotation)) { entity_data->rotation = vec3_from_floats(rotation[0] / 90.f * 16.f, rotation[1] / 90.f * 16.f, rotation[2] / 90.f * 16.f); }
+    if (ImGui::DragFloat3("Scale", scale, 0.001f))       { entity_data->scale = vec3_from_floats(scale[0], scale[1], scale[2]); }
+}
+
 #define PI 3.14159265358979f
-void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** selected_entity, int* mouse_over_viewport) {
+void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_slot, int* mouse_over_viewport) {
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
     // General info
@@ -124,10 +152,20 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** select
             vec3_t forward = renderer_get_forward_vector();
             vec3_t spawn_pos = vec3_add(vec3_muls(camera->position, -COL_SCALE), vec3_muls(forward, -80 * ONE));
 
+            entity_header_t* entity;
+
             switch (curr_selected_entity_type) {
                 case ENTITY_DOOR:
-                    entity_door_t* entity = entity_door_new();
-                    entity->entity_header.position = spawn_pos;
+                    entity = (entity_header_t*)entity_door_new();
+                    entity->position = spawn_pos;
+                    break;
+                case ENTITY_PICKUP:
+                    entity = (entity_header_t*)entity_pickup_new();
+                    entity->position = spawn_pos;
+                    break;
+                case ENTITY_CRATE:
+                    entity = (entity_header_t*)entity_crate_new();
+                    entity->position = spawn_pos;
                     break;
             }
         }
@@ -137,16 +175,10 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** select
     // Entity inspector menu
     ImGui::Begin("Inspector", NULL, ImGuiWindowFlags_None);
     {
-        if (*selected_entity) {
+        if (selected_entity_slot) {
             ImGui::Text("Selected entity");
             ImGui::Spacing();
-            
-            float cam_pos[] =  {
-                scalar_to_float((*selected_entity)->position.x),
-                scalar_to_float((*selected_entity)->position.y),
-                scalar_to_float((*selected_entity)->position.z),
-            };
-            ImGui::InputFloat3("Position", cam_pos, "%.3f", ImGuiInputTextFlags_ReadOnly);
+            inspect_entity(*selected_entity_slot);
         }
     }
     ImGui::End();
@@ -180,22 +212,25 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** select
         ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, window_width, window_height);
         mat4 delta;
         
-        if (*selected_entity) {
+        if (*selected_entity_slot != -1) {
+                entity_slot_t* entity_slot = &entity_list[*selected_entity_slot];
+                entity_header_t* selected_entity = entity_slot->data;
+
                 // Transform to world units
                 transform_t render_transform;
-                render_transform.position.x = -(*selected_entity)->position.x / COL_SCALE;
-                render_transform.position.y = -(*selected_entity)->position.y / COL_SCALE;
-                render_transform.position.z = -(*selected_entity)->position.z / COL_SCALE;
-                render_transform.rotation.x = -(*selected_entity)->rotation.x;
-                render_transform.rotation.y = -(*selected_entity)->rotation.y;
-                render_transform.rotation.z = -(*selected_entity)->rotation.z;
-                render_transform.scale.x = (*selected_entity)->scale.x;
-                render_transform.scale.y = (*selected_entity)->scale.x;
-                render_transform.scale.z = (*selected_entity)->scale.x;
+                render_transform.position.x = -selected_entity->position.x / COL_SCALE;
+                render_transform.position.y = -selected_entity->position.y / COL_SCALE;
+                render_transform.position.z = -selected_entity->position.z / COL_SCALE;
+                render_transform.rotation.x = -selected_entity->rotation.x;
+                render_transform.rotation.y = -selected_entity->rotation.y;
+                render_transform.rotation.z = -selected_entity->rotation.z;
+                render_transform.scale.x = selected_entity->scale.x;
+                render_transform.scale.y = selected_entity->scale.x;
+                render_transform.scale.z = selected_entity->scale.x;
 
                 const aabb_t collision_box = {
-                    .min = vec3_sub((*selected_entity)->position, (*selected_entity)->mesh->bounds.min),
-                    .max = vec3_sub((*selected_entity)->position, (*selected_entity)->mesh->bounds.max)
+                    .min = vec3_sub(selected_entity->position, selected_entity->mesh->bounds.min),
+                    .max = vec3_sub(selected_entity->position, selected_entity->mesh->bounds.max)
                 };
 
                 // Calculate model matrix
@@ -230,9 +265,9 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** select
             )) {
                 vec3 translation, rotation, scale;
                 ImGuizmo::DecomposeMatrixToComponents(&delta[0][0], &translation[0], &rotation[0], &scale[0]);
-                (*selected_entity)->position.x -= (scalar_t)(translation[0] * (float)COL_SCALE);
-                (*selected_entity)->position.y -= (scalar_t)(translation[1] * (float)COL_SCALE);
-                (*selected_entity)->position.z -= (scalar_t)(translation[2] * (float)COL_SCALE);
+                selected_entity->position.x -= (scalar_t)(translation[0] * (float)COL_SCALE);
+                selected_entity->position.y -= (scalar_t)(translation[1] * (float)COL_SCALE);
+                selected_entity->position.z -= (scalar_t)(translation[2] * (float)COL_SCALE);
             }
         }
         
@@ -251,10 +286,10 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** select
                 
                 if (!ImGuizmo::IsOver() && !ImGuizmo::IsUsingAny()) {
                     if (entity_index != 255) {
-                        *selected_entity = entity_list[(size_t)entity_index].data;
+                        *selected_entity_slot = entity_index;
                     }
                     else {
-                        *selected_entity = NULL;
+                        *selected_entity_slot = -1;
                     }
                 }
             }
