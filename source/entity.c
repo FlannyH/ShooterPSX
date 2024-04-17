@@ -63,6 +63,7 @@ char* entity_names[] = {
 	"ENTITY_DOOR",
 	"ENTITY_PICKUP",
 	"ENTITY_CRATE",
+	NULL
 };
 
 #ifdef _DEBUG
