@@ -153,6 +153,10 @@ void inspect_entity(size_t entity_id) {
         }
         ImGui::TreePop();
     }
+
+    if (ImGui::Button("Delete")) {
+        entity_kill(entity_id);
+    }
 }
 
 #define PI 3.14159265358979f
@@ -216,6 +220,11 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
             ImGui::Text("Selected entity");
             ImGui::Spacing();
             inspect_entity(*selected_entity_slot);
+            
+            // If deleted, deselect it
+            if (entity_list[*selected_entity_slot].type == ENTITY_NONE) {
+                *selected_entity_slot = -1;
+            }
         }
     }
     ImGui::End();

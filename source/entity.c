@@ -10,6 +10,8 @@ entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
 size_t entity_n_active_aabb;
 model_t* entity_models = NULL;
 
+// todo: currently, entities are allocated on a stack. maybe it's best if we have an array that holds ENTITY_LIST_LENGTH entities, where the stride is the largest struct we have. this way we wont need any allocators either.
+
 void entity_update_all(player_t* player, int dt) {
 	// Reset counters
 	entity_n_active_aabb = 0;
