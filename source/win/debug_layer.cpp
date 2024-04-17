@@ -74,12 +74,34 @@ extern "C" {
     extern GLuint fbo;
 }
 
+float scalar_to_float(scalar_t a) {
+    return (float)a / (float)ONE;
+}
+float world_space_to_collision_space(scalar_t a) {
+    return (float)a * ((float)COL_SCALE / (float)ONE);
+}
+
 #define PI 3.14159265358979f
 void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** selected_entity, int* mouse_over_viewport) {
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
+    // General info
+    ImGui::Begin("Info");
+    {
+        ImGui::Text("Camera");
+        ImGui::Spacing();
+
+        float cam_pos[] =  {
+            world_space_to_collision_space(scalar_to_float(-camera->position.x)),
+            world_space_to_collision_space(scalar_to_float(-camera->position.y)),
+            world_space_to_collision_space(scalar_to_float(-camera->position.z)),
+        };
+        ImGui::InputFloat3("Position", cam_pos, "%.3f", ImGuiInputTextFlags_ReadOnly);
+    }
+    ImGui::End();
+
     // Entity spawn menu
-    ImGui::Begin("Entity spawning", NULL, ImGuiWindowFlags_None);
+    ImGui::Begin("Entity spawning");
     {
         static size_t curr_selected_entity_type = 1;
         // Entity select dropdown
