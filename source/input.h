@@ -1,5 +1,8 @@
 #ifndef INPUT_H
 #define INPUT_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stdint.h>
 #include <stddef.h>
 
@@ -27,4 +30,7 @@ int input_mouse_connected();
 void input_lock_mouse();
 void input_unlock_mouse();
 
+#ifdef __cplusplus
+}
+#endif
 #endif
