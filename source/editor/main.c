@@ -41,6 +41,7 @@ level_t load_level(const char* path) {
     for (uint8_t i = 0; i < n_level_textures; ++i) {
 	    renderer_upload_texture(&tex_level[i], i + tex_level_start);
 	}
+    mem_stack_release(STACK_TEMP);
 
     // Load entity textures
 	texture_cpu_t *entity_textures;
@@ -49,6 +50,7 @@ level_t load_level(const char* path) {
 	for (uint8_t i = 0; i < n_entity_textures; ++i) {
 	    renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
 	}
+    mem_stack_release(STACK_TEMP);
 
     size_t mem_before = mem_stack_get_occupied(STACK_LEVEL);
 

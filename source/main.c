@@ -182,10 +182,12 @@ void state_enter_title_screen(void) {
 		texture_cpu_t *tex_ui;
 		mem_stack_release(STACK_TEMP);
 		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU1.TXC;1", &tex_menu1, 1, STACK_TEMP);
-		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU2.TXC;1", &tex_menu2, 1, STACK_TEMP);
-		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\UI.TXC;1", &tex_ui, 1, STACK_TEMP);
 		render_upload_8bit_texture_page(tex_menu1, 3);
+		mem_stack_release(STACK_TEMP);
+		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU2.TXC;1", &tex_menu2, 1, STACK_TEMP);
 		render_upload_8bit_texture_page(tex_menu2, 4);
+		mem_stack_release(STACK_TEMP);
+		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\UI.TXC;1", &tex_ui, 1, STACK_TEMP);
 		render_upload_8bit_texture_page(tex_ui, 5);
 		mem_stack_release(STACK_TEMP);
 		state.title_screen.assets_in_memory = 1;
@@ -371,11 +373,13 @@ void state_enter_in_game(void) {
 	for (uint8_t i = 0; i < n_level_textures; ++i) {
 	    renderer_upload_texture(&tex_level[i], i + tex_level_start);
 	}
+    mem_stack_release(STACK_TEMP);
 	tex_entity_start = tex_level_start + n_level_textures;
 	const uint32_t n_entity_textures = texture_collection_load("\\ASSETS\\MODELS\\ENTITY.TXC;1", &entity_textures, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_entity_textures; ++i) {
 	    renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
 	}
+    mem_stack_release(STACK_TEMP);
 	tex_weapon_start = tex_entity_start + n_entity_textures;
 	const uint32_t n_weapons_textures = texture_collection_load("\\ASSETS\\MODELS\\WEAPONS.TXC;1", &weapon_textures, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_weapons_textures; ++i) {
