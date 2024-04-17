@@ -247,11 +247,6 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
                 render_transform.scale.y = selected_entity->scale.x;
                 render_transform.scale.z = selected_entity->scale.x;
 
-                const aabb_t collision_box = {
-                    .min = vec3_sub(selected_entity->position, selected_entity->mesh->bounds.min),
-                    .max = vec3_sub(selected_entity->position, selected_entity->mesh->bounds.max)
-                };
-
                 // Calculate model matrix
                 mat4 model_matrix;
                 glm_mat4_identity(model_matrix);
