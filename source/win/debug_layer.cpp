@@ -6,11 +6,14 @@
 #include "backends/imgui_impl_opengl3.h"
 #include "ImGuizmo.h"
 #include <cmath>
+#include <vector>
+#include <string>
 
 #include "../renderer.h"
 #include "../input.h"
 
 static double dt_smooth = 0.0f;
+static std::vector<std::string> entity_type_names;
 
 void debug_layer_init(GLFWwindow* window) {
     ImGui::CreateContext();
@@ -78,7 +81,19 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** select
     // Entity spawn menu
     ImGui::Begin("Entity spawning", NULL, ImGuiWindowFlags_None);
     {
-
+        static size_t curr_selected_entity_type = 1;
+        // Entity select dropdown
+        if (ImGui::BeginCombo("Entity type", entity_names[curr_selected_entity_type]))
+        {
+            size_t i = 1;
+            while (entity_names[i]) {
+                if (ImGui::Selectable(entity_names[i], false)) {
+                    curr_selected_entity_type = i;
+                }
+                ++i;
+            }
+            ImGui::EndCombo();
+        }
     }
     ImGui::End();
 
