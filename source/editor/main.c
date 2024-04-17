@@ -62,7 +62,7 @@ level_t load_level(const char* path) {
     bvh_from_model(&level.collision_bvh, level.collision_mesh);
 
     size_t mem_allocated_in_this_function = mem_stack_get_occupied(STACK_LEVEL) - mem_before;
-    printf("Loaded level '%s', using %zi KB", path, mem_allocated_in_this_function / KiB);
+    printf("Loaded level '%s', using %zi KB\n", path, mem_allocated_in_this_function / KiB);
 
     return level;
 }
