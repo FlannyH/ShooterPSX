@@ -73,8 +73,8 @@ elseif (DEFINED LEVEL_EDITOR_TARGET)
         external/include/imgui/imgui_widgets.cpp
         external/include/imgui/imgui_tables.cpp
         external/include/imgui/imgui_draw.cpp
-        external/include/imgui/imgui_impl_glfw.cpp
-        external/include/imgui/imgui_impl_opengl3.cpp
+        external/include/imgui/backends/imgui_impl_glfw.cpp
+        external/include/imgui/backends/imgui_impl_opengl3.cpp
         external/include/imguizmo/ImGuizmo.cpp
     )
     if(WIN32)
@@ -151,8 +151,8 @@ else()
         external/include/imgui/imgui_widgets.cpp
         external/include/imgui/imgui_tables.cpp
         external/include/imgui/imgui_draw.cpp
-        external/include/imgui/imgui_impl_glfw.cpp
-        external/include/imgui/imgui_impl_opengl3.cpp
+        external/include/imgui/backends/imgui_impl_glfw.cpp
+        external/include/imgui/backends/imgui_impl_opengl3.cpp
         external/include/imguizmo/ImGuizmo.cpp
     )
     if(WIN32)
