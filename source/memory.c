@@ -168,7 +168,7 @@ size_t mem_stack_get_free(stack_t stack) {
 
 void* mem_alloc(size_t size, memory_category_t category) {
 #ifdef _DEBUG
-    printf("allocating %i bytes for category %s\n", size, mem_cat_strings[category]);
+    // printf("allocating %i bytes for category %s\n", size, mem_cat_strings[category]);
     void* result = NULL;
     for (size_t i = 0; i < 512; ++i) {
         if (allocated_memory_pointers[i] == NULL) {
@@ -189,7 +189,7 @@ void mem_free(void* ptr) {
 #ifdef _DEBUG
     for (size_t i = 0; i < 512; ++i) {
         if (allocated_memory_pointers[i] == ptr) {
-            printf("freeing %i bytes for category %s\n", allocated_memory_size[i], mem_cat_strings[allocated_memory_category[i]]);
+            // printf("freeing %i bytes for category %s\n", allocated_memory_size[i], mem_cat_strings[allocated_memory_category[i]]);
 
             allocated_memory_pointers[i] = NULL;
             allocated_memory_size[i] = 0;
