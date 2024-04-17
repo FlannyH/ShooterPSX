@@ -70,11 +70,6 @@ extern "C" {
     extern GLuint fbo;
 }
 
-void debug_layer_get_hovered_entity(transform_t* camera, entity_header_t* selected_entity) {
-    // Get mouse position in viewport
-
-}
-
 #define PI 3.14159265358979f
 void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** selected_entity) {
     int flags = ImGuiWindowFlags_NoResize;
