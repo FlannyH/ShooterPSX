@@ -67,6 +67,7 @@ void debug_layer_update_gameplay() {
     collision_clear_stats();
 }
 
+#ifdef _LEVEL_EDITOR
 #include <cglm/types.h>
 #include <cglm/affine.h>
 extern "C" {
@@ -366,6 +367,7 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
     ImGui::End();
 }
 
+#endif
 void debug_layer_close() {
     ImGui::SaveIniSettingsToDisk("imgui_layout.ini");
 }
