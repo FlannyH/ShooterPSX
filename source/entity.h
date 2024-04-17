@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 #define ENTITY_NOT_SECTION_BOUND 255
-#define ENTITY_LIST_LENGTH 64
+#define ENTITY_LIST_LENGTH 256
 
 typedef enum {
 	ENTITY_NONE,
