@@ -85,30 +85,38 @@ float world_space_to_collision_space(scalar_t a) {
     return (float)a * ((float)COL_SCALE / (float)ONE);
 }
 
+void inspect_vec3(vec3_t* vec, const char* label) {
+    float vec_float[] =  {
+        scalar_to_float(vec->x),
+        scalar_to_float(vec->y),
+        scalar_to_float(vec->z),
+    };
+
+    if (ImGui::DragFloat3(label, vec_float)) {
+        *vec = vec3_from_floats(vec_float[0], vec_float[1], vec_float[2]); 
+    }
+}
+
 void inspect_entity(size_t entity_id) {
     entity_slot_t* entity_slot = &entity_list[entity_id];
     if (entity_slot->type == ENTITY_NONE) return;
 
     entity_header_t* entity_data = entity_slot->data;
             
-    float position[] =  {
-        scalar_to_float(entity_data->position.x),
-        scalar_to_float(entity_data->position.y),
-        scalar_to_float(entity_data->position.z),
-    };
-    float rotation[] =  {
-        scalar_to_float(entity_data->rotation.x) / 16.f * 90.f,
-        scalar_to_float(entity_data->rotation.y) / 16.f * 90.f,
-        scalar_to_float(entity_data->rotation.z) / 16.f * 90.f,
-    };
-    float scale[] =  {
-        scalar_to_float(entity_data->scale.x),
-        scalar_to_float(entity_data->scale.y),
-        scalar_to_float(entity_data->scale.z),
-    };
-    if (ImGui::DragFloat3("Position", position)) { entity_data->position = vec3_from_floats(position[0], position[1], position[2]); }
-    if (ImGui::DragFloat3("Rotation", rotation)) { entity_data->rotation = vec3_from_floats(rotation[0] / 90.f * 16.f, rotation[1] / 90.f * 16.f, rotation[2] / 90.f * 16.f); }
-    if (ImGui::DragFloat3("Scale", scale, 0.001f))       { entity_data->scale = vec3_from_floats(scale[0], scale[1], scale[2]); }
+    if (ImGui::TreeNodeEx("Entity Header", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Text("Mesh: %s", entity_data->mesh->name);
+        inspect_vec3(&entity_data->position, "Position");
+        inspect_vec3(&entity_data->rotation, "Rotation");
+        inspect_vec3(&entity_data->scale, "Scale");
+        ImGui::TreePop();
+    }
+    if (ImGui::TreeNodeEx("Entity Data", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (entity_slot->type == ENTITY_DOOR) {
+            entity_door_t* door = (entity_door_t*)entity_data;
+            inspect_vec3(&door->open_offset, "Open offset");
+        }
+        ImGui::TreePop();
+    }
 }
 
 #define PI 3.14159265358979f
@@ -118,15 +126,18 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
     // General info
     ImGui::Begin("Info");
     {
-        ImGui::Text("Camera");
-        ImGui::Spacing();
+        if (ImGui::TreeNodeEx("Camera Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
+            float vec_float[] =  {
+                world_space_to_collision_space(scalar_to_float(-camera->position.x)),
+                world_space_to_collision_space(scalar_to_float(-camera->position.y)),
+                world_space_to_collision_space(scalar_to_float(-camera->position.z)),
+            };
 
-        float cam_pos[] =  {
-            world_space_to_collision_space(scalar_to_float(-camera->position.x)),
-            world_space_to_collision_space(scalar_to_float(-camera->position.y)),
-            world_space_to_collision_space(scalar_to_float(-camera->position.z)),
-        };
-        ImGui::InputFloat3("Position", cam_pos, "%.3f", ImGuiInputTextFlags_ReadOnly);
+            if (ImGui::DragFloat3("Position", vec_float)) {
+                camera->position = vec3_from_floats(-vec_float[0], -vec_float[1], -vec_float[2]); 
+            }
+            ImGui::TreePop();
+        }
     }
     ImGui::End();
 
