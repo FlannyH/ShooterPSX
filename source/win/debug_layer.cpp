@@ -97,6 +97,7 @@ void inspect_vec3(vec3_t* vec, const char* label) {
     }
 }
 
+
 void inspect_entity(size_t entity_id) {
     entity_slot_t* entity_slot = &entity_list[entity_id];
     if (entity_slot->type == ENTITY_NONE) return;
@@ -114,6 +115,13 @@ void inspect_entity(size_t entity_id) {
         if (entity_slot->type == ENTITY_DOOR) {
             entity_door_t* door = (entity_door_t*)entity_data;
             inspect_vec3(&door->open_offset, "Open offset");
+            // needs to be separate because these are single bits
+            bool is_locked = (bool)door->is_locked;
+            bool is_big_door = (bool)door->is_big_door;
+            bool is_rotated = (bool)door->is_rotated;
+            if (ImGui::Checkbox("Locked", &is_locked)) { door->is_locked = (int)is_locked; door->state_changed = 1; }
+            if (ImGui::Checkbox("Big door", &is_big_door)) { door->is_big_door = (int)is_big_door; door->state_changed = 1; }
+            if (ImGui::Checkbox("Rotated", &is_rotated)) { door->is_rotated = (int)is_rotated; door->state_changed = 1; }
         }
         ImGui::TreePop();
     }

@@ -14,6 +14,7 @@ typedef struct {
 	int is_locked : 1;
 	int is_big_door : 1;
 	int is_rotated : 1;
+	int state_changed : 1;
 } entity_door_t;
 
 entity_door_t* entity_door_new();
