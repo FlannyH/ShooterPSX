@@ -2,18 +2,17 @@
 
 entity_pickup_t* entity_pickup_new() {
 	// Allocate memory for the entity
-	entity_pickup_t* entity = mem_stack_alloc(sizeof(entity_pickup_t), STACK_ENTITY);
+    entity_pickup_t* entity = (entity_pickup_t*)&entity_pool[entity_alloc(ENTITY_PICKUP) * entity_pool_stride];
 	entity->entity_header.position = (vec3_t){0, 0, 0};
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
     entity->type = PICKUP_TYPE_AMMO_SMALL;
     entity->entity_header.mesh = NULL;
-    entity_register(&entity->entity_header, ENTITY_PICKUP);
     return entity;
 }
 
 void entity_pickup_update(int slot, player_t* player, int dt) {
-	entity_pickup_t* pickup = (entity_pickup_t*)entity_list[slot].data;
+	entity_pickup_t* pickup = (entity_pickup_t*)&entity_pool[slot * entity_pool_stride];
 	vec3_t pickup_pos = pickup->entity_header.position;
 	vec3_t player_pos = vec3_sub(player->position, (vec3_t){0, 200 * COL_SCALE, 0});
     vec3_t pickup_to_player = vec3_sub(player_pos, pickup_pos);

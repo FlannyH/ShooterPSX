@@ -117,7 +117,7 @@ void inspect_entity(size_t entity_id) {
     entity_slot_t* entity_slot = &entity_list[entity_id];
     if (entity_slot->type == ENTITY_NONE) return;
 
-    entity_header_t* entity_data = entity_slot->data;
+    entity_header_t* entity_data = (entity_header_t*)&entity_pool[entity_id * entity_pool_stride];
             
     if (ImGui::TreeNodeEx("Entity Header", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::Text("Mesh: %s", entity_data->mesh->name);
@@ -274,7 +274,7 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
         
         if (*selected_entity_slot != -1) {
                 entity_slot_t* entity_slot = &entity_list[*selected_entity_slot];
-                entity_header_t* selected_entity = entity_slot->data;
+                entity_header_t* selected_entity = (entity_header_t*)&entity_pool[(*selected_entity_slot) * entity_pool_stride];
 
                 // Transform to world units
                 transform_t render_transform;
