@@ -21,6 +21,10 @@ typedef enum {
 	PICKUP_TYPE_INVINCIBILITY,
 } pickup_types;
 
+#ifdef _LEVEL_EDITOR
+extern const char* pickup_names[];
+#endif
+
 typedef struct {
 	entity_header_t entity_header;
     uint8_t type;
