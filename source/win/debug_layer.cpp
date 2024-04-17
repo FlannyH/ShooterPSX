@@ -122,7 +122,17 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** select
     // Entity inspector menu
     ImGui::Begin("Inspector", NULL, ImGuiWindowFlags_None);
     {
-
+        if (*selected_entity) {
+            ImGui::Text("Selected entity");
+            ImGui::Spacing();
+            
+            float cam_pos[] =  {
+                scalar_to_float((*selected_entity)->position.x),
+                scalar_to_float((*selected_entity)->position.y),
+                scalar_to_float((*selected_entity)->position.z),
+            };
+            ImGui::InputFloat3("Position", cam_pos, "%.3f", ImGuiInputTextFlags_ReadOnly);
+        }
     }
     ImGui::End();
 
