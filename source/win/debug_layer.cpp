@@ -11,6 +11,8 @@
 
 #include "../renderer.h"
 #include "../input.h"
+#include "../entity.h"
+#include "../entities/door.h"
 
 static double dt_smooth = 0.0f;
 static std::vector<std::string> entity_type_names;
@@ -115,6 +117,19 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** select
                 ++i;
             }
             ImGui::EndCombo();
+        }
+
+        if (ImGui::Button("Spawn")) {
+            // Figure out where to spawn - in front of the camera
+            vec3_t forward = renderer_get_forward_vector();
+            vec3_t spawn_pos = vec3_add(vec3_muls(camera->position, -COL_SCALE), vec3_muls(forward, -80 * ONE));
+
+            switch (curr_selected_entity_type) {
+                case ENTITY_DOOR:
+                    entity_door_t* entity = entity_door_new();
+                    entity->entity_header.position = spawn_pos;
+                    break;
+            }
         }
     }
     ImGui::End();
