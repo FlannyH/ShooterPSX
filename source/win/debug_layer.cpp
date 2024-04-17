@@ -90,14 +90,9 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** select
     ImGui::End();
 
     // Viewport with gizmos
-    int flags = ImGuiWindowFlags_NoResize;
-    flags |= ImGuizmo::IsOver() || ImGuizmo::IsUsingAny() ? ImGuiWindowFlags_NoMove : 0;
+    int flags = ImGuizmo::IsOver() || ImGuizmo::IsUsingAny() ? ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove : 0;
     ImGui::Begin("Viewport", NULL, flags);
     {
-        // Set viewport
-        auto wsize = ImVec2(w, h);
-        ImGui::SetWindowSize(wsize);
-
         // Get normalized mouse position inside the viewport content area
         ImVec2 mouse_pos = ImGui::GetMousePos();
         ImVec2 window_pos = ImGui::GetWindowPos();
@@ -110,8 +105,11 @@ void debug_layer_manipulate_entity(transform_t* camera, entity_header_t** select
         float window_height = content_offset_bottom_right.y - content_offset_top_left.y;
         float nrm_mouse_x = (rel_mouse_pos.x / window_width) * 2.0 - 1.0;
         float nrm_mouse_y = (rel_mouse_pos.y / window_width) * 2.0 - 1.0;
-        
+        w = (int)window_width;
+        h = (int)window_height;    
+
         // Draw the viewport
+        auto wsize = ImVec2(w, h);
         ImGui::Image((ImTextureID)fb_texture, wsize, ImVec2(0, 1), ImVec2(1, 0));
 
         // Handle entity gizmo
