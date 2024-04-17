@@ -6,7 +6,8 @@
 
 entity_door_t* entity_door_new() {
 	// Allocate memory for the entity
-	entity_door_t* entity = mem_stack_alloc(sizeof(entity_door_t), STACK_ENTITY);
+	int entity_id = entity_alloc(ENTITY_DOOR);
+    entity_door_t* entity = (entity_door_t*)&entity_pool[entity_id * entity_pool_stride];
 	entity->entity_header.position = (vec3_t){0, 0, 0};
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
@@ -16,9 +17,6 @@ entity_door_t* entity_door_new() {
 	entity->is_big_door = 0;
 	entity->is_rotated = 0;
 	entity->open_offset = (vec3_t){0, 64 * ONE, 0};
-
-	// Register it in the entity list
-	entity_register(&entity->entity_header, ENTITY_DOOR);
 
 	return entity;
 }
@@ -66,7 +64,7 @@ mesh_t* update_mesh(entity_door_t* door) {
 }
 
 void entity_door_update(int slot, player_t* player, int dt) {
-	entity_door_t* door = (entity_door_t*)entity_list[slot].data;
+	entity_door_t* door = (entity_door_t*)&entity_pool[slot * entity_pool_stride];
 
 	vec3_t door_pos = door->entity_header.position;
 	vec3_t player_pos = player->position;
@@ -115,7 +113,7 @@ void entity_door_update(int slot, player_t* player, int dt) {
 		};
 		entity_register_collision_box(&box);
 	}
-	
+
 	door->state_changed = 0;
 
 	// Render mesh - we need to shift it because my implementation of multiplication loses some precision
