@@ -17,7 +17,6 @@
 #include "../entities/pickup.h"
 
 static double dt_smooth = 0.0f;
-static std::vector<std::string> entity_type_names;
 
 void debug_layer_init(GLFWwindow* window) {
     ImGui::CreateContext();
@@ -97,6 +96,21 @@ void inspect_vec3(vec3_t* vec, const char* label) {
     }
 }
 
+size_t inspect_enum(size_t value, const char** names, const char* label) {
+    size_t new_value = value;
+    if (ImGui::BeginCombo(label, names[value]))
+    {
+        size_t i = 1;
+        while (names[i]) {
+            if (ImGui::Selectable(names[i], false)) {
+                new_value = i;
+            }
+            ++i;
+        }
+        ImGui::EndCombo();
+    }
+    return new_value;
+}
 
 void inspect_entity(size_t entity_id) {
     entity_slot_t* entity_slot = &entity_list[entity_id];
@@ -115,13 +129,22 @@ void inspect_entity(size_t entity_id) {
         if (entity_slot->type == ENTITY_DOOR) {
             entity_door_t* door = (entity_door_t*)entity_data;
             inspect_vec3(&door->open_offset, "Open offset");
-            // needs to be separate because these are single bits
             bool is_locked = (bool)door->is_locked;
             bool is_big_door = (bool)door->is_big_door;
             bool is_rotated = (bool)door->is_rotated;
             if (ImGui::Checkbox("Locked", &is_locked)) { door->is_locked = (int)is_locked; door->state_changed = 1; }
             if (ImGui::Checkbox("Big door", &is_big_door)) { door->is_big_door = (int)is_big_door; door->state_changed = 1; }
             if (ImGui::Checkbox("Rotated", &is_rotated)) { door->is_rotated = (int)is_rotated; door->state_changed = 1; }
+        }
+        
+        if (entity_slot->type == ENTITY_PICKUP) {
+            entity_pickup_t* pickup = (entity_pickup_t*)entity_data;
+            const size_t old_type = (size_t)pickup->type;
+            const size_t new_type = inspect_enum((size_t)pickup->type, pickup_names, "Pickup type");
+            if (old_type != new_type) {
+                pickup->type = new_type;
+                pickup->entity_header.mesh = NULL; // force refresh mesh data
+            }
         }
         ImGui::TreePop();
     }
@@ -154,17 +177,7 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
     {
         static size_t curr_selected_entity_type = 1;
         // Entity select dropdown
-        if (ImGui::BeginCombo("Entity type", entity_names[curr_selected_entity_type]))
-        {
-            size_t i = 1;
-            while (entity_names[i]) {
-                if (ImGui::Selectable(entity_names[i], false)) {
-                    curr_selected_entity_type = i;
-                }
-                ++i;
-            }
-            ImGui::EndCombo();
-        }
+        curr_selected_entity_type = inspect_enum(curr_selected_entity_type, entity_names, "Entity type");
 
         if (ImGui::Button("Spawn")) {
             // Figure out where to spawn - in front of the camera

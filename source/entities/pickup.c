@@ -75,3 +75,21 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
 }
 
 void entity_pickup_on_hit(int slot, int hitbox_index) {}
+
+#ifdef _LEVEL_EDITOR 
+const char* pickup_names[] = {
+    "PICKUP_TYPE_NONE",
+    "PICKUP_TYPE_AMMO_SMALL",
+    "PICKUP_TYPE_AMMO_BIG",
+    "PICKUP_TYPE_ARMOR_SMALL",
+    "PICKUP_TYPE_ARMOR_BIG",
+    "PICKUP_TYPE_HEALTH_SMALL",
+    "PICKUP_TYPE_HEALTH_BIG",
+    "PICKUP_TYPE_KEY_BLUE",
+    "PICKUP_TYPE_KEY_YELLOW",
+    "PICKUP_TYPE_DAMAGE",
+    "PICKUP_TYPE_FIRE_RATE",
+    "PICKUP_TYPE_INVINCIBILITY",
+	NULL
+};
+#endif

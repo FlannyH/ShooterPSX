@@ -73,7 +73,7 @@ typedef struct {
 	int is_trigger : 1; // does it trigger any events? (e.g. text, moving geometry)
 } entity_collision_box_t;
 
-extern char* entity_names[];
+extern const char* entity_names[];
 extern model_t* entity_models;
 extern entity_slot_t entity_list[ENTITY_LIST_LENGTH];
 extern entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];

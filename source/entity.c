@@ -58,7 +58,7 @@ void entity_kill(int slot) {
 	entity_list[slot].type = ENTITY_NONE;
 }
 
-char* entity_names[] = {
+const char* entity_names[] = {
 	"ENTITY_NONE",
 	"ENTITY_DOOR",
 	"ENTITY_PICKUP",
