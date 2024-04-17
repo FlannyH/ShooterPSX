@@ -95,6 +95,7 @@ int main(void) {
 	crate1 = entity_door_new(); crate1->entity_header.position = (vec3_t){(1338 + 64*2)*ONE, 1294*ONE, (465+64*0)*ONE}; crate1->is_big_door = 1;
 	crate2 = entity_door_new(); crate2->entity_header.position = (vec3_t){(1338 + 64*3)*ONE, 1294*ONE, (465+64*0)*ONE}; crate2->is_big_door = 1;
 
+    int mouse_over_viewport = 0;
 
     while (!renderer_should_close()) {
 	    mem_stack_release(STACK_TEMP);
@@ -105,7 +106,7 @@ int main(void) {
         time_counter += dt;
 
         // Allow locking and unlocking the mouse
-        if (input_pressed(PAD_R2, 0)) {
+        if (input_pressed(PAD_R2, 0) && mouse_over_viewport) {
             mouse_lock = 1;
             input_lock_mouse();
         }
@@ -126,7 +127,7 @@ int main(void) {
             entity_update_all(&player, 0);
             
             debug_layer_begin();
-            debug_layer_manipulate_entity(&player.transform, &selected_entity);
+            debug_layer_manipulate_entity(&player.transform, &selected_entity, &mouse_over_viewport);
             debug_layer_end();
         }
         renderer_end_frame();
