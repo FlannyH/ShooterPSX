@@ -1,4 +1,4 @@
 # Sub Nivis PS1
 This is a PlayStation 1 port of Sub Nivis, a game I worked on in college.
 
-[Gameplay demo]("misc/2024-04-02 17-16-49.mp4")
+https://github.com/FlannyH/ShooterPSX/assets/60531875/5cb85d24-7a6c-44a8-9a6b-af4fc6346165
