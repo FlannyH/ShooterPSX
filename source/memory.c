@@ -7,7 +7,7 @@
 uint32_t mem_stack_temp [350  * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_level[960 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_music[64 * KiB / sizeof(uint32_t)];
-uint32_t mem_stack_entity[32 * KiB / sizeof(uint32_t)];
+uint32_t mem_stack_entity[64 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_vram_swap[1 * KiB / sizeof(uint32_t)];
 size_t mem_stack_cursor_temp = 0;
 size_t mem_stack_cursor_level = 0;
