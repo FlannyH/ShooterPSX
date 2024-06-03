@@ -9,11 +9,13 @@ uint32_t mem_stack_level[960 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_music[64 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_entity[64 * KiB / sizeof(uint32_t)];
 uint32_t mem_stack_vram_swap[1 * KiB / sizeof(uint32_t)];
+uint32_t* mem_stack_scratchpad = (uint32_t*)0x1F800000;
 size_t mem_stack_cursor_temp = 0;
 size_t mem_stack_cursor_level = 0;
 size_t mem_stack_cursor_music = 0;
 size_t mem_stack_cursor_entity = 0;
 size_t mem_stack_cursor_vram_swap = 0;
+size_t mem_stack_cursor_scratchpad = 0;
 
 #ifdef _DEBUG
 char* mem_cat_strings[] = {
@@ -32,6 +34,7 @@ char* stack_names[] = {
     "STACK_MUSIC",
     "STACK_ENTITY",
     "STACK_VRAM_SWAP",
+    "STACK_SCRATCHPAD",
 };
 #endif
 
@@ -48,7 +51,9 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 	size_t* cursor;
 
 #ifdef _DEBUG
-	printf("stack %s (id %i) has %i bytes available and we need %i bytes... ", stack_names[stack], stack, mem_stack_get_size(stack) - mem_stack_get_occupied(stack), size);
+	if (stack != STACK_SCRATCHPAD) {
+		printf("stack %s (id %i) has %i bytes available and we need %i bytes... ", stack_names[stack], stack, mem_stack_get_size(stack) - mem_stack_get_occupied(stack), size);
+	}
 #endif
 	
 	switch (stack) {
@@ -72,19 +77,25 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 			base = mem_stack_vram_swap;
 			cursor = &mem_stack_cursor_vram_swap;
 			break;
+		case STACK_SCRATCHPAD:
+			base = mem_stack_scratchpad;
+			cursor = &mem_stack_cursor_scratchpad;
+			break;
 		default:
 			printf("invalid stack allocation\n");
 			return NULL;
 	}
 
 #ifdef _DEBUG
-	// Make sure there is enough space
-	if (size > mem_stack_get_free(stack)) {
-		printf("turns out we don't have that.\n");
-		return NULL;
+	if (stack != STACK_SCRATCHPAD) {
+		// Make sure there is enough space
+		if (size > mem_stack_get_free(stack)) {
+			printf("turns out we don't have that.\n");
+			return NULL;
+		}
+		printf("which we have! move on :D\n");
+		printf("allocated to %p\n", cursor);
 	}
-	printf("which we have! move on :D\n");
-	printf("allocated to %p\n", cursor);
 #endif
 
 	// Convert size from bytes to words
@@ -111,6 +122,9 @@ void mem_stack_release(stack_t stack) {
 		case STACK_VRAM_SWAP:
 			mem_stack_cursor_vram_swap = 0;
 			break;
+		case STACK_SCRATCHPAD:
+			mem_stack_cursor_scratchpad = 0;
+			break;
 		default:
 			break;
 	}
@@ -132,6 +146,9 @@ size_t mem_stack_get_size(stack_t stack) {
 			break;
 		case STACK_VRAM_SWAP:
 			return sizeof(mem_stack_vram_swap);
+			break;
+		case STACK_SCRATCHPAD:
+			return 1024;
 			break;
 		default:
 			return 0;
@@ -155,6 +172,9 @@ size_t mem_stack_get_occupied(stack_t stack) {
 			break;
 		case STACK_VRAM_SWAP:
 			return mem_stack_cursor_vram_swap << 2;
+			break;
+		case STACK_SCRATCHPAD:
+			return mem_stack_cursor_scratchpad << 2;
 			break;
 		default:
 			return 0;

@@ -18,6 +18,7 @@ typedef enum {
     STACK_MUSIC,
     STACK_ENTITY,
     STACK_VRAM_SWAP,
+    STACK_SCRATCHPAD,
 	N_STACK_TYPES,
 } stack_t;
 
