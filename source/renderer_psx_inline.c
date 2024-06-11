@@ -418,6 +418,14 @@ static inline void subdivide_once_then_add_tex_triangle(const vertex_3d_t* verts
 
 // Transform and add to queue a textured, shaded triangle, with automatic subdivision based on size, fading to solid color in the distance.
 static inline void draw_tex_triangle3d_fancy(const vertex_3d_t* verts) {
+    // Transform the first 3 vertices
+    struct scratchpad {
+        svec2_t trans_vec_xy[25];
+        scalar_t trans_vec_z[25];
+    };
+
+    struct scratchpad* sp = (struct scratchpad*)SCRATCHPAD;
+
     // Transform the 3 vertices
     gte_ldv3(
         &verts[0],
@@ -433,11 +441,9 @@ static inline void draw_tex_triangle3d_fancy(const vertex_3d_t* verts) {
     if (p <= 0) return;
 
     // Store transformed position, and center depth
-    svec2_t trans_vec_xy[15];
-    scalar_t trans_vec_z[15];
     scalar_t avg_z;
-    gte_stsxy3c(&trans_vec_xy[0]);
-    gte_stsz3c(&trans_vec_z[0]);
+    gte_stsxy3c(&sp->trans_vec_xy[0]);
+    gte_stsz3c(&sp->trans_vec_z[0]);
     gte_avsz3();
     gte_stotz(&avg_z);
     
@@ -447,10 +453,10 @@ static inline void draw_tex_triangle3d_fancy(const vertex_3d_t* verts) {
     // Cull if off screen
     for (size_t i = 0; i < 3; ++i) {
         if (
-            trans_vec_xy[i].x >= 0 && 
-            trans_vec_xy[i].x <= res_x &&
-            trans_vec_xy[i].y >= 0 && 
-            trans_vec_xy[i].y <= curr_res_y 
+            sp->trans_vec_xy[i].x >= 0 && 
+            sp->trans_vec_xy[i].x <= res_x &&
+            sp->trans_vec_xy[i].y >= 0 && 
+            sp->trans_vec_xy[i].y <= curr_res_y 
         ) {
             goto dont_return;
         }
@@ -461,14 +467,14 @@ static inline void draw_tex_triangle3d_fancy(const vertex_3d_t* verts) {
     // If very close, subdivide twice
     const scalar_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id;
     if (avg_z < sub2_threshold) {
-        subdivide_twice_then_add_tex_triangle(verts, trans_vec_xy, trans_vec_z, avg_z, sub2_threshold);
+        subdivide_twice_then_add_tex_triangle(verts, sp->trans_vec_xy, sp->trans_vec_z, avg_z, sub2_threshold);
         return;
     }
     
     // If close, subdivice once
     const scalar_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)verts[1].tex_id;
     if (avg_z < sub1_threshold) {
-        subdivide_once_then_add_tex_triangle(verts, trans_vec_xy, trans_vec_z, avg_z, sub1_threshold);
+        subdivide_once_then_add_tex_triangle(verts, sp->trans_vec_xy, sp->trans_vec_z, avg_z, sub1_threshold);
         return;
     }
 
@@ -478,13 +484,13 @@ static inline void draw_tex_triangle3d_fancy(const vertex_3d_t* verts) {
         int16_t clut_fade = ((N_CLUT_FADES-1) * (avg_z - TRI_THRESHOLD_FADE_START)) / (TRI_THRESHOLD_FADE_END - TRI_THRESHOLD_FADE_START);
         if (clut_fade > (N_CLUT_FADES-1)) clut_fade = (N_CLUT_FADES-1);
         else if (clut_fade < 0) clut_fade = 0;
-        add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], verts[0], verts[1], verts[2], avg_z, verts[0].tex_id + tex_id_start, clut_fade);
+        add_tex_triangle(sp->trans_vec_xy[0], sp->trans_vec_xy[1], sp->trans_vec_xy[2], verts[0], verts[1], verts[2], avg_z, verts[0].tex_id + tex_id_start, clut_fade);
         return;
     }
 
     // If far away, calculate colors and add untextured triangle
     else {
-        add_untex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], verts[0], verts[1], verts[2], avg_z);
+        add_untex_triangle(sp->trans_vec_xy[0], sp->trans_vec_xy[1], sp->trans_vec_xy[2], verts[0], verts[1], verts[2], avg_z);
     }
 }
 
@@ -760,8 +766,13 @@ static inline void subdivide_once_then_add_tex_quad(const vertex_3d_t* verts, sv
 // Transform and add to queue a textured, shaded quad, with automatic subdivision based on size, fading to solid color in the distance.
 static inline void draw_tex_quad3d_fancy(const vertex_3d_t* verts) {
     // Transform the first 3 vertices
-    svec2_t trans_vec_xy[25];
-    scalar_t trans_vec_z[25];
+    struct scratchpad {
+        svec2_t trans_vec_xy[25];
+        scalar_t trans_vec_z[25];
+    };
+
+    struct scratchpad* sp = (struct scratchpad*)SCRATCHPAD;
+
     scalar_t avg_z;
     gte_ldv3(
         &verts[0],
@@ -777,12 +788,12 @@ static inline void draw_tex_quad3d_fancy(const vertex_3d_t* verts) {
     if (p <= 0) return;
 
     // Store transformed position, and center depth
-    gte_stsxy3c(&trans_vec_xy[0]);
-    gte_stsz3c(&trans_vec_z[0]);
+    gte_stsxy3c(&sp->trans_vec_xy[0]);
+    gte_stsz3c(&sp->trans_vec_z[0]);
     gte_ldv0(&verts[3]);
     gte_rtps();
-    gte_stsxy(&trans_vec_xy[3]);
-    gte_stsz(&trans_vec_z[3]);
+    gte_stsxy(&sp->trans_vec_xy[3]);
+    gte_stsz(&sp->trans_vec_z[3]);
     gte_avsz4();
     gte_stotz(&avg_z);
 
@@ -792,10 +803,10 @@ static inline void draw_tex_quad3d_fancy(const vertex_3d_t* verts) {
     // Cull if off screen
     for (size_t i = 0; i < 4; ++i) {
         if (
-            trans_vec_xy[i].x >= 0 && 
-            trans_vec_xy[i].x <= res_x &&
-            trans_vec_xy[i].y >= 0 && 
-            trans_vec_xy[i].y <= curr_res_y 
+            sp->trans_vec_xy[i].x >= 0 && 
+            sp->trans_vec_xy[i].x <= res_x &&
+            sp->trans_vec_xy[i].y >= 0 && 
+            sp->trans_vec_xy[i].y <= curr_res_y 
         ) {
             goto dont_return;
         }
@@ -806,14 +817,14 @@ static inline void draw_tex_quad3d_fancy(const vertex_3d_t* verts) {
     // If very close, subdivide twice
     const scalar_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id;
     if (avg_z < sub2_threshold) {
-        subdivide_twice_then_add_tex_quad(verts, trans_vec_xy, trans_vec_z, avg_z, sub2_threshold);
+        subdivide_twice_then_add_tex_quad(verts, sp->trans_vec_xy, sp->trans_vec_z, avg_z, sub2_threshold);
         return;
     }
     
     // If close, subdivice once
     const scalar_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)verts[1].tex_id;
     if (avg_z < sub1_threshold) {
-        subdivide_once_then_add_tex_quad(verts, trans_vec_xy, trans_vec_z, avg_z, sub1_threshold);
+        subdivide_once_then_add_tex_quad(verts, sp->trans_vec_xy, sp->trans_vec_z, avg_z, sub1_threshold);
         return;
     }
 
@@ -823,13 +834,13 @@ static inline void draw_tex_quad3d_fancy(const vertex_3d_t* verts) {
         int16_t clut_fade = ((N_CLUT_FADES-1) * (avg_z - TRI_THRESHOLD_FADE_START)) / (TRI_THRESHOLD_FADE_END - TRI_THRESHOLD_FADE_START);
         if (clut_fade > (N_CLUT_FADES-1)) clut_fade = (N_CLUT_FADES-1);
         else if (clut_fade < 0) clut_fade = 0;
-        add_tex_quad(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[3], verts[0], verts[1], verts[2], verts[3], avg_z, verts[0].tex_id + tex_id_start, clut_fade);
+        add_tex_quad(sp->trans_vec_xy[0], sp->trans_vec_xy[1], sp->trans_vec_xy[2], sp->trans_vec_xy[3], verts[0], verts[1], verts[2], verts[3], avg_z, verts[0].tex_id + tex_id_start, clut_fade);
         return;
     }
 
     // If far away, calculate colors and add untextured quad
     else {
-        add_untex_quad(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[3], verts[0], verts[1], verts[2], verts[3], avg_z);
+        add_untex_quad(sp->trans_vec_xy[0], sp->trans_vec_xy[1], sp->trans_vec_xy[2], sp->trans_vec_xy[3], verts[0], verts[1], verts[2], verts[3], avg_z);
     }
 }
 

@@ -63,5 +63,9 @@ static void warn_if(const char* error_if_false, const int condition, const int l
     #endif
 #endif
 
+#ifdef _PSX
+    #define SCRATCHPAD ((void*)0x1F800000)
+#endif
+
 #endif
             //FntPrint(-1, "%s: %i\n", name, TIMER_VALUE(timer) & 0xFFFF); \
