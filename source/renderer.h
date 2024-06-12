@@ -57,6 +57,7 @@ int renderer_should_close(void);
 vec3_t renderer_get_forward_vector(void);
 int renderer_get_level_section_from_position(const model_t *model, vec3_t position);
 void renderer_cycle_res_x(void);
+void renderer_set_depth_bias(int bias);
 extern int n_rendered_triangles;
 extern int n_rendered_quads;
 extern int n_rendered_untex_triangles;

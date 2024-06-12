@@ -41,6 +41,9 @@ int should_transition_state = 0;
 #define FADE_SPEED 18
 #define FADE_SPEED_SLOW 5
 
+#define DEPTH_BIAS_VIEWMODELS 64
+#define DEPTH_BIAS_LEVEL 256
+
 typedef struct {
 	struct {
 		int frame_counter;
@@ -457,6 +460,8 @@ void state_update_in_game(int dt) {
 	if (state.in_game.player.has_key_blue) renderer_draw_2d_quad_axis_aligned((vec2_t){(256 - 80 - 40)*ONE, 210*ONE}, (vec2_t){31*ONE, 20*ONE}, (vec2_t){194*ONE, 0*ONE}, (vec2_t){255*ONE, 40*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 5, 1);
 	if (state.in_game.player.has_key_yellow) renderer_draw_2d_quad_axis_aligned((vec2_t){(256 + 80)*ONE, 210*ONE}, (vec2_t){31*ONE, 20*ONE}, (vec2_t){130*ONE, 0*ONE}, (vec2_t){193*ONE, 40*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 5, 1);
 
+	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
+
 	int n_sections = player_get_level_section(&state.in_game.player, state.in_game.v_level);
 	state.global.frame_counter += dt;
 #ifdef _DEBUG
@@ -590,6 +595,7 @@ void state_update_in_game(int dt) {
 	}
 
 	// We render the player's weapons last, because we need the view matrices to be reset
+	renderer_set_depth_bias(DEPTH_BIAS_VIEWMODELS);
 	if (state.in_game.player.has_gun || 1) {
 		transform_t gun_transform;
 		vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
@@ -658,6 +664,7 @@ void state_update_settings(int dt) {
 	renderer_begin_frame(&id_transform);
 	input_update();
 	// Draw background
+	renderer_set_depth_bias(0);
 	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
 	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
 	
@@ -816,7 +823,6 @@ void state_exit_credits(void) {
 		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
 
 		// Draw text
-		renderer_begin_frame(&id_transform);
 		for (int i = 0; i < sizeof(text_credits) / sizeof(text_credits[0]); ++i) {
 			renderer_draw_text((vec2_t){256 * ONE, (state.credits.scroll + i * 16 * ONE) + (256 * ONE)}, text_credits[i], 1, 1, white);
 		}

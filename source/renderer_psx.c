@@ -27,6 +27,7 @@ uint32_t* next_primitive;
 
 // Rendering parameters
 uint8_t tex_id_start = 0;
+int curr_ot_bias = 0;
 
 // Camera info
 MATRIX view_matrix;
@@ -110,6 +111,8 @@ void renderer_init(void) {
 }
 
 void renderer_begin_frame(const transform_t* camera_transform) {
+	renderer_set_depth_bias(0);
+
     // Get camera position
     VECTOR position = *(VECTOR*)&camera_transform->position;
     memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
@@ -339,7 +342,7 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
             uv_br.x + tex_offset_x, uv_br.y + tex_offset_y
         );
     }
-    addPrim(ord_tbl[drawbuffer] + (depth), new_triangle);
+    addPrim(ord_tbl[drawbuffer] + depth + curr_ot_bias, new_triangle);
 }
 
 void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const int centered, const pixel32_t color) {
@@ -472,7 +475,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
         v1_tr[0], v1_tr[1]
     );
     setColor0(new_line, *(uint32_t*)&color); // ugly but eh it's debug anyway
-    addPrim(ord_tbl[drawbuffer] + depth, new_line);
+    addPrim(ord_tbl[drawbuffer] + depth + curr_ot_bias, new_line);
 
     PopMatrix();
 }
@@ -597,6 +600,10 @@ void renderer_set_video_mode(int is_pal) {
     draw[0].isbg = 1;
     draw[1].isbg = 1;
     drawn_first_frame = 0;
+}
+
+void renderer_set_depth_bias(int bias) {
+    curr_ot_bias = bias;
 }
 
 int renderer_get_delta_time_raw(void) {

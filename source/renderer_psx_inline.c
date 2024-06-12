@@ -106,7 +106,7 @@ static inline void add_tex_triangle(
         (v2.u >> 2) + tex_offset_x,
         (v2.v >> 2) + tex_offset_y
     );
-    addPrim(ord_tbl[drawbuffer] + avg_z, new_triangle);
+    addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, new_triangle);
 }
 
 // Queues textured quad primitive
@@ -150,7 +150,7 @@ static inline void add_tex_quad(
         (v2.u >> 2) + tex_offset_x, (v2.v >> 2) + tex_offset_y,
         (v3.u >> 2) + tex_offset_x, (v3.v >> 2) + tex_offset_y
     );
-    addPrim(ord_tbl[drawbuffer] + avg_z, new_quad);
+    addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, new_quad);
 }
 
 // Queues untextured triangle primitive
@@ -196,7 +196,7 @@ static inline void add_untex_triangle(
     );
     
     // Add the triangle to the draw queue
-    addPrim(ord_tbl[drawbuffer] + avg_z, new_triangle);
+    addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, new_triangle);
 }
 
 // Queues untextured quad primitive
@@ -250,7 +250,7 @@ static inline void add_untex_quad(
     );
     
     // Add the triangle to the draw queue
-    addPrim(ord_tbl[drawbuffer] + avg_z, new_quad);
+    addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, new_quad);
 }
 
 static inline vertex_3d_t get_halfway_point(const vertex_3d_t v0, const vertex_3d_t v1) {
@@ -448,7 +448,7 @@ static inline void draw_tex_triangle3d_fancy(const vertex_3d_t* verts) {
     gte_stotz(&avg_z);
     
     // Depth culling
-    if (avg_z >= ORD_TBL_LENGTH || (avg_z <= 0)) return;
+    if ((avg_z + curr_ot_bias) >= ORD_TBL_LENGTH || (avg_z <= 0)) return;
 
     // Cull if off screen
     int n_left = 1;
@@ -521,7 +521,7 @@ static inline void draw_tex_triangle3d_fast(const vertex_3d_t* verts) {
     gte_stotz(&avg_z);
     
     // Depth culling
-    if (avg_z >= ORD_TBL_LENGTH || (avg_z <= 0)) return;
+    if ((avg_z + curr_ot_bias) >= ORD_TBL_LENGTH || (avg_z <= 0)) return;
 
     // Cull if off screen
     int n_left = 1;
@@ -804,7 +804,7 @@ static inline void draw_tex_quad3d_fancy(const vertex_3d_t* verts) {
     gte_stotz(&avg_z);
 
     // Depth culling
-    if ((avg_z >> 0) >= ORD_TBL_LENGTH || ((avg_z >> 0) <= 0)) return;
+    if ((avg_z + curr_ot_bias) >= ORD_TBL_LENGTH || ((avg_z >> 0) <= 0)) return;
 
     // Cull if off screen
     int n_left = 1;
@@ -883,7 +883,7 @@ static inline void draw_tex_quad3d_fast(const vertex_3d_t* verts) {
     gte_stotz(&avg_z);
 
     // Depth culling
-    if ((avg_z >> 0) >= ORD_TBL_LENGTH || ((avg_z >> 0) <= 0)) return;
+    if ((avg_z + curr_ot_bias) >= ORD_TBL_LENGTH || ((avg_z + curr_ot_bias) <= 0)) return;
 
     // Cull if off screen
     int n_left = 1;
