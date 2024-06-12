@@ -451,18 +451,21 @@ static inline void draw_tex_triangle3d_fancy(const vertex_3d_t* verts) {
     if (avg_z >= ORD_TBL_LENGTH || (avg_z <= 0)) return;
 
     // Cull if off screen
+    int n_left = 1;
+    int n_right = 1;
+    int n_up = 1;
+    int n_down = 1;
     for (size_t i = 0; i < 3; ++i) {
-        if (
-            sp->trans_vec_xy[i].x >= 0 && 
-            sp->trans_vec_xy[i].x <= res_x &&
-            sp->trans_vec_xy[i].y >= 0 && 
-            sp->trans_vec_xy[i].y <= curr_res_y 
-        ) {
-            goto dont_return;
-        }
+        if (sp->trans_vec_xy[i].x < 0) n_left <<= 1;
+        if (sp->trans_vec_xy[i].x > res_x) n_right <<= 1;
+        if (sp->trans_vec_xy[i].y < 0) n_up <<= 1;
+        if (sp->trans_vec_xy[i].y > curr_res_y ) n_down <<= 1;
     }
-    return;
-    dont_return:
+    // If all vertices are off to one side of the screen, one of the values will be shifted left 3x.
+    // When OR-ing the bits together, the result will be %00001???.
+    // Shifting that value to the right 3x drops off the irrelevant ??? bits, returning 1 if all vertices are to one side, and 0 if not
+    const int off_to_one_side = (n_left | n_right | n_up | n_down) >> 3;
+    if (off_to_one_side) return;
 
     // If very close, subdivide twice
     const scalar_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id;
@@ -521,18 +524,21 @@ static inline void draw_tex_triangle3d_fast(const vertex_3d_t* verts) {
     if (avg_z >= ORD_TBL_LENGTH || (avg_z <= 0)) return;
 
     // Cull if off screen
+    int n_left = 1;
+    int n_right = 1;
+    int n_up = 1;
+    int n_down = 1;
     for (size_t i = 0; i < 3; ++i) {
-        if (
-            trans_vec_xy[i].x >= 0 && 
-            trans_vec_xy[i].x <= res_x &&
-            trans_vec_xy[i].y >= 0 && 
-            trans_vec_xy[i].y <= curr_res_y 
-        ) {
-            goto dont_return;
-        }
+        if (trans_vec_xy[i].x < 0) n_left <<= 1;
+        if (trans_vec_xy[i].x > res_x) n_right <<= 1;
+        if (trans_vec_xy[i].y < 0) n_up <<= 1;
+        if (trans_vec_xy[i].y > curr_res_y ) n_down <<= 1;
     }
-    return;
-    dont_return:
+    // If all vertices are off to one side of the screen, one of the values will be shifted left 3x.
+    // When OR-ing the bits together, the result will be %00001???.
+    // Shifting that value to the right 3x drops off the irrelevant ??? bits, returning 1 if all vertices are to one side, and 0 if not
+    const int off_to_one_side = (n_left | n_right | n_up | n_down) >> 3;
+    if (off_to_one_side) return;
 
     add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], verts[0], verts[1], verts[2], avg_z, verts[0].tex_id, 0);
 }
@@ -801,18 +807,21 @@ static inline void draw_tex_quad3d_fancy(const vertex_3d_t* verts) {
     if ((avg_z >> 0) >= ORD_TBL_LENGTH || ((avg_z >> 0) <= 0)) return;
 
     // Cull if off screen
+    int n_left = 1;
+    int n_right = 1;
+    int n_up = 1;
+    int n_down = 1;
     for (size_t i = 0; i < 4; ++i) {
-        if (
-            sp->trans_vec_xy[i].x >= 0 && 
-            sp->trans_vec_xy[i].x <= res_x &&
-            sp->trans_vec_xy[i].y >= 0 && 
-            sp->trans_vec_xy[i].y <= curr_res_y 
-        ) {
-            goto dont_return;
-        }
+        if (sp->trans_vec_xy[i].x < 0) n_left <<= 1;
+        if (sp->trans_vec_xy[i].x > res_x) n_right <<= 1;
+        if (sp->trans_vec_xy[i].y < 0) n_up <<= 1;
+        if (sp->trans_vec_xy[i].y > curr_res_y ) n_down <<= 1;
     }
-    return;
-    dont_return:
+    // If all vertices are off to one side of the screen, one of the values will be shifted left 4x.
+    // When OR-ing the bits together, the result will be %0001????.
+    // Shifting that value to the right 4x drops off the irrelevant ???? bits, returning 1 if all vertices are to one side, and 0 if not
+    const int off_to_one_side = (n_left | n_right | n_up | n_down) >> 4;
+    if (off_to_one_side) return;
     
     // If very close, subdivide twice
     const scalar_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id;
@@ -877,18 +886,21 @@ static inline void draw_tex_quad3d_fast(const vertex_3d_t* verts) {
     if ((avg_z >> 0) >= ORD_TBL_LENGTH || ((avg_z >> 0) <= 0)) return;
 
     // Cull if off screen
+    int n_left = 1;
+    int n_right = 1;
+    int n_up = 1;
+    int n_down = 1;
     for (size_t i = 0; i < 4; ++i) {
-        if (
-            trans_vec_xy[i].x >= 0 && 
-            trans_vec_xy[i].x <= res_x &&
-            trans_vec_xy[i].y >= 0 && 
-            trans_vec_xy[i].y <= curr_res_y 
-        ) {
-            goto dont_return;
-        }
+        if (trans_vec_xy[i].x < 0) n_left <<= 1;
+        if (trans_vec_xy[i].x > res_x) n_right <<= 1;
+        if (trans_vec_xy[i].y < 0) n_up <<= 1;
+        if (trans_vec_xy[i].y > curr_res_y ) n_down <<= 1;
     }
-    return;
-    dont_return:
+    // If all vertices are off to one side of the screen, one of the values will be shifted left 4x.
+    // When OR-ing the bits together, the result will be %0001????.
+    // Shifting that value to the right 4x drops off the irrelevant ???? bits, returning 1 if all vertices are to one side, and 0 if not
+    const int off_to_one_side = (n_left | n_right | n_up | n_down) >> 4;
+    if (off_to_one_side) return;
 
     add_tex_quad(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[3], verts[0], verts[1], verts[2], verts[3], avg_z, verts[0].tex_id, 0);
 }
