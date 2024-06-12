@@ -460,7 +460,6 @@ void state_update_in_game(int dt) {
 	int n_sections = player_get_level_section(&state.in_game.player, state.in_game.v_level);
 	state.global.frame_counter += dt;
 #ifdef _DEBUG
-	if (input_pressed(PAD_SQUARE, 0)) renderer_cycle_res_x();
 	if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
 	if (state.global.show_debug) {
 		PROFILE("input", input_update(), 1);
