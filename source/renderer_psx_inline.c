@@ -358,6 +358,8 @@ static inline void subdivide_twice_then_add_tex_triangle(const vertex_3d_t* vert
     scalar_t max_z = trans_vec_z[0];
     if (trans_vec_z[1] > max_z) max_z = trans_vec_z[1];
     if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2]; 
+    max_z >>= 2;
+    
     if (((max_z + curr_ot_bias + 1) < ORD_TBL_LENGTH) && max_z >= sub2_threshold) {
         add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[3], vtx0, vtx1, vtx3, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
         add_tex_triangle(trans_vec_xy[0], trans_vec_xy[3], trans_vec_xy[6], vtx0, vtx3, vtx6, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
@@ -409,6 +411,8 @@ static inline void subdivide_once_then_add_tex_triangle(const vertex_3d_t* verts
     scalar_t max_z = trans_vec_z[0];
     if (trans_vec_z[1] > max_z) max_z = trans_vec_z[1];
     if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2]; 
+    max_z >>= 2;
+
     if (((max_z + curr_ot_bias + 1) < ORD_TBL_LENGTH) && max_z >= sub1_threshold) {
         add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[3], verts[0], verts[1], ab, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
         add_tex_triangle(trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[4], verts[1], verts[2], bc, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
@@ -689,6 +693,8 @@ static inline void subdivide_twice_then_add_tex_quad(const vertex_3d_t* verts, s
     if (trans_vec_z[1] > max_z) max_z = trans_vec_z[1];
     if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2]; 
     if (trans_vec_z[3] > max_z) max_z = trans_vec_z[3];
+    max_z >>= 2;
+
     if (((max_z + curr_ot_bias + 1) < ORD_TBL_LENGTH) && max_z >= sub2_threshold) {
         add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[4], vtx0, vtx1, vtx4, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
         add_tex_triangle(trans_vec_xy[0], trans_vec_xy[4], trans_vec_xy[9], vtx0, vtx4, vtx9, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
@@ -758,6 +764,7 @@ static inline void subdivide_once_then_add_tex_quad(const vertex_3d_t* verts, sv
     if (trans_vec_z[1] > max_z) max_z = trans_vec_z[1];
     if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2];
     if (trans_vec_z[3] > max_z) max_z = trans_vec_z[3];
+    max_z >>= 2;
 
     if (((max_z + curr_ot_bias + 1) < ORD_TBL_LENGTH) && max_z >= sub1_threshold) {
         add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[4], verts[0], verts[1], ab, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
