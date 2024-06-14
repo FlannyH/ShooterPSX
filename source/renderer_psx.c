@@ -106,7 +106,6 @@ void renderer_init(void) {
     gte_SetGeomOffset(res_x / 2, curr_res_y / 2);
     gte_SetGeomScreen(120);
 
-    next_primitive = primitive_buffer[0];
     drawn_first_frame = 0;
 }
 
