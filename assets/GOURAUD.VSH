@@ -14,10 +14,12 @@ uniform mat4 proj_matrix;
 uniform mat4 view_matrix;
 uniform mat4 model_matrix;
 uniform int texture_offset;
+uniform int curr_depth_bias;
 
 void main()
 {
 	gl_Position = proj_matrix * view_matrix * model_matrix * vec4(in_position, 1.0);
+    gl_Position.z += float(curr_depth_bias) / 2048.0;
 	out_color = in_color * 2;
 	out_texcoord = in_texcoord.xy;
 	out_texture = in_texture + float(texture_offset);

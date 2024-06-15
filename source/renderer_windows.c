@@ -52,6 +52,7 @@ transform_t* cam_transform;
 vec3_t camera_pos;
 vec3_t camera_dir;
 int tex_id_start;
+int curr_depth_bias = 0;
 
 #ifdef _LEVEL_EDITOR
 GLuint fbo;
@@ -327,6 +328,7 @@ void renderer_init() {
 }
 
 void renderer_begin_frame(const transform_t *camera_transform) {
+	curr_depth_bias = 0;
     cam_transform = camera_transform;
 	// Set up viewport
 #ifdef _LEVEL_EDITOR
@@ -518,6 +520,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform)
     glUniform1i(glGetUniformLocation(shader, "texture_bound"), mesh->vertices[0].tex_id != 255);
     glUniform1i(glGetUniformLocation(shader, "texture_offset"), tex_id_start);
 	glUniform1i(glGetUniformLocation(shader, "texture_is_page"), 0);
+	glUniform1i(glGetUniformLocation(shader, "curr_depth_bias"), curr_depth_bias);
 	glUniform1f(glGetUniformLocation(shader, "alpha"), 1.0f);
     
 	// Copy data into it
@@ -583,6 +586,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE, &view_matrix[0][0]);
     glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
 	glUniform1i(glGetUniformLocation(shader, "texture_is_page"), 0);
+	glUniform1i(glGetUniformLocation(shader, "curr_depth_bias"), curr_depth_bias);
 	glUniform1f(glGetUniformLocation(shader, "alpha"), 1.0f);
 
     // Copy data into it
@@ -820,6 +824,7 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 	glUniform1i(glGetUniformLocation(shader, "texture_bound"), texture_id != 255);
 	glUniform1i(glGetUniformLocation(shader, "texture_offset"), 0);
 	glUniform1i(glGetUniformLocation(shader, "texture_is_page"), is_page);
+	glUniform1i(glGetUniformLocation(shader, "curr_depth_bias"), curr_depth_bias);
 	glUniform1f(glGetUniformLocation(shader, "alpha"), ((float)color.a) / 255.0f);
 
 	// Copy data into it
@@ -1020,6 +1025,7 @@ void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, const transform_
     glUniform1i(glGetUniformLocation(shader, "texture_bound"), mesh->vertices[0].tex_id != 255);
     glUniform1i(glGetUniformLocation(shader, "texture_offset"), tex_id_start);
 	glUniform1i(glGetUniformLocation(shader, "texture_is_page"), 0);
+	glUniform1i(glGetUniformLocation(shader, "curr_depth_bias"), curr_depth_bias);
 	glUniform1f(glGetUniformLocation(shader, "alpha"), 1.0f);
 
     // Copy data into it
@@ -1033,4 +1039,8 @@ void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, const transform_
 
     n_total_triangles += mesh->n_triangles;
     tex_id_start = 0;
+}
+
+void renderer_set_depth_bias(int bias) {
+	curr_depth_bias = bias;
 }

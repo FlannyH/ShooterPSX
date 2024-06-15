@@ -25,7 +25,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
         printf("[ERROR] Failed to load file %s\n", new_path);
         return 0;
     }
-
+    
     // Get file size
     fseek(file, 0, SEEK_END);
     *size = ftell(file);
