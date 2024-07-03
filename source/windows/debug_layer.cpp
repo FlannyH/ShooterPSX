@@ -188,6 +188,7 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
         path_model[0] = 0;
         path_model_lod[0] = 0;
         level_name[0] = 0;
+        initialized = true;
     }
     ImGui::Begin("Level Metadata");
     {
