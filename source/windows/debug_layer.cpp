@@ -323,8 +323,33 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
         ImGui::InputText("Model Path", path_model, 255);
         ImGui::InputText("Model LOD Path", path_model_lod, 255);
         ImGui::InputText("Level Name", level_name, 255);
-        if (ImGui::Button("Apply")) {
-            printf("reloaded level\n");
+        if (ImGui::Button("Hot reload")) {
+            mem_stack_release(STACK_LEVEL);
+
+            // Load graphics and collision data
+            curr_level->graphics = model_load(path_model, 1, STACK_LEVEL);
+            curr_level->collision_mesh_debug = model_load_collision_debug(path_collision, 1, STACK_LEVEL);
+            curr_level->collision_mesh = model_load_collision(path_collision, 1, STACK_LEVEL);
+            curr_level->transform = { {0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096} };
+            curr_level->vislist = vislist_load(path_vislist, 1, STACK_LEVEL);
+
+            // Load level textures
+            texture_cpu_t* tex_level;
+            tex_level_start = 0;
+            const uint32_t n_level_textures = texture_collection_load(path_texture, &tex_level, 1, STACK_TEMP);
+            for (uint8_t i = 0; i < n_level_textures; ++i) {
+                renderer_upload_texture(&tex_level[i], i + tex_level_start);
+            }
+
+            // Load entity textures
+            texture_cpu_t* entity_textures;
+            tex_entity_start = tex_level_start + n_level_textures;
+            const uint32_t n_entity_textures = texture_collection_load("\\ASSETS\\MODELS\\ENTITY.TXC;1", &entity_textures, 1, STACK_TEMP);
+            for (uint8_t i = 0; i < n_entity_textures; ++i) {
+                renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
+            }
+
+            bvh_from_model(&curr_level->collision_bvh, curr_level->collision_mesh);
         }
     }
     ImGui::End();
