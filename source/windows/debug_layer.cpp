@@ -217,27 +217,38 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
         auto save = [curr_level]() {
             std::vector<uint8_t> binary_section;
 
-            // Write all the text strings
-            auto write_and_get_offset = [](std::vector<uint8_t>& output, char* string) {
+            auto write_text_and_get_offset = [](std::vector<uint8_t>& output, char* string) {
                 auto string_offset_in_file = output.size();
                 intptr_t offset = 0;
                 do {
                     output.push_back(string[offset]);
                 } while (string[offset++] != 0);
                 return string_offset_in_file;
-                };
+            };
+
+            auto write_data_and_get_offset = [](std::vector<uint8_t>& output, void* data, size_t size_in_bytes) {
+                uint8_t* ptr = (uint8_t*)data;
+                auto offset_in_file = output.size();
+                intptr_t offset = 0;
+                do {
+                    output.push_back(ptr[offset]);
+                } while (++offset < size_in_bytes);
+                return offset_in_file;
+            };
 
             // Construct level header and write into binary section as we go along
             level_header_t header = {
                 .file_magic = MAGIC_FLVL,
-                .path_music_offset = (uint32_t)write_and_get_offset(binary_section, path_music),
-                .path_bank_offset = (uint32_t)write_and_get_offset(binary_section, path_bank),
-                .path_texture_offset = (uint32_t)write_and_get_offset(binary_section, path_texture),
-                .path_collision_offset = (uint32_t)write_and_get_offset(binary_section, path_collision),
-                .path_vislist_offset = (uint32_t)write_and_get_offset(binary_section, path_vislist),
-                .path_model_offset = (uint32_t)write_and_get_offset(binary_section, path_model),
-                .path_model_lod_offset = (uint32_t)write_and_get_offset(binary_section, path_model_lod),
-                .level_name_offset = (uint32_t)write_and_get_offset(binary_section, level_name),
+                .path_music_offset = (uint32_t)write_text_and_get_offset(binary_section, path_music),
+                .path_bank_offset = (uint32_t)write_text_and_get_offset(binary_section, path_bank),
+                .path_texture_offset = (uint32_t)write_text_and_get_offset(binary_section, path_texture),
+                .path_collision_offset = (uint32_t)write_text_and_get_offset(binary_section, path_collision),
+                .path_vislist_offset = (uint32_t)write_text_and_get_offset(binary_section, path_vislist),
+                .path_model_offset = (uint32_t)write_text_and_get_offset(binary_section, path_model),
+                .path_model_lod_offset = (uint32_t)write_text_and_get_offset(binary_section, path_model_lod),
+                .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_types, sizeof(entity_types)),
+                .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_pool, entity_pool_stride * ENTITY_LIST_LENGTH),
+                .level_name_offset = (uint32_t)write_text_and_get_offset(binary_section, level_name),
                 .player_spawn = {
                     .x = 0, .y = 0, .z = 0
                 },
