@@ -2,6 +2,7 @@
 
 #include <GL/gl3w.h>
 #include "imgui.h"
+#include "imfilebrowser.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "ImGuizmo.h"
@@ -165,6 +166,7 @@ void inspect_entity(size_t entity_id) {
 #define PI 3.14159265358979f
 void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_slot, int* mouse_over_viewport, level_t* curr_level) {
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+    static ImGui::FileBrowser file_dialog;
 
     // Level metadata
     static char* level_path = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
@@ -194,9 +196,28 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
     {
         ImGui::SeparatorText("Level File");
         ImGui::InputText("Level File Path", level_path, 255);
-        if (ImGui::Button("Load")) {
-            printf("load\n");
+
+        // Browse button
+        ImGui::SameLine();
+        if (ImGui::Button("...")) {
+            file_dialog.SetTitle("Open level file");
+            file_dialog.SetTypeFilters({".lvl"});
+            file_dialog.Open();
         }
+        file_dialog.Display();
+
+        if (file_dialog.HasSelected()) {
+            strcpy(level_path, file_dialog.GetSelected().string().c_str());
+            printf("selected file: %s\n", level_path);
+            file_dialog.ClearSelected();
+        }
+
+        // Load button
+        if (ImGui::Button("Load")) {
+            *curr_level = level_load(level_path);
+        }
+
+        // Save button
         ImGui::SameLine();
         if (ImGui::Button("Save")) {
             std::vector<uint8_t> binary_section;

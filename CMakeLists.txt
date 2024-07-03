@@ -110,6 +110,7 @@ elseif (DEFINED LEVEL_EDITOR_TARGET)
     include_directories(external/include/)
     include_directories(external/include/imgui)
     include_directories(external/include/imguizmo)
+    include_directories(external/include/imfilebrowser)
     
     add_custom_target(game_copy_assets ALL
         COMMAND ${CMAKE_COMMAND} -E copy_directory
