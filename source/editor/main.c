@@ -4,7 +4,7 @@
 #include "../player.h"
 #include "../entity.h"
 #include "../entities/door.h"
-#include "../win/debug_layer.h"
+#include "../windows/debug_layer.h"
 
 typedef struct {
     model_t* graphics;
