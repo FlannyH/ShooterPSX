@@ -9,7 +9,7 @@ extern "C" {
 #include "vislist.h"
 
 // Level file header
-#define MAGIC_FLVL 0x4C465C46
+#define MAGIC_FLVL 0x4C564C46
 typedef struct {
     uint32_t file_magic;            // File magic: "FLVL"                                                                          
     uint32_t path_music_offset;     // Offset to string containing the path to the music sequence file (.dss) to play in this level
