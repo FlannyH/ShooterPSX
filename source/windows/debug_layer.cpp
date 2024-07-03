@@ -168,7 +168,7 @@ void inspect_entity(size_t entity_id) {
 #define PI 3.14159265358979f
 void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_slot, int* mouse_over_viewport, level_t* curr_level) {
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
-    static ImGui::FileBrowser file_dialog;
+    static ImGui::FileBrowser file_dialog(ImGuiFileBrowserFlags_EnterNewFilename);
 
     // Level metadata
     static char* level_path = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
