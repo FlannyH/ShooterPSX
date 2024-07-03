@@ -177,6 +177,7 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
     static char* path_model_lod = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
     static char* level_name = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
     static bool initialized = false;
+
     if (!initialized) {
         level_path[0] = 0;
         path_music[0] = 0;
