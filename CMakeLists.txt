@@ -30,6 +30,7 @@ if (DEFINED PSN00BSDK_TARGET)
         source/vislist.c
         source/entity.c
         source/timer.c
+        source/level.c
         source/entities/door.c
         source/entities/pickup.c
         source/entities/crate.c
@@ -63,6 +64,7 @@ elseif (DEFINED LEVEL_EDITOR_TARGET)
         source/player.c
         source/memory.c
         source/vislist.c
+        source/level.c
         source/entity.c
         source/entities/door.c
         source/entities/pickup.c
@@ -142,6 +144,7 @@ else()
         source/player.c
         source/memory.c
         source/vislist.c
+        source/level.c
         source/entity.c
         source/entities/door.c
         source/entities/pickup.c

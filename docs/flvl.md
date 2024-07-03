@@ -3,16 +3,21 @@
 ## Level file (.lvl)
 | Type            | Name              | Description                                                                                  |
 | --------------- | ----------------- | -------------------------------------------------------------------------------------------- |
-| char[4]         | file_magic        | File magic: "FLVL"                                                                           |
-| u32             | music_path_offset | Offset to string containing the path to the music sequence file (.dss) to play in this level |
-| u32             | bank_path_offset  | Offset to string containing the path to the soundbank file (.sbk) to use in this level       |
-| u32             | model_path_offset | Offset to string containing the path to the level model file (.msh) to load in this level    |
-| u32             | level_name_offset | Offset to string containing display name of the level as shown in game to the player         |
-| i16[3]          | player_spawn      | Where in the map the player spawns, in model space units                                     |
-| u16             | n_entities        | Number of predefined entities in this map                                                    |
-| u32[n_entities] | entity_offsets    | List of offsets to all the enemy data.                                                       |
+| u32 | file_magic            | File magic: "FLVL"                                                                           |
+| u32 | path_music_offset     | Offset to string containing the path to the music sequence file (.dss) to play in this level |
+| u32 | path_bank_offset      | Offset to string containing the path to the soundbank file (.sbk) to use in this level       |
+| u32 | path_texture_offset   | Offset to string containing the path to the level texture collection file (.txc) to load in this level    |
+| u32 | path_collision_offset | Offset to string containing the path to the collision model file (.col) to load in this level    |
+| u32 | path_vislist_offset   | Offset to string containing the path to the collision model file (.col) to load in this level    |
+| u32 | path_model_offset     | Offset to string containing the path to the level model file (.msh) to load in this level    |
+| u32 | path_model_lod_offset | Optional offset to string containing the path to the level model file (.msh) to load in this level. Set to 0 if not using LODs. |
+| u32 | level_name_offset     | Offset to string containing display name of the level as shown in game to the player         |
+| i16[3] | player_spawn       | Where in the map the player spawns, in model space units                                     |
+| u16 | n_entities            | Number of predefined entities in this map                                                    |
 
 All offsets are relative to the start of the binary section, which is located right after the header.
+
+Entity data is stored right after the header, so its offset is always 0.
 
 ## Entity list entry
 | Type   | Name     | Description                                                       |
