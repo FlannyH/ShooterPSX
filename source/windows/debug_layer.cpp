@@ -209,6 +209,9 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
         ImGui::InputText("Model Path", path_model_offset, 255);
         ImGui::InputText("Model LOD Path", path_model_lod_offset, 255);
         ImGui::InputText("Level Name", level_name_offset, 255);
+        if (ImGui::Button("Apply")) {
+            printf("reloaded level\n");
+        }
     }
     ImGui::End();
 
