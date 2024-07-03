@@ -7,6 +7,7 @@ level_t level_load(const char* path) {
     uint32_t* file_data;
     size_t size;
     mem_stack_release(STACK_TEMP);
+    mem_stack_release(STACK_LEVEL);
     file_read(path, &file_data, &size, 1, STACK_TEMP);
 
     // Get header data
