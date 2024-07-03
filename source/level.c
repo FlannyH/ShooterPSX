@@ -14,7 +14,7 @@ level_t level_load(const char* path) {
 
     // Ensure FMSH header is valid
     if (level_header->file_magic != MAGIC_FLVL) { // "FLVL"
-        printf("[ERROR] Error loading model '%s', file header is invalid!\n", path);
+        printf("[ERROR] Error loading level '%s', file header is invalid!\n", path);
         return (level_t) { 0 };
     }
 

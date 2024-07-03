@@ -20,7 +20,7 @@ vislist_t vislist_load(const char* path, int on_stack, stack_t stack) {
     // Ensure FMSH header is valid
     vislist_t vislist = {0};
     if (vislist_header->file_magic != MAGIC_FVIS) { // "FVIS"
-        printf("[ERROR] Error loading model '%s', file header is invalid!\n", path);
+        printf("[ERROR] Error loading vislist '%s', file header is invalid!\n", path);
         return vislist;
     }
 
