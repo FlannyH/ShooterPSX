@@ -12,6 +12,7 @@
 #include <format>
 
 #include "../renderer.h"
+#include "../file.h"
 #include "../input.h"
 #include "../entity.h"
 #include "../entities/door.h"
@@ -72,6 +73,7 @@ void debug_layer_update_gameplay() {
 #include <cglm/types.h>
 #include <cglm/affine.h>
 #include <level.h>
+#include <file.h>
 extern "C" {
     extern mat4 perspective_matrix;
     extern mat4 view_matrix;
@@ -214,6 +216,20 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
 
         // Load button
         if (ImGui::Button("Load")) {
+            uint32_t* data;
+            size_t size;
+            file_read(level_path, &data, &size, 1, STACK_TEMP);
+            level_header_t* header = (level_header_t*)data;
+            char* binary_section = (char*)(&header[1]);
+            strcpy(path_music, binary_section + header->path_music_offset);
+            strcpy(path_bank, binary_section + header->path_bank_offset);
+            strcpy(path_texture, binary_section + header->path_texture_offset);
+            strcpy(path_collision, binary_section + header->path_collision_offset);
+            strcpy(path_vislist, binary_section + header->path_vislist_offset);
+            strcpy(path_model, binary_section + header->path_model_offset);
+            strcpy(path_model_lod, binary_section + header->path_model_lod_offset);
+            strcpy(level_name, binary_section + header->level_name_offset);
+
             *curr_level = level_load(level_path);
         }
 
