@@ -8,7 +8,7 @@ extern "C" {
 #ifdef _PSX
 #include <psxgte.h>
 #else
-#include "win/psx.h"
+#include "windows/psx.h"
 #endif
 #include <stdint.h>
 #include "mesh.h"

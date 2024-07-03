@@ -4,7 +4,7 @@
 #include <psxgte.h>
 #include <psxpad.h>
 #else
-#include "win/psx.h"
+#include "windows/psx.h"
 #endif
 
 #include "input.h"

@@ -60,7 +60,7 @@ RECT textures[256];
 RECT palettes[256];
 
 // Import inline helper functions
-#include "renderer_psx_inline.c"
+#include "renderer_inline.c"
 
 void renderer_cycle_res_x(void) {
     static int index = 0;

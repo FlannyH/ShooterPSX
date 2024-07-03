@@ -11,14 +11,15 @@ if (DEFINED PSN00BSDK_TARGET)
         DESCRIPTION  "PSn00bSDK template"
         HOMEPAGE_URL "http://lameguy64.net/?page=psn00bsdk"
     )
+    include_directories(source/)
     add_compile_definitions(_PSX)
     
     psn00bsdk_add_executable(main GPREL 
-        source/file_psx.c 
-        source/input_psx.c 
-        source/renderer_psx.c 
-        source/music_psx.c
-        source/texture_psx.c
+        source/psx/file.c 
+        source/psx/input.c 
+        source/psx/renderer.c 
+        source/psx/music.c
+        source/psx/texture.c
         source/main.c 
         source/mesh.c 
         source/camera.c
@@ -50,11 +51,11 @@ elseif (DEFINED LEVEL_EDITOR_TARGET)
         source/editor/main.c
 
         # Reused code from the game for rendering
-        source/file_windows.c 
-        source/input_windows.c 
-        source/renderer_windows.c 
-        source/music_windows.c
-        source/texture_windows.c
+        source/windows/file.c 
+        source/windows/input.c 
+        source/windows/renderer.c 
+        source/windows/music.c
+        source/windows/texture.c
         source/mesh.c 
         source/camera.c
         source/collision.c
@@ -66,8 +67,8 @@ elseif (DEFINED LEVEL_EDITOR_TARGET)
         source/entities/door.c
         source/entities/pickup.c
         source/entities/crate.c
-        source/win/psx.c
-        source/win/debug_layer.cpp
+        source/windows/psx.c
+        source/windows/debug_layer.cpp
         external/source/GL/gl3w.c
         external/include/imgui/imgui.cpp
         external/include/imgui/imgui_widgets.cpp
@@ -103,6 +104,7 @@ elseif (DEFINED LEVEL_EDITOR_TARGET)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -fsanitize=undefined -fsanitize=address ")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined -fsanitize=address ")
     endif()
+    include_directories(source/)
     include_directories(external/include/)
     include_directories(external/include/imgui)
     include_directories(external/include/imguizmo)
@@ -127,11 +129,11 @@ else()
     project ("ShooterPSX")
     set(CMAKE_CXX_STANDARD 20)
     add_executable (ShooterPSX
-        source/file_windows.c 
-        source/input_windows.c 
-        source/renderer_windows.c 
-        source/music_windows.c
-        source/texture_windows.c
+        source/windows/file.c 
+        source/windows/input.c 
+        source/windows/renderer.c 
+        source/windows/music.c
+        source/windows/texture.c
         source/main.c 
         source/mesh.c 
         source/camera.c
@@ -144,8 +146,8 @@ else()
         source/entities/door.c
         source/entities/pickup.c
         source/entities/crate.c
-        source/win/psx.c
-        source/win/debug_layer.cpp
+        source/windows/psx.c
+        source/windows/debug_layer.cpp
         external/source/GL/gl3w.c
         external/include/imgui/imgui.cpp
         external/include/imgui/imgui_widgets.cpp
@@ -181,6 +183,7 @@ else()
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -fsanitize=undefined -fsanitize=address ")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined -fsanitize=address ")
     endif()
+    include_directories(source/)
     include_directories(external/include/)
     include_directories(external/include/imgui)
     include_directories(external/include/imguizmo)

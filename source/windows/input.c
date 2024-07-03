@@ -2,7 +2,7 @@
 
 #include "input.h"
 #include "GLFW/glfw3.h"
-#include "win/psx.h"
+#include "windows/psx.h"
 
 extern GLFWwindow* window;
 int8_t left_stick_x[2] = { 0, 0 };

@@ -4,7 +4,7 @@
 #ifdef _PSX
 #include <psxpad.h>
 #else
-#include "win/psx.h"
+#include "windows/psx.h"
 #endif
 
 // Cheats are defined in reverse order, it was easier to implement that way

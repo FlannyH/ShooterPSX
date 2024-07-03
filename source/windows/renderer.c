@@ -6,7 +6,7 @@
 
 #include "memory.h"
 #include "renderer.h"
-#include "win/debug_layer.h"
+#include "debug_layer.h"
 #include <GL/gl3w.h>
 #include <cglm/affine.h>
 #include <cglm/cam.h>

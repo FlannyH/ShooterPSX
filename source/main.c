@@ -12,8 +12,8 @@
 #include <psxpad.h>
 
 #else
-#include "win/psx.h"
-#include "win/debug_layer.h"
+#include "windows/psx.h"
+#include "windows/debug_layer.h"
 #endif
 
 #include "cheats.h"
