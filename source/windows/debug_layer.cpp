@@ -422,6 +422,10 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
                     break;
             }
         }
+
+        if (ImGui::Button("Defragment")) {
+            entity_defragment();
+        }
     }
     ImGui::End();
 

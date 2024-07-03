@@ -65,6 +65,30 @@ void entity_register_collision_box(const entity_collision_box_t* box) {
 	memcpy(&entity_aabb_queue[entity_n_active_aabb++], box, sizeof(entity_collision_box_t));
 }
 
+void entity_defragment() {
+	int start = 0;
+	int end = ENTITY_LIST_LENGTH - 1;
+
+	while (1) {
+		while (entity_types[end] == ENTITY_NONE) --end;
+		while (entity_types[start] != ENTITY_NONE) ++start;
+		if (start >= end) break;
+
+		// swap *end and *start
+		{
+			auto temp = entity_types[start];
+			entity_types[start] = entity_types[end];
+			entity_types[end] = temp;
+		}
+		{
+			entity_union* pool = (entity_union*)entity_pool;
+			entity_union temp = pool[start];
+			pool[start] = pool[end];
+			pool[end] = temp;
+		}
+	}
+}
+
 void entity_kill(int slot) {
 	// todo: maybe support destructors?
 	entity_types[slot] = ENTITY_NONE;
