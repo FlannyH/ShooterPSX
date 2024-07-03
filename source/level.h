@@ -1,5 +1,9 @@
 #ifndef LEVEL_H
 #define LEVEL_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stdint.h>
 #include "structs.h"
 #include "vislist.h"
@@ -32,4 +36,8 @@ typedef struct {
 
 level_t level_load(const char* level_path); // Load level from path, including .LVL;1 extension.
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif
