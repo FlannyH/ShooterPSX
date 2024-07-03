@@ -163,7 +163,7 @@ void inspect_entity(size_t entity_id) {
 }
 
 #define PI 3.14159265358979f
-void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_slot, int* mouse_over_viewport) {
+void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_slot, int* mouse_over_viewport, level_t* curr_level) {
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
     // Level metadata
@@ -199,7 +199,39 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
         }
         ImGui::SameLine();
         if (ImGui::Button("Save")) {
-            printf("save\n");
+            std::vector<uint8_t> binary_section;
+
+            // Write all the text strings
+            auto write_and_get_offset = [](std::vector<uint8_t>& output, char* string) {
+                auto string_offset_in_file = output.size();
+                intptr_t offset = 0;
+                do {
+                    output.push_back(string[offset]);
+                } while (string[offset++] != 0);
+                return string_offset_in_file;
+            };
+
+            // Construct level header and write into binary section as we go along
+            level_header_t header = {
+                .file_magic = MAGIC_FLVL,
+                .path_music_offset = (uint32_t)write_and_get_offset(binary_section, path_music),
+                .path_bank_offset = (uint32_t)write_and_get_offset(binary_section, path_bank),
+                .path_texture_offset = (uint32_t)write_and_get_offset(binary_section, path_texture),
+                .path_collision_offset = (uint32_t)write_and_get_offset(binary_section, path_collision),
+                .path_vislist_offset = (uint32_t)write_and_get_offset(binary_section, path_vislist),
+                .path_model_offset = (uint32_t)write_and_get_offset(binary_section, path_model),
+                .path_model_lod_offset = (uint32_t)write_and_get_offset(binary_section, path_model_lod),
+                .level_name_offset = (uint32_t)write_and_get_offset(binary_section, level_name),
+                .player_spawn = {
+                    .x = 0, .y = 0, .z = 0
+                },
+                .n_entities = 0, // todo: implement saving entities
+            };
+
+            FILE* file = fopen(level_path, "w");
+            fwrite(&header, sizeof(header), 1, file);
+            fwrite(binary_section.data(), sizeof(binary_section[0]), binary_section.size(), file);
+            fclose(file);
         }
 
         ImGui::SeparatorText("Level Header");

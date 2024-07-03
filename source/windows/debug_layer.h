@@ -2,6 +2,7 @@
 #define DEBUG_LAYER_H
 #include "GLFW/glfw3.h"
 #include "../entity.h"
+#include "../level.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,7 +15,7 @@ void debug_layer_end(void);
 void debug_layer_update_gameplay(void);
 void debug_layer_update_editor(void);
 void debug_layer_close(void);
-void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_slot, int* mouse_over_viewport);
+void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_slot, int* mouse_over_viewport, level_t* curr_level);
 
 #ifdef __cplusplus
 }

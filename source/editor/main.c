@@ -63,7 +63,7 @@ int main(void) {
             entity_update_all(&player, 0);
             
             debug_layer_begin();
-            debug_layer_manipulate_entity(&player.transform, &selected_entity, &mouse_over_viewport);
+            debug_layer_manipulate_entity(&player.transform, &selected_entity, &mouse_over_viewport, &level);
             debug_layer_end();
         }
         renderer_end_frame();
