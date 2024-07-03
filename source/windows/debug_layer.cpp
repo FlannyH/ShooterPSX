@@ -196,26 +196,7 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
     }
     ImGui::Begin("Level Metadata");
     {
-        ImGui::SeparatorText("Level File");
-        ImGui::InputText("Level File Path", level_path, 255);
-
-        // Browse button
-        ImGui::SameLine();
-        if (ImGui::Button("...")) {
-            file_dialog.SetTitle("Open level file");
-            file_dialog.SetTypeFilters({".lvl"});
-            file_dialog.Open();
-        }
-        file_dialog.Display();
-
-        if (file_dialog.HasSelected()) {
-            strcpy(level_path, file_dialog.GetSelected().string().c_str());
-            printf("selected file: %s\n", level_path);
-            file_dialog.ClearSelected();
-        }
-
-        // Load button
-        if (ImGui::Button("Load")) {
+        auto load = [curr_level]() {
             uint32_t* data;
             size_t size;
             file_read(level_path, &data, &size, 1, STACK_TEMP);
@@ -231,11 +212,9 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
             strcpy(level_name, binary_section + header->level_name_offset);
 
             *curr_level = level_load(level_path);
-        }
+        };
 
-        // Save button
-        ImGui::SameLine();
-        if (ImGui::Button("Save")) {
+        auto save = [curr_level]() {
             std::vector<uint8_t> binary_section;
 
             // Write all the text strings
@@ -246,7 +225,7 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
                     output.push_back(string[offset]);
                 } while (string[offset++] != 0);
                 return string_offset_in_file;
-            };
+                };
 
             // Construct level header and write into binary section as we go along
             level_header_t header = {
@@ -269,6 +248,70 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
             fwrite(&header, sizeof(header), 1, file);
             fwrite(binary_section.data(), sizeof(binary_section[0]), binary_section.size(), file);
             fclose(file);
+        };
+
+        ImGui::SeparatorText("Level File");
+        ImGui::InputText("Level File Path", level_path, 255);
+
+        // Browse button
+        ImGui::SameLine();
+        if (ImGui::Button("...")) {
+            file_dialog.SetTitle("Open level file");
+            file_dialog.SetTypeFilters({ ".lvl" });
+            file_dialog.Open();
+        }
+        file_dialog.Display();
+
+        static bool load_after_select = false;
+        static bool save_after_select = false;
+
+        if (file_dialog.HasSelected()) {
+            strcpy(level_path, file_dialog.GetSelected().string().c_str());
+            file_dialog.ClearSelected();
+
+            if (load_after_select) load();
+            if (save_after_select) save();
+
+            load_after_select = false;
+            save_after_select = false;
+        }
+
+        // Load button
+        if (ImGui::Button("Load")) {
+            // If the level path is empty
+            if (level_path[0] == '\0' || level_path[0] == ' ') {
+                load_after_select = true;
+                file_dialog.SetTitle("Open level file");
+                file_dialog.SetTypeFilters({ ".lvl" });
+                file_dialog.Open();
+            }
+            else {
+                load();
+            }
+        }
+
+        // Save button
+        ImGui::SameLine();
+        if (ImGui::Button("Save")) {
+            // If the level path is empty
+            if (level_path[0] == '0' || level_path[0] == ' ') {
+                save_after_select = true;
+                file_dialog.SetTitle("Open level file");
+                file_dialog.SetTypeFilters({ ".lvl" });
+                file_dialog.Open();
+            }
+            else {
+                save();
+            }
+        }
+
+        // Save as button
+        ImGui::SameLine();
+        if (ImGui::Button("Save as")) {
+            save_after_select = true;
+            file_dialog.SetTitle("Open level file");
+            file_dialog.SetTypeFilters({ ".lvl" });
+            file_dialog.Open();
         }
 
         ImGui::SeparatorText("Level Header");
