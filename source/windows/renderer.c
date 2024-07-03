@@ -445,6 +445,8 @@ void renderer_end_frame() {
 }
 int drawing_entity_id = 255;
 void renderer_draw_model_shaded(const model_t* model, const transform_t* model_transform, visfield_t* vislist, int tex_id_offset) {
+	if (!model) return;
+
 	drawing_entity_id = 255;
     glViewport(0, 0, w, h);
     if (vislist == NULL || n_sections == 0) {
