@@ -7,10 +7,16 @@
 int file_read(const char* path, uint32_t** destination, size_t* size, int on_stack, stack_t stack) {
     // Modify file name to not be CD based
     const size_t length = strlen(path) + 1; // Include the null terminator
-    char* new_path = mem_alloc(length + 1 - 2, MEM_CAT_UNDEFINED); // Length from strlen + 1 for the period at the start, -2 for the ;1 at the end, and +1 for the null terminator
-    new_path[0] = '.';
-    memcpy(&new_path[1], path, length - 2);
-    new_path[length - 2] = 0;
+    char* new_path = mem_alloc(length, MEM_CAT_UNDEFINED);
+
+    if (path[length - 3] == ';') {    
+        new_path[0] = '.';
+        memcpy(&new_path[1], path, length - 2);
+        new_path[length - 2] = 0;
+    }
+    else {
+        strcpy(new_path, path);
+    }
 
     // Convert slashes to forward slashes, Linux build will cry otherwise
     for (size_t x = 0; x < length - 2; ++x) {
