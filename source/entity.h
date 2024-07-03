@@ -82,6 +82,7 @@ void entity_init();
 int entity_alloc(uint8_t entity_type);
 void entity_register_collision_box(const entity_collision_box_t* box); // (*box) gets copied, can safely be freed after calling this function
 void entity_defragment();
+void entity_sanitize();
 void entity_update_all(player_t* player, int dt);
 void entity_kill(int slot);
 

@@ -5,8 +5,8 @@
 #include "entities/crate.h"
 #include <string.h>
 
-uint8_t entity_types[ENTITY_LIST_LENGTH];
 entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
+uint8_t entity_types[ENTITY_LIST_LENGTH];
 uint8_t* entity_pool = NULL;
 size_t entity_pool_stride = 0;
 size_t entity_n_active_aabb;
@@ -41,6 +41,7 @@ int entity_alloc(uint8_t entity_type) {
 
 typedef struct {
 	union {
+		entity_header_t header;
 		entity_door_t door;
 		entity_pickup_t pickup;
 		entity_crate_t crate;
@@ -86,6 +87,15 @@ void entity_defragment() {
 			pool[start] = pool[end];
 			pool[end] = temp;
 		}
+	}
+}
+
+// Sets the mesh pointer, which is only valid for the runtime of this program, to 
+// null. It will be recalculated in the entity code after loading
+void entity_sanitize() {
+	entity_union* pool = (entity_union*)entity_pool;
+	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
+		pool[i].header.mesh = NULL;
 	}
 }
 

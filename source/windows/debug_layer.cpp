@@ -125,7 +125,7 @@ void inspect_entity(size_t entity_id) {
     entity_header_t* entity_data = (entity_header_t*)&entity_pool[entity_id * entity_pool_stride];
             
     if (ImGui::TreeNodeEx("Entity Header", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Text("Mesh: %s", entity_data->mesh->name);
+        if (entity_data->mesh) ImGui::Text("Mesh: %s", entity_data->mesh->name);
         inspect_vec3(&entity_data->position, "Position");
         inspect_vec3(&entity_data->rotation, "Rotation");
         inspect_vec3(&entity_data->scale, "Scale");
@@ -228,6 +228,10 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
 
             auto write_data_and_get_offset = [](std::vector<uint8_t>& output, void* data, size_t size_in_bytes) {
                 uint8_t* ptr = (uint8_t*)data;
+                
+                // align to 4 bytes
+                while ((output.size() % 4) != 0) output.push_back(0);
+
                 auto offset_in_file = output.size();
                 intptr_t offset = 0;
                 do {
@@ -237,6 +241,10 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
             };
 
             // Construct level header and write into binary section as we go along
+            entity_sanitize();
+            entity_defragment(); // make entity allocations contiguous and compact so we can save space...
+            auto n_entities = entity_how_many_active(); // ...and reuse this function
+
             level_header_t header = {
                 .file_magic = MAGIC_FLVL,
                 .path_music_offset = (uint32_t)write_text_and_get_offset(binary_section, path_music),
@@ -246,13 +254,13 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
                 .path_vislist_offset = (uint32_t)write_text_and_get_offset(binary_section, path_vislist),
                 .path_model_offset = (uint32_t)write_text_and_get_offset(binary_section, path_model),
                 .path_model_lod_offset = (uint32_t)write_text_and_get_offset(binary_section, path_model_lod),
-                .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_types, sizeof(entity_types)),
-                .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_pool, entity_pool_stride * ENTITY_LIST_LENGTH),
+                .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_types, (n_entities + 3) & ~0x03), // 4-byte padding
+                .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_pool, entity_pool_stride * n_entities),
                 .level_name_offset = (uint32_t)write_text_and_get_offset(binary_section, level_name),
                 .player_spawn = {
                     .x = 0, .y = 0, .z = 0
                 },
-                .n_entities = 0, // todo: implement saving entities
+                .n_entities = (uint16_t)n_entities,
             };
 
             FILE* file = fopen(level_path, "w");
@@ -336,6 +344,7 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
         ImGui::InputText("Level Name", level_name, 255);
         if (ImGui::Button("Hot reload")) {
             mem_stack_release(STACK_LEVEL);
+            mem_stack_release(STACK_ENTITY);
 
             // Load graphics and collision data
             curr_level->graphics = model_load(path_model, 1, STACK_LEVEL);

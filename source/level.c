@@ -1,6 +1,10 @@
 #include "level.h"
 #include "texture.h"
 #include "renderer.h"
+#include <entity.h>
+
+extern uint8_t entity_types[ENTITY_LIST_LENGTH];
+extern uint8_t* entity_pool;
 
 level_t level_load(const char* path) {
     // Read the file 
@@ -8,6 +12,9 @@ level_t level_load(const char* path) {
     size_t size;
     mem_stack_release(STACK_TEMP);
     mem_stack_release(STACK_LEVEL);
+    mem_stack_release(STACK_ENTITY);
+    entity_init();
+
     file_read(path, &file_data, &size, 1, STACK_TEMP);
 
     // Get header data
@@ -29,6 +36,8 @@ level_t level_load(const char* path) {
     const char* path_vislist = (const char*)((binary_section + level_header->path_vislist_offset));
     const char* path_graphics = (const char*)((binary_section + level_header->path_model_offset));
     const char* path_graphics_lod = (const char*)((binary_section + level_header->path_model_lod_offset));
+    const char* level_entity_pool = (const char*)((binary_section + level_header->entity_pool_offset));
+    const char* level_entity_types = (const char*)((binary_section + level_header->entity_types_offset));
 
     // Load level textures
 	texture_cpu_t *tex_level;
@@ -54,6 +63,10 @@ level_t level_load(const char* path) {
         .vislist = vislist_load(path_vislist, 1, STACK_LEVEL),
     };
     bvh_from_model(&level.collision_bvh, level.collision_mesh);
+
+    // Load entities
+    memcpy(entity_pool, level_entity_pool, entity_pool_stride * level_header->n_entities);
+    memcpy(entity_types, level_entity_types, level_header->n_entities);
 
     return level;
 }
