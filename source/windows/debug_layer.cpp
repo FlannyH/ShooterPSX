@@ -70,6 +70,7 @@ void debug_layer_update_gameplay() {
 #ifdef _LEVEL_EDITOR
 #include <cglm/types.h>
 #include <cglm/affine.h>
+#include <level.h>
 extern "C" {
     extern mat4 perspective_matrix;
     extern mat4 view_matrix;
@@ -164,6 +165,52 @@ void inspect_entity(size_t entity_id) {
 #define PI 3.14159265358979f
 void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_slot, int* mouse_over_viewport) {
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+
+    // Level metadata
+    static char* level_path = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* path_music_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* path_bank_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* path_texture_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* path_collision_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* path_vislist_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* path_model_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* path_model_lod_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* level_name_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static bool initialized = false;
+    if (!initialized) {
+        level_path[0] = 0;
+        path_music_offset[0] = 0;
+        path_bank_offset[0] = 0;
+        path_texture_offset[0] = 0;
+        path_collision_offset[0] = 0;
+        path_vislist_offset[0] = 0;
+        path_model_offset[0] = 0;
+        path_model_lod_offset[0] = 0;
+        level_name_offset[0] = 0;
+    }
+    ImGui::Begin("Level Metadata");
+    {
+        ImGui::SeparatorText("Level File");
+        ImGui::InputText("Level File Path", level_path, 255);
+        if (ImGui::Button("Load")) {
+            printf("load\n");
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Save")) {
+            printf("save\n");
+        }
+
+        ImGui::SeparatorText("Level Header");
+        ImGui::InputText("Music Sequence Path", path_music_offset, 255);
+        ImGui::InputText("Music Soundbank Path", path_bank_offset, 255);
+        ImGui::InputText("Texture Collection Path", path_texture_offset, 255);
+        ImGui::InputText("Collision Path", path_collision_offset, 255);
+        ImGui::InputText("Visility List Path", path_vislist_offset, 255);
+        ImGui::InputText("Model Path", path_model_offset, 255);
+        ImGui::InputText("Model LOD Path", path_model_lod_offset, 255);
+        ImGui::InputText("Level Name", level_name_offset, 255);
+    }
+    ImGui::End();
 
     // General info
     ImGui::Begin("Info");
