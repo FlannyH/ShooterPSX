@@ -168,25 +168,25 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
 
     // Level metadata
     static char* level_path = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* path_music_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* path_bank_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* path_texture_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* path_collision_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* path_vislist_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* path_model_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* path_model_lod_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* level_name_offset = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* path_music = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* path_bank = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* path_texture = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* path_collision = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* path_vislist = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* path_model = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* path_model_lod = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* level_name = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
     static bool initialized = false;
     if (!initialized) {
         level_path[0] = 0;
-        path_music_offset[0] = 0;
-        path_bank_offset[0] = 0;
-        path_texture_offset[0] = 0;
-        path_collision_offset[0] = 0;
-        path_vislist_offset[0] = 0;
-        path_model_offset[0] = 0;
-        path_model_lod_offset[0] = 0;
-        level_name_offset[0] = 0;
+        path_music[0] = 0;
+        path_bank[0] = 0;
+        path_texture[0] = 0;
+        path_collision[0] = 0;
+        path_vislist[0] = 0;
+        path_model[0] = 0;
+        path_model_lod[0] = 0;
+        level_name[0] = 0;
     }
     ImGui::Begin("Level Metadata");
     {
@@ -201,14 +201,14 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
         }
 
         ImGui::SeparatorText("Level Header");
-        ImGui::InputText("Music Sequence Path", path_music_offset, 255);
-        ImGui::InputText("Music Soundbank Path", path_bank_offset, 255);
-        ImGui::InputText("Texture Collection Path", path_texture_offset, 255);
-        ImGui::InputText("Collision Path", path_collision_offset, 255);
-        ImGui::InputText("Visility List Path", path_vislist_offset, 255);
-        ImGui::InputText("Model Path", path_model_offset, 255);
-        ImGui::InputText("Model LOD Path", path_model_lod_offset, 255);
-        ImGui::InputText("Level Name", level_name_offset, 255);
+        ImGui::InputText("Music Sequence Path", path_music, 255);
+        ImGui::InputText("Music Soundbank Path", path_bank, 255);
+        ImGui::InputText("Texture Collection Path", path_texture, 255);
+        ImGui::InputText("Collision Path", path_collision, 255);
+        ImGui::InputText("Visility List Path", path_vislist, 255);
+        ImGui::InputText("Model Path", path_model, 255);
+        ImGui::InputText("Model LOD Path", path_model_lod, 255);
+        ImGui::InputText("Level Name", level_name, 255);
         if (ImGui::Button("Apply")) {
             printf("reloaded level\n");
         }
