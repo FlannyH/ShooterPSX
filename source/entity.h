@@ -73,7 +73,7 @@ typedef struct {
 
 extern const char* entity_names[];
 extern model_t* entity_models;
-extern entity_slot_t entity_list[ENTITY_LIST_LENGTH];
+extern uint8_t entity_types[ENTITY_LIST_LENGTH];
 extern uint8_t* entity_pool;
 extern size_t entity_pool_stride;
 extern entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];

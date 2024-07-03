@@ -5,7 +5,7 @@
 #include "entities/crate.h"
 #include <string.h>
 
-entity_slot_t entity_list[ENTITY_LIST_LENGTH];
+uint8_t entity_types[ENTITY_LIST_LENGTH];
 entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
 uint8_t* entity_pool = NULL;
 size_t entity_pool_stride = 0;
@@ -18,7 +18,7 @@ void entity_update_all(player_t* player, int dt) {
 
 	// Loop over all entities
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
-		switch (entity_list[i].type) {
+		switch (entity_types[i]) {
 			case ENTITY_NONE: break;
 			case ENTITY_DOOR: entity_door_update(i, player, dt); break;
 			case ENTITY_PICKUP: entity_pickup_update(i, player, dt); break;
@@ -30,9 +30,9 @@ void entity_update_all(player_t* player, int dt) {
 int entity_alloc(uint8_t entity_type) {
 	// Find an empty slot
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
-		if (entity_list[i].type == ENTITY_NONE) {
+		if (entity_types[i] == ENTITY_NONE) {
 			// Register the entity
-			entity_list[i].type = entity_type;
+			entity_types[i] = entity_type;
 			return i;
 		}
 	}
@@ -49,7 +49,7 @@ typedef struct {
 
 void entity_init() {
 	// Zero initialize the entity list
-	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) entity_list[i].type = ENTITY_NONE;
+	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) entity_types[i] = ENTITY_NONE;
 
 	entity_n_active_aabb = 0;
 
@@ -67,7 +67,7 @@ void entity_register_collision_box(const entity_collision_box_t* box) {
 
 void entity_kill(int slot) {
 	// todo: maybe support destructors?
-	entity_list[slot].type = ENTITY_NONE;
+	entity_types[slot] = ENTITY_NONE;
 }
 
 const char* entity_names[] = {
@@ -81,14 +81,14 @@ const char* entity_names[] = {
 #ifdef _DEBUG
 void entity_debug() {
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
-		printf("entity %03i:\t%s\n", i, entity_names[entity_list[i].type]);
+		printf("entity %03i:\t%s\n", i, entity_names[entity_types[i]]);
 	}
 }
 
 int entity_how_many_active() {
 	int count = 0;
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
-		if (entity_list[i].type != ENTITY_NONE) {
+		if (entity_types[i] != ENTITY_NONE) {
 			count++;
 		}
 	}

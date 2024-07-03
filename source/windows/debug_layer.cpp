@@ -119,8 +119,8 @@ size_t inspect_enum(size_t value, const char** names, const char* label) {
 }
 
 void inspect_entity(size_t entity_id) {
-    entity_slot_t* entity_slot = &entity_list[entity_id];
-    if (entity_slot->type == ENTITY_NONE) return;
+    uint8_t entity_type = entity_types[entity_id];
+    if (entity_type == ENTITY_NONE) return;
 
     entity_header_t* entity_data = (entity_header_t*)&entity_pool[entity_id * entity_pool_stride];
             
@@ -132,7 +132,7 @@ void inspect_entity(size_t entity_id) {
         ImGui::TreePop();
     }
     if (ImGui::TreeNodeEx("Entity Data", ImGuiTreeNodeFlags_DefaultOpen)) {
-        if (entity_slot->type == ENTITY_DOOR) {
+        if (entity_type == ENTITY_DOOR) {
             entity_door_t* door = (entity_door_t*)entity_data;
             inspect_vec3(&door->open_offset, "Open offset");
             bool is_locked = (bool)door->is_locked;
@@ -143,7 +143,7 @@ void inspect_entity(size_t entity_id) {
             if (ImGui::Checkbox("Rotated", &is_rotated)) { door->is_rotated = (int)is_rotated; door->state_changed = 1; }
         }
         
-        if (entity_slot->type == ENTITY_PICKUP) {
+        if (entity_type == ENTITY_PICKUP) {
             entity_pickup_t* pickup = (entity_pickup_t*)entity_data;
             const size_t old_type = (size_t)pickup->type;
             const size_t new_type = inspect_enum((size_t)pickup->type, pickup_names, "Pickup type");
@@ -153,7 +153,7 @@ void inspect_entity(size_t entity_id) {
             }
         }
         
-        if (entity_slot->type == ENTITY_CRATE) {
+        if (entity_type == ENTITY_CRATE) {
             entity_crate_t* crate = (entity_crate_t*)entity_data;
             crate->pickup_to_spawn = inspect_enum((size_t)crate->pickup_to_spawn, pickup_names, "Pickup type to spawn");
         }
@@ -378,7 +378,7 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
         // Entity count:
         int entity_count = 0;
         for (size_t i = 0; i < ENTITY_LIST_LENGTH; ++i) {
-            if (entity_list[i].type != ENTITY_NONE) {
+            if (entity_types[i] != ENTITY_NONE) {
                 ++entity_count;
             }
         }
@@ -419,9 +419,9 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
     {
         if (ImGui::TreeNode("All entities")) {
             for (size_t i = 0; i < ENTITY_LIST_LENGTH; ++i) {
-                if (entity_list[i].type != ENTITY_NONE) {
+                if (entity_types[i] != ENTITY_NONE) {
                     static std::string tree_nodes[ENTITY_LIST_LENGTH];
-                    tree_nodes[i] = std::format("{} - {}", i, entity_names[entity_list[i].type]);
+                    tree_nodes[i] = std::format("{} - {}", i, entity_names[entity_types[i]]);
                     if (ImGui::TreeNode(tree_nodes[i].c_str())) {
                         inspect_entity(i);
                         ImGui::TreePop();
@@ -436,7 +436,7 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
             inspect_entity(*selected_entity_slot);
             
             // If deleted, deselect it
-            if (entity_list[*selected_entity_slot].type == ENTITY_NONE) {
+            if (entity_types[*selected_entity_slot] == ENTITY_NONE) {
                 *selected_entity_slot = -1;
             }
         }
@@ -473,7 +473,6 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
         mat4 delta;
         
         if (*selected_entity_slot != -1) {
-                entity_slot_t* entity_slot = &entity_list[*selected_entity_slot];
                 entity_header_t* selected_entity = (entity_header_t*)&entity_pool[(*selected_entity_slot) * entity_pool_stride];
 
                 // Transform to world units
