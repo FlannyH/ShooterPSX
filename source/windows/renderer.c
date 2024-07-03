@@ -161,7 +161,7 @@ static void DebugCallbackFunc(GLenum source, GLenum type, GLuint id,
 				"severity: %i:%s \n	message: %s",
 				source, sourceString, type, typeString, id, severity, severityString,
 				message);
-	exit(1);
+	//exit(1);
 }
 
 void update_delta_time_ms(void) {
