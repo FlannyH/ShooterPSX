@@ -30,3 +30,16 @@ The first node in the BVH node pool is always the root.
 | i32[3]  | bounds_max              | Axis aligned bounding box around all primitives inside this node, in collision space |
 | u16     | left_first | If this is a leaf, this is the index of the first primitive, otherwise, this is the index of the first of two child nodes | 
 | u16     | primitive_count | If this value is above 0x8000, this is a leaf node | 
+
+## Navigation Mesh
+### Header
+| Type    | Name       | Description                                   |
+| ------- | ---------- | --------------------------------------------- |
+| u32 | n_nav_nodes | Number of navigation nodes                      |
+| nav_node_t[n]     | nodes | All navmesh nodes |
+
+### Node
+| Type    | Name       | Description                                   |
+| ------- | ---------- | --------------------------------------------- |
+| i16[3]     | position    | Position of the node, in model space | 
+| u16[4]     | neighbors    | The closest accessible nodes from this node | 
