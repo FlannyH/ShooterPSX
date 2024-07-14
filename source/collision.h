@@ -9,6 +9,7 @@
 #define COL_SCALE 512 // 4096 = 1.0, 512 = 0.125. Need lower scale for less overflows
 
 // BVH construction
+bvh_t bvh_from_file(const char* path, int on_stack, stack_t stack);
 aabb_t bvh_get_bounds(const bvh_t* bvh, uint16_t first, uint16_t count);
 void bvh_construct(bvh_t* bvh, const col_mesh_file_tri_t* primitives, const uint16_t n_primitives);
 void bvh_subdivide(bvh_t* bvh, bvh_node_t* node, int recursion_depth);

@@ -4,11 +4,29 @@
 | ------- | ---------- | --------------------------------------------- |
 | char[4] | file_magic | File magic: "FCOL"                            |
 | u32     | n_verts    | The number of vertices in this collision mesh | 
+| u32     | n_nodes    | The number of nodes in the collision mesh's BVH | 
+| u32     | triangle_data_offset | Offset to raw triangle data | 
+| u32     | terrain_id_offset | Offset to array of 8 bit terrain IDs for each triangle |
+| u32     | bvh_nodes_offset | Offset to the precalculated BVH's node pool | 
+| u32     | bvh_indices_offset | Offset to the precalculated BVH's index array | 
+| u32     | navmesh_offset | Offset to the precalculated navigation mesh for the enemies | 
 
-## Collision Vertex
+All offsets are relative to the start of the binary section, which is located right after the header.
+
+The first node in the BVH node pool is always the root.
+
+## Collision Triangle
 | Type | Name               | Description                   |
 | ---- | ------------------ | ----------------------------- |
-| i16  | pos_x              | X-position of the vertex      |
-| i16  | pos_y              | Y-position of the vertex      |
-| i16  | pos_z              | Z-position of the vertex      |
-| u16  | terrain_id         | What type of terrain it is.   |
+| i32[3]  | v0              | Vertex 0, in collision space |
+| i32[3]  | v1              | Vertex 1, in collision space |
+| i32[3]  | v2              | Vertex 2, in collision space |
+| i32[3]  | normal         | Triangle's normal vector in graphics space    |
+
+## BVH Node
+| Type    | Name       | Description                                   |
+| ------- | ---------- | --------------------------------------------- |
+| i32[3]  | bounds_min              | Axis aligned bounding box around all primitives inside this node, in collision space |
+| i32[3]  | bounds_max              | Axis aligned bounding box around all primitives inside this node, in collision space |
+| u16     | left_first | If this is a leaf, this is the index of the first primitive, otherwise, this is the index of the first of two child nodes | 
+| u16     | primitive_count | If this value is above 0x8000, this is a leaf node | 

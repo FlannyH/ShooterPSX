@@ -9,10 +9,9 @@ typedef struct {
 } aabb_t;
 
 typedef struct {
-    aabb_t bounds;                        // Axis aligned bounding box around all primitives inside this node
-    uint16_t left_first;                // If this is a leaf, this is the index of the first primitive, otherwise, this is the index of the first of two child nodes
-    uint16_t is_leaf : 1;               // The high bit of the count determines whether this is a node or a leaf
-    uint16_t primitive_count : 15;      // Number of primitives in this leaf. If this node isn't a leaf, ignore this value
+    aabb_t bounds; // Axis aligned bounding box around all primitives inside this node
+    uint16_t left_first; // If this is a leaf, this is the index of the first primitive, otherwise, this is the index of the first of two child nodes
+    uint16_t primitive_count; // Number of primitives in this leaf. If the primitive count is 0xFFFF, this node isn't a leaf, in which case ignore this value
 } bvh_node_t;
 
 typedef struct {
@@ -64,7 +63,6 @@ typedef struct {
 typedef struct {
     vec3_t v0, v1, v2;
     vec3_t normal;
-    vec3_t center;
 } collision_triangle_3d_t;
 
 typedef struct {
@@ -149,7 +147,13 @@ typedef struct {
 #define MAGIC_FCOL 0x4C4F4346
 typedef struct {
     uint32_t file_magic; // File magic: "FCOL"
-    uint32_t n_verts; // The number of vertices in this collision mesh
+    uint32_t n_verts; // The number of vertices in this collision mesh 
+    uint32_t n_nodes; // The number of nodes in the collision mesh's BVH 
+    uint32_t triangle_data_offset; // Offset to raw triangle data 
+    uint32_t terrain_id_offset; // Offset to array of 8 bit terrain IDs for each triangle
+    uint32_t bvh_nodes_offset; // Offset to the precalculated BVH's node pool 
+    uint32_t bvh_indices_offset; // Offset to the precalculated BVH's index array 
+    uint32_t navmesh_offset; // Offset to the precalculated navigation mesh for the enemies 
 } collision_mesh_header_t;
 
 typedef struct {

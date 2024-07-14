@@ -321,6 +321,8 @@ void state_enter_in_game(void) {
 
 	state.title_screen.assets_in_memory = 0;
 
+	// todo: level_load()
+
     // Init player
     state.in_game.player.position.x = 11705653 / 2;
    	state.in_game.player.position.y = 11413985 / 2;
@@ -363,7 +365,7 @@ void state_enter_in_game(void) {
 
 
 	// Generate collision BVH
-    bvh_from_model(&state.in_game.bvh_level_model, state.in_game.m_level_col);
+    state.in_game.bvh_level_model = bvh_from_file("\\ASSETS\\MODELS\\LEVEL.COL;1", 1, STACK_LEVEL);
 
 	// Load textures
 	texture_cpu_t *tex_level;

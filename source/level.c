@@ -8,8 +8,8 @@ extern uint8_t* entity_pool;
 
 level_t level_load(const char* path) {
     // Read the file 
-    uint32_t* file_data;
-    size_t size;
+    uint32_t* file_data = NULL;
+    size_t size = 0;
     mem_stack_release(STACK_TEMP);
     mem_stack_release(STACK_LEVEL);
     mem_stack_release(STACK_ENTITY);
@@ -21,7 +21,7 @@ level_t level_load(const char* path) {
     level_header_t* level_header = (level_header_t*)file_data;
 
     // Ensure FMSH header is valid
-    if (level_header->file_magic != MAGIC_FLVL) { // "FLVL"
+    if (level_header && (level_header->file_magic != MAGIC_FLVL)) { // "FLVL"
         printf("[ERROR] Error loading level '%s', file header is invalid!\n", path);
         return (level_t) { 0 };
     }
@@ -62,7 +62,7 @@ level_t level_load(const char* path) {
         .transform = (transform_t){{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}},
         .vislist = vislist_load(path_vislist, 1, STACK_LEVEL),
     };
-    bvh_from_model(&level.collision_bvh, level.collision_mesh);
+    bvh_from_file(path_collision, 1, STACK_LEVEL);
 
     // Load entities
     memcpy(entity_pool, level_entity_pool, entity_pool_stride * level_header->n_entities);

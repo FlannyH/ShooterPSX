@@ -14,50 +14,6 @@ int n_ray_triangle_intersects = 0;
 int n_vertical_cylinder_aabb_intersects = 0;
 int n_vertical_cylinder_triangle_intersects = 0;
 
-void bvh_construct(bvh_t* bvh, const col_mesh_file_tri_t* primitives, const uint16_t n_primitives) {
-    // Convert triangles from the model into collision triangles
-    // todo: maybe store this mesh in the file? not sure if it's worth implementing but could be nice
-    bvh->primitives = mem_stack_alloc(sizeof(collision_triangle_3d_t) * n_primitives, STACK_LEVEL);
-    bvh->n_primitives = n_primitives;
-    PANIC_IF("failed to allocate memory for collision model!", bvh->primitives == 0);
-
-    for (size_t i = 0; i < n_primitives; ++i) {
-        // Set position
-        bvh->primitives[i].v0 = vec3_from_int32s(-(int32_t)primitives[i].v0.x * COL_SCALE, -(int32_t)primitives[i].v0.y * COL_SCALE, -(int32_t)primitives[i].v0.z * COL_SCALE);
-        bvh->primitives[i].v1 = vec3_from_int32s(-(int32_t)primitives[i].v1.x * COL_SCALE, -(int32_t)primitives[i].v1.y * COL_SCALE, -(int32_t)primitives[i].v1.z * COL_SCALE);
-        bvh->primitives[i].v2 = vec3_from_int32s(-(int32_t)primitives[i].v2.x * COL_SCALE, -(int32_t)primitives[i].v2.y * COL_SCALE, -(int32_t)primitives[i].v2.z * COL_SCALE);
-
-        // Calculate normal
-        const vec3_t ac = vec3_sub(vec3_shift_right(bvh->primitives[i].v1, 4), vec3_shift_right(bvh->primitives[i].v0, 4));
-        const vec3_t ab = vec3_sub(vec3_shift_right(bvh->primitives[i].v2, 4), vec3_shift_right(bvh->primitives[i].v0, 4));
-        bvh->primitives[i].normal = vec3_cross(ac, ab);
-        WARN_IF("bvh normal calculation return infinity", (bvh->primitives[i].normal.x | bvh->primitives[i].normal.y | bvh->primitives[i].normal.z) == INT32_MAX);
-        bvh->primitives[i].normal = vec3_normalize(bvh->primitives[i].normal);
-
-        // Calculate center
-        bvh->primitives[i].center = bvh->primitives[i].v0;
-        bvh->primitives[i].center = vec3_add(bvh->primitives[i].center, bvh->primitives[i].v1);
-        bvh->primitives[i].center = vec3_add(bvh->primitives[i].center, bvh->primitives[i].v2);
-        bvh->primitives[i].center = vec3_muls(bvh->primitives[i].center, 1365);
-    }
-
-
-    // Create index array
-    bvh->indices = mem_stack_alloc(sizeof(uint16_t) * n_primitives, STACK_LEVEL);
-    for (int i = 0; i < n_primitives; i++)
-    {
-        bvh->indices[i] = i;
-    }
-
-    // Create root node
-    bvh->nodes = mem_stack_alloc(sizeof(bvh_node_t) * n_primitives * 2, STACK_LEVEL);
-    bvh->node_pointer = 2;
-    bvh->root = &bvh->nodes[0]; // todo: maybe we can just hard code the root to be index 0 and skip this indirection?
-    bvh->root->left_first = 0;
-    bvh->root->primitive_count = n_primitives;
-    bvh_subdivide(bvh, bvh->root, 0);
-}
-
 aabb_t bvh_get_bounds(const bvh_t* bvh, const uint16_t first, const uint16_t count)
 {
     aabb_t result;
@@ -73,113 +29,12 @@ aabb_t bvh_get_bounds(const bvh_t* bvh, const uint16_t first, const uint16_t cou
     return result;
 }
 
-void bvh_subdivide(bvh_t* bvh, bvh_node_t* node, const int recursion_depth) {
-    //Determine AABB for primitives in array
-    node->bounds = bvh_get_bounds(bvh, node->left_first, node->primitive_count);
-
-    if (node->primitive_count < 3)
-    {
-        node->is_leaf = 1;
-        return;
-    }
-
-    // Get the average position of all the primitives
-    int64_t avg_x = 0;
-    int64_t avg_y = 0;
-    int64_t avg_z = 0;
-    for (int i = node->left_first; i < node->left_first + node->primitive_count; i++) {
-        avg_x += bvh->primitives[bvh->indices[i]].v0.x;
-        avg_y += bvh->primitives[bvh->indices[i]].v0.y;
-        avg_z += bvh->primitives[bvh->indices[i]].v0.z;
-        avg_x += bvh->primitives[bvh->indices[i]].v1.x;
-        avg_y += bvh->primitives[bvh->indices[i]].v1.y;
-        avg_z += bvh->primitives[bvh->indices[i]].v1.z;
-        avg_x += bvh->primitives[bvh->indices[i]].v2.x;
-        avg_y += bvh->primitives[bvh->indices[i]].v2.y;
-        avg_z += bvh->primitives[bvh->indices[i]].v2.z;
-    }
-    avg_x /= node->primitive_count * 3;
-    avg_y /= node->primitive_count * 3;
-    avg_z /= node->primitive_count * 3;
-
-    //Determine split axis - choose biggest axis
-    axis_t split_axis = axis_x;
-    scalar_t split_pos = 0;
-
-    const vec3_t size = vec3_sub(node->bounds.max, node->bounds.min);
-
-    if (size.x > size.y 
-        && size.x > size.z)
-    {
-        split_axis = axis_x;
-        //split_pos = (node->bounds.max.x + node->bounds.min.x);
-        //split_pos = split_pos >> 1;
-        split_pos = avg_x;
-    }
-
-    if (size.y > size.x
-        && size.y > size.z)
-    {
-        split_axis = axis_y;
-        //split_pos = (node->bounds.max.y + node->bounds.min.y);
-        //split_pos = split_pos >> 1;
-        split_pos = avg_y;
-    }
-
-    if (size.z > size.x
-        && size.z > size.y)
-    {
-        split_axis = axis_z;
-        //split_pos = (node->bounds.max.z + node->bounds.min.z);
-        //split_pos = split_pos >> 1;
-        split_pos = avg_z;
-    }
-
-    //Partition the index array, and get the split position
-    uint16_t split_index = 0;
-    bvh_partition(bvh, split_axis, split_pos, node->left_first, node->primitive_count, &split_index);
-
-    //If splitIndex is at the end of the array, we've reached a dead end, so stop here
-    if (split_index == (node->left_first + node->primitive_count))
-    {
-        node->is_leaf = 1;
-        return;
-    }
-
-    //If splitIndex and the start are the same, we've reached a dead end, so stop here
-    if (split_index == node->left_first)
-    {
-        node->is_leaf = 1;
-        return;
-    }
-
-    //Save the start index of this node
-    const int start_index = node->left_first;
-
-    //Create child nodes
-    node->left_first = bvh->node_pointer;
-    bvh->node_pointer += 2;
-
-    //Start
-    bvh->nodes[node->left_first + 0].left_first = start_index;
-    bvh->nodes[node->left_first + 1].left_first = split_index;
-
-    //Count
-    bvh->nodes[node->left_first + 0].primitive_count = split_index - start_index;
-    bvh->nodes[node->left_first + 1].primitive_count = start_index + node->primitive_count - split_index;
-
-    bvh_subdivide(bvh, &bvh->nodes[node->left_first + 0], recursion_depth + 1);
-    bvh_subdivide(bvh, &bvh->nodes[node->left_first + 1], recursion_depth + 1);
-
-    node->is_leaf = 0;
-}
-
 void handle_node_intersection_ray(bvh_t* self, const bvh_node_t* current_node, const ray_t ray, rayhit_t* hit, const int rec_depth) {
     // Intersect current node
     if (ray_aabb_intersect(&current_node->bounds, ray))
     {
         // If it's a leaf
-        if (current_node->is_leaf)
+        if (current_node->primitive_count != 0)
         {
             // Intersect all triangles attached to it
             rayhit_t sub_hit = { 0 };
@@ -209,21 +64,16 @@ void handle_node_intersection_ray(bvh_t* self, const bvh_node_t* current_node, c
 
 void handle_node_intersection_vertical_cylinder(bvh_t* self, const bvh_node_t* current_node, const vertical_cylinder_t vertical_cylinder, rayhit_t* hit, const int rec_depth) {
     // Intersect current node
-    if (vertical_cylinder_aabb_intersect(&current_node->bounds, vertical_cylinder))
-    {
-        // If it's a leaf
-        if (current_node->is_leaf)
-        {
+    if (vertical_cylinder_aabb_intersect(&current_node->bounds, vertical_cylinder)) {
+        if (current_node->primitive_count != 0) {
             // Intersect all triangles attached to it
             rayhit_t sub_hit = { 0 };
             sub_hit.distance = 0;
-            for (int i = current_node->left_first; i < current_node->left_first + current_node->primitive_count; i++)
-            {
+            for (int i = current_node->left_first; i < current_node->left_first + current_node->primitive_count; i++) {
                 // If hit
                 if (vertical_cylinder_triangle_intersect(&self->primitives[self->indices[i]], vertical_cylinder, &sub_hit)) {
                     // If lowest distance
-                    if (sub_hit.distance < hit->distance && sub_hit.distance >= 0)
-                    {
+                    if (sub_hit.distance < hit->distance && sub_hit.distance >= 0) {
                         // Copy the hit info into the output hit for the BVH traversal
                         memcpy(hit, &sub_hit, sizeof(rayhit_t));
                         hit->type = RAY_HIT_TYPE_TRIANGLE;
@@ -238,7 +88,7 @@ void handle_node_intersection_vertical_cylinder(bvh_t* self, const bvh_node_t* c
         handle_node_intersection_vertical_cylinder(self, &self->nodes[current_node->left_first + 0], vertical_cylinder, hit, rec_depth + 1);
         handle_node_intersection_vertical_cylinder(self, &self->nodes[current_node->left_first + 1], vertical_cylinder, hit, rec_depth + 1);
     }
-}
+} 
 
 void bvh_intersect_ray(bvh_t* self, ray_t ray, rayhit_t* hit) {
     hit->distance = INT32_MAX;
@@ -281,13 +131,6 @@ void bvh_partition(const bvh_t* bvh, const axis_t axis, const scalar_t pivot, co
     *split_index = i;
 }
 
-void bvh_from_model(bvh_t* bvh, const collision_mesh_t* mesh) {
-    // Construct the BVH
-    const col_mesh_file_tri_t* primitives = (const col_mesh_file_tri_t*)mesh->verts;
-    const uint16_t n_primitives = mesh->n_verts / 3;
-    bvh_construct(bvh, primitives, n_primitives);
-}
-
 void debug_draw(const bvh_t* self, const bvh_node_t* node, const int min_depth, const int max_depth, const int curr_depth, const pixel32_t color) {
     transform_t trans = { {0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096} };
 
@@ -301,7 +144,7 @@ void debug_draw(const bvh_t* self, const bvh_node_t* node, const int min_depth, 
     }
 
     // If child nodes exist
-    if (node->is_leaf) {
+    if (node->primitive_count == 0) {
         return;
     }
 
@@ -831,4 +674,29 @@ int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere
     }
 
     return 0;
+}
+
+bvh_t bvh_from_file(const char* path, int on_stack, stack_t stack) {
+    // Load file
+    uint32_t* data = NULL;
+    size_t size;
+    file_read(path, &data, &size, on_stack, stack);
+
+    // Find data and return to user
+    collision_mesh_header_t* header = (collision_mesh_header_t*)data;
+    intptr_t binary = (intptr_t)(header + 1);
+
+    // Verify file magic
+    if (header->file_magic != MAGIC_FCOL) {
+        printf("[ERROR] Error loading collision mesh '%s', file header is invalid!\n", path);
+        return (bvh_t){};
+    }
+
+    return (bvh_t) {
+        .primitives = (collision_triangle_3d_t*)(binary + header->triangle_data_offset),
+        .indices = (uint16_t*)(binary + header->bvh_indices_offset),
+        .nodes = (bvh_node_t*)(binary + header->bvh_nodes_offset),
+        .root = (bvh_node_t*)(binary + header->bvh_nodes_offset),
+        .n_primitives = header->n_nodes,
+    };
 }

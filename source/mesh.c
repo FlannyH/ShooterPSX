@@ -151,33 +151,36 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
         .min = (vec3_t) {.x = INT32_MIN, .y = INT32_MIN, .z = INT32_MIN,},
     };
 
-    col_mesh_file_vert_t* in = (col_mesh_file_vert_t*)(col_mesh + 1);
+    intptr_t binary = (intptr_t)(col_mesh + 1);
+    collision_triangle_3d_t* tris = (collision_triangle_3d_t*)(binary + col_mesh->triangle_data_offset);
+    
     vertex_3d_t* out = model->meshes[0].vertices;
-    for (size_t i = 0; i < col_mesh->n_verts; i += 3) {
+    for (size_t i = 0; i < col_mesh->n_verts / 3; i += 1) {
         // Calculate normal
-        vec3_t a = { in[i + 0].x * 16, in[i + 0].y * 16, in[i + 0].z * 16 };
-        vec3_t b = { in[i + 1].x * 16, in[i + 1].y * 16, in[i + 1].z * 16 };
-        vec3_t c = { in[i + 2].x * 16, in[i + 2].y * 16, in[i + 2].z * 16 };
-        vec3_t ab = vec3_sub(b, a);
-        vec3_t ac = vec3_sub(c, a);
-        vec3_t normal = vec3_normalize(vec3_cross(ab, ac));
-        normal = vec3_add(normal, (vec3_t){ 4096, 4096, 4096 });
-        normal = vec3_div(normal, (vec3_t){ 8192, 8192, 8192 });
-        normal = vec3_min(normal, (vec3_t) { 4095, 4095, 4095 });
+        vec3_t normal = vec3_neg(tris[i].normal);
+        normal.x += 4096; normal.x *= 127; normal.x /= 8192;
+        normal.y += 4096; normal.y *= 127; normal.y /= 8192;
+        normal.z += 4096; normal.z *= 127; normal.z /= 8192;
 
         for (size_t j = 0; j < 3; ++j) {
-            out[i+j] = (vertex_3d_t){
-                .r = normal.x >> 4,
-                .g = normal.y >> 4,
-                .b = normal.z >> 4,
+            out[(i*3)+j] = (vertex_3d_t){
+                .r = normal.x,
+                .g = normal.y,
+                .b = normal.z,
                 .u = 0,
                 .v = 0,
-                .tex_id = 0,
-                .x = in[i+j].x,
-                .y = in[i+j].y,
-                .z = in[i+j].z,
+                .tex_id = 255,
             };
         }
+        out[(i*3)+0].x = tris[i].v0.x / COL_SCALE;
+        out[(i*3)+0].y = tris[i].v0.y / COL_SCALE;
+        out[(i*3)+0].z = tris[i].v0.z / COL_SCALE;
+        out[(i*3)+1].x = tris[i].v1.x / COL_SCALE;
+        out[(i*3)+1].y = tris[i].v1.y / COL_SCALE;
+        out[(i*3)+1].z = tris[i].v1.z / COL_SCALE;
+        out[(i*3)+2].x = tris[i].v2.x / COL_SCALE;
+        out[(i*3)+2].y = tris[i].v2.y / COL_SCALE;
+        out[(i*3)+2].z = tris[i].v2.z / COL_SCALE;
     }
 
     return model;
