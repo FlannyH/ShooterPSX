@@ -19,8 +19,6 @@ int sections[N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE];
 void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     WARN_IF("player radius squared was not computed, and is equal to 0", player_radius_squared == 0);
 
-    bvh_debug_draw(level_bvh, 0, 100, white);
-
     // Cast a cylinder from the player's feet + step height, down to the ground
     int32_t distance_to_check = 120000;
     rayhit_t hit = { 0 };
