@@ -11,13 +11,13 @@
 | u32 | path_vislist_offset   | Offset to string containing the path to the collision model file (.col) to load in this level    |
 | u32 | path_model_offset     | Offset to string containing the path to the level model file (.msh) to load in this level    |
 | u32 | path_model_lod_offset | Optional offset to string containing the path to the level model file (.msh) to load in this level. Set to 0 if not using LODs. |
+| u32 | entity_types_offset | Offset to the u8 array of entity types  |
+| u32 | entity_pool_offset | Offset to the entity pool, which contains all the entity data, ready to be copied into RAM as is | 
 | u32 | level_name_offset     | Offset to string containing display name of the level as shown in game to the player         |
 | i16[3] | player_spawn       | Where in the map the player spawns, in model space units                                     |
 | u16 | n_entities            | Number of predefined entities in this map                                                    |
 
 All offsets are relative to the start of the binary section, which is located right after the header.
-
-Entity data is stored right after the header, so its offset is always 0.
 
 ## Entity list entry
 | Type   | Name     | Description                                                       |
