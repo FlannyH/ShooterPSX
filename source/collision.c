@@ -139,8 +139,8 @@ void bvh_subdivide(bvh_t* bvh, bvh_node_t* node, const int recursion_depth) {
     uint16_t split_index = 0;
     bvh_partition(bvh, split_axis, split_pos, node->left_first, node->primitive_count, &split_index);
 
-    //If splitIndex and node count are the same, we've reached a dead end, so stop here
-    if (split_index == node->primitive_count)
+    //If splitIndex is at the end of the array, we've reached a dead end, so stop here
+    if (split_index == (node->left_first + node->primitive_count))
     {
         node->is_leaf = 1;
         return;
