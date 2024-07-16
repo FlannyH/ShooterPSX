@@ -88,12 +88,12 @@ The bit layout for this command is as follows:
 ```
 1000TTTT TTTTTTTT
 |   |
-|   Bits 11-0: Tempo
+|   Bits 11-0: Tempo (tick duration)
 Bits 15-12: Command code
 ```
 | Parameter | Raw range       | Unit range                     | Examples
 | --------- | --------------- | ------------------------------ | -------
-| Tempo     | 0 - 4095        | 0 sec - 0.0833 sec             | 120 BPM (48 PPQ) = 512, 60 BPM (48 PPQ) = 1024
+| Tempo (tick duration)     | 0 - 4095        | 0 sec - 0.0833 sec             | 120 BPM (48 PPQ) = 512, 60 BPM (48 PPQ) = 1024
 
 #### (\$A0 - \$BF) - Wait a Number of Ticks
 Wait a number of ticks between the previous command and the next command.
