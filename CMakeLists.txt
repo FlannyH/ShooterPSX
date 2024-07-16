@@ -24,7 +24,6 @@ if (DEFINED PSN00BSDK_TARGET)
         source/mesh.c 
         source/camera.c
         source/collision.c
-        source/fixed_point.c
         source/player.c
         source/memory.c
         source/vislist.c
@@ -60,7 +59,6 @@ elseif (DEFINED LEVEL_EDITOR_TARGET)
         source/mesh.c 
         source/camera.c
         source/collision.c
-        source/fixed_point.c
         source/player.c
         source/memory.c
         source/vislist.c
@@ -141,7 +139,6 @@ else()
         source/mesh.c 
         source/camera.c
         source/collision.c
-        source/fixed_point.c
         source/player.c
         source/memory.c
         source/vislist.c
