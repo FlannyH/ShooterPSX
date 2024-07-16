@@ -78,7 +78,12 @@ The channel's instrument is set to the instrument index operand's value. Any sub
 | Instrument Index | 0 - 255 | Instrument 0 to 255 | Instrument 0 = 0
 
 #### ($8x) - Set Tempo
-Sets the new tick length. This is a 12-bit value (0 - 4095). To get the tick length in microseconds, divide this value by 49152. This value was chosen to have zero error for common tempos, namely: 30, 32, 40, 48, 60, 64, 80, 96, 120, 128, 160, 192, 240, and 256 BPM, and less than 1% error in any tempo inbetween.
+Sets the new tick length. This is a 12-bit value (0 - 4095). To get the tick length in microseconds, divide this value by 49152. Let's break down why this number was chosen.
+
+Let's say we have a song sequence that is played at 120 BPM, with 48 pulses per quarter note (PPQ). PPQ values are commonly a multiple of 24 in MIDI files. At 120 BPM, each quarter note lasts 0.5 seconds, which means 2 quarter notes fit in one second. This means we have 96 ticks per second. Then, to make sure we can have tempos from 30 BPM all the way to 480 BPM without losing too much resolution or accuracy, the factor 512 was chosen. This way, the minimum tempo is 15 BPM at 48 PPQ, and while technically the upper limit would be 61440 BPM, you can keep within 1% of the desired BPM up to 1266 BPM.
+
+Since this value is a unit of length instead of tempo, this number can easily be converted to a value that's useful for hardware timers. For PS1, the raw value can be converted to be used with timer 2's "System Clock / 8"  mode by calculating `(value * 44100) / 512`, which can then directly be assigned to the timer target value.
+
 The bit layout for this command is as follows:
 ```
 1000TTTT TTTTTTTT
