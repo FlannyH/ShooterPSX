@@ -235,13 +235,14 @@ void music_tick(int delta_time) {
 
 		// Set tempo
 		else if ((command & 0xF0) == 0x80) {
-			// And then filter the command code out
-			tempo = ((command << 8) + (*sequence_pointer++)) & 0x0FFF; 
+			uint32_t value = (((uint32_t)command) << 8) + ((int32_t)(*sequence_pointer++)) & 0xFFF; // Raw value from song data
+			value = (value * 44100) / 512; // Convert from raw value to sysclock
+			TIMER_RELOAD(2) = (uint16_t)value;
 		}
 
 		// Wait a number of ticks
 		else if ((command >= 0xA0) && (command <= 0xBF)) {
-			wait_timer += lut_wait_times[command & 0x1F] * 6;
+			wait_timer += lut_wait_times[command & 0x1F];
 		}
 
 		// Set time signature, we ignore for now

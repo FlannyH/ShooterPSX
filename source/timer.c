@@ -3,16 +3,20 @@
 
 #include <stdio.h>
 
-static int timer0_count = 0;
-
-static void timer0_handler(void) {
-    music_tick(6);
-	timer0_count++;
+static void timer2_handler(void) {
+    music_tick(1);
 }
 
+
 void setup_timers() {
-	TIMER_CTRL(0) = 0x0160; // Dotclock input, repeated IRQ on overflow
+	TIMER_CTRL(2) = 
+		(2 << 8) | // Use "System Clock / 8" source
+		(1 << 4) | // Interrupt when hitting target value
+		(1 << 6) | // Repeat this interrupt every time the timer reaches target
+		(1 << 3);  // Reset counter to 0 after hitting target value
+	TIMER_RELOAD(2) = 22050;
+
 	EnterCriticalSection();
-	InterruptCallback(IRQ_TIMER0, &timer0_handler);
+	InterruptCallback(IRQ_TIMER2, &timer2_handler);
 	ExitCriticalSection();
 }
