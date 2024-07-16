@@ -2,6 +2,7 @@
 #define ENTITY_H
 #include "structs.h"
 #include "player.h"
+
 #include <stdint.h>
 #include <stdio.h>
 

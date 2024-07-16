@@ -1,7 +1,6 @@
 #ifndef DEBUG_LAYER_H
 #define DEBUG_LAYER_H
-#include "GLFW/glfw3.h"
-#include "../entity.h"
+#include <GLFW/glfw3.h>
 #include "../level.h"
 
 #ifdef __cplusplus

@@ -1,7 +1,8 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
-#include <stdint.h>
 #include "memory.h"
+
+#include <stdint.h>
 
 // Texture Collection file header
 #define MAGIC_FTXC 0x43585446

@@ -1,8 +1,10 @@
 #ifdef _PSX
 #include "input.h"
-#include "fixed_point.h"
-#include <psxapi.h>     // API header, has InitPAD() and StartPAD() defs
+
+#include <psxapi.h>
 #include <psxpad.h>
+
+#include "fixed_point.h"
 
 uint8_t pad_buff[2][34];
 uint16_t button_prev[2] = {0, 0};

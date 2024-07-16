@@ -1,23 +1,22 @@
 #include "debug_layer.h"
 
+#include <backends/imgui_impl_opengl3.h>
+#include <backends/imgui_impl_glfw.h>
 #include <GL/gl3w.h>
-#include "imgui.h"
-#include "imfilebrowser.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_opengl3.h"
-#include "ImGuizmo.h"
-#include <cmath>
-#include <vector>
-#include <string>
-#include <format>
 
-#include "../renderer.h"
-#include "../file.h"
-#include "../input.h"
 #include "../entity.h"
-#include "../entities/door.h"
-#include "../entities/crate.h"
+#include "imgui.h"
+
+#ifdef _LEVEL_EDITOR
+#include <ImGuizmo.h>
+#include <imfilebrowser.h>
 #include "../entities/pickup.h"
+#include "../entities/crate.h"
+#include "../entities/door.h"
+#include "../renderer.h"
+#include "../input.h"
+#include "../file.h"
+#endif
 
 static double dt_smooth = 0.0f;
 
@@ -36,7 +35,9 @@ void debug_layer_begin() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+#ifdef _LEVEL_EDITOR
     ImGuizmo::BeginFrame();
+#endif
 }
 
 void debug_layer_end() {

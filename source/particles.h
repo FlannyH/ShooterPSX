@@ -2,10 +2,10 @@
 #define PARTICLES_H
 
 #include "texture.h"
-#include "vec2.h"
-#include "vec3.h"
 #include "structs.h"
 #include "random.h"
+#include "vec3.h"
+#include "vec2.h"
 
 enum BlendMode
 {

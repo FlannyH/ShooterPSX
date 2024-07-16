@@ -223,7 +223,7 @@ void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms, const int 
     handle_drag(self, dt_ms);
     handle_jump(self);
     handle_movement(self, level_bvh, dt_ms);
-    //vec3_debug(self->position);
+    
     vec2_t vel_2d = {self->velocity.x, self->velocity.z};
     scalar_t speed_1d = vec2_magnitude(vel_2d);
     self->transform.position.x = -self->position.x * (4096 / COL_SCALE);

@@ -1,8 +1,20 @@
-#include <string.h>
-#include "main.h"
+#include "entities/pickup.h"
+#include "entities/crate.h"
+#include "entities/door.h"
+#include "fixed_point.h"
+#include "renderer.h"
+#include "texture.h"
+#include "cheats.h"
+#include "camera.h"
+#include "player.h"
+#include "memory.h"
+#include "entity.h"
+#include "random.h"
+#include "timer.h"
 #include "input.h"
 #include "music.h"
-#include "renderer.h"
+#include "text.h"
+#include "main.h"
 
 #ifdef _PSX
 #include <psxcd.h>
@@ -16,20 +28,7 @@
 #include "windows/debug_layer.h"
 #endif
 
-#include "cheats.h"
-#include "camera.h"
-#include "fixed_point.h"
-#include "player.h"
-
-#include "texture.h"
-#include "memory.h"
-#include "text.h"
-#include "timer.h"
-#include "entity.h"
-#include "random.h"
-#include "entities/door.h"
-#include "entities/pickup.h"
-#include "entities/crate.h"
+#include <string.h>
 
 int widescreen = 0;
 extern int vsync_enable;

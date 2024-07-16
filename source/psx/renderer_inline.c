@@ -1,6 +1,4 @@
 #include <psxgte.h>
-#include <psxgpu.h>
-#include <psxetc.h>
 #include <inline_c.h>
 
 static inline int frustrum_cull_aabb(const vec3_t min, const vec3_t max) {
@@ -24,7 +22,7 @@ static inline int frustrum_cull_aabb(const vec3_t min, const vec3_t max) {
     gte_stsxy3(&vertices[0].vx, &vertices[1].vx, &vertices[2].vx);
     gte_stsz3(&vertices[0].vz, &vertices[1].vz, &vertices[2].vz);
     // 3, 4, 5
-    gte_ldv3(&vertices[3].vx, &vertices[4].vx, &vertices[5].vx); // 3 4 5
+    gte_ldv3(&vertices[3].vx, &vertices[4].vx, &vertices[5].vx);
     gte_rtpt();
     gte_stsxy3(&vertices[3].vx, &vertices[4].vx, &vertices[5].vx);
     gte_stsz3(&vertices[3].vz, &vertices[4].vz, &vertices[5].vz);

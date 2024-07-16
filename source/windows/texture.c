@@ -1,9 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "texture.h"
+
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include "file.h"
-#include "texture.h"
 #include "memory.h"
 
 int vsync_enable = 2;

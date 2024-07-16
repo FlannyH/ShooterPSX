@@ -1,29 +1,20 @@
+#include "renderer.h"
+
+#include <cglm/affine.h>
+#include <cglm/types.h>
+#include <cglm/vec3.h>
+#include <cglm/cam.h>
+#include <GLFW/glfw3.h>
+#include <GL/gl3w.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
 #include "memory.h"
-#include "renderer.h"
-#include "debug_layer.h"
-#include <GL/gl3w.h>
-#include <cglm/affine.h>
-#include <cglm/cam.h>
-#include <GLFW/glfw3.h>
-
-
 #include "file.h"
-#include "texture.h"
-#include "GL/gl3w.h"
-#include "GL/glcorearb.h"
-#include <cglm/types.h>
-#include <cglm/vec3.h>
-#include <cglm/affine.h>
-
-#include "input.h"
-#include "vec3.h"
 #include "lut.h"
+
 #define PI 3.14159265358979f
 
 int n_sections;
@@ -432,7 +423,6 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 	camera_dir.y = -view_matrix_normal[2][1] * 4096.f;
 	camera_dir.z = -view_matrix_normal[2][2] * 4096.f;
 	memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
-	//vec3_debug(camera_dir);
 
 	n_total_triangles = 0;
 }
@@ -468,14 +458,12 @@ void renderer_draw_model_shaded(const model_t* model, const transform_t* model_t
         }
 
         // Render only the meshes that are visible
-		printf("rendering meshes: ");
         for (size_t i = 0; i < model->n_meshes; ++i) {
             if ((i < 32) && (combined.sections_0_31 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
             else if ((i >= 32) && (i < 64) && (combined.sections_32_63 & (1 << (i - 32)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
             else if ((i >= 64) && (i < 96) && (combined.sections_64_95 & (1 << (i - 64)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
             else if ((i >= 96) && (i < 128) && (combined.sections_96_127 & (1 << (i - 96)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
         }
-		printf("\n");
     }
 }
 

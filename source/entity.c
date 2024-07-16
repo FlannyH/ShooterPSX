@@ -1,9 +1,11 @@
 #include "entity.h"
-#include "mesh.h"
-#include "entities/door.h"
+
+#include <string.h>
+
 #include "entities/pickup.h"
 #include "entities/crate.h"
-#include <string.h>
+#include "entities/door.h"
+#include "mesh.h"
 
 entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
 uint8_t entity_types[ENTITY_LIST_LENGTH];

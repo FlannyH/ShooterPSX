@@ -10,14 +10,15 @@ extern "C" {
 #else
 #include "windows/psx.h"
 #endif
-#include <stdint.h>
-#include "mesh.h"
-// ReSharper disable once CppUnusedIncludeDirective
-#include "common.h"
-#include "texture.h"
-#include "vec2.h"
+
 #include "structs.h"
 #include "vislist.h"
+#include "texture.h"
+#include "common.h"
+#include "mesh.h"
+#include "vec2.h"
+
+#include <stdint.h>
     
 #define ORD_TBL_LENGTH 4096
 #define RES_X 384

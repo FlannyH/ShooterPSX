@@ -1,10 +1,8 @@
 #include "../renderer.h"
 #include "../input.h"
-#include "../memory.h"
 #include "../player.h"
 #include "../entity.h"
 #include "../level.h"
-#include "../entities/door.h"
 #include "../windows/debug_layer.h"
 #include "../windows/psx.h"
 
@@ -14,9 +12,8 @@ int main(void) {
 	entity_init();
     input_set_stick_deadzone(36);
     
-    //level_t level = level_load("\\ASSETS\\MODELS\\LEVEL.LVL;1");
-    level_t level = (level_t){0};
-    player_t player = (player_t){};
+    level_t level = (level_t){0}; // start with empty level
+    player_t player = (player_t){0};
     player.position.x = 11705653 / 2;
    	player.position.y = 11413985 / 2;
     player.position.z = 2112866  / 2;

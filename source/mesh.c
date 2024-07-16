@@ -1,10 +1,10 @@
-#include "mesh.h"
 #include "memory.h"
+#include "mesh.h"
+#include "file.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "file.h"
 
 model_t* model_load(const char* path, int on_stack, stack_t stack) {
     // Read the file

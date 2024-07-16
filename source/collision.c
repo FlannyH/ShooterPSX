@@ -1,11 +1,11 @@
 #include "collision.h"
-#include "memory.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-#include "mesh.h"
 #include "renderer.h"
+#include "memory.h"
+#include "mesh.h"
 #include "vec3.h"
 #include "vec2.h"
 
@@ -609,10 +609,11 @@ int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere
     const scalar_t radius_squared = scalar_mul(radius, radius);
 
     const vec3_t N = vec3_normalize(vec3_cross(vec3_sub(p1, p0), vec3_sub(p2, p0)));
-    //vec3_debug(N);
     const scalar_t dist = vec3_dot(vec3_sub(center, p0), N);
+
     if (dist > 0) return 0;
     if (dist < -radius || dist > radius) return 0;
+    
     const vec3_t point0 = vec3_sub(center, vec3_muls(N, dist));
     const vec3_t c0 = vec3_cross(vec3_sub(point0, p0), vec3_sub(p1, p0));
     const vec3_t c1 = vec3_cross(vec3_sub(point0, p1), vec3_sub(p2, p1));

@@ -1,7 +1,9 @@
 #include "level.h"
-#include "texture.h"
-#include "renderer.h"
+
 #include <entity.h>
+
+#include "renderer.h"
+#include "texture.h"
 
 extern uint8_t entity_types[ENTITY_LIST_LENGTH];
 extern uint8_t* entity_pool;

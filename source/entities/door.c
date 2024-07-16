@@ -1,6 +1,4 @@
 #include "door.h"
-#include <string.h>
-#include "../memory.h"
 #include "../vec3.h"
 #include "../renderer.h"
 
@@ -59,7 +57,6 @@ mesh_t* update_mesh(entity_door_t* door) {
 			}
 		}
 	}
-    printf("door mesh updated: %x\n", door->entity_header.mesh);
 	return mesh;
 }
 

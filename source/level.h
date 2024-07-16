@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 #include <stdint.h>
+
 #include "structs.h"
 #include "vislist.h"
 

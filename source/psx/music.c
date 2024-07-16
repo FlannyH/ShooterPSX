@@ -1,14 +1,14 @@
 #include "music.h"
+
 #include <stdio.h>
 #include <psxspu.h>
-#include <psxgpu.h>
-#include <psxgte.h>
 #include <string.h>
+
 #include "lut.h"
-#include "fixed_point.h"
 #include "vec2.h"
 #include "file.h"
 #include "memory.h"
+#include "fixed_point.h"
 
 // Channels
 spu_channel_t spu_channel[24];

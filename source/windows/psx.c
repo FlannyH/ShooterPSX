@@ -40,11 +40,6 @@ int icos(const int a) {
     return cosine;
 }
 
-/*
-int FntPrint(int id, const char* fmt, ...) {
-    return 0;
-}*/
-
 // ReSharper disable once CppInconsistentNaming
 char* FntFlush(int id) {
     return 0;

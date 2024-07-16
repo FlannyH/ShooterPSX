@@ -1,8 +1,8 @@
+#include "texture.h"
+
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "file.h"
-#include "texture.h"
 #include "memory.h"
 
 uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures, int on_stack, stack_t stack) { // returns number of textures loaded
