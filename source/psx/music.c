@@ -235,7 +235,7 @@ void music_tick(int delta_time) {
 
 		// Set tempo
 		else if ((command & 0xF0) == 0x80) {
-			uint32_t value = (((uint32_t)command) << 8) + ((int32_t)(*sequence_pointer++)) & 0xFFF; // Raw value from song data
+			uint32_t value = ((((uint32_t)command) << 8) + ((int32_t)(*sequence_pointer++))) & 0xFFF; // Raw value from song data
 			value = (value * 44100) / 512; // Convert from raw value to sysclock
 			TIMER_RELOAD(2) = (uint16_t)value;
 		}
