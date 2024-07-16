@@ -369,7 +369,7 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
                 renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
             }
 
-            bvh_from_model(&curr_level->collision_bvh, curr_level->collision_mesh);
+            curr_level->collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL);
         }
     }
     ImGui::End();
