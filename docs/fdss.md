@@ -28,7 +28,7 @@
 ### Meta Command overview
 | Command Code  | Description            | Operands                                                  | Example / Notes
 | ------------- | ---------------------- | --------------------------------------------------------- | ------------------------------------
-| \$8x          | Set Tempo              | tempo (u12) | \$83 \$C0: Set tempo to 0x3C0 (960, or 120 BPM). See detailed description for explanation of u12
+| \$8x          | Set Tempo              | tempo (u12) | \$83 \$C0: Set tick length. To convert this value to microseconds per tick, divide it by 49152.
 | \$9x          | Reserved               |
 | \$A0 - $BF    | Wait a number of ticks | (none) | Actual number of ticks to wait is fetched from a look-up table, see detailed description.
 | \$Bx          | Reserved               |
@@ -78,7 +78,7 @@ The channel's instrument is set to the instrument index operand's value. Any sub
 | Instrument Index | 0 - 255 | Instrument 0 to 255 | Instrument 0 = 0
 
 #### ($8x) - Set Tempo
-Set the tempo to a new value in beats per minute. This is a 12 bit unsigned integer, calculated using this formula: `new_tempo_bpm = (((command << 8) + operand) & 0x0FFF) / 8`. 
+Sets the new tick length. This is a 12-bit value (0 - 4095). To get the tick length in microseconds, divide this value by 49152. This value was chosen to have zero error for common tempos, namely: 30, 32, 40, 48, 60, 64, 80, 96, 120, 128, 160, 192, 240, and 256 BPM, and less than 1% error in any tempo inbetween.
 The bit layout for this command is as follows:
 ```
 1000TTTT TTTTTTTT
@@ -88,7 +88,7 @@ Bits 15-12: Command code
 ```
 | Parameter | Raw range       | Unit range                     | Examples
 | --------- | --------------- | ------------------------------ | -------
-| Tempo     | 0 - 4095        | 0.0 BPM - 511.875 BPM          | 120 BPM = 960
+| Tempo     | 0 - 4095        | 0 sec - 0.0833 sec             | 120 BPM (48 PPQ) = 512, 60 BPM (48 PPQ) = 1024
 
 #### (\$A0 - \$BF) - Wait a Number of Ticks
 Wait a number of ticks between the previous command and the next command.
