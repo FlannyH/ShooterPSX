@@ -111,7 +111,7 @@ typedef struct {
 typedef struct {
     svec3_t position;
     uint16_t neighbor_ids[4];
-} navmesh_node_t;
+} nav_node_t;
 
 typedef struct {
     collision_triangle_3d_t* primitives;
@@ -120,7 +120,7 @@ typedef struct {
         bvh_node_t* nodes;
         bvh_node_t* root;
     };
-    navmesh_node_t* navmesh_nodes;
+    nav_node_t* nav_graph_nodes;
     uint16_t n_primitives;
     uint16_t node_pointer;
 } level_collision_t;
@@ -161,7 +161,7 @@ typedef struct {
     uint32_t terrain_id_offset; // Offset to array of 8 bit terrain IDs for each triangle
     uint32_t bvh_nodes_offset; // Offset to the precalculated BVH's node pool 
     uint32_t bvh_indices_offset; // Offset to the precalculated BVH's index array 
-    uint32_t navmesh_offset; // Offset to the precalculated navigation mesh for the enemies 
+    uint32_t nav_graph_offset; // Offset to the precalculated navigation graph for the enemies 
 } collision_mesh_header_t;
 
 typedef struct {
