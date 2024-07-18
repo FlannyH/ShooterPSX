@@ -33,6 +33,7 @@ if (DEFINED PSN00BSDK_TARGET)
         source/entities/door.c
         source/entities/pickup.c
         source/entities/crate.c
+        source/entities/chaser.c
     )
 
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall -Wno-unused-function")
@@ -67,6 +68,7 @@ elseif (DEFINED LEVEL_EDITOR_TARGET)
         source/entities/door.c
         source/entities/pickup.c
         source/entities/crate.c
+        source/entities/chaser.c
         source/windows/psx.c
         source/windows/debug_layer.cpp
         external/source/GL/gl3w.c
@@ -147,6 +149,7 @@ else()
         source/entities/door.c
         source/entities/pickup.c
         source/entities/crate.c
+        source/entities/chaser.c
         source/windows/psx.c
         source/windows/debug_layer.cpp
         external/source/GL/gl3w.c

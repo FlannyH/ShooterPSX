@@ -25,6 +25,7 @@ void entity_update_all(player_t* player, int dt) {
 			case ENTITY_DOOR: entity_door_update(i, player, dt); break;
 			case ENTITY_PICKUP: entity_pickup_update(i, player, dt); break;
 			case ENTITY_CRATE: entity_crate_update(i, player, dt); break;
+			case ENTITY_CHASER: entity_chaser_update(i, player, dt); break;
 		}
 	}
 }
@@ -111,6 +112,7 @@ const char* entity_names[] = {
 	"ENTITY_DOOR",
 	"ENTITY_PICKUP",
 	"ENTITY_CRATE",
+	"ENTITY_CHASER",
 	NULL
 };
 

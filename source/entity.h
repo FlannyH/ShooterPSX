@@ -18,6 +18,7 @@ typedef enum {
 	ENTITY_DOOR,
 	ENTITY_PICKUP,
 	ENTITY_CRATE,
+	ENTITY_CHASER
 } entity_type_t; // typically represented by a uint8_t
 
 typedef enum {
