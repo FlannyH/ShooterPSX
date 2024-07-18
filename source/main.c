@@ -74,7 +74,7 @@ typedef struct {
 		model_t* m_weapons;
 		collision_mesh_t* m_level_col;
 		vislist_t v_level;
-    	bvh_t bvh_level_model;
+    	level_collision_t bvh_level_model;
 		player_t player;
 		scalar_t gun_animation_timer;
 		scalar_t gun_animation_timer_sqrt;
