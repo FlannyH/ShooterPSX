@@ -690,7 +690,7 @@ level_collision_t bvh_from_file(const char* path, int on_stack, stack_t stack) {
     // Verify file magic
     if (header->file_magic != MAGIC_FCOL) {
         printf("[ERROR] Error loading collision mesh '%s', file header is invalid!\n", path);
-        return (level_collision_t){};
+        return (level_collision_t){0};
     }
 
     return (level_collision_t) {
@@ -698,6 +698,7 @@ level_collision_t bvh_from_file(const char* path, int on_stack, stack_t stack) {
         .indices = (uint16_t*)(binary + header->bvh_indices_offset),
         .nodes = (bvh_node_t*)(binary + header->bvh_nodes_offset),
         .root = (bvh_node_t*)(binary + header->bvh_nodes_offset),
+        .navmesh_nodes = (navmesh_node_t*)(binary + header->navmesh_offset),
         .n_primitives = header->n_nodes,
     };
 }

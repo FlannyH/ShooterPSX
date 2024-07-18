@@ -109,12 +109,18 @@ typedef struct {
 } model_t;
 
 typedef struct {
+    svec3_t position;
+    uint16_t neighbor_ids[4];
+} navmesh_node_t;
+
+typedef struct {
     collision_triangle_3d_t* primitives;
     uint16_t* indices;
     union {
         bvh_node_t* nodes;
         bvh_node_t* root;
     };
+    navmesh_node_t* navmesh_nodes;
     uint16_t n_primitives;
     uint16_t node_pointer;
 } level_collision_t;
