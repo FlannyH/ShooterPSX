@@ -35,7 +35,7 @@ The first node in the BVH node pool is always the root.
 ### Header
 | Type          | Name        | Description                |
 | ------------- | ----------- | -------------------------- |
-| u32           | n_nav_nodes | Number of navigation nodes |
+| u16           | n_nav_nodes | Number of navigation nodes |
 | nav_node_t[n] | nodes       | All navigation graph nodes |
 
 ### Node
