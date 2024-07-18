@@ -111,8 +111,10 @@ typedef struct {
 typedef struct {
     collision_triangle_3d_t* primitives;
     uint16_t* indices;
-    bvh_node_t* nodes;
-    bvh_node_t* root;
+    union {
+        bvh_node_t* nodes;
+        bvh_node_t* root;
+    };
     uint16_t n_primitives;
     uint16_t node_pointer;
 } level_collision_t;
