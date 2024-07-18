@@ -7,9 +7,15 @@ rem levels
 tools\obj2psx.exe  --input ./assets_to_build/models/level.obj --output ./assets/models/level --split
 tools\obj2psx.exe  --input ./assets_to_build/models/level_col.obj --collision --output ./assets/models/level
 tools\psx_vislist_generator.exe ./assets/models/level.msh ./assets/models/level.col ./assets/models/level.vis
-tools\psx_vislist_generator.exe ./assets/models/test.msh ./assets/models/test.col ./assets/models/test.vis
+
+tools\obj2psx.exe  --input ./assets_to_build/models/level2.obj --output ./assets/models/level2
+tools\obj2psx.exe  --input ./assets_to_build/models/level2_col.obj --collision --output ./assets/models/level2
+tools\psx_vislist_generator.exe ./assets/models/level2.msh ./assets/models/level2.col ./assets/models/level2.vis
+
 tools\obj2psx.exe  --input ./assets_to_build/models/test.obj --output ./assets/models/test
 tools\obj2psx.exe  --input ./assets_to_build/models/test_col.obj --collision --output ./assets/models/test
+tools\psx_vislist_generator.exe ./assets/models/test.msh ./assets/models/test.col ./assets/models/test.vis
+
 rem entities
 tools\obj2psx.exe  --input ./assets_to_build/models/entity.obj --output ./assets/models/entity
 tools\obj2psx.exe  --input ./assets_to_build/models/weapons.obj --output ./assets/models/weapons
