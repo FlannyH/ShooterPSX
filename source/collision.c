@@ -157,6 +157,26 @@ void bvh_debug_draw(const level_collision_t* bvh, const int min_depth, const int
     debug_draw(bvh, bvh->root, min_depth, max_depth, 0, color);
 }
 
+void bvh_debug_draw_nav_graph(const level_collision_t* bvh) {
+    for (size_t i = 0; i < bvh->n_nav_graph_nodes; ++i) {
+        svec3_t s_pos1 = bvh->nav_graph_nodes[i].position;
+        s_pos1.y += 2;
+        const vec3_t pos1 = vec3_from_svec3(s_pos1);
+        const nav_node_t* node = &bvh->nav_graph_nodes[i];
+
+        for (size_t j = 0; j < 4; ++j) {
+            const uint16_t id_neighbor = bvh->nav_graph_nodes[i].neighbor_ids[j];
+            
+            if (id_neighbor == 0xFFFF) break;
+
+            svec3_t s_pos2 = bvh->nav_graph_nodes[id_neighbor].position;
+            s_pos2.y += 2;
+            const vec3_t pos2 = vec3_from_svec3(s_pos2);
+            renderer_debug_draw_line(pos1, pos2, red, &id_transform);
+        }
+    }
+}
+
 int point_aabb_intersect(const aabb_t* aabb, vec3_t point) {
     return (point.x >= aabb->min.x)
     &&     (point.y >= aabb->min.y)

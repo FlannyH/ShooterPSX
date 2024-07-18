@@ -18,6 +18,7 @@ void bvh_partition(const level_collision_t* bvh, axis_t axis, scalar_t pivot, ui
 void bvh_from_mesh(level_collision_t* bvh, const mesh_t* mesh);
 void bvh_from_model(level_collision_t* bvh, const collision_mesh_t* mesh);
 void bvh_debug_draw(const level_collision_t* bvh, int min_depth, int max_depth, pixel32_t color);
+void bvh_debug_draw_nav_graph(const level_collision_t* bvh);
 
 // BVH intersection
 void bvh_intersect_ray(level_collision_t* self, ray_t ray, rayhit_t* hit);

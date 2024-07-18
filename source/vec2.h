@@ -6,6 +6,10 @@ typedef struct {
     fixed20_12_t x, y;
 } vec2_t;
 
+typedef struct {
+    int16_t x, y; // 2D position
+} svec2_t;
+
 static vec2_t vec2_from_scalar(const scalar_t a) {
     const vec2_t result = { a, a };
     return result;

@@ -7,6 +7,10 @@ typedef struct {
     fixed20_12_t x, y, z;
 } vec3_t;
 
+typedef struct {
+    int16_t x, y, z; // 3D position
+} svec3_t;
+
 // Let's hope and cry that this will be compile-time evaluated
 ALWAYS_INLINE vec3_t vec3_from_floats(const float x, const float y, const float z) {
     vec3_t result;
@@ -41,6 +45,14 @@ ALWAYS_INLINE vec3_t vec3_from_int32s(int32_t x, int32_t y, int32_t z) {
     result.x = x;
     result.y = y;
     result.z = z;
+    return result;
+}
+
+ALWAYS_INLINE vec3_t vec3_from_svec3(svec3_t vec) {
+    vec3_t result;
+    result.x = vec.x * ONE;
+    result.y = vec.y * ONE;
+    result.z = vec.z * ONE;
     return result;
 }
 

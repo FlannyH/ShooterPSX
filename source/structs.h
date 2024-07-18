@@ -66,14 +66,6 @@ typedef struct {
 } collision_triangle_3d_t;
 
 typedef struct {
-    int16_t x, y, z; // 3D position
-} svec3_t;
-
-typedef struct {
-    int16_t x, y; // 2D position
-} svec2_t;
-
-typedef struct {
     uint16_t n_triangles;
     uint16_t n_quads;
     vertex_3d_t* vertices;
