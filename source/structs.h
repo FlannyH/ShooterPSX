@@ -122,7 +122,6 @@ typedef struct {
     };
     nav_node_t* nav_graph_nodes;
     uint16_t n_primitives;
-    uint16_t node_pointer;
 } level_collision_t;
 
 typedef enum {
