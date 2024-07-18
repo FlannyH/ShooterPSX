@@ -9,19 +9,19 @@
 #define COL_SCALE 512 // 4096 = 1.0, 512 = 0.125. Need lower scale for less overflows
 
 // BVH construction
-bvh_t bvh_from_file(const char* path, int on_stack, stack_t stack);
-aabb_t bvh_get_bounds(const bvh_t* bvh, uint16_t first, uint16_t count);
-void bvh_construct(bvh_t* bvh, const col_mesh_file_tri_t* primitives, const uint16_t n_primitives);
-void bvh_subdivide(bvh_t* bvh, bvh_node_t* node, int recursion_depth);
+level_collision_t bvh_from_file(const char* path, int on_stack, stack_t stack);
+aabb_t bvh_get_bounds(const level_collision_t* bvh, uint16_t first, uint16_t count);
+void bvh_construct(level_collision_t* bvh, const col_mesh_file_tri_t* primitives, const uint16_t n_primitives);
+void bvh_subdivide(level_collision_t* bvh, bvh_node_t* node, int recursion_depth);
 void bvh_swap_primitives(uint16_t* a, uint16_t* b);
-void bvh_partition(const bvh_t* bvh, axis_t axis, scalar_t pivot, uint16_t start, uint16_t count, uint16_t* split_index);
-void bvh_from_mesh(bvh_t* bvh, const mesh_t* mesh);
-void bvh_from_model(bvh_t* bvh, const collision_mesh_t* mesh);
-void bvh_debug_draw(const bvh_t* bvh, int min_depth, int max_depth, pixel32_t color);
+void bvh_partition(const level_collision_t* bvh, axis_t axis, scalar_t pivot, uint16_t start, uint16_t count, uint16_t* split_index);
+void bvh_from_mesh(level_collision_t* bvh, const mesh_t* mesh);
+void bvh_from_model(level_collision_t* bvh, const collision_mesh_t* mesh);
+void bvh_debug_draw(const level_collision_t* bvh, int min_depth, int max_depth, pixel32_t color);
 
 // BVH intersection
-void bvh_intersect_ray(bvh_t* self, ray_t ray, rayhit_t* hit);
-void bvh_intersect_vertical_cylinder(bvh_t* bvh, vertical_cylinder_t ray, rayhit_t* hit);
+void bvh_intersect_ray(level_collision_t* self, ray_t ray, rayhit_t* hit);
+void bvh_intersect_vertical_cylinder(level_collision_t* bvh, vertical_cylinder_t ray, rayhit_t* hit);
 
 // Primitive intersection
 int point_aabb_intersect(const aabb_t* aabb, vec3_t point);

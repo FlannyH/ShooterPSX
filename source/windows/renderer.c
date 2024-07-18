@@ -603,7 +603,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     glDrawArrays(GL_LINES, 0, 2);
 }
 
-void renderer_debug_draw_bvh_triangles(const bvh_t* box, const pixel32_t color, const transform_t* model_transform) {
+void renderer_debug_draw_bvh_triangles(const level_collision_t* box, const pixel32_t color, const transform_t* model_transform) {
     for (size_t i = 0; i < box->n_primitives; ++i) {
         const collision_triangle_3d_t* tri = &box->primitives[i];
         renderer_debug_draw_line(tri->v0, tri->v1, color, model_transform);

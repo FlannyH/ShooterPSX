@@ -33,7 +33,7 @@ typedef struct {
     collision_mesh_t* collision_mesh;
     transform_t transform;
     vislist_t vislist;
-    bvh_t collision_bvh;
+    level_collision_t collision_bvh;
     // todo: add other fields as specified in FLVL documentation
 } level_t;                                 
 

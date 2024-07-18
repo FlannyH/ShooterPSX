@@ -14,7 +14,7 @@ int n_ray_triangle_intersects = 0;
 int n_vertical_cylinder_aabb_intersects = 0;
 int n_vertical_cylinder_triangle_intersects = 0;
 
-aabb_t bvh_get_bounds(const bvh_t* bvh, const uint16_t first, const uint16_t count)
+aabb_t bvh_get_bounds(const level_collision_t* bvh, const uint16_t first, const uint16_t count)
 {
     aabb_t result;
     result.max = vec3_from_int32s(INT32_MIN, INT32_MIN, INT32_MIN);
@@ -29,7 +29,7 @@ aabb_t bvh_get_bounds(const bvh_t* bvh, const uint16_t first, const uint16_t cou
     return result;
 }
 
-void handle_node_intersection_ray(bvh_t* self, const bvh_node_t* current_node, const ray_t ray, rayhit_t* hit, const int rec_depth) {
+void handle_node_intersection_ray(level_collision_t* self, const bvh_node_t* current_node, const ray_t ray, rayhit_t* hit, const int rec_depth) {
     // Intersect current node
     if (ray_aabb_intersect(&current_node->bounds, ray))
     {
@@ -62,7 +62,7 @@ void handle_node_intersection_ray(bvh_t* self, const bvh_node_t* current_node, c
     }
 }
 
-void handle_node_intersection_vertical_cylinder(bvh_t* self, const bvh_node_t* current_node, const vertical_cylinder_t vertical_cylinder, rayhit_t* hit, const int rec_depth) {
+void handle_node_intersection_vertical_cylinder(level_collision_t* self, const bvh_node_t* current_node, const vertical_cylinder_t vertical_cylinder, rayhit_t* hit, const int rec_depth) {
     // Intersect current node
     if (vertical_cylinder_aabb_intersect(&current_node->bounds, vertical_cylinder)) {
         if (current_node->primitive_count != 0) {
@@ -90,12 +90,12 @@ void handle_node_intersection_vertical_cylinder(bvh_t* self, const bvh_node_t* c
     }
 } 
 
-void bvh_intersect_ray(bvh_t* self, ray_t ray, rayhit_t* hit) {
+void bvh_intersect_ray(level_collision_t* self, ray_t ray, rayhit_t* hit) {
     hit->distance = INT32_MAX;
     handle_node_intersection_ray(self, self->root, ray, hit, 0);
 }
 
-void bvh_intersect_vertical_cylinder(bvh_t* bvh, vertical_cylinder_t cyl, rayhit_t* hit) {
+void bvh_intersect_vertical_cylinder(level_collision_t* bvh, vertical_cylinder_t cyl, rayhit_t* hit) {
     hit->distance = INT32_MAX;
     handle_node_intersection_vertical_cylinder(bvh, bvh->root, cyl, hit, 0);
 }
@@ -106,7 +106,7 @@ void bvh_swap_primitives(uint16_t* a, uint16_t* b) {
     *b = tmp;
 }
 
-void bvh_partition(const bvh_t* bvh, const axis_t axis, const scalar_t pivot, const uint16_t start, const uint16_t count, uint16_t* split_index) {
+void bvh_partition(const level_collision_t* bvh, const axis_t axis, const scalar_t pivot, const uint16_t start, const uint16_t count, uint16_t* split_index) {
     int i = start;
     for (int j = start; j < start + count; j++)
     {
@@ -131,7 +131,7 @@ void bvh_partition(const bvh_t* bvh, const axis_t axis, const scalar_t pivot, co
     *split_index = i;
 }
 
-void debug_draw(const bvh_t* self, const bvh_node_t* node, const int min_depth, const int max_depth, const int curr_depth, const pixel32_t color) {
+void debug_draw(const level_collision_t* self, const bvh_node_t* node, const int min_depth, const int max_depth, const int curr_depth, const pixel32_t color) {
     transform_t trans = { {0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096} };
 
     // Draw box of this node - only if within the depth bounds
@@ -153,7 +153,7 @@ void debug_draw(const bvh_t* self, const bvh_node_t* node, const int min_depth, 
     debug_draw(self, &self->nodes[node->left_first + 1], min_depth, max_depth, curr_depth + 1, color);
 }
 
-void bvh_debug_draw(const bvh_t* bvh, const int min_depth, const int max_depth, const pixel32_t color) {
+void bvh_debug_draw(const level_collision_t* bvh, const int min_depth, const int max_depth, const pixel32_t color) {
     debug_draw(bvh, bvh->root, min_depth, max_depth, 0, color);
 }
 
@@ -677,7 +677,7 @@ int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere
     return 0;
 }
 
-bvh_t bvh_from_file(const char* path, int on_stack, stack_t stack) {
+level_collision_t bvh_from_file(const char* path, int on_stack, stack_t stack) {
     // Load file
     uint32_t* data = NULL;
     size_t size;
@@ -690,10 +690,10 @@ bvh_t bvh_from_file(const char* path, int on_stack, stack_t stack) {
     // Verify file magic
     if (header->file_magic != MAGIC_FCOL) {
         printf("[ERROR] Error loading collision mesh '%s', file header is invalid!\n", path);
-        return (bvh_t){};
+        return (level_collision_t){};
     }
 
-    return (bvh_t) {
+    return (level_collision_t) {
         .primitives = (collision_triangle_3d_t*)(binary + header->triangle_data_offset),
         .indices = (uint16_t*)(binary + header->bvh_indices_offset),
         .nodes = (bvh_node_t*)(binary + header->bvh_nodes_offset),

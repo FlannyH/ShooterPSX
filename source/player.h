@@ -35,6 +35,6 @@ const static int32_t walking_drag = 32 / 8;
 const static int32_t initial_jump_velocity = 8000 / 8;
 const static int32_t jump_ground_threshold = 16000 / 8;
 
-void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms, const int time_counter);
+void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms, const int time_counter);
 int player_get_level_section(player_t* self, const vislist_t vis);
 #endif // PLAYER_H

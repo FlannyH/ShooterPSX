@@ -115,7 +115,7 @@ typedef struct {
     bvh_node_t* root;
     uint16_t n_primitives;
     uint16_t node_pointer;
-} bvh_t;
+} level_collision_t;
 
 typedef enum {
     none,

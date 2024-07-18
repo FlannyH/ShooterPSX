@@ -16,7 +16,7 @@ int32_t is_grounded = 0;
 int n_sections;
 int sections[N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE];
 
-void check_ground_collision(player_t* self, bvh_t* level_bvh, const int dt_ms) {
+void check_ground_collision(player_t* self, level_collision_t* level_bvh, const int dt_ms) {
     WARN_IF("player radius squared was not computed, and is equal to 0", player_radius_squared == 0);
 
     // Cast a cylinder from the player's feet + step height, down to the ground
@@ -155,7 +155,7 @@ void handle_jump(player_t* self) {
     }
 }
 
-void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
+void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_ms) {
     // Move the player, ask questions later
     self->position.x += self->velocity.x * dt_ms;
     self->position.z += self->velocity.z * dt_ms;
@@ -209,7 +209,7 @@ void handle_movement(player_t* self, bvh_t* level_bvh, const int dt_ms) {
     self->position.y += self->velocity.y * dt_ms;
 }
 
-void player_update(player_t* self, bvh_t* level_bvh, const int dt_ms, const int time_counter) {
+void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms, const int time_counter) {
     if (player_radius_squared == 0) {
         const scalar_t player_radius_scalar = player_radius;
         player_radius_squared = scalar_mul(player_radius_scalar, player_radius_scalar);
