@@ -15,9 +15,46 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 	entity_chaser_t* chaser = (entity_chaser_t*)&entity_pool[slot * entity_pool_stride];
 	vec3_t chaser_pos = chaser->entity_header.position;
 
-	// todo: switch meshes to make animation
-	// todo: register body hitbox
-	// todo: register head hitbox
+	// Register hitboxes
+	aabb_t bounds_body = (aabb_t){
+		.min = (vec3_t){
+			chaser_pos.x - (-69 * COL_SCALE), 
+			chaser_pos.y - (-230 * COL_SCALE), 
+			chaser_pos.z - (-69 * COL_SCALE )},
+		.max = (vec3_t){ 
+			chaser_pos.x - (69 * COL_SCALE), 
+			chaser_pos.y - (0 * COL_SCALE), 
+			chaser_pos.z - (69 * COL_SCALE)
+		},
+	};
+	aabb_t bounds_head = (aabb_t){
+		.min = (vec3_t){
+			chaser_pos.x - (-35 * COL_SCALE), 
+			chaser_pos.y - (-340 * COL_SCALE), 
+			chaser_pos.z - (-35 * COL_SCALE )},
+		.max = (vec3_t){ 
+			chaser_pos.x - (25 * COL_SCALE), 
+			chaser_pos.y - (-230 * COL_SCALE), 
+			chaser_pos.z - (35 * COL_SCALE)
+		},
+	};
+	entity_collision_box_t box_body = {
+		.aabb = bounds_body,
+		.box_index = 0,
+		.entity_index = slot,
+		.is_solid = 0,
+		.is_trigger = 0,
+	};
+	entity_collision_box_t box_head = {
+		.aabb = bounds_head,
+		.box_index = 1,
+		.entity_index = slot,
+		.is_solid = 0,
+		.is_trigger = 0,
+	};
+	entity_register_collision_box(&box_body);
+	entity_register_collision_box(&box_head);
+
 	// todo: implement behaviour
 	
 	// Render
@@ -38,6 +75,12 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 }
 
 void entity_chaser_on_hit(int slot, int hitbox_index) {
-	// todo: handle body hits
-	// todo: handle head hits
+	if (hitbox_index == 0) {
+		// todo: handle body hits
+		printf("hit enemy body\n");
+	}
+	if (hitbox_index == 1) {
+		// todo: handle head hits
+		printf("hit enemy head\n");
+	}
 }
