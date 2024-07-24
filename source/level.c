@@ -1,6 +1,7 @@
 #include "level.h"
 
 #include <entity.h>
+#include <string.h>
 
 #include "renderer.h"
 #include "texture.h"

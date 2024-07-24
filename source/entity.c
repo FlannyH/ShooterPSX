@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "entities/pickup.h"
+#include "entities/chaser.h"
 #include "entities/crate.h"
 #include "entities/door.h"
 #include "mesh.h"
