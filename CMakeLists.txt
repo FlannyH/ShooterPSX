@@ -36,7 +36,8 @@ if (DEFINED PSN00BSDK_TARGET)
         source/entities/chaser.c
     )
 
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall -Wno-unused-function")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall -Wno-unused-function -fanalyzer")
+    target_compile_options(main PRIVATE -fanalyzer)
 
     psn00bsdk_add_cd_image(
         iso      # Target name
