@@ -20,6 +20,7 @@ if (DEFINED PSN00BSDK_TARGET) # PS1 (game)
         source/psx/renderer.c 
         source/psx/music.c
         source/psx/texture.c
+        source/psx/timer.c
         source/main.c 
         source/mesh.c 
         source/camera.c
@@ -28,7 +29,6 @@ if (DEFINED PSN00BSDK_TARGET) # PS1 (game)
         source/memory.c
         source/vislist.c
         source/entity.c
-        source/timer.c
         source/level.c
         source/entities/door.c
         source/entities/pickup.c
@@ -48,6 +48,7 @@ elseif (DEFINED NDS_TARGET) # Nintendo DS (game)
     set(CMAKE_CXX_STANDARD 20)
 
     project ("ShooterNDS")
+    add_compile_definitions(_NDS)
     include_directories(source/)
     add_executable (ShooterNDS
         # source/nds/file.c 
@@ -55,6 +56,7 @@ elseif (DEFINED NDS_TARGET) # Nintendo DS (game)
         # source/nds/renderer.c 
         # source/nds/music.c
         # source/nds/texture.c
+        source/nds/psx.c
         source/main.c 
         source/mesh.c 
         source/camera.c
@@ -63,7 +65,6 @@ elseif (DEFINED NDS_TARGET) # Nintendo DS (game)
         source/memory.c
         source/vislist.c
         source/entity.c
-        source/timer.c
         source/level.c
         source/entities/door.c
         source/entities/pickup.c
