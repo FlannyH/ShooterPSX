@@ -24,7 +24,7 @@ ALWAYS_INLINE void print_fixed_point(scalar_t a) {
     const int n_fractional_bits = 12;
     const int32_t integer = a >> n_fractional_bits;   
     const int32_t fractional = a & ((1 << n_fractional_bits) - 1);
-    printf("%i.%03i", integer, (fractional * 1000) / (1 << n_fractional_bits));
+    printf("%li.%03li", integer, (fractional * 1000) / (1 << n_fractional_bits));
 }
 
 ALWAYS_INLINE void scalar_debug(const scalar_t a) {
