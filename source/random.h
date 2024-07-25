@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#ifdef random
+#undef random
+#endif
+
 static uint32_t random_state = 0x26082023;
 static uint32_t random() {
     random_state ^= random_state << 13;
