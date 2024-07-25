@@ -24,7 +24,7 @@
 #include <psxspu.h>
 #include <psxpad.h>
 
-#else
+#elif defined(_WINDOWS)
 #include "windows/psx.h"
 #include "windows/debug_layer.h"
 #endif
@@ -161,7 +161,7 @@ int main(void) {
 			case STATE_PAUSE_MENU:		state_update_pause_menu(delta_time);	break;
 		}
 	}
-#ifndef _PSX
+#ifdef _WINDOWS
 	debug_layer_close();
 #endif
     return 0;
