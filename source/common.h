@@ -3,9 +3,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifndef _NDS
 //#define PAL
 //#define DEBUG_CAMERA
 #define _DEBUG
+#endif
 
 #ifdef _WIN32
 #define ALWAYS_INLINE inline
