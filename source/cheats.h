@@ -1,8 +1,11 @@
 #ifndef CHEATS_H
 #define CHEATS_H
 #include <stdint.h>
+
 #ifdef _PSX
 #include <psxpad.h>
+#elif defined(_NDS)
+#include "nds/psx.h"
 #else
 #include "windows/psx.h"
 #endif

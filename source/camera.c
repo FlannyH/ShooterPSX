@@ -3,6 +3,8 @@
 #ifdef _PSX
 #include <psxgte.h>
 #include <psxpad.h>
+#elif defined(_NDS)
+#include "nds/psx.h"
 #else
 #include "windows/psx.h"
 #endif
