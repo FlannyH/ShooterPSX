@@ -5,6 +5,7 @@
 
 #include "renderer.h"
 #include "memory.h"
+#include "file.h"
 #include "mesh.h"
 #include "vec3.h"
 #include "vec2.h"
