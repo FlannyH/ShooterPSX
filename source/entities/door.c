@@ -15,6 +15,7 @@ entity_door_t* entity_door_new() {
 	entity->is_big_door = 0;
 	entity->is_rotated = 0;
 	entity->open_offset = (vec3_t){0, 64 * ONE, 0};
+	entity->entity_header.mesh = NULL;
 
 	return entity;
 }
