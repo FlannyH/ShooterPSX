@@ -81,7 +81,7 @@ void entity_defragment() {
 
 		// swap *end and *start
 		{
-			auto temp = entity_types[start];
+			uint8_t temp = entity_types[start];
 			entity_types[start] = entity_types[end];
 			entity_types[end] = temp;
 		}
