@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.21)
 
-if (DEFINED PSN00BSDK_TARGET)
+if (DEFINED PSN00BSDK_TARGET) # PS1 (game)
     project(
         PSn00bSDK-template
         LANGUAGES    C CXX ASM
@@ -44,7 +44,35 @@ if (DEFINED PSN00BSDK_TARGET)
         iso.xml  # Path to config file
         DEPENDS main
     )
-elseif (DEFINED LEVEL_EDITOR_TARGET)
+elseif (DEFINED NDS_TARGET) # Nintendo DS (game)
+    set(CMAKE_CXX_STANDARD 20)
+
+    project ("ShooterNDS")
+    include_directories(source/)
+    add_executable (ShooterNDS
+        # source/nds/file.c 
+        # source/nds/input.c 
+        # source/nds/renderer.c 
+        # source/nds/music.c
+        # source/nds/texture.c
+        source/main.c 
+        source/mesh.c 
+        source/camera.c
+        source/collision.c
+        source/player.c
+        source/memory.c
+        source/vislist.c
+        source/entity.c
+        source/timer.c
+        source/level.c
+        source/entities/door.c
+        source/entities/pickup.c
+        source/entities/crate.c
+        source/entities/chaser.c
+    )
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function -fanalyzer")
+
+elseif (DEFINED LEVEL_EDITOR_TARGET) # Windows (level editor)
     project ("ShooterPSX")
     set(CMAKE_CXX_STANDARD 20)
     add_executable (ShooterPSX
@@ -128,7 +156,7 @@ elseif (DEFINED LEVEL_EDITOR_TARGET)
     add_compile_definitions(_WINDOWS)
     add_compile_definitions(_LEVEL_EDITOR)
     add_compile_definitions(DEBUG_CAMERA)
-else()
+else() # Windows (game)
     project ("ShooterPSX")
     set(CMAKE_CXX_STANDARD 20)
     add_executable (ShooterPSX
