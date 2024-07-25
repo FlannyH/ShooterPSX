@@ -98,6 +98,7 @@ state_vars_t state;
 
 
 int main(void) {
+	mem_init();
 	mem_debug();
 	// Init systems
 	renderer_init();

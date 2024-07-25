@@ -21,6 +21,7 @@ typedef enum {
 	N_STACK_TYPES,
 } stack_t;
 
+void mem_init();
 void* mem_alloc(size_t size, memory_category_t category);
 void* mem_stack_alloc(size_t size, stack_t stack);
 void mem_stack_release(stack_t stack);

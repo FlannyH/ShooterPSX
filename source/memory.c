@@ -5,11 +5,16 @@
 #include <stdint.h>
 #include <stdio.h>
 
-uint32_t mem_stack_temp [350  * KiB / sizeof(uint32_t)];
-uint32_t mem_stack_level[960 * KiB / sizeof(uint32_t)];
-uint32_t mem_stack_music[64 * KiB / sizeof(uint32_t)];
-uint32_t mem_stack_entity[64 * KiB / sizeof(uint32_t)];
-uint32_t mem_stack_vram_swap[1 * KiB / sizeof(uint32_t)];
+#define size_stack_temp (350  * KiB)
+#define size_stack_level (960 * KiB)
+#define size_stack_music (64 * KiB)
+#define size_stack_entity (64 * KiB)
+#define size_stack_vram_swap (1 * KiB)
+uint32_t* mem_stack_temp = NULL;
+uint32_t* mem_stack_level = NULL;
+uint32_t* mem_stack_music = NULL;
+uint32_t* mem_stack_entity = NULL;
+uint32_t* mem_stack_vram_swap = NULL;
 size_t mem_stack_cursor_temp = 0;
 size_t mem_stack_cursor_level = 0;
 size_t mem_stack_cursor_music = 0;
@@ -42,6 +47,22 @@ memory_category_t allocated_memory_category[512] = {0};
 
 void* scheduled_frees[32];
 int n_scheduled_frees = 0;
+
+void mem_init() {
+	mem_stack_temp = malloc(size_stack_temp);
+	mem_stack_level = malloc(size_stack_level);
+	mem_stack_music = malloc(size_stack_music);
+	mem_stack_entity = malloc(size_stack_entity);
+	mem_stack_vram_swap = malloc(size_stack_vram_swap);
+
+#ifdef _DEBUG
+	printf("mem_stack_temp:      %p\n", mem_stack_temp);
+	printf("mem_stack_level:     %p\n", mem_stack_level);
+	printf("mem_stack_music:     %p\n", mem_stack_music);
+	printf("mem_stack_entity:    %p\n", mem_stack_entity);
+	printf("mem_stack_vram_swap: %p\n", mem_stack_vram_swap);
+#endif
+}
 
 void* mem_stack_alloc(size_t size, stack_t stack) {
 	// Convert stack enum into actual pointers and cursors
@@ -120,19 +141,19 @@ void mem_stack_release(stack_t stack) {
 size_t mem_stack_get_size(stack_t stack) {
 	switch (stack) {
 		case STACK_LEVEL:
-			return sizeof(mem_stack_level);
+			return size_stack_level;
 			break;
 		case STACK_MUSIC:
-			return sizeof(mem_stack_music);
+			return size_stack_music;
 			break;
 		case STACK_TEMP:
-			return sizeof(mem_stack_temp);
+			return size_stack_temp;
 			break;
 		case STACK_ENTITY:
-			return sizeof(mem_stack_entity);
+			return size_stack_entity;
 			break;
 		case STACK_VRAM_SWAP:
-			return sizeof(mem_stack_vram_swap);
+			return size_stack_vram_swap;
 			break;
 		default:
 			return 0;
