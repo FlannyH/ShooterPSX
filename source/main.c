@@ -53,7 +53,7 @@ typedef struct {
 		state_t state_to_return_to;
 	} global;
 	struct {
-		int doom_mode : 1;
+		unsigned int doom_mode : 1;
 	} cheats;
 	struct {
 		int button_selected;

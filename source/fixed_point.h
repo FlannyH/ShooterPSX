@@ -48,7 +48,7 @@ ALWAYS_INLINE void scalar_debug(const scalar_t a) {
 #include <stdlib.h>
 
 static struct {
-    int overflow : 1;
+    unsigned int overflow : 1;
 } operator_flags;
 
 ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
