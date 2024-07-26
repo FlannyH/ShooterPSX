@@ -328,10 +328,15 @@ void state_enter_in_game(void) {
     state.in_game.player.position.x = 11705653 / 2;
    	state.in_game.player.position.y = 11413985 / 2;
     state.in_game.player.position.z = 2112866  / 2;
+	state.in_game.player.rotation.x = 0;
 	state.in_game.player.rotation.y = 4096 * 16;
-    //state.in_game.player.position.x = 0;
-   	//state.in_game.player.position.y = 0;
-    //state.in_game.player.position.z = 0;
+	state.in_game.player.rotation.z = 0;
+    state.in_game.player.velocity.x = 0;
+   	state.in_game.player.velocity.y = 0;
+    state.in_game.player.velocity.z = 0;
+	vec3_debug(state.in_game.player.position);
+	vec3_debug(state.in_game.player.velocity);
+	vec3_debug(state.in_game.player.rotation);
 
 	// Load models
     state.in_game.m_level = model_load("\\ASSETS\\MODELS\\LEVEL.MSH;1", 1, STACK_LEVEL);
@@ -467,7 +472,7 @@ void state_update_in_game(int dt) {
 
 	int n_sections = player_get_level_section(&state.in_game.player, state.in_game.v_level);
 	state.global.frame_counter += dt;
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_PSX)
 	if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
 	if (state.global.show_debug) {
 		PROFILE("input", input_update(), 1);
@@ -521,7 +526,7 @@ void state_update_in_game(int dt) {
 		renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level.vislists, 0);
 		entity_update_all(&state.in_game.player, dt);
 		player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt, state.global.time_counter);
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_PSX)
 	}
 #endif
 	if (state.global.fade_level > 0) {
