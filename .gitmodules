@@ -10,3 +10,18 @@
 [submodule "tools/psx_soundfont_generator"]
 	path = tools/psx_soundfont_generator
 	url = https://github.com/FlannyH/psx_soundfont_generator.git
+[submodule "external/glfw"]
+	path = external/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "external/gl3w"]
+	path = external/gl3w
+	url = https://github.com/skaslev/gl3w.git
+[submodule "external/cglm"]
+	path = external/cglm
+	url = https://github.com/recp/cglm.git
+[submodule "external/imgui"]
+	path = external/imgui
+	url = https://github.com/ocornut/imgui
+[submodule "external/imguizmo"]
+	path = external/imguizmo
+	url = https://github.com/CedricGuillemet/ImGuizmo

@@ -9,6 +9,7 @@
 #include "mesh.h"
 #include "vec3.h"
 #include "vec2.h"
+#include "fixed_point.h"
 
 int n_ray_aabb_intersects = 0;
 int n_ray_triangle_intersects = 0;

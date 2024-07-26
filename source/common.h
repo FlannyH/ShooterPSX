@@ -9,11 +9,7 @@
 #define _DEBUG
 #endif
 
-#ifdef _WIN32
-#define ALWAYS_INLINE inline
-#else
 #define ALWAYS_INLINE __attribute__((always_inline)) inline
-#endif
 
 #define KiB (1024)
 #define MiB (1024 * KiB)

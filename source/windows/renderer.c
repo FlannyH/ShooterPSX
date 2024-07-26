@@ -1,11 +1,11 @@
 #include "renderer.h"
 
+#include <GL/gl3w.h>
+#include <GLFW/glfw3.h>
 #include <cglm/affine.h>
 #include <cglm/types.h>
 #include <cglm/vec3.h>
 #include <cglm/cam.h>
-#include <GLFW/glfw3.h>
-#include <GL/gl3w.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -15,6 +15,7 @@
 #include "memory.h"
 #include "input.h"
 #include "file.h"
+#include "vec3.h"
 #include "lut.h"
 
 #define PI 3.14159265358979f
@@ -37,7 +38,7 @@ uint32_t n_total_triangles = 0;
 int w, h;
 int prev_w = 0;
 int prev_h = 0;
-transform_t* cam_transform;
+transform_t cam_transform;
 vec3_t camera_pos;
 vec3_t camera_dir;
 int tex_id_start;
@@ -318,7 +319,7 @@ void renderer_init() {
 
 void renderer_begin_frame(const transform_t *camera_transform) {
 	curr_depth_bias = 0;
-    *cam_transform = *camera_transform;
+    cam_transform = *camera_transform;
 	// Set up viewport
 #ifdef _LEVEL_EDITOR
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
