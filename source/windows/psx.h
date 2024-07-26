@@ -15,8 +15,6 @@ int icos(int a);
 int FntPrint(int id, const char* fmt, ...);
 char* FntFlush(int id);
 
-#define FntPrint(a, b) {}
-
 typedef enum {
     // Standard pads, analog joystick, Jogcon
     PAD_SELECT = 1 << 0,

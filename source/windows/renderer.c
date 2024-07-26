@@ -11,15 +11,13 @@
 #include <string.h>
 #include <time.h>
 
+#include "debug_layer.h"
 #include "memory.h"
+#include "input.h"
 #include "file.h"
 #include "lut.h"
 
 #define PI 3.14159265358979f
-
-int n_sections;
-int sections[N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE];
-
 #define RESOLUTION_SCALING 4
 GLFWwindow *window;
 mat4 perspective_matrix;
@@ -320,7 +318,7 @@ void renderer_init() {
 
 void renderer_begin_frame(const transform_t *camera_transform) {
 	curr_depth_bias = 0;
-    cam_transform = camera_transform;
+    *cam_transform = *camera_transform;
 	// Set up viewport
 #ifdef _LEVEL_EDITOR
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -468,7 +466,7 @@ void renderer_draw_model_shaded(const model_t* model, const transform_t* model_t
 }
 
 int32_t max_dot_value = 0;
-void renderer_draw_mesh_shaded(const mesh_t *mesh, transform_t *model_transform) {
+void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_transform) {
 	// Calculate model matrix
 	mat4 model_matrix;
 	glm_mat4_identity(model_matrix);
