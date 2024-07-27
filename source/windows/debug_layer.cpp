@@ -10,6 +10,7 @@
 #ifdef _LEVEL_EDITOR
 #include <ImGuizmo.h>
 #include <imfilebrowser.h>
+#include <format>
 #include "../entities/pickup.h"
 #include "../entities/crate.h"
 #include "../entities/door.h"
