@@ -9,10 +9,12 @@ ASSETS = assets
 PATH_TEMP = temp
 PATH_BUILD = build
 
-PATH_TEMP_PSX = $(PATH_TEMP)/psx
-PATH_TEMP_WIN = $(PATH_TEMP)/windows
-PATH_BUILD_PSX = $(PATH_BUILD)/psx
-PATH_BUILD_WIN = $(PATH_BUILD)/windows
+PATH_TEMP_PSX = 		  $(PATH_TEMP)/psx
+PATH_TEMP_WIN = 		  $(PATH_TEMP)/windows
+PATH_TEMP_LEVEL_EDITOR =  $(PATH_TEMP)/level_editor
+PATH_BUILD_PSX = 		  $(PATH_BUILD)/psx
+PATH_BUILD_WIN = 		  $(PATH_BUILD)/windows
+PATH_BUILD_LEVEL_EDITOR = $(PATH_BUILD)/level_editor
 COMPILED_LIB_OUTPUT_WIN = $(PATH_TEMP_WIN)/lib
 
 # Include directories
@@ -55,12 +57,12 @@ CODE_ENGINE_WIN_C = windows/file.c \
 				    windows/psx.c \
 				    windows/renderer.c \
 				    windows/texture.c 
-
 CODE_ENGINE_WIN_CPP = windows/debug_layer.cpp
 
 # Where the object files go
 PATH_OBJ_PSX = $(PATH_TEMP_PSX)/obj
 PATH_OBJ_WIN = $(PATH_TEMP_WIN)/obj
+PATH_OBJ_LEVEL_EDITOR = $(PATH_TEMP_LEVEL_EDITOR)/obj
 
 # Misc source file definitions
 CODE_GAME_MAIN = main.c
@@ -74,12 +76,12 @@ CODE_WIN_CPP			= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_WIN_CPP)
 CODE_LEVEL_EDITOR_C		= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_WIN_C) 	$(CODE_LEVEL_EDITOR) 
 CODE_LEVEL_EDITOR_CPP	= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_WIN_CPP)
 
-OBJ_PSX					= 	$(patsubst %.c, 	$(PATH_OBJ_PSX)/%.o,	$(CODE_PSX_C))				\
-							$(patsubst %.cpp, 	$(PATH_OBJ_PSX)/%.o,	$(CODE_PSX_CPP))				
-OBJ_WIN					= 	$(patsubst %.c, 	$(PATH_OBJ_WIN)/%.o,	$(CODE_WIN_C))				\
-							$(patsubst %.cpp, 	$(PATH_OBJ_WIN)/%.o,	$(CODE_WIN_CPP))				
-OBJ_LEVEL_EDITOR		= 	$(patsubst %.c, 	$(PATH_OBJ_WIN)/%.o, 	$(CODE_LEVEL_EDITOR_C))		\
-							$(patsubst %.cpp, 	$(PATH_OBJ_WIN)/%.o, 	$(CODE_LEVEL_EDITOR_CPP))		
+OBJ_PSX					= 	$(patsubst %.c, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_C))				\
+							$(patsubst %.cpp, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_CPP))				
+OBJ_WIN					= 	$(patsubst %.c, 	$(PATH_OBJ_WIN)/%.o,	        $(CODE_WIN_C))				\
+							$(patsubst %.cpp, 	$(PATH_OBJ_WIN)/%.o,	        $(CODE_WIN_CPP))				
+OBJ_LEVEL_EDITOR		= 	$(patsubst %.c, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVEL_EDITOR_C))		\
+							$(patsubst %.cpp, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVEL_EDITOR_CPP))		
 
 # Compiler flags
 CFLAGS = -Wall -Wextra -std=c11
@@ -175,17 +177,17 @@ $(IMGUIZMO_OBJ_DIR)/%.o: $(IMGUIZMO_SRC_DIR)/%.cpp
 imguizmo: $(OBJ_IMGUIZMO)
 
 $(PATH_BUILD_WIN)/SubNivis: mkdir_output_win windows_dependencies $(OBJ_WIN)
-	@mkdir -p $(PATH_BUILD_WIN)
+	@mkdir -p $(dir $@)
 	@echo Linking $@
 	@$(CXX) -o $@ $(OBJ_WIN) $(OBJ_IMGUI) $(LINKER_FLAGS)
 	@echo Copying assets
-	@cp -r $(ASSETS) $(PATH_BUILD_WIN)
+	@cp -r $(ASSETS) $(dir $@)
 	
-$(PATH_BUILD_WIN)/LevelEditor: mkdir_output_win windows_dependencies $(OBJ_LEVEL_EDITOR)
-	@mkdir -p $(PATH_BUILD_WIN)
+$(PATH_BUILD_LEVEL_EDITOR)/LevelEditor: mkdir_output_win windows_dependencies $(OBJ_LEVEL_EDITOR)
+	@mkdir -p $(dir $@)
 	@echo Linking $@
 	@$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
-	@cp -r $(ASSETS) $(PATH_BUILD_WIN)
+	@cp -r $(ASSETS) $(dir $@)
 
 $(PATH_OBJ_WIN)/%.o: $(SOURCE)/%.c
 	@mkdir -p $(dir $@)
@@ -197,8 +199,18 @@ $(PATH_OBJ_WIN)/%.o: $(SOURCE)/%.cpp
 	@echo Compiling $<
 	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
+$(PATH_OBJ_LEVEL_EDITOR)/%.o: $(SOURCE)/%.c
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
+
+$(PATH_OBJ_LEVEL_EDITOR)/%.o: $(SOURCE)/%.cpp
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
+
 windows: $(PATH_BUILD_WIN)/SubNivis
-level_editor: $(PATH_BUILD_WIN)/LevelEditor
+level_editor: $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor
 
 # Define compiler for PSX
 $(TARGET_PSX): CC = D:/Tools/psn00bsdk/bin/mipsel-none-elf-gcc.exe
@@ -209,3 +221,5 @@ $(TARGET_PSX): CXXFLAGS = -D_PSX
 clean:
 	rm -rf $(PATH_TEMP)
 	rm -rf $(PATH_BUILD)
+
+all: windows level_editor
