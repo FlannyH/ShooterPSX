@@ -1,3 +1,6 @@
+# Flags
+VERBOSE = 0
+
 # Input folders
 SOURCE = source
 ASSETS = assets
@@ -10,6 +13,7 @@ PATH_TEMP_PSX = $(PATH_TEMP)/psx
 PATH_TEMP_WIN = $(PATH_TEMP)/windows
 PATH_BUILD_PSX = $(PATH_BUILD)/psx
 PATH_BUILD_WIN = $(PATH_BUILD)/windows
+COMPILED_LIB_OUTPUT_WIN = $(PATH_TEMP_WIN)/lib
 
 # Include directories
 INCLUDE_DIRS = source \
@@ -18,7 +22,8 @@ INCLUDE_DIRS = source \
 			   external/glfw/include \
 			   external/imgui \
 			   external/imguizmo \
-			   external/imgui-filebrowser 
+			   external/imgui-filebrowser \
+			   $(COMPILED_LIB_OUTPUT_WIN)/gl3w/include
 INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 
 # Source files shared by all targets
@@ -81,21 +86,20 @@ CFLAGS = -Wall -Wextra -std=c11
 CXXFLAGS = -Wall -Wextra -std=c++20
 
 # Windows target
-COMPILED_LIB_OUTPUT_WIN = $(PATH_TEMP_WIN)/lib
 windows: DEFINES = _WINDOWS _WIN32
 windows: LIBRARIES = glfw3 stdc++ gdi32 opengl32
 windows: CC = gcc
 windows: CXX = g++
 windows: CFLAGS = $(patsubst %, -D%, $(DEFINES))
-windows: CXXFLAGS = $(patsubst %, -D%, $(DEFINES))
-windows: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(COMPILED_LIB_OUTPUT_WIN))
+windows: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) 
+windows: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(COMPILED_LIB_OUTPUT_WIN)) -std=c++20
 level_editor: DEFINES = _WINDOWS _WIN32 _LEVEL_EDITOR
 level_editor: LIBRARIES = glfw3 stdc++ gdi32 opengl32
 level_editor: CC = gcc
 level_editor: CXX = g++
 level_editor: CFLAGS = $(patsubst %, -D%, $(DEFINES))
 level_editor: CXXFLAGS = $(patsubst %, -D%, $(DEFINES))
-level_editor: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(COMPILED_LIB_OUTPUT_WIN))
+level_editor: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(COMPILED_LIB_OUTPUT_WIN)) -std=c++20
 
 mkdir_output_win:
 	mkdir -p $(PATH_TEMP_WIN)
@@ -107,14 +111,14 @@ windows_dependencies: glfw gl3w imgui
 
 glfw:
 	mkdir -p $(COMPILED_LIB_OUTPUT_WIN)/glfw
-	cmake -S external/glfw -B $(COMPILED_LIB_OUTPUT_WIN)/glfw -G "MSYS Makefiles"
+	@cmake -S external/glfw -B $(COMPILED_LIB_OUTPUT_WIN)/glfw -G "MSYS Makefiles"
 	make -C $(COMPILED_LIB_OUTPUT_WIN)/glfw glfw
 	cp $(COMPILED_LIB_OUTPUT_WIN)/glfw/src/libglfw3.a $(COMPILED_LIB_OUTPUT_WIN)
 
 OBJ_WIN += $(COMPILED_LIB_OUTPUT_WIN)/gl3w.o
 gl3w:
 	mkdir -p $(COMPILED_LIB_OUTPUT_WIN)/gl3w
-	cmake -S external/gl3w -B $(COMPILED_LIB_OUTPUT_WIN)/gl3w -G "MSYS Makefiles"
+	@cmake -S external/gl3w -B $(COMPILED_LIB_OUTPUT_WIN)/gl3w -G "MSYS Makefiles"
 	make -C $(COMPILED_LIB_OUTPUT_WIN)/gl3w 
 	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $(COMPILED_LIB_OUTPUT_WIN)/gl3w/src/gl3w.c -o $(COMPILED_LIB_OUTPUT_WIN)/gl3w.o
 
@@ -139,28 +143,33 @@ OBJ_IMGUI = $(IMGUI_SRC:$(IMGUI_SRC_DIR)/%.cpp=$(IMGUI_OBJ_DIR)/%.o)
 # Pattern rule for building object files
 $(IMGUI_OBJ_DIR)/%.o: $(IMGUI_SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
-	$(CXX) $(INCLUDE_FLAGS) -c $< -o $@
+	@echo Compiling $<
+	@$(CXX) $(INCLUDE_FLAGS) -c $< -o $@
 
 # Target rule for building imgui
 imgui: $(OBJ_IMGUI)
 
 $(PATH_BUILD_WIN)/SubNivis: mkdir_output_win windows_dependencies $(OBJ_WIN)
-	mkdir -p $(PATH_BUILD_WIN)
-	$(CXX) -o $@ $(OBJ_WIN) $(OBJ_IMGUI) $(LINKER_FLAGS)
-	cp -r $(ASSETS) $(PATH_BUILD_WIN)
+	@mkdir -p $(PATH_BUILD_WIN)
+	@echo Linking $@
+	@$(CXX) -o $@ $(OBJ_WIN) $(OBJ_IMGUI) $(LINKER_FLAGS)
+	@echo Copying assets
+	@cp -r $(ASSETS) $(PATH_BUILD_WIN)
 	
 $(PATH_BUILD_WIN)/LevelEditor: mkdir_output_win windows_dependencies $(OBJ_LEVEL_EDITOR)
-	mkdir -p $(PATH_BUILD_WIN)
-	$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(LINKER_FLAGS)
-	cp -r $(ASSETS) $(PATH_BUILD_WIN)
+	@mkdir -p $(PATH_BUILD_WIN)
+	@$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(LINKER_FLAGS)
+	@cp -r $(ASSETS) $(PATH_BUILD_WIN)
 
 $(PATH_OBJ_WIN)/%.o: $(SOURCE)/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
+	@echo Compiling $<
+	@$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
 $(PATH_OBJ_WIN)/%.o: $(SOURCE)/%.cpp
 	@mkdir -p $(dir $@)
-	$(CXX) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
+	@echo Compiling $<
+	@$(CXX) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
 windows: $(PATH_BUILD_WIN)/SubNivis
 level_editor: $(PATH_BUILD_WIN)/LevelEditor
