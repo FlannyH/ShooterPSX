@@ -119,7 +119,10 @@ mkdir_output_win:
 	mkdir -p $(PATH_OBJ_WIN)/entities
 	mkdir -p $(PATH_OBJ_WIN)/windows
 
-windows_dependencies: glfw gl3w imgui imguizmo
+submodules:
+	git submodule update
+	
+windows_dependencies: submodules glfw gl3w imgui imguizmo
 
 glfw:
 	mkdir -p $(PATH_LIB_WIN)/glfw
