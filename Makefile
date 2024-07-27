@@ -15,7 +15,8 @@ PATH_TEMP_LEVEL_EDITOR =  $(PATH_TEMP)/level_editor
 PATH_BUILD_PSX = 		  $(PATH_BUILD)/psx
 PATH_BUILD_WIN = 		  $(PATH_BUILD)/windows
 PATH_BUILD_LEVEL_EDITOR = $(PATH_BUILD)/level_editor
-COMPILED_LIB_OUTPUT_WIN = $(PATH_TEMP_WIN)/lib
+PATH_LIB_WIN = $(PATH_TEMP_WIN)/lib
+PATH_LIB_PSX = $(PSN00BSDK_LIBS)/release
 
 # Source files shared by all targets
 CODE_ENGINE_SHARED_C = camera.c \
@@ -83,13 +84,13 @@ windows: CC = gcc
 windows: CXX = g++
 windows: CFLAGS = $(patsubst %, -D%, $(DEFINES))
 windows: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) -std=c++20
-windows: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(COMPILED_LIB_OUTPUT_WIN)) -std=c++20
+windows: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_WIN)) -std=c++20
 windows: INCLUDE_DIRS = source \
 			   external/cglm/include \
 			   external/gl3w/include \
 			   external/glfw/include \
 			   external/imgui \
-			   $(COMPILED_LIB_OUTPUT_WIN)/gl3w/include
+			   $(PATH_LIB_WIN)/gl3w/include
 windows: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 level_editor: DEFINES = _WINDOWS _WIN32 _LEVEL_EDITOR
 level_editor: LIBRARIES = glfw3 stdc++ gdi32 opengl32
@@ -97,7 +98,7 @@ level_editor: CC = gcc
 level_editor: CXX = g++
 level_editor: CFLAGS = $(patsubst %, -D%, $(DEFINES)) 
 level_editor: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) -std=c++20
-level_editor: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(COMPILED_LIB_OUTPUT_WIN)) -std=c++20
+level_editor: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_WIN)) -std=c++20
 level_editor: INCLUDE_DIRS = source \
 			   external/cglm/include \
 			   external/gl3w/include \
@@ -105,7 +106,7 @@ level_editor: INCLUDE_DIRS = source \
 			   external/imgui \
 			   external/imguizmo \
 			   external/imgui-filebrowser \
-			   $(COMPILED_LIB_OUTPUT_WIN)/gl3w/include
+			   $(PATH_LIB_WIN)/gl3w/include
 level_editor: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 
 mkdir_output_win:
@@ -117,22 +118,22 @@ mkdir_output_win:
 windows_dependencies: glfw gl3w imgui imguizmo
 
 glfw:
-	mkdir -p $(COMPILED_LIB_OUTPUT_WIN)/glfw
-	@cmake -S external/glfw -B $(COMPILED_LIB_OUTPUT_WIN)/glfw -G "MSYS Makefiles"
-	make -C $(COMPILED_LIB_OUTPUT_WIN)/glfw glfw
-	cp $(COMPILED_LIB_OUTPUT_WIN)/glfw/src/libglfw3.a $(COMPILED_LIB_OUTPUT_WIN)
+	mkdir -p $(PATH_LIB_WIN)/glfw
+	@cmake -S external/glfw -B $(PATH_LIB_WIN)/glfw -G "MSYS Makefiles"
+	make -C $(PATH_LIB_WIN)/glfw glfw
+	cp $(PATH_LIB_WIN)/glfw/src/libglfw3.a $(PATH_LIB_WIN)
 
-OBJ_WIN += $(COMPILED_LIB_OUTPUT_WIN)/gl3w.o
-OBJ_LEVEL_EDITOR += $(COMPILED_LIB_OUTPUT_WIN)/gl3w.o
+OBJ_WIN += $(PATH_LIB_WIN)/gl3w.o
+OBJ_LEVEL_EDITOR += $(PATH_LIB_WIN)/gl3w.o
 gl3w:
-	mkdir -p $(COMPILED_LIB_OUTPUT_WIN)/gl3w
-	@cmake -S external/gl3w -B $(COMPILED_LIB_OUTPUT_WIN)/gl3w -G "MSYS Makefiles"
-	make -C $(COMPILED_LIB_OUTPUT_WIN)/gl3w 
-	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $(COMPILED_LIB_OUTPUT_WIN)/gl3w/src/gl3w.c -o $(COMPILED_LIB_OUTPUT_WIN)/gl3w.o
+	mkdir -p $(PATH_LIB_WIN)/gl3w
+	@cmake -S external/gl3w -B $(PATH_LIB_WIN)/gl3w -G "MSYS Makefiles"
+	make -C $(PATH_LIB_WIN)/gl3w 
+	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $(PATH_LIB_WIN)/gl3w/src/gl3w.c -o $(PATH_LIB_WIN)/gl3w.o
 
 # Define the base directories
 IMGUI_SRC_DIR = external/imgui
-IMGUI_OBJ_DIR = $(COMPILED_LIB_OUTPUT_WIN)/imgui
+IMGUI_OBJ_DIR = $(PATH_LIB_WIN)/imgui
 IMGUI_BACKENDS_OBJ_DIR = $(IMGUI_OBJ_DIR)/backends
 
 # List of source files
@@ -158,7 +159,7 @@ imgui: $(OBJ_IMGUI)
 
 # Define the base directories
 IMGUIZMO_SRC_DIR = external/imguizmo
-IMGUIZMO_OBJ_DIR = $(COMPILED_LIB_OUTPUT_WIN)/imguizmo
+IMGUIZMO_OBJ_DIR = $(PATH_LIB_WIN)/imguizmo
 IMGUIZMO_BACKENDS_OBJ_DIR = $(IMGUIZMO_OBJ_DIR)/backends
 
 # List of source files
@@ -220,18 +221,33 @@ level_editor: $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor
 # PSX target
 psx: PSN00BSDK_PATH = $(PSN00BSDK_LIBS)/../..
 psx: DEFINES = _PSX PSN00BSDK=1 NDEBUG=1
-psx: LIBRARIES = 
+psx: LIBRARIES = gcc \
+				 psxgpu_exe_gprel \
+				 psxgte_exe_gprel \
+				 psxspu_exe_gprel \
+				 psxcd_exe_gprel \
+				 psxpress_exe_gprel \
+				 psxsio_exe_gprel \
+				 psxetc_exe_gprel \
+				 psxapi_exe_gprel \
+				 smd_exe_gprel \
+				 lzp_exe_gprel \
+				 c_exe_gprel \
+				 gcc 
 psx: CC = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-gcc.exe
 psx: CXX = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-g++.exe
 psx: CFLAGS = $(patsubst %, -D%, $(DEFINES)) -Wno-unused-function -fanalyzer -O2 -g -Wa,--strip-local-absolute -ffreestanding -fno-builtin -nostdlib -fdata-sections -ffunction-sections -fsigned-char -fno-strict-overflow -fdiagnostics-color=always -msoft-float -march=r3000 -mtune=r3000 -mabi=32 -mno-mt -mno-llsc -G8 -fno-pic -mno-abicalls -mgpopt -mno-extern-sdata
 psx: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) -std=c++20
-psx: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(COMPILED_LIB_OUTPUT_PSX)) -std=c++20
+psx: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PSX)) -nostdlib -Wl,-gc-sections -G8 -static -T$(PSN00BSDK_LIBS)/ldscripts/exe.ld
 psx: INCLUDE_DIRS = source \
-			   $(COMPILED_LIB_OUTPUT_WIN)/gl3w/include \
+			   $(PATH_LIB_WIN)/gl3w/include \
 			   $(PSN00BSDK_PATH)/include/libpsn00b 
 psx: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 
 $(PATH_BUILD_PSX)/SubNivis.elf: $(OBJ_PSX)
+	@mkdir -p $(dir $@)
+	@echo Linking $@
+	@$(CC) -o $@ $(OBJ_PSX) $(LINKER_FLAGS)
 
 $(PATH_OBJ_PSX)/%.o: $(SOURCE)/%.c
 	@mkdir -p $(dir $@)
