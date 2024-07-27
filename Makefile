@@ -116,6 +116,7 @@ glfw:
 	cp $(COMPILED_LIB_OUTPUT_WIN)/glfw/src/libglfw3.a $(COMPILED_LIB_OUTPUT_WIN)
 
 OBJ_WIN += $(COMPILED_LIB_OUTPUT_WIN)/gl3w.o
+OBJ_LEVEL_EDITOR += $(COMPILED_LIB_OUTPUT_WIN)/gl3w.o
 gl3w:
 	mkdir -p $(COMPILED_LIB_OUTPUT_WIN)/gl3w
 	@cmake -S external/gl3w -B $(COMPILED_LIB_OUTPUT_WIN)/gl3w -G "MSYS Makefiles"
