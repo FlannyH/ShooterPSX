@@ -1,6 +1,7 @@
 *.cpe
 *.exe
 build/
+temp/
 license_data.dat
 .vs/
 .vscode/settings.json
