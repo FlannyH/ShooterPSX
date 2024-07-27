@@ -25,9 +25,7 @@ int main(void) {
     int mouse_lock = 0;
     input_unlock_mouse();
 
-    entity_header_t* selected_entity = NULL;
-    entity_header_t* hovered_entity = NULL;
-
+    size_t selected_entity = 0;
     int mouse_over_viewport = 0;
 
     while (!renderer_should_close()) {
