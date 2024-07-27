@@ -184,7 +184,7 @@ $(PATH_BUILD_WIN)/SubNivis: mkdir_output_win windows_dependencies $(OBJ_WIN)
 $(PATH_BUILD_WIN)/LevelEditor: mkdir_output_win windows_dependencies $(OBJ_LEVEL_EDITOR)
 	@mkdir -p $(PATH_BUILD_WIN)
 	@echo Linking $@
-	$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
+	@$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
 	@cp -r $(ASSETS) $(PATH_BUILD_WIN)
 
 $(PATH_OBJ_WIN)/%.o: $(SOURCE)/%.c
