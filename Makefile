@@ -17,17 +17,6 @@ PATH_BUILD_WIN = 		  $(PATH_BUILD)/windows
 PATH_BUILD_LEVEL_EDITOR = $(PATH_BUILD)/level_editor
 COMPILED_LIB_OUTPUT_WIN = $(PATH_TEMP_WIN)/lib
 
-# Include directories
-INCLUDE_DIRS = source \
-			   external/cglm/include \
-			   external/gl3w/include \
-			   external/glfw/include \
-			   external/imgui \
-			   external/imguizmo \
-			   external/imgui-filebrowser \
-			   $(COMPILED_LIB_OUTPUT_WIN)/gl3w/include
-INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
-
 # Source files shared by all targets
 CODE_ENGINE_SHARED_C = camera.c \
 			  	  	   collision.c \
@@ -95,6 +84,13 @@ windows: CXX = g++
 windows: CFLAGS = $(patsubst %, -D%, $(DEFINES))
 windows: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) -std=c++20
 windows: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(COMPILED_LIB_OUTPUT_WIN)) -std=c++20
+windows: INCLUDE_DIRS = source \
+			   external/cglm/include \
+			   external/gl3w/include \
+			   external/glfw/include \
+			   external/imgui \
+			   $(COMPILED_LIB_OUTPUT_WIN)/gl3w/include
+windows: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 level_editor: DEFINES = _WINDOWS _WIN32 _LEVEL_EDITOR
 level_editor: LIBRARIES = glfw3 stdc++ gdi32 opengl32
 level_editor: CC = gcc
@@ -102,6 +98,15 @@ level_editor: CXX = g++
 level_editor: CFLAGS = $(patsubst %, -D%, $(DEFINES)) 
 level_editor: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) -std=c++20
 level_editor: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(COMPILED_LIB_OUTPUT_WIN)) -std=c++20
+level_editor: INCLUDE_DIRS = source \
+			   external/cglm/include \
+			   external/gl3w/include \
+			   external/glfw/include \
+			   external/imgui \
+			   external/imguizmo \
+			   external/imgui-filebrowser \
+			   $(COMPILED_LIB_OUTPUT_WIN)/gl3w/include
+level_editor: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 
 mkdir_output_win:
 	mkdir -p $(PATH_TEMP_WIN)
@@ -212,14 +217,36 @@ $(PATH_OBJ_LEVEL_EDITOR)/%.o: $(SOURCE)/%.cpp
 windows: $(PATH_BUILD_WIN)/SubNivis
 level_editor: $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor
 
-# Define compiler for PSX
-$(TARGET_PSX): CC = D:/Tools/psn00bsdk/bin/mipsel-none-elf-gcc.exe
-$(TARGET_PSX): CXX = D:/Tools/psn00bsdk/bin/mipsel-none-elf-g++.exe
-$(TARGET_PSX): CFLAGS = -D_PSX
-$(TARGET_PSX): CXXFLAGS = -D_PSX
+# PSX target
+psx: PSN00BSDK_PATH = $(PSN00BSDK_LIBS)/../..
+psx: DEFINES = _PSX PSN00BSDK=1 NDEBUG=1
+psx: LIBRARIES = 
+psx: CC = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-gcc.exe
+psx: CXX = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-g++.exe
+psx: CFLAGS = $(patsubst %, -D%, $(DEFINES)) -Wno-unused-function -fanalyzer -O2 -g -Wa,--strip-local-absolute -ffreestanding -fno-builtin -nostdlib -fdata-sections -ffunction-sections -fsigned-char -fno-strict-overflow -fdiagnostics-color=always -msoft-float -march=r3000 -mtune=r3000 -mabi=32 -mno-mt -mno-llsc -G8 -fno-pic -mno-abicalls -mgpopt -mno-extern-sdata
+psx: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) -std=c++20
+psx: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(COMPILED_LIB_OUTPUT_PSX)) -std=c++20
+psx: INCLUDE_DIRS = source \
+			   $(COMPILED_LIB_OUTPUT_WIN)/gl3w/include \
+			   $(PSN00BSDK_PATH)/include/libpsn00b 
+psx: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
+
+$(PATH_BUILD_PSX)/SubNivis.elf: $(OBJ_PSX)
+
+$(PATH_OBJ_PSX)/%.o: $(SOURCE)/%.c
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
+
+$(PATH_OBJ_PSX)/%.o: $(SOURCE)/%.cpp
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
+
+psx: $(PATH_BUILD_PSX)/SubNivis.elf
 
 clean:
 	rm -rf $(PATH_TEMP)
 	rm -rf $(PATH_BUILD)
 
-all: windows level_editor
+all: windows level_editor psx
