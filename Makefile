@@ -248,7 +248,7 @@ psx: INCLUDE_DIRS = source \
 			   $(PSN00BSDK_PATH)/include/libpsn00b 
 psx: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 
-$(PATH_BUILD_PSX)/$(PROJECT_NAME).elf: $(OBJ_PSX)
+$(PATH_TEMP_PSX)/$(PROJECT_NAME).elf: $(OBJ_PSX)
 	@mkdir -p $(dir $@)
 	@echo Linking $@
 	@$(CC) -o $@ $(OBJ_PSX) $(LINKER_FLAGS)
@@ -263,12 +263,13 @@ $(PATH_OBJ_PSX)/%.o: $(SOURCE)/%.cpp
 	@echo Compiling $<
 	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
-$(PATH_BUILD_PSX)/$(PROJECT_NAME).exe: $(PATH_BUILD_PSX)/$(PROJECT_NAME).elf
+$(PATH_TEMP_PSX)/$(PROJECT_NAME).exe: $(PATH_TEMP_PSX)/$(PROJECT_NAME).elf
 	@mkdir -p $(dir $@)
 	@echo Creating $@
-	@$(PSN00BSDK_PATH)/bin/elf2x -q $(PATH_BUILD_PSX)/$(PROJECT_NAME).elf $(PATH_BUILD_PSX)/$(PROJECT_NAME).exe
+	@$(PSN00BSDK_PATH)/bin/elf2x -q $(PATH_TEMP_PSX)/$(PROJECT_NAME).elf $(PATH_TEMP_PSX)/$(PROJECT_NAME).exe
 
-psx: $(PATH_BUILD_PSX)/$(PROJECT_NAME).exe
+psx: $(PATH_TEMP_PSX)/$(PROJECT_NAME).exe
+	@mkdir -p $(PATH_BUILD_PSX)
 	@echo Building CD image
 	$(PSN00BSDK_PATH)/bin/mkpsxiso -y -o $(PATH_BUILD_PSX)/$(PROJECT_NAME).bin -c $(PATH_BUILD_PSX)/$(PROJECT_NAME).cue $(ISO_XML)
 

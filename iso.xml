@@ -62,7 +62,7 @@
 			contain any number of files.
 		-->
 		<directory_tree>
-            <file name="SUBNIVIS.EXE"	type="data" source="build/psx/SubNivis.exe" />
+            <file name="SUBNIVIS.EXE"	type="data" source="temp/psx/SubNivis.exe" />
             <file name="SYSTEM.CNF"		type="data" source="system.cnf" />
             <dir name="ASSETS">
 				<dir name="MODELS">
