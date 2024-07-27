@@ -107,7 +107,7 @@ mkdir_output_win:
 	mkdir -p $(PATH_OBJ_WIN)/entities
 	mkdir -p $(PATH_OBJ_WIN)/windows
 
-windows_dependencies: glfw gl3w imgui
+windows_dependencies: glfw gl3w imgui imguizmo
 
 glfw:
 	mkdir -p $(COMPILED_LIB_OUTPUT_WIN)/glfw
@@ -121,7 +121,6 @@ gl3w:
 	@cmake -S external/gl3w -B $(COMPILED_LIB_OUTPUT_WIN)/gl3w -G "MSYS Makefiles"
 	make -C $(COMPILED_LIB_OUTPUT_WIN)/gl3w 
 	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $(COMPILED_LIB_OUTPUT_WIN)/gl3w/src/gl3w.c -o $(COMPILED_LIB_OUTPUT_WIN)/gl3w.o
-
 
 # Define the base directories
 IMGUI_SRC_DIR = external/imgui
@@ -149,6 +148,31 @@ $(IMGUI_OBJ_DIR)/%.o: $(IMGUI_SRC_DIR)/%.cpp
 # Target rule for building imgui
 imgui: $(OBJ_IMGUI)
 
+# Define the base directories
+IMGUIZMO_SRC_DIR = external/imguizmo
+IMGUIZMO_OBJ_DIR = $(COMPILED_LIB_OUTPUT_WIN)/imguizmo
+IMGUIZMO_BACKENDS_OBJ_DIR = $(IMGUIZMO_OBJ_DIR)/backends
+
+# List of source files
+IMGUIZMO_SRC = \
+    $(IMGUIZMO_SRC_DIR)/GraphEditor.cpp \
+    $(IMGUIZMO_SRC_DIR)/ImCurveEdit.cpp \
+    $(IMGUIZMO_SRC_DIR)/ImGradient.cpp \
+    $(IMGUIZMO_SRC_DIR)/ImGuizmo.cpp \
+    $(IMGUIZMO_SRC_DIR)/ImSequencer.cpp 
+
+# Corresponding object files
+OBJ_IMGUIZMO = $(IMGUIZMO_SRC:$(IMGUIZMO_SRC_DIR)/%.cpp=$(IMGUIZMO_OBJ_DIR)/%.o)
+
+# Pattern rule for building object files
+$(IMGUIZMO_OBJ_DIR)/%.o: $(IMGUIZMO_SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@$(CXX) $(INCLUDE_FLAGS) -c $< -o $@
+
+# Target rule for building imguizmo
+imguizmo: $(OBJ_IMGUIZMO)
+
 $(PATH_BUILD_WIN)/SubNivis: mkdir_output_win windows_dependencies $(OBJ_WIN)
 	@mkdir -p $(PATH_BUILD_WIN)
 	@echo Linking $@
@@ -158,7 +182,8 @@ $(PATH_BUILD_WIN)/SubNivis: mkdir_output_win windows_dependencies $(OBJ_WIN)
 	
 $(PATH_BUILD_WIN)/LevelEditor: mkdir_output_win windows_dependencies $(OBJ_LEVEL_EDITOR)
 	@mkdir -p $(PATH_BUILD_WIN)
-	@$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(LINKER_FLAGS)
+	@echo Linking $@
+	$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
 	@cp -r $(ASSETS) $(PATH_BUILD_WIN)
 
 $(PATH_OBJ_WIN)/%.o: $(SOURCE)/%.c
@@ -169,7 +194,7 @@ $(PATH_OBJ_WIN)/%.o: $(SOURCE)/%.c
 $(PATH_OBJ_WIN)/%.o: $(SOURCE)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
+	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
 windows: $(PATH_BUILD_WIN)/SubNivis
 level_editor: $(PATH_BUILD_WIN)/LevelEditor
