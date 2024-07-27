@@ -28,10 +28,10 @@
 		-->
 		<identifiers
 			system			="PLAYSTATION"
-			volume			="SHOOTERPSX"
-			volume_set		="SHOOTERPSX"
+			volume			="SUBNIVIS"
+			volume_set		="SUBNIVIS"
 			publisher		="MEIDOTEK"
-			data_preparer	="PSN00BSDK ${PSN00BSDK_VERSION}"
+			data_preparer	="PSN00BSDK"
 			application		="PLAYSTATION"
 			copyright		="README.TXT;1"
 		/>
@@ -47,7 +47,7 @@
 			PSn00bSDK for obvious reasons, but can be dumped from an official
 			game using dumpsxiso or extracted from the Sony SDK.
 		-->
-		<license file="${PROJECT_SOURCE_DIR}/license_data.dat" />
+		<license file="license_data.dat" />
 
 		<!--
 			Files and directories can be added to the disc by placing <file>
@@ -62,44 +62,44 @@
 			contain any number of files.
 		-->
 		<directory_tree>
-            <file name="MAIN.EXE"	type="data" source="main.exe" />
-            <file name="SYSTEM.CNF"		type="data" source="${PROJECT_SOURCE_DIR}/system.cnf" />
+            <file name="SUBNIVIS.EXE"	type="data" source="build/psx/SubNivis.exe" />
+            <file name="SYSTEM.CNF"		type="data" source="system.cnf" />
             <dir name="ASSETS">
 				<dir name="MODELS">
-					<file name="LEVEL.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level.msh" />
-					<file name="LEVEL.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level.txc" />
-					<file name="LEVEL.COL"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level.col" />
-					<file name="LEVEL.VIS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level.vis" />
-					<file name="LEVEL2.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level2.msh" />
-					<file name="LEVEL2.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level2.txc" />
-					<file name="LEVEL2.COL"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level2.col" />
-					<file name="LEVEL2.VIS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/level2.vis" />
-					<file name="TEST.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/test.msh" />
-					<file name="TEST.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/test.txc" />
-					<file name="TEST.COL"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/test.col" />
-					<file name="TEST.VIS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/test.vis" />
-					<file name="ENTITY.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/entity.msh" />
-					<file name="ENTITY.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/entity.txc" />
-					<file name="WEAPONS.MSH"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/weapons.msh" />
-					<file name="WEAPONS.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/weapons.txc" />
+					<file name="LEVEL.MSH"	type="data" source="assets/models/level.msh" />
+					<file name="LEVEL.TXC"	type="data" source="assets/models/level.txc" />
+					<file name="LEVEL.COL"	type="data" source="assets/models/level.col" />
+					<file name="LEVEL.VIS"	type="data" source="assets/models/level.vis" />
+					<file name="LEVEL2.MSH"	type="data" source="assets/models/level2.msh" />
+					<file name="LEVEL2.TXC"	type="data" source="assets/models/level2.txc" />
+					<file name="LEVEL2.COL"	type="data" source="assets/models/level2.col" />
+					<file name="LEVEL2.VIS"	type="data" source="assets/models/level2.vis" />
+					<file name="TEST.MSH"	type="data" source="assets/models/test.msh" />
+					<file name="TEST.TXC"	type="data" source="assets/models/test.txc" />
+					<file name="TEST.COL"	type="data" source="assets/models/test.col" />
+					<file name="TEST.VIS"	type="data" source="assets/models/test.vis" />
+					<file name="ENTITY.MSH"	type="data" source="assets/models/entity.msh" />
+					<file name="ENTITY.TXC"	type="data" source="assets/models/entity.txc" />
+					<file name="WEAPONS.MSH"	type="data" source="assets/models/weapons.msh" />
+					<file name="WEAPONS.TXC"	type="data" source="assets/models/weapons.txc" />
 					<dir name="UI_TEX">
-						<file name="MENU1.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/ui_tex/menu1.txc" />
-						<file name="MENU2.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/ui_tex/menu2.txc" />
-						<file name="UI.TXC"	type="data" source="${PROJECT_SOURCE_DIR}/assets/models/ui_tex/ui.txc" />
+						<file name="MENU1.TXC"	type="data" source="assets/models/ui_tex/menu1.txc" />
+						<file name="MENU2.TXC"	type="data" source="assets/models/ui_tex/menu2.txc" />
+						<file name="UI.TXC"	type="data" source="assets/models/ui_tex/ui.txc" />
 					</dir>
 				</dir>
 				<dir name="MUSIC">
 					<dir name="SEQUENCE">
-						<file name="E1M1.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/e1m1.dss" />
-						<file name="JUSTICE.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/justice.dss" />
-						<file name="E3M3.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/e3m3.dss" />
-						<file name="BLACK.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/black.dss" />
-						<file name="PITCHTST.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/pitchtst.dss" />
-						<file name="LEVEL1.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/level1.dss" />
-						<file name="LEVEL3.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/level3.dss" />
-						<file name="SUBNIVIS.DSS"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/sequence/subnivis.dss" />
+						<file name="E1M1.DSS"	type="data" source="assets/music/sequence/e1m1.dss" />
+						<file name="JUSTICE.DSS"	type="data" source="assets/music/sequence/justice.dss" />
+						<file name="E3M3.DSS"	type="data" source="assets/music/sequence/e3m3.dss" />
+						<file name="BLACK.DSS"	type="data" source="assets/music/sequence/black.dss" />
+						<file name="PITCHTST.DSS"	type="data" source="assets/music/sequence/pitchtst.dss" />
+						<file name="LEVEL1.DSS"	type="data" source="assets/music/sequence/level1.dss" />
+						<file name="LEVEL3.DSS"	type="data" source="assets/music/sequence/level3.dss" />
+						<file name="SUBNIVIS.DSS"	type="data" source="assets/music/sequence/subnivis.dss" />
 					</dir>
-					<file name="INSTR.SBK"	type="data" source="${PROJECT_SOURCE_DIR}/assets/music/instr.sbk" />
+					<file name="INSTR.SBK"	type="data" source="assets/music/instr.sbk" />
 				</dir>
             </dir>
 		</directory_tree>
@@ -111,5 +111,5 @@
 		or MP3 format (using WAV or FLAC is highly recommended to preserve
 		audio quality if you have a lossless copy of the source track).
 	-->
-	<!--<track type="audio" source="${PROJECT_SOURCE_DIR}/track2.wav" />-->
+	<!--<track type="audio" source="track2.wav" />-->
 </iso_project>

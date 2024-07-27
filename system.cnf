@@ -1,4 +1,4 @@
-BOOT=cdrom:\main.exe;1
+BOOT=cdrom:\subnivis.exe;1
 TCB=4
 EVENT=10
 STACK=801FFFF0

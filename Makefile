@@ -1,3 +1,7 @@
+PROJECT_NAME = SubNivis
+ISO_XML = iso.xml
+PROJECT_SOURCE_DIR = .
+
 # Flags
 VERBOSE = 0
 
@@ -182,7 +186,7 @@ $(IMGUIZMO_OBJ_DIR)/%.o: $(IMGUIZMO_SRC_DIR)/%.cpp
 # Target rule for building imguizmo
 imguizmo: $(OBJ_IMGUIZMO)
 
-$(PATH_BUILD_WIN)/SubNivis: mkdir_output_win windows_dependencies $(OBJ_WIN)
+$(PATH_BUILD_WIN)/$(PROJECT_NAME): mkdir_output_win windows_dependencies $(OBJ_WIN)
 	@mkdir -p $(dir $@)
 	@echo Linking $@
 	@$(CXX) -o $@ $(OBJ_WIN) $(OBJ_IMGUI) $(LINKER_FLAGS)
@@ -215,7 +219,7 @@ $(PATH_OBJ_LEVEL_EDITOR)/%.o: $(SOURCE)/%.cpp
 	@echo Compiling $<
 	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
-windows: $(PATH_BUILD_WIN)/SubNivis
+windows: $(PATH_BUILD_WIN)/$(PROJECT_NAME)
 level_editor: $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor
 
 # PSX target
@@ -244,7 +248,7 @@ psx: INCLUDE_DIRS = source \
 			   $(PSN00BSDK_PATH)/include/libpsn00b 
 psx: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 
-$(PATH_BUILD_PSX)/SubNivis.elf: $(OBJ_PSX)
+$(PATH_BUILD_PSX)/$(PROJECT_NAME).elf: $(OBJ_PSX)
 	@mkdir -p $(dir $@)
 	@echo Linking $@
 	@$(CC) -o $@ $(OBJ_PSX) $(LINKER_FLAGS)
@@ -259,7 +263,14 @@ $(PATH_OBJ_PSX)/%.o: $(SOURCE)/%.cpp
 	@echo Compiling $<
 	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
-psx: $(PATH_BUILD_PSX)/SubNivis.elf
+$(PATH_BUILD_PSX)/$(PROJECT_NAME).exe: $(PATH_BUILD_PSX)/$(PROJECT_NAME).elf
+	@mkdir -p $(dir $@)
+	@echo Creating $@
+	@$(PSN00BSDK_PATH)/bin/elf2x -q $(PATH_BUILD_PSX)/$(PROJECT_NAME).elf $(PATH_BUILD_PSX)/$(PROJECT_NAME).exe
+
+psx: $(PATH_BUILD_PSX)/$(PROJECT_NAME).exe
+	@echo Building CD image
+	$(PSN00BSDK_PATH)/bin/mkpsxiso -y -o $(PATH_BUILD_PSX)/$(PROJECT_NAME).bin -c $(PATH_BUILD_PSX)/$(PROJECT_NAME).cue $(ISO_XML)
 
 clean:
 	rm -rf $(PATH_TEMP)
