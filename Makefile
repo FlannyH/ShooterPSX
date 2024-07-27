@@ -91,14 +91,14 @@ windows: LIBRARIES = glfw3 stdc++ gdi32 opengl32
 windows: CC = gcc
 windows: CXX = g++
 windows: CFLAGS = $(patsubst %, -D%, $(DEFINES))
-windows: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) 
+windows: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) -std=c++20
 windows: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(COMPILED_LIB_OUTPUT_WIN)) -std=c++20
 level_editor: DEFINES = _WINDOWS _WIN32 _LEVEL_EDITOR
 level_editor: LIBRARIES = glfw3 stdc++ gdi32 opengl32
 level_editor: CC = gcc
 level_editor: CXX = g++
-level_editor: CFLAGS = $(patsubst %, -D%, $(DEFINES))
-level_editor: CXXFLAGS = $(patsubst %, -D%, $(DEFINES))
+level_editor: CFLAGS = $(patsubst %, -D%, $(DEFINES)) 
+level_editor: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) -std=c++20
 level_editor: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(COMPILED_LIB_OUTPUT_WIN)) -std=c++20
 
 mkdir_output_win:
@@ -169,7 +169,7 @@ $(PATH_OBJ_WIN)/%.o: $(SOURCE)/%.c
 $(PATH_OBJ_WIN)/%.o: $(SOURCE)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@$(CXX) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
 windows: $(PATH_BUILD_WIN)/SubNivis
 level_editor: $(PATH_BUILD_WIN)/LevelEditor
