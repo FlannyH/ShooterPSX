@@ -490,7 +490,7 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
 
         // Draw the viewport
         auto wsize = ImVec2(w, h);
-        ImGui::Image((ImTextureID)fb_texture, wsize, ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::Image((ImTextureID)(intptr_t)fb_texture, wsize, ImVec2(0, 1), ImVec2(1, 0));
 
         // Handle entity gizmo
         ImGuizmo::SetOrthographic(false);
