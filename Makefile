@@ -244,7 +244,7 @@ psx: LIBRARIES = gcc \
 				 gcc 
 psx: CC = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-gcc.exe
 psx: CXX = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-g++.exe
-psx: CFLAGS = $(patsubst %, -D%, $(DEFINES)) -Wno-unused-function -fanalyzer -O2 -g -Wa,--strip-local-absolute -ffreestanding -fno-builtin -nostdlib -fdata-sections -ffunction-sections -fsigned-char -fno-strict-overflow -fdiagnostics-color=always -msoft-float -march=r3000 -mtune=r3000 -mabi=32 -mno-mt -mno-llsc -G8 -fno-pic -mno-abicalls -mgpopt -mno-extern-sdata
+psx: CFLAGS = $(patsubst %, -D%, $(DEFINES)) -Wno-unused-function -fanalyzer -O3 -g -Wa,--strip-local-absolute -ffreestanding -fno-builtin -nostdlib -fdata-sections -ffunction-sections -fsigned-char -fno-strict-overflow -fdiagnostics-color=always -msoft-float -march=r3000 -mtune=r3000 -mabi=32 -mno-mt -mno-llsc -G8 -fno-pic -mno-abicalls -mgpopt -mno-extern-sdata
 psx: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) -std=c++20
 psx: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PSX)) -nostdlib -Wl,-gc-sections -G8 -static -T$(PSN00BSDK_LIBS)/ldscripts/exe.ld
 psx: INCLUDE_DIRS = source \
