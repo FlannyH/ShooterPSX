@@ -306,16 +306,16 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/GOURAUD.FSH \
 					  $(PATH_ASSETS)/GOURAUD.VSH \
 					  $(PATH_ASSETS)/models/entity.msh \
 					  $(PATH_ASSETS)/models/entity.txc \
-					  $(PATH_ASSETS)/models/level.vis \
 					  $(PATH_ASSETS)/models/level.col \
+					  $(PATH_ASSETS)/models/level.vis \
 					  $(PATH_ASSETS)/models/level.msh \
 					  $(PATH_ASSETS)/models/level.txc \
-					  $(PATH_ASSETS)/models/level2.vis \
 					  $(PATH_ASSETS)/models/level2.col \
+					  $(PATH_ASSETS)/models/level2.vis \
 					  $(PATH_ASSETS)/models/level2.msh \
 					  $(PATH_ASSETS)/models/level2.txc \
-					  $(PATH_ASSETS)/models/test.vis \
 					  $(PATH_ASSETS)/models/test.col \
+					  $(PATH_ASSETS)/models/test.vis \
 					  $(PATH_ASSETS)/models/test.msh \
 					  $(PATH_ASSETS)/models/test.txc \
 					  $(PATH_ASSETS)/models/weapons.msh \
@@ -352,6 +352,7 @@ $(PATH_ASSETS)/models/%.vis: $(PATH_ASSETS_TO_BUILD)/models/%.obj
 	@echo Compiling $<
 	@tools/obj2psx.exe --input $< --output $(basename $@) --split
 	@echo Compiling vislist $<
+	@tools/psx_vislist_generator.exe $(basename $@).msh $(basename $@).col $@
 
 # Collision model
 $(PATH_ASSETS)/models/%.col: $(PATH_ASSETS_TO_BUILD)/models/%_col.obj
