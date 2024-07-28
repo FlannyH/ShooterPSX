@@ -7,4 +7,3 @@ license_data.dat
 .vscode/settings.json
 .vscode/launch.json
 assets_to_build/models/level.blend1
-!tools/*.exe
