@@ -121,7 +121,7 @@ mkdir_output_win:
 	mkdir -p $(PATH_OBJ_WIN)/windows
 
 submodules:
-	git submodule update
+	git submodule update --init --recursive
 	
 windows_dependencies: submodules glfw gl3w imgui imguizmo
 
