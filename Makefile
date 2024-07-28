@@ -400,4 +400,4 @@ clean:
 	cargo clean --manifest-path=tools/midi2psx/Cargo.toml
 	cargo clean --manifest-path=tools/psx_vislist_generator/Cargo.toml
 
-all: tools assets windows level_editor psx
+all: submodules tools assets windows level_editor psx
