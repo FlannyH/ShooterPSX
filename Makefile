@@ -7,11 +7,12 @@ VERBOSE = 0
 
 # Input folders
 PATH_SOURCE = source
-PATH_ASSETS = assets
+PATH_ASSETS_TO_BUILD = assets_to_build
 
 # Output folders
 PATH_TEMP = temp
 PATH_BUILD = build
+PATH_ASSETS = assets
 
 PATH_TEMP_PSX = 		  $(PATH_TEMP)/psx
 PATH_TEMP_WIN = 		  $(PATH_TEMP)/windows
@@ -222,8 +223,8 @@ $(PATH_OBJ_LEVEL_EDITOR)/%.o: $(PATH_SOURCE)/%.cpp
 	@echo Compiling $<
 	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
-windows: $(PATH_BUILD_WIN)/$(PROJECT_NAME)
-level_editor: $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor
+windows: tools assets $(PATH_BUILD_WIN)/$(PROJECT_NAME)
+level_editor: tools assets $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor
 
 # PSX target
 psx: PSN00BSDK_PATH = $(PSN00BSDK_LIBS)/../..
@@ -271,38 +272,132 @@ $(PATH_TEMP_PSX)/$(PROJECT_NAME).exe: $(PATH_TEMP_PSX)/$(PROJECT_NAME).elf
 	@echo Creating $@
 	@$(PSN00BSDK_PATH)/bin/elf2x -q $(PATH_TEMP_PSX)/$(PROJECT_NAME).elf $(PATH_TEMP_PSX)/$(PROJECT_NAME).exe
 
-psx: $(PATH_TEMP_PSX)/$(PROJECT_NAME).exe
+psx: tools assets $(PATH_TEMP_PSX)/$(PROJECT_NAME).exe
 	@mkdir -p $(PATH_BUILD_PSX)
 	@echo Building CD image
 	$(PSN00BSDK_PATH)/bin/mkpsxiso -y -o $(PATH_BUILD_PSX)/$(PROJECT_NAME).bin -c $(PATH_BUILD_PSX)/$(PROJECT_NAME).cue $(ISO_XML)
 
 obj2psx:
-	@cargo build --release --manifest-path=tools\obj2psx\Cargo.toml
 	@echo Building $@
+	@cargo build --release --manifest-path=tools/obj2psx/Cargo.toml
 	@cp tools/obj2psx/target/release/deps/obj2psx.exe tools/
 
 midi2psx:
-	@cargo build --release --manifest-path=tools\midi2psx\Cargo.toml
 	@echo Building $@
+	@cargo build --release --manifest-path=tools/midi2psx/Cargo.toml
 	@cp tools/midi2psx/target/release/deps/midi2psx.exe tools/
 
 psx_vislist_generator:
-	@cargo build --release --manifest-path=tools\psx_vislist_generator\Cargo.toml
 	@echo Building $@
+	@cargo build --release --manifest-path=tools/psx_vislist_generator/Cargo.toml
 	@cp tools/psx_vislist_generator/target/release/deps/psx_vislist_generator.exe tools/
 
 psx_soundfont_generator:
-	@mkdir -p $(PATH_TEMP)/psx_soundfont_generator
 	@echo Building $@
+	@mkdir -p $(PATH_TEMP)/psx_soundfont_generator
 	@cmake -S tools/psx_soundfont_generator -B $(PATH_TEMP)/psx_soundfont_generator -G "MSYS Makefiles"
 	@make -C $(PATH_TEMP)/psx_soundfont_generator
 	@cp tools/psx_soundfont_generator/output/psx_soundfont_generator.exe tools/
 
 tools: obj2psx midi2psx psx_vislist_generator psx_soundfont_generator
 
+# For levels, make the first 2 art .col, .vis, and then the rest. this way everything can be built in the right order
+COMPILED_ASSET_LIST = $(PATH_ASSETS)/GOURAUD.FSH \
+					  $(PATH_ASSETS)/GOURAUD.VSH \
+					  $(PATH_ASSETS)/models/entity.msh \
+					  $(PATH_ASSETS)/models/entity.txc \
+					  $(PATH_ASSETS)/models/level.vis \
+					  $(PATH_ASSETS)/models/level.col \
+					  $(PATH_ASSETS)/models/level.msh \
+					  $(PATH_ASSETS)/models/level.txc \
+					  $(PATH_ASSETS)/models/level2.vis \
+					  $(PATH_ASSETS)/models/level2.col \
+					  $(PATH_ASSETS)/models/level2.msh \
+					  $(PATH_ASSETS)/models/level2.txc \
+					  $(PATH_ASSETS)/models/test.vis \
+					  $(PATH_ASSETS)/models/test.col \
+					  $(PATH_ASSETS)/models/test.msh \
+					  $(PATH_ASSETS)/models/test.txc \
+					  $(PATH_ASSETS)/models/weapons.msh \
+					  $(PATH_ASSETS)/models/weapons.txc \
+					  $(PATH_ASSETS)/models/ui_tex/menu1.txc \
+					  $(PATH_ASSETS)/models/ui_tex/menu2.txc \
+					  $(PATH_ASSETS)/models/ui_tex/ui.txc \
+					  $(PATH_ASSETS)/music/instr.sbk \
+					  $(PATH_ASSETS)/music/sequence/black.dss \
+					  $(PATH_ASSETS)/music/sequence/combust.dss \
+					  $(PATH_ASSETS)/music/sequence/e1m1.dss \
+					  $(PATH_ASSETS)/music/sequence/e3m3.dss \
+					  $(PATH_ASSETS)/music/sequence/energia.dss \
+					  $(PATH_ASSETS)/music/sequence/justice.dss \
+					  $(PATH_ASSETS)/music/sequence/level1.dss \
+					  $(PATH_ASSETS)/music/sequence/level3.dss \
+					  $(PATH_ASSETS)/music/sequence/pitchtst.dss \
+					  $(PATH_ASSETS)/music/sequence/subnivis.dss
+
+# Shaders for Windows and Level Editor build
+$(PATH_ASSETS)/%.FSH: $(PATH_ASSETS_TO_BUILD)/%.FSH
+	@mkdir -p $(dir $@)
+	@echo Copying $@
+	@cp $< $@
+
+$(PATH_ASSETS)/%.VSH: $(PATH_ASSETS_TO_BUILD)/%.VSH
+	@mkdir -p $(dir $@)
+	@echo Copying $@
+	@cp $< $@
+
+# If we encounter a vislist, we need to compile the model slightly differently. So do that before creating the vislist
+$(PATH_ASSETS)/models/%.vis: $(PATH_ASSETS_TO_BUILD)/models/%.obj
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@tools/obj2psx.exe --input $< --output $(basename $@) --split
+	@echo Compiling vislist $<
+
+# Collision model
+$(PATH_ASSETS)/models/%.col: $(PATH_ASSETS_TO_BUILD)/models/%_col.obj
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@tools/obj2psx.exe --input $< --output $(basename $@) --collision
+
+# Any other model, like weapon models or entity models
+$(PATH_ASSETS)/models/%.msh: $(PATH_ASSETS_TO_BUILD)/models/%.obj
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@tools/obj2psx.exe --input $< --output $(basename $@)
+$(PATH_ASSETS)/models/%.txc: $(PATH_ASSETS)/models/%.msh
+
+# UI textures
+$(PATH_ASSETS)/models/ui_tex/%.txc: $(PATH_ASSETS_TO_BUILD)/models/ui_tex/%.png
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@tools/obj2psx.exe --input $< --output $@
+
+# Soundbank
+$(PATH_ASSETS)/music/%.sbk: $(PATH_ASSETS_TO_BUILD)/music/%.csv
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@tools/psx_soundfont_generator.exe $< $@
+
+# Music sequences
+$(PATH_ASSETS)/music/sequence/%.dss: $(PATH_ASSETS_TO_BUILD)/music/sequence/%.mid
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@tools/midi2psx.exe $< $@
+
+assets: $(COMPILED_ASSET_LIST)
+
+clean_assets: 
+	rm -rf $(PATH_ASSETS)
+
+rebuild_assets: clean_assets assets
+
 clean:
 	rm -rf $(PATH_TEMP)
 	rm -rf $(PATH_BUILD)
+	rm -rf $(PATH_ASSETS)
 	rm tools/*.exe
+	cargo clean --manifest-path=tools/obj2psx/Cargo.toml
+	cargo clean --manifest-path=tools/midi2psx/Cargo.toml
+	cargo clean --manifest-path=tools/psx_vislist_generator/Cargo.toml
 
-all: tools windows level_editor psx
+all: tools assets windows level_editor psx
