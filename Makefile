@@ -6,8 +6,8 @@ PROJECT_SOURCE_DIR = .
 VERBOSE = 0
 
 # Input folders
-SOURCE = source
-ASSETS = assets
+PATH_SOURCE = source
+PATH_ASSETS = assets
 
 # Output folders
 PATH_TEMP = temp
@@ -194,30 +194,30 @@ $(PATH_BUILD_WIN)/$(PROJECT_NAME): mkdir_output_win windows_dependencies $(OBJ_W
 	@echo Linking $@
 	@$(CXX) -o $@ $(OBJ_WIN) $(OBJ_IMGUI) $(LINKER_FLAGS)
 	@echo Copying assets
-	@cp -r $(ASSETS) $(dir $@)
+	@cp -r $(PATH_ASSETS) $(dir $@)
 	
 $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor: mkdir_output_win windows_dependencies $(OBJ_LEVEL_EDITOR)
 	@mkdir -p $(dir $@)
 	@echo Linking $@
 	@$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
-	@cp -r $(ASSETS) $(dir $@)
+	@cp -r $(PATH_ASSETS) $(dir $@)
 
-$(PATH_OBJ_WIN)/%.o: $(SOURCE)/%.c
+$(PATH_OBJ_WIN)/%.o: $(PATH_SOURCE)/%.c
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
-$(PATH_OBJ_WIN)/%.o: $(SOURCE)/%.cpp
+$(PATH_OBJ_WIN)/%.o: $(PATH_SOURCE)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
-$(PATH_OBJ_LEVEL_EDITOR)/%.o: $(SOURCE)/%.c
+$(PATH_OBJ_LEVEL_EDITOR)/%.o: $(PATH_SOURCE)/%.c
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
-$(PATH_OBJ_LEVEL_EDITOR)/%.o: $(SOURCE)/%.cpp
+$(PATH_OBJ_LEVEL_EDITOR)/%.o: $(PATH_SOURCE)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
@@ -256,12 +256,12 @@ $(PATH_TEMP_PSX)/$(PROJECT_NAME).elf: $(OBJ_PSX)
 	@echo Linking $@
 	@$(CC) -o $@ $(OBJ_PSX) $(LINKER_FLAGS)
 
-$(PATH_OBJ_PSX)/%.o: $(SOURCE)/%.c
+$(PATH_OBJ_PSX)/%.o: $(PATH_SOURCE)/%.c
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
-$(PATH_OBJ_PSX)/%.o: $(SOURCE)/%.cpp
+$(PATH_OBJ_PSX)/%.o: $(PATH_SOURCE)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
@@ -276,8 +276,33 @@ psx: $(PATH_TEMP_PSX)/$(PROJECT_NAME).exe
 	@echo Building CD image
 	$(PSN00BSDK_PATH)/bin/mkpsxiso -y -o $(PATH_BUILD_PSX)/$(PROJECT_NAME).bin -c $(PATH_BUILD_PSX)/$(PROJECT_NAME).cue $(ISO_XML)
 
+obj2psx:
+	@cargo build --release --manifest-path=tools\obj2psx\Cargo.toml
+	@echo Building $@
+	@cp tools/obj2psx/target/release/deps/obj2psx.exe tools/
+
+midi2psx:
+	@cargo build --release --manifest-path=tools\midi2psx\Cargo.toml
+	@echo Building $@
+	@cp tools/midi2psx/target/release/deps/midi2psx.exe tools/
+
+psx_vislist_generator:
+	@cargo build --release --manifest-path=tools\psx_vislist_generator\Cargo.toml
+	@echo Building $@
+	@cp tools/psx_vislist_generator/target/release/deps/psx_vislist_generator.exe tools/
+
+psx_soundfont_generator:
+	@mkdir -p $(PATH_TEMP)/psx_soundfont_generator
+	@echo Building $@
+	@cmake -S tools/psx_soundfont_generator -B $(PATH_TEMP)/psx_soundfont_generator -G "MSYS Makefiles"
+	@make -C $(PATH_TEMP)/psx_soundfont_generator
+	@cp tools/psx_soundfont_generator/output/psx_soundfont_generator.exe tools/
+
+tools: obj2psx midi2psx psx_vislist_generator psx_soundfont_generator
+
 clean:
 	rm -rf $(PATH_TEMP)
 	rm -rf $(PATH_BUILD)
+	rm tools/*.exe
 
-all: windows level_editor psx
+all: tools windows level_editor psx
