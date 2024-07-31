@@ -47,24 +47,15 @@ ALWAYS_INLINE void scalar_debug(const scalar_t a) {
 #endif
 #include <stdlib.h>
 
-static struct {
-    unsigned int overflow : 1;
-} operator_flags;
-
 ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
     int64_t result32 = ((int64_t)(a >> 6) * ((int64_t)b >> 6));
 
     // overflow check
-    operator_flags.overflow = 0;
     if (result32 > INT32_MAX) {
         result32 = INT32_MAX;
-        operator_flags.overflow = 1;
-        //WARN_IF("overflow occured during scalar_mul", 1);
     }
     else if (result32 < -INT32_MAX) {
         result32 = -INT32_MAX;
-        operator_flags.overflow = 1;
-        //WARN_IF("overflow occured during scalar_mul", 1);
     }
     return (fixed20_12_t)result32;
 }
