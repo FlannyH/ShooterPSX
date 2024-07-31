@@ -48,7 +48,7 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 #ifdef _LEVEL_EDITOR
 	drawing_entity_id = slot;
 #endif
-	renderer_draw_mesh_shaded_offset(crate->entity_header.mesh, &render_transform, tex_entity_start);
+	renderer_draw_mesh_shaded_offset(crate->entity_header.mesh, &render_transform, 0, tex_entity_start);
 }
 
 void entity_crate_on_hit(int slot, int hitbox_index) {

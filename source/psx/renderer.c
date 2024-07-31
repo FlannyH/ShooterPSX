@@ -173,7 +173,7 @@ void renderer_end_frame(void) {
     drawn_first_frame = 1;
 }
 
-void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform) {
+void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform, int local) {
     ++n_meshes_total;
     if (!mesh) {
         printf("renderer_draw_mesh_shaded: mesh was null!\n");
@@ -184,7 +184,8 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_tran
     MATRIX model_matrix;
     HiRotMatrix((VECTOR*)&model_transform->rotation, &model_matrix); // VECTOR and vec3_t are identical bitwise
     TransMatrix(&model_matrix, (VECTOR*)&model_transform->position); 
-    CompMatrixLV(&view_matrix, &model_matrix, &model_matrix);
+    if (local) CompMatrixLV(&aspect_matrix, &model_matrix, &model_matrix);
+    else       CompMatrixLV(&view_matrix, &model_matrix, &model_matrix);
 
     // Send it to the GTE
 	PushMatrix();
@@ -208,54 +209,6 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_tran
     }
 
 	PopMatrix();
-}
-
-void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, const transform_t* model_transform, int tex_id_offset) {
-    tex_id_start = tex_id_offset;
-    
-    ++n_meshes_total;
-    if (!mesh) {
-        printf("renderer_draw_mesh_shaded: mesh was null!\n");
-        return;
-    }
-
-    // Set rotation and translation matrix
-    MATRIX model_matrix;
-    HiRotMatrix((VECTOR*)&model_transform->rotation, &model_matrix); // VECTOR and vec3_t are identical bitwise
-    TransMatrix(&model_matrix, (VECTOR*)&model_transform->position);
-    // Scale by aspect ratio
-    aspect_matrix = (MATRIX){
-        .m = {
-            {(ONE * res_x) / (widescreen ? 427 : 320), 0, 0},
-            {0, ONE, 0},
-            {0, 0, ONE},
-        },
-        .t = {0, 0, 0},
-    };
-    CompMatrixLV(&aspect_matrix, &model_matrix, &model_matrix);
-
-    // Send it to the GTE
-	PushMatrix();
-    gte_SetRotMatrix(&model_matrix);
-    gte_SetTransMatrix(&model_matrix);
-
-    // If the mesh's bounding box is not inside the viewing frustum, cull it
-    if (frustrum_cull_aabb(mesh->bounds.min, mesh->bounds.max)) return;
-
-    ++n_meshes_drawn;
-
-    // Loop over each triangle
-    size_t vert_idx = 0;
-    for (size_t i = 0; i < mesh->n_triangles; ++i) {
-        draw_tex_triangle3d_fancy(&mesh->vertices[vert_idx]);
-        vert_idx += 3;
-    }
-    for (size_t i = 0; i < mesh->n_quads; ++i) {
-        draw_tex_quad3d_fancy(&mesh->vertices[vert_idx]);
-        vert_idx += 4;
-    }
-
-    PopMatrix();
 }
 
 void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {

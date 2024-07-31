@@ -14,9 +14,9 @@ uint8_t tex_id_start = 0;
 extern int drawing_entity_id;
 #endif
 
-void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, const transform_t* model_transform, int tex_id_offset) {
+void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, const transform_t* model_transform, int local, int tex_id_offset) {
     tex_id_start = tex_id_offset;
-    renderer_draw_mesh_shaded(mesh, model_transform);
+    renderer_draw_mesh_shaded(mesh, model_transform, local);
 }
 
 void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {
@@ -75,7 +75,7 @@ void renderer_draw_model_shaded(const model_t* model, const transform_t* model_t
     if (vislist == NULL || n_sections == 0) {
         for (size_t i = 0; i < model->n_meshes; ++i) {
             //renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
-            renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+            renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0);
         }
     }
     else {
@@ -92,10 +92,10 @@ void renderer_draw_model_shaded(const model_t* model, const transform_t* model_t
 
         // Render only the meshes that are visible
         for (size_t i = 0; i < model->n_meshes; ++i) {
-            if ((i < 32) && (combined.sections_0_31 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-            else if ((i >= 32) && (i < 64) && (combined.sections_32_63 & (1 << (i - 32)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-            else if ((i >= 64) && (i < 96) && (combined.sections_64_95 & (1 << (i - 64)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-            else if ((i >= 96) && (i < 128) && (combined.sections_96_127 & (1 << (i - 96)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
+            if ((i < 32) && (combined.sections_0_31 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0);
+            else if ((i >= 32) && (i < 64) && (combined.sections_32_63 & (1 << (i - 32)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0);
+            else if ((i >= 64) && (i < 96) && (combined.sections_64_95 & (1 << (i - 64)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0);
+            else if ((i >= 96) && (i < 128) && (combined.sections_96_127 & (1 << (i - 96)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0);
         }
     }
 

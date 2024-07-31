@@ -443,7 +443,7 @@ void renderer_end_frame(void) {
 }
 
 int32_t max_dot_value = 0;
-void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_transform) {
+void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_transform, int local) {
 	// Calculate model matrix
 	mat4 model_matrix;
 	glm_mat4_identity(model_matrix);
@@ -480,8 +480,17 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 
 	// Set matrices
 	glUniformMatrix4fv(glGetUniformLocation(shader, "proj_matrix"), 1, GL_FALSE, &perspective_matrix[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE, &view_matrix[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
+	if (local) {
+		static const mat4 id_matrix =   {{1.0f, 0.0f, 0.0f, 0.0f},                    \
+                                 		 {0.0f, -1.0f, 0.0f, 0.0f},                    \
+                                 		 {0.0f, 0.0f, -1.0f, 0.0f},                    \
+                                 		 {0.0f, 0.0f, 0.0f, 1.0f}};
+		glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE, &id_matrix[0][0]);
+	}
+	else {
+		glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE, &view_matrix[0][0]);
+	}
 
     glUniform1i(glGetUniformLocation(shader, "texture_bound"), mesh->vertices[0].tex_id != 255);
     glUniform1i(glGetUniformLocation(shader, "texture_offset"), tex_id_start);
@@ -798,67 +807,6 @@ void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8
 }
 
 void renderer_set_video_mode(int is_pal) {}
-
-void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, const transform_t* model_transform, int tex_id_offset) {
-    tex_id_start = tex_id_offset;
-    // Calculate model matrix
-    mat4 model_matrix;
-    glm_mat4_identity(model_matrix);
-
-    // Apply rotation
-    // Apply translation
-    // Apply scale
-    vec3 position = {
-            (float)model_transform->position.x,
-            (float)-model_transform->position.y,
-            (float)-model_transform->position.z,
-    };
-    vec3 scale = {
-            (float)model_transform->scale.x / 4096.0f,
-            (float)model_transform->scale.y / -4096.0f,
-            (float)model_transform->scale.z / -4096.0f,
-    };
-    glm_translate(model_matrix, position);
-    glm_scale(model_matrix, scale);
-    glm_rotate_x(model_matrix, (float)model_transform->rotation.x * 2 * PI / 131072.0f, model_matrix);
-    glm_rotate_y(model_matrix, (float)model_transform->rotation.y * 2 * PI / 131072.0f, model_matrix);
-    glm_rotate_z(model_matrix, (float)model_transform->rotation.z * 2 * PI / 131072.0f, model_matrix);
-
-    // Bind shader
-    glUseProgram(shader);
-
-    // Bind texture
-    glBindTexture(GL_TEXTURE_2D, textures);
-
-    // Bind vertex buffers
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-    // Set matrices
-    mat4 id_matrix;
-    glm_mat4_identity(id_matrix);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "proj_matrix"), 1, GL_FALSE, &perspective_matrix[0][0]);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE, &id_matrix[0][0]);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
-
-    glUniform1i(glGetUniformLocation(shader, "texture_bound"), mesh->vertices[0].tex_id != 255);
-    glUniform1i(glGetUniformLocation(shader, "texture_offset"), tex_id_start);
-	glUniform1i(glGetUniformLocation(shader, "texture_is_page"), 0);
-	glUniform1i(glGetUniformLocation(shader, "curr_depth_bias"), curr_depth_bias);
-	glUniform1f(glGetUniformLocation(shader, "alpha"), 1.0f);
-
-    // Copy data into it
-    glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(vertex_3d_t), mesh->vertices, GL_STATIC_DRAW);
-
-    // Enable depth and draw
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
-    glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
-
-    n_total_triangles += mesh->n_triangles;
-    tex_id_start = 0;
-}
 
 void renderer_set_depth_bias(int bias) {
 	curr_depth_bias = bias;
