@@ -28,7 +28,7 @@ int main(void) {
     size_t selected_entity = 0;
     int mouse_over_viewport = 0;
 
-    while (!renderer_should_close(void)) {
+    while (!renderer_should_close()) {
 	    mem_stack_release(STACK_TEMP);
 
         // Delta time
