@@ -707,7 +707,16 @@ void state_update_settings(int dt) {
 	// Draw values
 	char num_display[4];
 	snprintf(num_display, 4, "%i", res_x);
-	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 0))*ONE}, (is_pal) ? ((vsync_enable == 2) ? "25 FPS" : "50 FPS") : ((vsync_enable == 2) ? "30 FPS" : "60 FPS"), 1, 0, white);
+	char* fps_text = "UNLOCKED";
+	if (vsync_enable == 1) {
+		if (is_pal) fps_text = "50 FPS";
+		else fps_text = "60 FPS";
+	} 
+	else if (vsync_enable == 2) {
+		if (is_pal) fps_text = "25 FPS";
+		else fps_text = "30 FPS";
+	} 
+	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 0))*ONE}, fps_text, 1, 0, white);
 	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 1))*ONE}, is_pal ? "PAL" : "NTSC", 1, 0, white);
 	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 2))*ONE}, widescreen ? "16:9" : "4:3", 1, 0, white);
 	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 3))*ONE}, num_display, 1, 0, white);
@@ -729,9 +738,11 @@ void state_update_settings(int dt) {
 	if (input_released(PAD_CROSS, 0)) {
 		state.settings.button_pressed = 0;
 		switch (state.settings.button_selected) {
-			case 0: // frame rate limit 30 or 60
-				if (vsync_enable == 1) vsync_enable = 2;
-				else if (vsync_enable == 2) vsync_enable = 1;
+			case 0: // frame rate limit
+				vsync_enable--;
+				if (vsync_enable < 0) {
+					vsync_enable = 2;
+				}
 				break;
 			case 1: // video mode pal or ntsc
 				is_pal = !is_pal;
