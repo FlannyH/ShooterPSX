@@ -46,7 +46,7 @@ int curr_depth_bias = 0;
 
 // Need to define these somewhere so it compiles, unused in Windows build
 int is_pal = 0;
-int vsync_enable = 2; // 0 = unlocked, 1 = 60 fps or 50 fps, 2 = 30 fps or 25 fps
+int vsync_enable = 0; // 0 = unlocked, 1 = 60 fps or 50 fps, 2 = 30 fps or 25 fps
 int tex_entity_start = 0;
 int tex_weapon_start = 0;
 int tex_level_start = 0;
@@ -438,6 +438,7 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 void renderer_end_frame(void) {
 	update_delta_time_ms();
 	// Flip buffers
+	glfwSwapInterval(vsync_enable);
 	glfwSwapBuffers(window);
 	glfwPollEvents();
 }
