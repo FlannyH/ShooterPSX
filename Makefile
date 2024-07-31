@@ -58,7 +58,8 @@ CODE_ENGINE_WIN_C = windows/file.c \
 CODE_ENGINE_WIN_CPP = windows/debug_layer.cpp
 
 # Source files specific to NDS
-# CODE_ENGINE_PSX_C = nds/file.c \
+CODE_ENGINE_NDS_C = nds/psx.c \
+# 				    nds/file.c \
 # 				    nds/input.c \
 # 				    nds/music.c \
 # 				    nds/renderer.c \
@@ -303,7 +304,8 @@ nds: CXX = $(GCC_ARM_NONE_EABI_PATH)/bin/arm-none-eabi-g++.exe
 nds: CFLAGS = $(patsubst %, -D%, $(DEFINES)) -mthumb -mcpu=arm946e-s+nofp -std=gnu17 -O2 -ffunction-sections -fdata-sections -specs=$(BLOCKSDS)/sys/crts/ds_arm9.specs
 nds: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) -mthumb -mcpu=arm946e-s+nofp -std=gnu++17 -O2 -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -specs=$(BLOCKSDS)/sys/crts/ds_arm9.specs
 nds: LINKER_FLAGS = $(patsubst %, -L%, $(PATH_LIB_NDS)) -mthumb -mcpu=arm946e-s+nofp -Wl,--start-group $(patsubst %, -l%, $(LIBRARIES)) -Wl,--end-group -specs=$(BLOCKSDS)/sys/crts/ds_arm9.specs
-nds: INCLUDE_DIRS = source
+nds: INCLUDE_DIRS = source \
+					$(BLOCKSDS)/libs/libnds/include
 nds: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 
 $(PATH_OBJ_NDS)/%.o: $(PATH_SOURCE)/%.c
