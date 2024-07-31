@@ -36,3 +36,8 @@ void renderer_begin_frame(const transform_t* camera_transform) {
     camera_dir.y = view_matrix[5];
     camera_dir.z = view_matrix[8];
 }
+
+void renderer_end_frame(void) {
+    // todo: update delta time
+    glFlush(0);
+}
