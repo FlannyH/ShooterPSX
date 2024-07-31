@@ -42,7 +42,6 @@ void renderer_draw_model_shaded(const model_t* model, const transform_t* model_t
 void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform); // Draws a 3D mesh at a given transform using shaded triangle primitives
 void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, const transform_t* model_transform, int tex_id_offset); // Same as above, except applies a texture id offset
 void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, const transform_t* model_transform, int tex_id_offset); // Same as above, except always renders from 0, 0, 0. Useful for 3D HUD elements since camera position is not taken into account
-void renderer_draw_entity_shaded(const mesh_t* mesh, const transform_t* model_transform, int texpage); // Same as draw_mesh, except it uses 8-bit texture pages instead of 4-bit textures
 void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page);
 void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page);
 void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const int centered, const pixel32_t color);
@@ -57,10 +56,14 @@ int renderer_get_delta_time_raw(void);
 int renderer_get_delta_time_ms(void);
 int renderer_convert_dt_raw_to_ms(int dt_raw);
 int renderer_should_close(void);
-vec3_t renderer_get_forward_vector(void);
 int renderer_get_level_section_from_position(const model_t *model, vec3_t position);
 void renderer_cycle_res_x(void);
 void renderer_set_depth_bias(int bias);
+
+#ifdef _LEVEL_EDITOR
+vec3_t renderer_get_forward_vector(void); // Used in the level editor to determine where to spawn new entities
+#endif 
+
 extern int n_rendered_triangles;
 extern int n_rendered_quads;
 extern int n_rendered_untex_triangles;

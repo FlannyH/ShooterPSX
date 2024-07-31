@@ -56,6 +56,7 @@ int res_x = 512; // Pretend it's the same as PSX
 GLuint fbo;
 GLuint fb_texture;
 GLuint fb_depth;
+int drawing_entity_id = 255;
 #endif
 
 typedef enum { vertex, pixel, geometry, compute } ShaderType;
@@ -440,45 +441,13 @@ void renderer_end_frame(void) {
 	glfwSwapBuffers(window);
 	glfwPollEvents();
 }
-int drawing_entity_id = 255;
-void renderer_draw_model_shaded(const model_t* model, const transform_t* model_transform, visfield_t* vislist, int tex_id_offset) {
-	if (!model) return;
-
-	drawing_entity_id = 255;
-    glViewport(0, 0, w, h);
-    if (vislist == NULL || n_sections == 0) {
-        for (size_t i = 0; i < model->n_meshes; ++i) {
-            //renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
-            renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-        }
-    }
-    else {
-        // Determine which meshes to render
-        visfield_t combined = { 0, 0, 0, 0 };
-
-        // Get all the vislist bitfields and combine them together
-        for (size_t i = 0; i < n_sections; ++i) {
-            combined.sections_0_31 |= vislist[sections[i]].sections_0_31;
-            combined.sections_32_63 |= vislist[sections[i]].sections_32_63;
-            combined.sections_64_95 |= vislist[sections[i]].sections_64_95;
-            combined.sections_96_127 |= vislist[sections[i]].sections_96_127;
-        }
-
-        // Render only the meshes that are visible
-        for (size_t i = 0; i < model->n_meshes; ++i) {
-            if ((i < 32) && (combined.sections_0_31 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-            else if ((i >= 32) && (i < 64) && (combined.sections_32_63 & (1 << (i - 32)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-            else if ((i >= 64) && (i < 96) && (combined.sections_64_95 & (1 << (i - 64)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-            else if ((i >= 96) && (i < 128) && (combined.sections_96_127 & (1 << (i - 96)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform);
-        }
-    }
-}
 
 int32_t max_dot_value = 0;
 void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_transform) {
 	// Calculate model matrix
 	mat4 model_matrix;
 	glm_mat4_identity(model_matrix);
+    glViewport(0, 0, w, h);
 
 	// Apply rotation
 	// Apply translation
@@ -525,18 +494,22 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 
 	// Enable depth and draw
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_STENCIL_TEST);
 	glEnable(GL_CULL_FACE);
+#ifdef _LEVEL_EDITOR
+	glEnable(GL_STENCIL_TEST);
 	glStencilMask(0xFF);
 	glStencilFunc(GL_ALWAYS, drawing_entity_id, 0xFF);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+#endif
 	glCullFace(GL_FRONT);
 	glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
     glDrawArrays(GL_QUADS, mesh->n_triangles * 3, mesh->n_quads * 4);
 
 	n_total_triangles += mesh->n_triangles;
     tex_id_start = 0;
+#ifdef _LEVEL_EDITOR
 	drawing_entity_id = 255;
+#endif
 }
 
 void renderer_draw_triangles_shaded_2d(const vertex_2d_t *vertex_buffer, uint16_t n_verts, int16_t x, int16_t y) {
