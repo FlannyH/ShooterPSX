@@ -16,12 +16,15 @@ PATH_ASSETS = assets
 
 PATH_TEMP_PSX = 		  $(PATH_TEMP)/psx
 PATH_TEMP_WIN = 		  $(PATH_TEMP)/windows
+PATH_TEMP_NDS = 		  $(PATH_TEMP)/nds
 PATH_TEMP_LEVEL_EDITOR =  $(PATH_TEMP)/level_editor
 PATH_BUILD_PSX = 		  $(PATH_BUILD)/psx
 PATH_BUILD_WIN = 		  $(PATH_BUILD)/windows
+PATH_BUILD_NDS = 		  $(PATH_BUILD)/nds
 PATH_BUILD_LEVEL_EDITOR = $(PATH_BUILD)/level_editor
 PATH_LIB_WIN = $(PATH_TEMP_WIN)/lib
 PATH_LIB_PSX = $(PSN00BSDK_LIBS)/release
+PATH_LIB_NDS = $(BLOCKSDS)/libs/libnds/lib
 
 # Source files shared by all targets
 CODE_ENGINE_SHARED_C = camera.c \
@@ -54,9 +57,18 @@ CODE_ENGINE_WIN_C = windows/file.c \
 				    windows/texture.c 
 CODE_ENGINE_WIN_CPP = windows/debug_layer.cpp
 
+# Source files specific to NDS
+# CODE_ENGINE_PSX_C = nds/file.c \
+# 				    nds/input.c \
+# 				    nds/music.c \
+# 				    nds/renderer.c \
+# 				    nds/texture.c \
+# 				    nds/timer.c 
+
 # Where the object files go
 PATH_OBJ_PSX = $(PATH_TEMP_PSX)/obj
 PATH_OBJ_WIN = $(PATH_TEMP_WIN)/obj
+PATH_OBJ_NDS = $(PATH_TEMP_NDS)/obj
 PATH_OBJ_LEVEL_EDITOR = $(PATH_TEMP_LEVEL_EDITOR)/obj
 
 # Misc source file definitions
@@ -68,6 +80,8 @@ CODE_PSX_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PSX_C) 	$(CODE_GAME_MAI
 CODE_PSX_CPP			= $(CODE_ENGINE_SHARED_CPP) 	
 CODE_WIN_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_WIN_C) 	$(CODE_GAME_MAIN)
 CODE_WIN_CPP			= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_WIN_CPP)
+CODE_NDS_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_NDS_C) 	$(CODE_GAME_MAIN)
+CODE_NDS_CPP			= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_NDS_CPP)
 CODE_LEVEL_EDITOR_C		= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_WIN_C) 	$(CODE_LEVEL_EDITOR) 
 CODE_LEVEL_EDITOR_CPP	= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_WIN_CPP)
 
@@ -75,6 +89,8 @@ OBJ_PSX					= 	$(patsubst %.c, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_C))				\
 							$(patsubst %.cpp, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_CPP))				
 OBJ_WIN					= 	$(patsubst %.c, 	$(PATH_OBJ_WIN)/%.o,	        $(CODE_WIN_C))				\
 							$(patsubst %.cpp, 	$(PATH_OBJ_WIN)/%.o,	        $(CODE_WIN_CPP))				
+OBJ_NDS					= 	$(patsubst %.c, 	$(PATH_OBJ_NDS)/%.o,	        $(CODE_NDS_C))				\
+							$(patsubst %.cpp, 	$(PATH_OBJ_NDS)/%.o,	        $(CODE_NDS_CPP))				
 OBJ_LEVEL_EDITOR		= 	$(patsubst %.c, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVEL_EDITOR_C))		\
 							$(patsubst %.cpp, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVEL_EDITOR_CPP))		
 
@@ -244,7 +260,7 @@ psx: LIBRARIES = gcc \
 				 gcc 
 psx: CC = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-gcc.exe
 psx: CXX = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-g++.exe
-psx: CFLAGS = $(patsubst %, -D%, $(DEFINES)) -Wno-unused-function -fanalyzer -O3 -g -Wa,--strip-local-absolute -ffreestanding -fno-builtin -nostdlib -fdata-sections -ffunction-sections -fsigned-char -fno-strict-overflow -fdiagnostics-color=always -msoft-float -march=r3000 -mtune=r3000 -mabi=32 -mno-mt -mno-llsc -G8 -fno-pic -mno-abicalls -mgpopt -mno-extern-sdata
+psx: CFLAGS = $(patsubst %, -D%, $(DEFINES)) -Wno-unused-function -fanalyzer -O3 -g -Wa,--strip-local-absolute -ffreestanding -fno-builtin -nostdlib -fdata-sections -ffunction-sections -fsigned-char -fno-strict-overflow -fdiagnostics-color=always -msoft-float -march=r3000 -mtune=r3000 -mabi=32 -mno-mt -mno-llsc -G8 -fno-pic -mno-abicalls -mgpopt -mno-extern-sdata -MMD -MP
 psx: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) -std=c++20
 psx: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PSX)) -nostdlib -Wl,-gc-sections -G8 -static -T$(PSN00BSDK_LIBS)/ldscripts/exe.ld
 psx: INCLUDE_DIRS = source \
@@ -276,6 +292,36 @@ psx: tools assets $(PATH_TEMP_PSX)/$(PROJECT_NAME).exe
 	@mkdir -p $(PATH_BUILD_PSX)
 	@echo Building CD image
 	$(PSN00BSDK_PATH)/bin/mkpsxiso -y -o $(PATH_BUILD_PSX)/$(PROJECT_NAME).bin -c $(PATH_BUILD_PSX)/$(PROJECT_NAME).cue $(ISO_XML)
+
+# NDS target
+# Set GCC_ARM_NONE_EABI_PATH to the folder containing the GCC compiler
+# todo: maybe try to find it using a set of defaults first before resorting to this one
+nds: DEFINES = _NDS
+nds: LIBRARIES = nds9 c
+nds: CC = $(GCC_ARM_NONE_EABI_PATH)/bin/arm-none-eabi-gcc.exe
+nds: CXX = $(GCC_ARM_NONE_EABI_PATH)/bin/arm-none-eabi-g++.exe
+nds: CFLAGS = $(patsubst %, -D%, $(DEFINES)) -mthumb -mcpu=arm946e-s+nofp -std=gnu17 -O2 -ffunction-sections -fdata-sections -specs=$(BLOCKSDS)/sys/crts/ds_arm9.specs
+nds: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) -mthumb -mcpu=arm946e-s+nofp -std=gnu++17 -O2 -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -specs=$(BLOCKSDS)/sys/crts/ds_arm9.specs
+nds: LINKER_FLAGS = $(patsubst %, -L%, $(PATH_LIB_NDS)) -mthumb -mcpu=arm946e-s+nofp -Wl,--start-group $(patsubst %, -l%, $(LIBRARIES)) -Wl,--end-group -specs=$(BLOCKSDS)/sys/crts/ds_arm9.specs
+nds: INCLUDE_DIRS = source
+nds: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
+
+$(PATH_OBJ_NDS)/%.o: $(PATH_SOURCE)/%.c
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
+
+$(PATH_OBJ_NDS)/%.o: $(PATH_SOURCE)/%.cpp
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
+
+$(PATH_TEMP_NDS)/$(PROJECT_NAME).elf: $(OBJ_NDS)
+	@mkdir -p $(dir $@)
+	@echo Linking $@
+	@$(CC) -o $@ $(OBJ_NDS) $(LINKER_FLAGS)
+
+nds: tools assets $(PATH_TEMP_NDS)/$(PROJECT_NAME).elf
 
 obj2psx:
 	@echo Building $@
