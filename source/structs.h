@@ -172,7 +172,7 @@ typedef struct {
 
 typedef struct {
     vec3_t position; // Position (4096 is 1.0 meter)
-    vec3_t rotation; // Angles in fixed-point format (131072 = 360 degrees)
+    vec3_t rotation; // Angles in fixed-point format (131072 units = 360 degrees)
     vec3_t scale; // Scale (4096 = 1.0)
 } transform_t;
 
