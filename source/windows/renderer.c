@@ -443,11 +443,12 @@ void renderer_end_frame(void) {
 }
 
 int32_t max_dot_value = 0;
-void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_transform, int local) {
+void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_transform, int local, int tex_id_offset) {
 	// Calculate model matrix
 	mat4 model_matrix;
 	glm_mat4_identity(model_matrix);
     glViewport(0, 0, w, h);
+    tex_id_start = tex_id_offset;
 
 	// Apply rotation
 	// Apply translation

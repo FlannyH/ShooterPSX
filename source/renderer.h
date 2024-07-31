@@ -39,8 +39,7 @@ void renderer_init(void); // Initializes the renderer by configuring the GPU, se
 void renderer_begin_frame(const transform_t* camera_transform); // Applies the camera transform to the renderer, preparing it for a new frame
 void renderer_end_frame(void); // Draws the render queue, swaps the drawbuffer, clears the render queue, and applies the display environments
 void renderer_draw_model_shaded(const model_t* model, const transform_t* model_transform, visfield_t* vislist, int tex_id_offset); // Draws a 3D model at a given transform using shaded triangle primitives
-void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform, int local); // Draws a 3D mesh at a given transform using shaded triangle primitives
-void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, const transform_t* model_transform, int local, int tex_id_offset); // Same as above, except applies a texture id offset
+void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform, int local, int tex_id_offset); // Draws a 3D mesh at a given transform using shaded triangle primitives. Setting local to 1 draws it relative to the camera view.
 void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page);
 void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page);
 void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const int centered, const pixel32_t color);
