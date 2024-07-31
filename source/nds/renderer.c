@@ -31,7 +31,7 @@ void renderer_begin_frame(const transform_t* camera_transform) {
 
     // Fetch view matrix
     int view_matrix[9];
-    glGetFixed(GL_GET_MATRIX_VECTOR, &view_matrix)
+    glGetFixed(GL_GET_MATRIX_VECTOR, &view_matrix[0]);
     camera_dir.x = view_matrix[2]; // todo: verify that these are correct
     camera_dir.y = view_matrix[5];
     camera_dir.z = view_matrix[8];
