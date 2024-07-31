@@ -44,6 +44,14 @@ vec3_t camera_dir;
 int tex_id_start;
 int curr_depth_bias = 0;
 
+// Need to define these somewhere so it compiles, unused in Windows build
+int is_pal = 0;
+int vsync_enable = 0;
+int tex_entity_start = 0;
+int tex_weapon_start = 0;
+int tex_level_start = 0;
+int res_x = 512; // Pretend it's the same as PSX
+
 #ifdef _LEVEL_EDITOR
 GLuint fbo;
 GLuint fb_texture;
