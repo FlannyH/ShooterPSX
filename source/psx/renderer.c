@@ -64,13 +64,6 @@ RECT palettes[256];
 // Import inline helper functions
 #include "renderer_inline.c"
 
-void renderer_cycle_res_x(void) {
-    static int index = 0;
-    res_x = horizontal_resolutions[index++];
-    index %= 4;
-    renderer_set_video_mode(is_pal);
-}
-
 void renderer_init(void) {
     // Reset GPU and enable interrupts
     ResetGraph(0);

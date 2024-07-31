@@ -741,7 +741,6 @@ void state_update_settings(int dt) {
 				widescreen = !widescreen;
 				break;
 			case 3: // controller sensitivity
-				renderer_cycle_res_x();
 				break;
 			case 4: // back
 				current_state = state.global.state_to_return_to;

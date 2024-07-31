@@ -879,7 +879,6 @@ void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8
 }
 
 void renderer_set_video_mode(int is_pal) {}
-void renderer_cycle_res_x(void) {}
 
 void renderer_draw_mesh_shaded_offset_local(const mesh_t* mesh, const transform_t* model_transform, int tex_id_offset) {
     tex_id_start = tex_id_offset;

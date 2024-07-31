@@ -57,7 +57,6 @@ int renderer_get_delta_time_ms(void);
 int renderer_convert_dt_raw_to_ms(int dt_raw);
 int renderer_should_close(void);
 int renderer_get_level_section_from_position(const model_t *model, vec3_t position);
-void renderer_cycle_res_x(void);
 void renderer_set_depth_bias(int bias);
 
 #ifdef _LEVEL_EDITOR
