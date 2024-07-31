@@ -1,7 +1,7 @@
 #include "crate.h"
 #include "pickup.h"
 
-entity_crate_t* entity_crate_new() {
+entity_crate_t* entity_crate_new(void) {
 	// Allocate memory for the entity
 	entity_crate_t* entity = (entity_crate_t*)&entity_pool[entity_alloc(ENTITY_CRATE) * entity_pool_stride];
 	entity->entity_header.position = (vec3_t){0, 0, 0};

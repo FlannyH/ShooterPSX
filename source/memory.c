@@ -48,7 +48,7 @@ memory_category_t allocated_memory_category[512] = {0};
 void* scheduled_frees[32];
 int n_scheduled_frees = 0;
 
-void mem_init() {
+void mem_init(void) {
 	mem_stack_temp = malloc(size_stack_temp);
 	mem_stack_level = malloc(size_stack_level);
 	mem_stack_music = malloc(size_stack_music);
@@ -227,13 +227,13 @@ void mem_delayed_free(void* ptr) {
     scheduled_frees[n_scheduled_frees++] = ptr;
 }
 
-void mem_free_scheduled_frees() {
+void mem_free_scheduled_frees(void) {
     for (int i = 0; i < n_scheduled_frees; ++i) {
         mem_free(scheduled_frees[i]);
     }
 }
 
-void mem_debug() {
+void mem_debug(void) {
 #ifdef _DEBUG
     // Sum up each category
     size_t size_per_category[16] = {0};

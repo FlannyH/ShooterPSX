@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 static uint32_t random_state = 0x26082023;
-static uint32_t random_u32() {
+static uint32_t random_u32(void) {
     random_state ^= random_state << 13;
     random_state ^= random_state >> 17;
     random_state ^= random_state << 5;

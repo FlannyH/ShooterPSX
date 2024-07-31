@@ -6,7 +6,7 @@ typedef struct {
     entity_header_t entity_header;
 } entity_chaser_t;
 
-entity_chaser_t* entity_chaser_new();
+entity_chaser_t* entity_chaser_new(void);
 void entity_chaser_update(int slot, player_t* player, int dt);
 void entity_chaser_on_hit(int slot, int hitbox_index);
 

@@ -240,7 +240,7 @@ GLuint shader_from_file(char *vert_path, char *frag_path) {
 	return shader_gpu;
 }
 
-void renderer_init() {
+void renderer_init(void) {
 	// Create OpenGL window
 	glfwInit();
 	window = glfwCreateWindow(320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, "ShooterPSX", NULL, NULL);
@@ -434,7 +434,7 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 	n_total_triangles = 0;
 }
 
-void renderer_end_frame() {
+void renderer_end_frame(void) {
 	update_delta_time_ms();
 	// Flip buffers
 	glfwSwapBuffers(window);
@@ -704,17 +704,17 @@ void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) 
 	mem_free(pixels);
 }
 
-int renderer_get_delta_time_raw() { return 0; }
+int renderer_get_delta_time_raw(void) { return 0; }
 
-int renderer_get_delta_time_ms() { return dt; }
+int renderer_get_delta_time_ms(void) { return dt; }
 
-uint32_t renderer_get_n_rendered_triangles() { return 0; }
+uint32_t renderer_get_n_rendered_triangles(void) { return 0; }
 
-uint32_t renderer_get_n_total_triangles() { return n_total_triangles; }
+uint32_t renderer_get_n_total_triangles(void) { return n_total_triangles; }
 
-int renderer_should_close() { return glfwWindowShouldClose(window); }
+int renderer_should_close(void) { return glfwWindowShouldClose(window); }
 
-vec3_t renderer_get_forward_vector() {
+vec3_t renderer_get_forward_vector(void) {
     return vec3_from_floats(
         -view_matrix_normal[0][2],
         -view_matrix_normal[1][2],

@@ -80,17 +80,17 @@ extern uint8_t* entity_pool;
 extern size_t entity_pool_stride;
 extern entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
 extern size_t entity_n_active_aabb;
-void entity_init();
+void entity_init(void);
 int entity_alloc(uint8_t entity_type);
 void entity_register_collision_box(const entity_collision_box_t* box); // (*box) gets copied, can safely be freed after calling this function
-void entity_defragment();
-void entity_sanitize();
+void entity_defragment(void);
+void entity_sanitize(void);
 void entity_update_all(player_t* player, int dt);
 void entity_kill(int slot);
 
 #ifdef _DEBUG
-void entity_debug();
-int entity_how_many_active();
+void entity_debug(void);
+int entity_how_many_active(void);
 #endif
 
 #ifdef __cplusplus
