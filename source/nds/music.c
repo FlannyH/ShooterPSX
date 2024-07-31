@@ -1,6 +1,6 @@
 #include "music.h"
 
-void music_test_sound() {} // todo: implement this
+void music_test_sound(void) {} // todo: implement this
 void music_test_instr_region(int region) {} // todo: implement this
 void music_load_soundbank(const char* path) {} // todo: implement this
 void music_load_sequence(const char* path) {} // todo: implement this

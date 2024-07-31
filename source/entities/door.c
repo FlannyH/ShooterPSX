@@ -2,7 +2,7 @@
 #include "../vec3.h"
 #include "../renderer.h"
 
-entity_door_t* entity_door_new() {
+entity_door_t* entity_door_new(void) {
 	// Allocate memory for the entity
 	int entity_id = entity_alloc(ENTITY_DOOR);
     entity_door_t* entity = (entity_door_t*)&entity_pool[entity_id * entity_pool_stride];

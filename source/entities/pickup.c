@@ -1,6 +1,6 @@
 #include "pickup.h"
 
-entity_pickup_t* entity_pickup_new() {
+entity_pickup_t* entity_pickup_new(void) {
 	// Allocate memory for the entity
     entity_pickup_t* entity = (entity_pickup_t*)&entity_pool[entity_alloc(ENTITY_PICKUP) * entity_pool_stride];
 	entity->entity_header.position = (vec3_t){0, 0, 0};

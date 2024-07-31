@@ -31,7 +31,7 @@ void debug_layer_init(GLFWwindow* window) {
     ImGui::LoadIniSettingsFromDisk("imgui_layout.ini");
 }
 
-void debug_layer_begin() {
+void debug_layer_begin(void) {
     // Begin a new frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -41,7 +41,7 @@ void debug_layer_begin() {
 #endif
 }
 
-void debug_layer_end() {
+void debug_layer_end(void) {
 	// Clear screen
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
@@ -53,7 +53,7 @@ void debug_layer_end() {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void debug_layer_update_gameplay() {
+void debug_layer_update_gameplay(void) {
     // Update deltatime
     dt_smooth = dt_smooth + ((static_cast<double>(renderer_get_delta_time_ms()) / 1000.) - dt_smooth) * 0.01;
 
@@ -582,6 +582,6 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
 }
 
 #endif
-void debug_layer_close() {
+void debug_layer_close(void) {
     ImGui::SaveIniSettingsToDisk("imgui_layout.ini");
 }

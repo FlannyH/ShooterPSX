@@ -5,9 +5,9 @@
 #include <psxetc.h>
 #include <psxapi.h>
 
-void setup_timers();
+void setup_timers(void);
 #else 
-void setup_timers() {}
+void setup_timers(void) {}
 #endif
 
 #endif

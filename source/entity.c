@@ -52,7 +52,7 @@ typedef struct {
 	};
 } entity_union;
 
-void entity_init() {
+void entity_init(void) {
 	// Zero initialize the entity list
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) entity_types[i] = ENTITY_NONE;
 
@@ -70,7 +70,7 @@ void entity_register_collision_box(const entity_collision_box_t* box) {
 	memcpy(&entity_aabb_queue[entity_n_active_aabb++], box, sizeof(entity_collision_box_t));
 }
 
-void entity_defragment() {
+void entity_defragment(void) {
 	int start = 0;
 	int end = ENTITY_LIST_LENGTH - 1;
 
@@ -96,7 +96,7 @@ void entity_defragment() {
 
 // Sets the mesh pointer, which is only valid for the runtime of this program, to 
 // null. It will be recalculated in the entity code after loading
-void entity_sanitize() {
+void entity_sanitize(void) {
 	entity_union* pool = (entity_union*)entity_pool;
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
 		pool[i].header.mesh = NULL;
@@ -118,13 +118,13 @@ const char* entity_names[] = {
 };
 
 #ifdef _DEBUG
-void entity_debug() {
+void entity_debug(void) {
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
 		printf("entity %03i:\t%s\n", i, entity_names[entity_types[i]]);
 	}
 }
 
-int entity_how_many_active() {
+int entity_how_many_active(void) {
 	int count = 0;
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
 		if (entity_types[i] != ENTITY_NONE) {

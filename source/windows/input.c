@@ -21,10 +21,10 @@ int button_pressed_this_frame = 0;
 int mouse_lock = 0;
 uint16_t input_buffer[32];
 
-void input_init() {
+void input_init(void) {
 }
 
-void input_update() {
+void input_update(void) {
     // Detect controllers
     for (int i = 0; i < 8; ++i) {
         if (i == player1_index || i == player2_index)
@@ -259,15 +259,15 @@ void input_rumble(uint8_t left_strength, uint8_t right_enable) {
     // todo
 }
 
-int input_mouse_connected() {
+int input_mouse_connected(void) {
     return keyboard_focus;
 }
 
-void input_lock_mouse() {
+void input_lock_mouse(void) {
     mouse_lock = 1;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
-void input_unlock_mouse() {
+void input_unlock_mouse(void) {
     mouse_lock = 0;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }

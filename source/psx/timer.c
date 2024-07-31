@@ -8,7 +8,7 @@ static void timer2_handler(void) {
 }
 
 
-void setup_timers() {
+void setup_timers(void) {
 	TIMER_CTRL(2) = 
 		(2 << 8) | // Use "System Clock / 8" source
 		(1 << 4) | // Interrupt when hitting target value

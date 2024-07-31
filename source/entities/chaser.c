@@ -1,6 +1,6 @@
 #include "chaser.h"
 
-entity_chaser_t* entity_chaser_new() {
+entity_chaser_t* entity_chaser_new(void) {
 	// Allocate memory for the entity
 	entity_chaser_t* entity = (entity_chaser_t*)&entity_pool[entity_alloc(ENTITY_CHASER) * entity_pool_stride];
 	entity->entity_header.position = (vec3_t){ 0, 0, 0 };
