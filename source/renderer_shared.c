@@ -1,6 +1,7 @@
 #include "renderer.h"
 
-uint8_t tex_id_start;
+// Shared rendering parameters
+uint8_t tex_id_start = 0;
 
 void renderer_draw_mesh_shaded_offset(const mesh_t* mesh, const transform_t* model_transform, int tex_id_offset) {
     tex_id_start = tex_id_offset;
