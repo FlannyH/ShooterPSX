@@ -658,25 +658,6 @@ vec3_t renderer_get_forward_vector(void) {
     );
 }
 
-int renderer_get_level_section_from_position(const model_t* model, vec3_t position) {
-    position.x = -position.x / COL_SCALE;
-    position.y = -position.y / COL_SCALE;
-    position.z = -position.z / COL_SCALE;
-    n_sections = 0;
-    for (size_t i = 0; i < model->n_meshes; ++i) {
-        if (n_sections == N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE) break;
-        if (point_aabb_intersect(&model->meshes[i].bounds, position)) {
-            renderer_debug_draw_aabb(&model->meshes[i].bounds, green, &id_transform);
-            sections[n_sections] = i;
-            n_sections += 1;
-        }
-        else {
-            renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
-        }
-    }
-    return n_sections; // -1 means no section
-}
-
 void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color,
     int depth, int texture_id, int is_page) {
 	vertex_3d_t verts[4];

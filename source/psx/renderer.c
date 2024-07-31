@@ -574,8 +574,6 @@ int renderer_convert_dt_raw_to_ms(int dt_raw) {
 int renderer_should_close(void) {
     return 0;
 }
-vec3_t renderer_get_forward_vector(void);
-int renderer_get_level_section_from_position(const model_t *model, vec3_t position);
 
 void renderer_draw_particle_system(particle_system_t* system, scalar_t dt) {
     // Loop over the particles in chunks of 3
