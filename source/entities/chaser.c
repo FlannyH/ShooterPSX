@@ -71,7 +71,7 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 #ifdef _LEVEL_EDITOR
 	drawing_entity_id = slot;
 #endif
-	renderer_draw_mesh_shaded_offset(chaser->entity_header.mesh, &render_transform, 0, tex_entity_start);
+	renderer_draw_mesh_shaded(chaser->entity_header.mesh, &render_transform, 0, tex_entity_start);
 }
 
 void entity_chaser_on_hit(int slot, int hitbox_index) {

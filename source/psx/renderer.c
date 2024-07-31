@@ -173,12 +173,13 @@ void renderer_end_frame(void) {
     drawn_first_frame = 1;
 }
 
-void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform, int local) {
+void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform, int local, int tex_id_offset) {
     ++n_meshes_total;
     if (!mesh) {
         printf("renderer_draw_mesh_shaded: mesh was null!\n");
         return;
     }
+    tex_id_start = tex_id_offset;
 
     // Set rotation and translation matrix
     MATRIX model_matrix;

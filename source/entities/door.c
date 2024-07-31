@@ -130,7 +130,7 @@ void entity_door_update(int slot, player_t* player, int dt) {
 #ifdef _LEVEL_EDITOR
 	drawing_entity_id = slot;
 #endif
-	renderer_draw_mesh_shaded_offset(door->entity_header.mesh, &render_transform, 0, tex_entity_start);
+	renderer_draw_mesh_shaded(door->entity_header.mesh, &render_transform, 0, tex_entity_start);
 }
 
 void entity_door_on_hit(int slot, int hitbox_index) {}
