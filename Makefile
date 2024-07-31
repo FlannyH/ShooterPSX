@@ -34,6 +34,7 @@ CODE_ENGINE_SHARED_C = camera.c \
 			  	  	   memory.c \
 			  	  	   mesh.c \
 			  	  	   player.c \
+					   texture.c \
 			  	  	   vislist.c \
 				  	   entities/chaser.c \
 				  	   entities/crate.c \
@@ -45,7 +46,6 @@ CODE_ENGINE_PSX_C = psx/file.c \
 				    psx/input.c \
 				    psx/music.c \
 				    psx/renderer.c \
-				    psx/texture.c \
 				    psx/timer.c 
 
 # Source files specific to Windows
@@ -53,8 +53,7 @@ CODE_ENGINE_WIN_C = windows/file.c \
 				    windows/input.c \
 				    windows/music.c \
 				    windows/psx.c \
-				    windows/renderer.c \
-				    windows/texture.c 
+				    windows/renderer.c 
 CODE_ENGINE_WIN_CPP = windows/debug_layer.cpp
 
 # Source files specific to NDS
@@ -63,7 +62,6 @@ CODE_ENGINE_NDS_C = nds/psx.c \
 				    nds/input.c \
 				    nds/music.c \
 				    nds/renderer.c \
-				    nds/texture.c \
 				    nds/timer.c 
 
 # Where the object files go
