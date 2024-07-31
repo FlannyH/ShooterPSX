@@ -1,7 +1,7 @@
 #ifndef WIN_GTE_H
 #define WIN_GTE_H
 
-// This entire document is a duct tape fix for the Windows debug version
+// This entire document is a duct tape fix for the NDS version
 #ifdef _NDS
 #include <stdint.h>
 typedef struct {

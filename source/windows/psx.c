@@ -1,5 +1,8 @@
 #ifndef PSX_H
 #define PSX_H
+
+#include "psx.h"
+
 #include <math.h>
 
 #define PI 3.14159265358979
