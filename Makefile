@@ -59,12 +59,12 @@ CODE_ENGINE_WIN_CPP = windows/debug_layer.cpp
 
 # Source files specific to NDS
 CODE_ENGINE_NDS_C = nds/psx.c \
-# 				    nds/file.c \
-# 				    nds/input.c \
-# 				    nds/music.c \
-# 				    nds/renderer.c \
-# 				    nds/texture.c \
-# 				    nds/timer.c 
+				    nds/file.c \
+				    nds/input.c \
+				    nds/music.c \
+				    nds/renderer.c \
+				    nds/texture.c \
+				    nds/timer.c 
 
 # Where the object files go
 PATH_OBJ_PSX = $(PATH_TEMP_PSX)/obj
