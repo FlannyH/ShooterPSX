@@ -28,7 +28,7 @@ uint32_t primitive_buffer[2][(128 * KiB) / sizeof(uint32_t)];
 uint32_t* next_primitive;
 
 // Rendering parameters
-uint8_t tex_id_start = 0;
+extern uint8_t tex_id_start;
 int curr_ot_bias = 0;
 
 // Camera info

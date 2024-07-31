@@ -34,6 +34,7 @@ CODE_ENGINE_SHARED_C = camera.c \
 			  	  	   memory.c \
 			  	  	   mesh.c \
 			  	  	   player.c \
+			  	  	   renderer_shared.c \
 					   texture.c \
 			  	  	   vislist.c \
 				  	   entities/chaser.c \

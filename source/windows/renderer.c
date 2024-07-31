@@ -41,7 +41,7 @@ int prev_h = 0;
 transform_t cam_transform;
 vec3_t camera_pos;
 vec3_t camera_dir;
-int tex_id_start;
+extern uint8_t tex_id_start;
 int curr_depth_bias = 0;
 
 // Need to define these somewhere so it compiles, unused in Windows build
