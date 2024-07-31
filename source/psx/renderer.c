@@ -536,7 +536,7 @@ void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index) {
     palettes[index] = rect_palette;
 }
 
-void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {
+void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {
     WARN_IF("texture is not a full page!", texture->width != 0 || texture->height != 0); // 0 is interpreted as 256
     const RECT rect_page = {
         index * 256 / (16 / 8), // X: 256 pixels, 8bpp

@@ -929,7 +929,7 @@ void renderer_apply_fade(int fade_level) {
 	);
 }
 
-void render_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {
+void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {
     // This is where all the pixels will be stored
     size_t width = texture->width == 0 ? 256 : texture->width;
     size_t height = texture->height == 0 ? 256 : texture->height;

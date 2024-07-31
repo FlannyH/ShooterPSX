@@ -192,13 +192,13 @@ void state_enter_title_screen(void) {
 		texture_cpu_t *tex_ui;
 		mem_stack_release(STACK_TEMP);
 		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU1.TXC", &tex_menu1, 1, STACK_TEMP);
-		render_upload_8bit_texture_page(tex_menu1, 3);
+		renderer_upload_8bit_texture_page(tex_menu1, 3);
 		mem_stack_release(STACK_TEMP);
 		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU2.TXC", &tex_menu2, 1, STACK_TEMP);
-		render_upload_8bit_texture_page(tex_menu2, 4);
+		renderer_upload_8bit_texture_page(tex_menu2, 4);
 		mem_stack_release(STACK_TEMP);
 		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\UI.TXC", &tex_ui, 1, STACK_TEMP);
-		render_upload_8bit_texture_page(tex_ui, 5);
+		renderer_upload_8bit_texture_page(tex_ui, 5);
 		mem_stack_release(STACK_TEMP);
 		state.title_screen.assets_in_memory = 1;
 		mem_stack_release(STACK_MUSIC);
