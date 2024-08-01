@@ -63,7 +63,7 @@ void entity_init(void) {
 	entity_pool = mem_stack_alloc(ENTITY_LIST_LENGTH * sizeof(entity_union), STACK_ENTITY);
 
 	// Load model collection
-    entity_models = model_load("\\ASSETS\\MODELS\\ENTITY.MSH", 1, STACK_ENTITY);
+    entity_models = model_load("\\assets\\models\\entity.msh", 1, STACK_ENTITY);
 }
 
 void entity_register_collision_box(const entity_collision_box_t* box) {

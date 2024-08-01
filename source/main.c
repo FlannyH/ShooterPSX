@@ -191,19 +191,19 @@ void state_enter_title_screen(void) {
 		texture_cpu_t *tex_menu2;
 		texture_cpu_t *tex_ui;
 		mem_stack_release(STACK_TEMP);
-		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU1.TXC", &tex_menu1, 1, STACK_TEMP);
+		texture_collection_load("\\assets\\models\\ui_tex\\menu1.txc", &tex_menu1, 1, STACK_TEMP);
 		renderer_upload_8bit_texture_page(tex_menu1, 3);
 		mem_stack_release(STACK_TEMP);
-		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\MENU2.TXC", &tex_menu2, 1, STACK_TEMP);
+		texture_collection_load("\\assets\\models\\ui_tex\\menu2.txc", &tex_menu2, 1, STACK_TEMP);
 		renderer_upload_8bit_texture_page(tex_menu2, 4);
 		mem_stack_release(STACK_TEMP);
-		texture_collection_load("\\ASSETS\\MODELS\\UI_TEX\\UI.TXC", &tex_ui, 1, STACK_TEMP);
+		texture_collection_load("\\assets\\models\\ui_tex\\ui.txc", &tex_ui, 1, STACK_TEMP);
 		renderer_upload_8bit_texture_page(tex_ui, 5);
 		mem_stack_release(STACK_TEMP);
 		state.title_screen.assets_in_memory = 1;
 		mem_stack_release(STACK_MUSIC);
-		music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK");
-		music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\LEVEL3.DSS");
+		music_load_soundbank("\\assets\\music\\instr.sbk");
+		music_load_sequence("\\assets\\music\\sequence\\level3.dss");
 		music_play_sequence(0);
 	}
 	state.global.fade_level = 255;
@@ -345,11 +345,11 @@ void state_enter_in_game(void) {
 	vec3_debug(state.in_game.player.rotation);
 
 	// Load models
-    state.in_game.m_level = model_load("\\ASSETS\\MODELS\\LEVEL.MSH", 1, STACK_LEVEL);
-	state.in_game.m_level_col_dbg = NULL; // model_load_collision_debug("\\ASSETS\\MODELS\\LEVEL.COL", 1, STACK_LEVEL);
-    state.in_game.m_level_col = model_load_collision("\\ASSETS\\MODELS\\LEVEL.COL", 1, STACK_LEVEL);
-	state.in_game.v_level = vislist_load("\\ASSETS\\MODELS\\LEVEL.VIS", 1, STACK_LEVEL);
-	state.in_game.m_weapons = model_load("\\ASSETS\\MODELS\\WEAPONS.MSH", 1, STACK_LEVEL);
+    state.in_game.m_level = model_load("\\assets\\models\\level.msh", 1, STACK_LEVEL);
+	state.in_game.m_level_col_dbg = NULL; // model_load_collision_debug("\\assets\\models\\level.col", 1, STACK_LEVEL);
+    state.in_game.m_level_col = model_load_collision("\\assets\\models\\level.col", 1, STACK_LEVEL);
+	state.in_game.v_level = vislist_load("\\assets\\models\\level.vis", 1, STACK_LEVEL);
+	state.in_game.m_weapons = model_load("\\assets\\models\\level.msh", 1, STACK_LEVEL);
 
 	entity_init();
 
@@ -377,7 +377,7 @@ void state_enter_in_game(void) {
 
 
 	// Generate collision BVH
-    state.in_game.bvh_level_model = bvh_from_file("\\ASSETS\\MODELS\\LEVEL.COL", 1, STACK_LEVEL);
+    state.in_game.bvh_level_model = bvh_from_file("\\assets\\models\\level.col", 1, STACK_LEVEL);
 
 	// Load textures
 	texture_cpu_t *tex_level;
@@ -386,19 +386,19 @@ void state_enter_in_game(void) {
 	mem_stack_release(STACK_TEMP);
 	printf("occupied STACK_TEMP: %i / %i\n", mem_stack_get_occupied(STACK_TEMP), mem_stack_get_size(STACK_TEMP));
 	tex_level_start = 0;
-	const uint32_t n_level_textures = texture_collection_load("\\ASSETS\\MODELS\\LEVEL.TXC", &tex_level, 1, STACK_TEMP);
+	const uint32_t n_level_textures = texture_collection_load("\\assets\\models\\level.txc", &tex_level, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_level_textures; ++i) {
 	    renderer_upload_texture(&tex_level[i], i + tex_level_start);
 	}
     mem_stack_release(STACK_TEMP);
 	tex_entity_start = tex_level_start + n_level_textures;
-	const uint32_t n_entity_textures = texture_collection_load("\\ASSETS\\MODELS\\ENTITY.TXC", &entity_textures, 1, STACK_TEMP);
+	const uint32_t n_entity_textures = texture_collection_load("\\assets\\models\\entity.txc", &entity_textures, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_entity_textures; ++i) {
 	    renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
 	}
     mem_stack_release(STACK_TEMP);
 	tex_weapon_start = tex_entity_start + n_entity_textures;
-	const uint32_t n_weapons_textures = texture_collection_load("\\ASSETS\\MODELS\\WEAPONS.TXC", &weapon_textures, 1, STACK_TEMP);
+	const uint32_t n_weapons_textures = texture_collection_load("\\assets\\models\\weapons.txc", &weapon_textures, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_weapons_textures; ++i) {
 	    renderer_upload_texture(&weapon_textures[i], i + tex_weapon_start);
 	}
@@ -406,8 +406,8 @@ void state_enter_in_game(void) {
 
 	// Start music
 	music_stop();
-	music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK");
-	music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\SUBNIVIS.DSS");
+	music_load_soundbank("\\assets\\music\\instr.sbk");
+	music_load_sequence("\\assets\\music\\sequence\\subnivis.dss");
 	music_play_sequence(0);
 	
 	music_set_volume(255);
@@ -876,8 +876,8 @@ void state_update_pause_menu(int dt) {
 		state.cheats.doom_mode = 1;
 		music_stop();
 		mem_stack_release(STACK_MUSIC);
-		music_load_sequence("\\ASSETS\\MUSIC\\SEQUENCE\\JUSTICE.DSS");
-		music_load_soundbank("\\ASSETS\\MUSIC\\INSTR.SBK");
+		music_load_sequence("\\assets\\music\\sequence\\justice.dss");
+		music_load_soundbank("\\assets\\music\\instr.sbk");
 		music_play_sequence(0);
 	}
 
