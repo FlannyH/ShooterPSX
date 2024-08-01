@@ -117,6 +117,9 @@ OBJ_LEVEL_EDITOR		= 	$(patsubst %.c, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVE
 CFLAGS = -Wall -Wextra -std=c11
 CXXFLAGS = -Wall -Wextra -std=c++20
 
+.PHONY: all submodules tools assets windows level_editor psx nds clean mkdir_output_win windows_dependencies glfw gl3w imgui imguizmo
+all: submodules tools assets windows level_editor psx nds 
+
 # Windows target
 windows: DEFINES = _WINDOWS _WIN32
 windows: LIBRARIES = glfw3 stdc++ gdi32 opengl32
