@@ -366,7 +366,7 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
             // Load entity textures
             texture_cpu_t* entity_textures;
             tex_entity_start = tex_level_start + n_level_textures;
-            const uint32_t n_entity_textures = texture_collection_load("\\ASSETS\\MODELS\\ENTITY.TXC", &entity_textures, 1, STACK_TEMP);
+            const uint32_t n_entity_textures = texture_collection_load("\\assets\\models\\entity.txc", &entity_textures, 1, STACK_TEMP);
             for (uint8_t i = 0; i < n_entity_textures; ++i) {
                 renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
             }
