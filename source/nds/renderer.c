@@ -80,7 +80,7 @@ void renderer_set_video_mode(int is_pal) {
 }
 
 int renderer_get_delta_time_raw(void) {
-    TODO()
+    return 1; // todo: return actual number of vblanks this frame took, probably with a vblank interrupt
 }
 
 int renderer_get_delta_time_ms(void) {
@@ -88,7 +88,7 @@ int renderer_get_delta_time_ms(void) {
 }
 
 int renderer_convert_dt_raw_to_ms(int dt_raw) {
-    TODO()
+    return (1666 * dt_raw) / 100;
 }
 
 int renderer_should_close(void) {
