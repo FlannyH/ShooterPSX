@@ -322,7 +322,12 @@ $(PATH_TEMP_NDS)/$(PROJECT_NAME).elf: $(OBJ_NDS)
 	@echo Linking $@
 	@$(CC) -o $@ $(OBJ_NDS) $(LINKER_FLAGS)
 
-nds: tools assets $(PATH_TEMP_NDS)/$(PROJECT_NAME).elf
+$(PATH_BUILD_NDS)/$(PROJECT_NAME).nds: $(PATH_TEMP_NDS)/$(PROJECT_NAME).elf
+	@mkdir -p $(dir $@)
+	@echo Building $@
+	$(BLOCKSDS)/tools/ndstool/ndstool.exe -c $@ -7 $(BLOCKSDS)/sys/default_arm7/arm7.elf -9 $< $(NDSTOOL_ARGS) -d $(PATH_ASSETS)
+
+nds: tools assets $(PATH_BUILD_NDS)/$(PROJECT_NAME).nds
 
 obj2psx:
 	@echo Building $@
