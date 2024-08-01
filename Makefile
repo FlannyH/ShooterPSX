@@ -2,8 +2,12 @@ PROJECT_NAME = SubNivis
 ISO_XML = iso.xml
 PROJECT_SOURCE_DIR = .
 
-# Flags
-VERBOSE = 0
+# Get executable extension
+EXE_EXT = 
+ifeq ($(OS),Windows_NT)
+	EXE_EXT += .exe
+endif
+
 # Find NDS compiler
 ifeq ($(GCC_ARM_NONE_EABI_PATH),)
 	ifneq ($(wildcard /opt/wonderful/toolchain/gcc-arm-none-eabi),)
@@ -280,8 +284,8 @@ psx: LIBRARIES = gcc \
 				 lzp_exe_gprel \
 				 c_exe_gprel \
 				 gcc 
-psx: CC = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-gcc.exe
-psx: CXX = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-g++.exe
+psx: CC = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-gcc$(EXE_EXT)
+psx: CXX = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-g++$(EXE_EXT)
 psx: CFLAGS = $(patsubst %, -D%, $(DEFINES)) -Wno-unused-function -fanalyzer -O3 -g -Wa,--strip-local-absolute -ffreestanding -fno-builtin -nostdlib -fdata-sections -ffunction-sections -fsigned-char -fno-strict-overflow -fdiagnostics-color=always -msoft-float -march=r3000 -mtune=r3000 -mabi=32 -mno-mt -mno-llsc -G8 -fno-pic -mno-abicalls -mgpopt -mno-extern-sdata -MMD -MP
 psx: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) -std=c++20
 psx: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PSX)) -nostdlib -Wl,-gc-sections -G8 -static -T$(PSN00BSDK_LIBS)/ldscripts/exe.ld
@@ -320,8 +324,8 @@ psx: tools assets $(PATH_TEMP_PSX)/$(PROJECT_NAME).exe
 # todo: maybe try to find it using a set of defaults first before resorting to this one
 nds: DEFINES = _NDS
 nds: LIBRARIES = nds9 c
-nds: CC = $(GCC_ARM_NONE_EABI_PATH)/bin/arm-none-eabi-gcc.exe
-nds: CXX = $(GCC_ARM_NONE_EABI_PATH)/bin/arm-none-eabi-g++.exe
+nds: CC = $(GCC_ARM_NONE_EABI_PATH)/bin/arm-none-eabi-gcc$(EXE_EXT)
+nds: CXX = $(GCC_ARM_NONE_EABI_PATH)/bin/arm-none-eabi-g++$(EXE_EXT)
 nds: CFLAGS = $(patsubst %, -D%, $(DEFINES)) -mthumb -mcpu=arm946e-s+nofp -std=gnu17 -O2 -ffunction-sections -fdata-sections -specs=$(BLOCKSDS)/sys/crts/ds_arm9.specs
 nds: CXXFLAGS = $(patsubst %, -D%, $(DEFINES)) -mthumb -mcpu=arm946e-s+nofp -std=gnu++17 -O2 -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -specs=$(BLOCKSDS)/sys/crts/ds_arm9.specs
 nds: LINKER_FLAGS = $(patsubst %, -L%, $(PATH_LIB_NDS)) -mthumb -mcpu=arm946e-s+nofp -Wl,--start-group $(patsubst %, -l%, $(LIBRARIES)) -Wl,--end-group -specs=$(BLOCKSDS)/sys/crts/ds_arm9.specs
@@ -354,24 +358,24 @@ nds: tools assets $(PATH_BUILD_NDS)/$(PROJECT_NAME).nds
 obj2psx:
 	@echo Building $@
 	@cargo build --release --manifest-path=tools/obj2psx/Cargo.toml
-	@cp tools/obj2psx/target/release/deps/obj2psx.exe tools/
+	@cp tools/obj2psx/target/release/deps/obj2psx$(EXE_EXT) tools/
 
 midi2psx:
 	@echo Building $@
 	@cargo build --release --manifest-path=tools/midi2psx/Cargo.toml
-	@cp tools/midi2psx/target/release/deps/midi2psx.exe tools/
+	@cp tools/midi2psx/target/release/deps/midi2psx$(EXE_EXT) tools/
 
 psx_vislist_generator:
 	@echo Building $@
 	@cargo build --release --manifest-path=tools/psx_vislist_generator/Cargo.toml
-	@cp tools/psx_vislist_generator/target/release/deps/psx_vislist_generator.exe tools/
+	@cp tools/psx_vislist_generator/target/release/deps/psx_vislist_generator$(EXE_EXT) tools/
 
 psx_soundfont_generator:
 	@echo Building $@
 	@mkdir -p $(PATH_TEMP)/psx_soundfont_generator
 	@cmake -S tools/psx_soundfont_generator -B $(PATH_TEMP)/psx_soundfont_generator -G "MSYS Makefiles"
 	@make -C $(PATH_TEMP)/psx_soundfont_generator
-	@cp tools/psx_soundfont_generator/output/psx_soundfont_generator.exe tools/
+	@cp tools/psx_soundfont_generator/output/psx_soundfont_generator$(EXE_EXT) tools/
 
 tools: obj2psx midi2psx psx_vislist_generator psx_soundfont_generator
 
@@ -424,40 +428,40 @@ $(PATH_ASSETS)/%.VSH: $(PATH_ASSETS_TO_BUILD)/%.VSH
 $(PATH_ASSETS)/models/%.vis: $(PATH_ASSETS_TO_BUILD)/models/%.obj
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@tools/obj2psx.exe --input $< --output $(basename $@) --split
+	@tools/obj2psx$(EXE_EXT) --input $< --output $(basename $@) --split
 	@echo Compiling vislist $<
-	@tools/psx_vislist_generator.exe $(basename $@).msh $(basename $@).col $@
+	@tools/psx_vislist_generator$(EXE_EXT) $(basename $@).msh $(basename $@).col $@
 
 # Collision model
 $(PATH_ASSETS)/models/%.col: $(PATH_ASSETS_TO_BUILD)/models/%_col.obj
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@tools/obj2psx.exe --input $< --output $(basename $@) --collision
+	@tools/obj2psx$(EXE_EXT) --input $< --output $(basename $@) --collision
 
 # Any other model, like weapon models or entity models
 $(PATH_ASSETS)/models/%.msh: $(PATH_ASSETS_TO_BUILD)/models/%.obj
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@tools/obj2psx.exe --input $< --output $(basename $@)
+	@tools/obj2psx$(EXE_EXT) --input $< --output $(basename $@)
 $(PATH_ASSETS)/models/%.txc: $(PATH_ASSETS)/models/%.msh
 
 # UI textures
 $(PATH_ASSETS)/models/ui_tex/%.txc: $(PATH_ASSETS_TO_BUILD)/models/ui_tex/%.png
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@tools/obj2psx.exe --input $< --output $@
+	@tools/obj2psx$(EXE_EXT) --input $< --output $@
 
 # Soundbank
 $(PATH_ASSETS)/music/%.sbk: $(PATH_ASSETS_TO_BUILD)/music/%.csv
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@tools/psx_soundfont_generator.exe $< $@
+	@tools/psx_soundfont_generator$(EXE_EXT) $< $@
 
 # Music sequences
 $(PATH_ASSETS)/music/sequence/%.dss: $(PATH_ASSETS_TO_BUILD)/music/sequence/%.mid
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@tools/midi2psx.exe $< $@
+	@tools/midi2psx$(EXE_EXT) $< $@
 
 assets: $(COMPILED_ASSET_LIST)
 
@@ -470,9 +474,10 @@ clean:
 	rm -rf $(PATH_TEMP)
 	rm -rf $(PATH_BUILD)
 	rm -rf $(PATH_ASSETS)
-	rm tools/*.exe
+	rm -f tools/midi2psx$(EXE_EXT)
+	rm -f tools/obj2psx$(EXE_EXT)
+	rm -f tools/psx_soundfont_generator$(EXE_EXT)
+	rm -f tools/psx_vislist_generator$(EXE_EXT)
 	cargo clean --manifest-path=tools/obj2psx/Cargo.toml
 	cargo clean --manifest-path=tools/midi2psx/Cargo.toml
 	cargo clean --manifest-path=tools/psx_vislist_generator/Cargo.toml
-
-all: submodules tools assets windows level_editor psx
