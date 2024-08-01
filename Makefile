@@ -4,6 +4,25 @@ PROJECT_SOURCE_DIR = .
 
 # Flags
 VERBOSE = 0
+# Find NDS compiler
+ifeq ($(GCC_ARM_NONE_EABI_PATH),)
+	ifneq ($(wildcard /opt/wonderful/toolchain/gcc-arm-none-eabi),)
+		GCC_ARM_NONE_EABI_PATH = /opt/wonderful/toolchain/gcc-arm-none-eabi
+	endif
+	ifneq ($(wildcard C:/msys64/opt/wonderful/toolchain/gcc-arm-none-eabi)),)
+		GCC_ARM_NONE_EABI_PATH = C:/msys64/opt/wonderful/toolchain/gcc-arm-none-eabi
+	endif
+endif
+
+# Find BlocksDS for NDS target
+ifeq ($(BLOCKSDS),)
+	ifneq ($(wildcard C:/msys64/opt/wonderful/thirdparty/blocksds/core)),)
+		BLOCKSDS = C:/msys64/opt/wonderful/thirdparty/blocksds/core
+	endif
+	ifneq ($(wildcard /opt/wonderful/thirdparty/blocksds/core)),)
+		BLOCKSDS = /opt/wonderful/thirdparty/blocksds/core
+	endif
+endif
 
 # Input folders
 PATH_SOURCE = source
