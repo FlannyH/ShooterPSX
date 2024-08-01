@@ -8,7 +8,7 @@
 
 int file_read(const char* path, uint32_t** destination, size_t* size, int on_stack, stack_t stack) {
     // Modify file name to not be CD based
-    const size_t length = strlen(path) + 1; // Include the null terminator
+    const size_t length = strlen(path) + 2; // Include the null terminator
     char* new_path = mem_alloc(length, MEM_CAT_UNDEFINED);
 
     if (path[length - 3] == ';') {    
@@ -17,7 +17,8 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
         new_path[length - 2] = 0;
     }
     else {
-        strcpy(new_path, path);
+        new_path[0] = '.';
+        strcpy(new_path+1, path);
     }
 
     // Convert slashes to forward slashes, Linux build will cry otherwise
