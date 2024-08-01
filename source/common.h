@@ -11,6 +11,9 @@
 
 #define ALWAYS_INLINE __attribute__((always_inline)) inline
 
+#define TODO()  printf("%s:%i: todo!"); \
+                while(1) {;;}
+
 #define KiB (1024)
 #define MiB (1024 * KiB)
 #define GiB (1024 * MiB)
