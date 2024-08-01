@@ -10,6 +10,7 @@ int tex_weapon_start = 0;
 int res_x = 256;
 int vsync_enable = 1;
 int is_pal = 0;
+int textures[256];
 
 void renderer_init(void) {
     videoSetMode(MODE_0_3D);
@@ -21,7 +22,9 @@ void renderer_init(void) {
     glClearPolyID(63);
     glClearDepth(0x7FFF);
     glViewport(0, 0, 255, 191);
-    vramSetBankA(VRAM_A_TEXTURE);
+    vramSetBankA(VRAM_A_TEXTURE);    
+    vramSetBankB(VRAM_B_TEXTURE);
+    vramSetBankF(VRAM_F_TEX_PALETTE);
     gluPerspective(90, 256.0 / 192.0, 0.1, 40);
 }
 
@@ -68,11 +71,25 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
 }
 
 void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index) {
-    TODO()
+    glGenTextures(1, &textures[index]);
+    glBindTexture(0, textures[index]);
+    if (glTexImage2D(0, 0, GL_RGB16, 64, 64, 0, TEXGEN_OFF, texture->data) == 0) {
+        printf("Error loading texture page %i pixels\n", index);
+    }
+    if (glColorTableEXT(0, 0, 16, 0, 0, texture->palette) == 0) {
+        printf("Error loading texture page %i palette\n", index);
+    }
 }
 
 void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {
-    TODO()
+    glGenTextures(1, &textures[index]);
+    glBindTexture(0, textures[index]);
+    if (glTexImage2D(0, 0, GL_RGB256, 256, 256, 0, TEXGEN_OFF, texture->data) == 0) {
+        printf("Error loading texture page %i pixels\n", index);
+    }
+    if (glColorTableEXT(0, 0, 256, 0, 0, texture->palette) == 0) {
+        printf("Error loading texture page %i palette\n", index);
+    }
 }
 
 void renderer_set_video_mode(int is_pal) {
