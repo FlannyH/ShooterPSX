@@ -23,7 +23,6 @@ void renderer_init(void) {
     glViewport(0, 0, 255, 191);
     vramSetBankA(VRAM_A_TEXTURE);
     gluPerspective(90, 256.0 / 192.0, 0.1, 40);
-    printf("test 1233\n");
 }
 
 int16_t angle_to_16(int angle) {
