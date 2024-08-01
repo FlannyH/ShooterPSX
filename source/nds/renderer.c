@@ -92,7 +92,7 @@ int renderer_convert_dt_raw_to_ms(int dt_raw) {
 }
 
 int renderer_should_close(void) {
-    TODO()
+    return 0;
 }
 
 void renderer_set_depth_bias(int bias) {
