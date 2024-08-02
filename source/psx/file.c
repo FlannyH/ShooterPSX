@@ -1,6 +1,7 @@
 #ifdef _PSX
 #include "file.h"
 
+#include <string.h>
 #include <stdio.h>
 #include <psxcd.h> // Disc IO
 
