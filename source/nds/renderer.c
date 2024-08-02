@@ -14,6 +14,8 @@ int vsync_enable = 1;
 int is_pal = 0;
 int textures[256] = {0};
 int texture_pages[8] = {0};
+int n_rendered_triangles = 0;
+int n_rendered_quads = 0;
 
 void renderer_init(void) {
     videoSetMode(MODE_0_3D);
@@ -30,28 +32,32 @@ void renderer_init(void) {
     vramSetBankA(VRAM_A_TEXTURE);    
     vramSetBankB(VRAM_B_TEXTURE);
     vramSetBankF(VRAM_F_TEX_PALETTE);
-    gluPerspective(90, 256.0 / 192.0, 0.1, 40);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(90, 256.0 / 192.0, 0.01, 100);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 }
 
 int16_t angle_to_16(int angle) {
-    return (angle >> 1) & 0xFFFF;
+    return (angle >> 2) & 0xFFFF;
 }
 
 void renderer_begin_frame(const transform_t* camera_transform) {
-    // Set view matrix
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(90, 256.0 / 192.0, 0.01, 100);
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    glScalef32(ONE, -ONE, -ONE);
     glRotateXi(angle_to_16(camera_transform->rotation.x));
-    glRotateYi(angle_to_16(-camera_transform->rotation.y));
+    glRotateYi(angle_to_16(camera_transform->rotation.y));
     glRotateZi(angle_to_16(camera_transform->rotation.z));
-    glTranslatef32(-camera_transform->position.x, -camera_transform->position.y, -camera_transform->position.z);
-
-    // Fetch view matrix
-    int view_matrix[9];
-    glGetFixed(GL_GET_MATRIX_VECTOR, &view_matrix[0]);
-    camera_dir.x = view_matrix[2]; // todo: verify that these are correct
-    camera_dir.y = view_matrix[5];
-    camera_dir.z = view_matrix[8];
+    glTranslatef32(-camera_transform->position.x >> 12, -camera_transform->position.y >> 12, -camera_transform->position.z >> 12);
+    
+    n_rendered_triangles = 0;
+    n_rendered_quads = 0;
 }
 
 void renderer_end_frame(void) {
@@ -63,11 +69,80 @@ void renderer_end_frame(void) {
 }
 
 void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform, int local, int tex_id_offset) {
-    (void)mesh;
-    (void)model_transform;
-    (void)local;
-    (void)tex_id_offset;
-    TODO_SOFT()
+    // Set up model view matrix
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    if (local) {
+        glLoadIdentity();
+        glTranslatef32(model_transform->position.x, -model_transform->position.y, -model_transform->position.z);
+        glScalef32(-model_transform->scale.x, -model_transform->scale.y, -model_transform->scale.z);
+        glRotateXi(angle_to_16(model_transform->rotation.x));
+        glRotateYi(angle_to_16(-model_transform->rotation.y));
+        glRotateZi(angle_to_16(model_transform->rotation.z));
+    }
+    else {
+        glTranslatef32(model_transform->position.x, model_transform->position.y, model_transform->position.z);
+        glScalef32(model_transform->scale.x, model_transform->scale.y, model_transform->scale.z);
+        glRotateZi(angle_to_16(model_transform->rotation.z));
+        glRotateYi(angle_to_16(model_transform->rotation.y));
+        glRotateXi(angle_to_16(model_transform->rotation.x));
+    }
+
+    // todo - display lists
+    // Draw triangles
+    size_t vert_idx = 0;
+    glPolyFmt(POLY_ALPHA(31) | POLY_CULL_BACK);
+    glBegin(GL_TRIANGLES);
+    for (size_t i = 0; i < mesh->n_triangles; ++i) {
+        uint8_t tex_id = mesh->vertices[vert_idx].tex_id;
+        if (tex_id != 255) glBindTexture(0, textures[(int)tex_id + tex_id_offset]);
+        else glBindTexture(0, 0);
+        const vertex_3d_t v0 = mesh->vertices[vert_idx];
+        const vertex_3d_t v1 = mesh->vertices[vert_idx + 2];
+        const vertex_3d_t v2 = mesh->vertices[vert_idx + 1];
+        glColor3b(v0.r, v0.g, v0.b);
+        glTexCoord2i(v0.u >> 2, v0.v >> 2);
+        glVertex3v16(v0.x, v0.y, v0.z);
+        glColor3b(v1.r, v1.g, v1.b);
+        glTexCoord2i(v1.u >> 2, v1.v >> 2);
+        glVertex3v16(v1.x, v1.y, v1.z);
+        glColor3b(v2.r, v2.g, v2.b);
+        glTexCoord2i(v2.u >> 2, v2.v >> 2);
+        glVertex3v16(v2.x, v2.y, v2.z);
+        vert_idx += 3;
+        n_rendered_triangles++;
+    }
+    glEnd();
+    // Draw quads
+    glPolyFmt(POLY_ALPHA(31) | POLY_CULL_NONE);
+    glBegin(GL_QUADS);
+    for (size_t i = 0; i < mesh->n_quads; ++i) {
+        uint8_t tex_id = mesh->vertices[vert_idx].tex_id;
+        if (tex_id != 255) glBindTexture(0, textures[(int)tex_id + tex_id_offset]);
+        else glBindTexture(0, 0);
+        const vertex_3d_t v0 = mesh->vertices[vert_idx];
+        const vertex_3d_t v1 = mesh->vertices[vert_idx + 1];
+        const vertex_3d_t v2 = mesh->vertices[vert_idx + 3];
+        const vertex_3d_t v3 = mesh->vertices[vert_idx + 2];
+        glColor3b(v0.r, v0.g, v0.b);
+        glTexCoord2i(v0.u >> 2, v0.v >> 2);
+        glVertex3v16(v0.x, v0.y, v0.z);
+        glColor3b(v1.r, v1.g, v1.b);
+        glTexCoord2i(v1.u >> 2, v1.v >> 2);
+        glVertex3v16(v1.x, v1.y, v1.z);
+        glColor3b(v2.r, v2.g, v2.b);
+        glTexCoord2i(v2.u >> 2, v2.v >> 2);
+        glVertex3v16(v2.x, v2.y, v2.z);
+        glColor3b(v3.r, v3.g, v3.b);
+        glTexCoord2i(v3.u >> 2, v3.v >> 2);
+        glVertex3v16(v3.x, v3.y, v3.z);
+        vert_idx += 4;
+        n_rendered_quads++;
+    }
+    glEnd();
+
+    // Revert matrix
+    glPopMatrix(1);
 }
 
 void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {
@@ -188,7 +263,7 @@ void renderer_set_video_mode(int is_pal) {
 }
 
 int renderer_get_delta_time_raw(void) {
-    return 1; // todo: return actual number of vblanks this frame took, probably with a vblank interrupt
+    return vsync_enable; // todo: return actual number of vblanks this frame took, probably with a vblank interrupt
 }
 
 int renderer_get_delta_time_ms(void) {
