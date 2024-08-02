@@ -1,6 +1,8 @@
 #include "renderer.h"
 #include "structs.h"
+#include "vec2.h"
 
+#include <gl2d.h>
 #include <nds.h>
 
 vec3_t camera_dir;
@@ -17,6 +19,7 @@ void renderer_init(void) {
     // Setup layer 1 as console layer
     consoleDemoInit();
     glInit();
+    glEnable(GL_TEXTURE_2D);
     glFlush(0);
     glClearColor(0, 0, 0, 31);
     glClearPolyID(63);
@@ -59,11 +62,54 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_tran
 }
 
 void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {
-    TODO()
+    // Reset all matrices
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // Map 512x240 to 256x192, in fixed point 20.12
+    tl.x = ((tl.x * 2) / 512) - ONE;
+    tr.x = ((tr.x * 2) / 512) - ONE;
+    bl.x = ((bl.x * 2) / 512) - ONE;
+    br.x = ((br.x * 2) / 512) - ONE;
+    tl.y = ONE - ((tl.y * 2) / 240);
+    tr.y = ONE - ((tr.y * 2) / 240);
+    bl.y = ONE - ((bl.y * 2) / 240);
+    br.y = ONE - ((br.y * 2) / 240);
+
+    // Render quad
+    glPolyFmt(POLY_ALPHA(color.a >> 3) | POLY_CULL_NONE);
+    glBindTexture(0, textures[texture_id]);
+    glColor3b(
+        scalar_clamp((int)color.r * 2, 0, 255),
+        scalar_clamp((int)color.g * 2, 0, 255),
+        scalar_clamp((int)color.b * 2, 0, 255)
+    );
+    glEnable(GL_BLEND)
+    glBegin(GL_QUADS);
+        glTexCoord2i(uv_tl.x / ONE, uv_tl.y / ONE); // v1
+        glVertex3v16(tl.x, tl.y, depth);
+        glTexCoord2i(uv_br.x / ONE, uv_tl.y / ONE); // v2
+        glVertex3v16(tr.x, tr.y, depth);
+        glTexCoord2i(uv_br.x / ONE, uv_br.y / ONE); // v3
+        glVertex3v16(br.x, br.y, depth);
+        glTexCoord2i(uv_tl.x / ONE, uv_br.y / ONE); // v4
+        glVertex3v16(bl.x, bl.y, depth);
+    glEnd();
+    glDisable(GL_BLEND)
+
+    // Put the matrices back
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix(1);
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix(1);
 }
 
 void renderer_apply_fade(int fade_level) {
-    TODO()
+    TODO_SOFT()
 }
 
 void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const transform_t* model_transform) {
@@ -73,7 +119,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
 void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index) {
     glGenTextures(1, &textures[index]);
     glBindTexture(0, textures[index]);
-    if (glTexImage2D(0, 0, GL_RGB16, 64, 64, 0, TEXGEN_OFF, texture->data) == 0) {
+    if (glTexImage2D(0, 0, GL_RGB16, 64, 64, 0, TEXGEN_OFF | ((texture->palette[0].a == 0) ? GL_TEXTURE_COLOR0_TRANSPARENT : 0), texture->data) == 0) {
         printf("Error loading texture page %i pixels\n", index);
     }
     if (glColorTableEXT(0, 0, 16, 0, 0, texture->palette) == 0) {
@@ -84,7 +130,7 @@ void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index) {
 void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {
     glGenTextures(1, &textures[index]);
     glBindTexture(0, textures[index]);
-    if (glTexImage2D(0, 0, GL_RGB256, 256, 256, 0, TEXGEN_OFF, texture->data) == 0) {
+    if (glTexImage2D(0, 0, GL_RGB256, 256, 256, 0, TEXGEN_OFF | ((texture->palette[0].a == 0) ? GL_TEXTURE_COLOR0_TRANSPARENT : 0), texture->data) == 0) {
         printf("Error loading texture page %i pixels\n", index);
     }
     if (glColorTableEXT(0, 0, 256, 0, 0, texture->palette) == 0) {
