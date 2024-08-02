@@ -679,8 +679,8 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 	verts[0].v = uv_tl.y / ONE;
 
 	// Top right
-	verts[1].x = br.x / ONE;
-	verts[1].y = tl.y / ONE;
+	verts[1].x = tr.x / ONE;
+	verts[1].y = tr.y / ONE;
 	verts[1].u = uv_br.x / ONE;
 	verts[1].v = uv_tl.y / ONE;
 
@@ -691,8 +691,8 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 	verts[2].v = uv_br.y / ONE;
 
 	// Bottom left
-	verts[3].x = tl.x / ONE;
-	verts[3].y = br.y / ONE;
+	verts[3].x = bl.x / ONE;
+	verts[3].y = bl.y / ONE;
 	verts[3].u = uv_tl.x / ONE;
 	verts[3].v = uv_br.y / ONE;
 
