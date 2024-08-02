@@ -7,6 +7,7 @@
 #include "input.h"
 #include "music.h"
 #include "text.h"
+#include "ui.h"
 
 #ifdef _PSX
 #include <psxcd.h>
@@ -30,9 +31,7 @@ void state_enter_credits(void) {
 	state.global.fade_level = 255;
 	while (state.global.fade_level > 0) {
 		renderer_begin_frame(&id_transform);
-		// Draw background
-		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
-		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
+		ui_render_background();
 		renderer_apply_fade(state.global.fade_level);
 		state.global.fade_level -= FADE_SPEED;
 		renderer_end_frame();
@@ -44,9 +43,7 @@ void state_enter_credits(void) {
 void state_update_credits(int dt) {
 	renderer_begin_frame(&id_transform);
 
-	// Draw background
-	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
-	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
+	ui_render_background();
 
 	// Draw text
 	for (int i = 0; i < sizeof(text_credits) / sizeof(text_credits[0]); ++i) {
@@ -71,9 +68,7 @@ void state_exit_credits(void) {
 	while (state.global.fade_level < 255) {
 		renderer_begin_frame(&id_transform);
 		
-		// Draw background
-		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
-		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
+		ui_render_background();
 
 		// Draw text
 		for (int i = 0; i < sizeof(text_credits) / sizeof(text_credits[0]); ++i) {

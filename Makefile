@@ -52,18 +52,19 @@ PATH_LIB_NDS = $(BLOCKSDS)/libs/libnds/lib
 # Source files shared by all targets
 CODE_ENGINE_SHARED_C = camera.c \
 			  	  	   collision.c \
+					   credits.c \
 			  	  	   entity.c \
+					   in_game.c \
 			  	  	   level.c \
 			  	  	   memory.c \
 			  	  	   mesh.c \
 			  	  	   player.c \
 			  	  	   renderer_shared.c \
 					   title_screen.c \
-					   in_game.c \
 					   settings.c \
 					   pause_menu.c \
-					   credits.c \
 					   texture.c \
+			  	  	   ui.c \
 			  	  	   vislist.c \
 				  	   entities/chaser.c \
 				  	   entities/crate.c \
