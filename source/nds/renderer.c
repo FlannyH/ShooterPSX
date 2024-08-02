@@ -21,6 +21,7 @@ void renderer_init(void) {
     consoleDemoInit();
     glInit();
     glEnable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
     glFlush(0);
     glClearColor(2, 2, 4, 31);
     glClearPolyID(63);
@@ -109,7 +110,38 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 }
 
 void renderer_apply_fade(int fade_level) {
-    TODO_SOFT()
+    if (fade_level <= 0) return; 
+
+    // Reset all matrices
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // Draw transparent quad
+    printf("adsfkhg\n");
+    glBindTexture(0, texture_pages[4]);
+    glPolyFmt(POLY_ALPHA(fade_level >> 3) | POLY_CULL_NONE);
+    glColor3b(0, 0, 0);
+
+    glBegin(GL_QUADS);
+        glTexCoord2i(0, 0);
+        glVertex3v16(-ONE, -ONE, 0);
+        glTexCoord2i(0, 0);
+        glVertex3v16(ONE, -ONE, 0);
+        glTexCoord2i(0, 0);
+        glVertex3v16(ONE, ONE, 0);
+        glTexCoord2i(0, 0);
+        glVertex3v16(-ONE, ONE, 0);
+    glEnd();
+    
+    // Put the matrices back
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix(1);
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix(1);
 }
 
 void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const transform_t* model_transform) {
