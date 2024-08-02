@@ -88,7 +88,6 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
         scalar_clamp((int)color.g * 2, 0, 255),
         scalar_clamp((int)color.b * 2, 0, 255)
     );
-    glEnable(GL_BLEND)
     glBegin(GL_QUADS);
         glTexCoord2i(uv_tl.x / ONE, uv_tl.y / ONE); // v1
         glVertex3v16(tl.x, tl.y, depth);
@@ -99,7 +98,6 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
         glTexCoord2i(uv_tl.x / ONE, uv_br.y / ONE); // v4
         glVertex3v16(bl.x, bl.y, depth);
     glEnd();
-    glDisable(GL_BLEND)
 
     // Put the matrices back
     glMatrixMode(GL_MODELVIEW);
