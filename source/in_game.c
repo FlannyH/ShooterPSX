@@ -174,11 +174,11 @@ void state_update_in_game(int dt) {
 	// Draw HUD - gauge text
 	char gauge_text_buffer[4];
 	snprintf(gauge_text_buffer, 4, "%i", state.in_game.player.health);
-	renderer_draw_text((vec2_t){(138 + 24 - 16)*ONE, 236*ONE}, gauge_text_buffer, 2, 0, (pixel32_t){255, 97, 0});
+	renderer_draw_text((vec2_t){(138 + 24 - 16)*ONE, 236*ONE}, gauge_text_buffer, 2, 0, (pixel32_t){255, 97, 0, 255});
 	snprintf(gauge_text_buffer, 4, "%i", state.in_game.player.armor);
-	renderer_draw_text((vec2_t){(226 + 24 - 16)*ONE, 236*ONE}, gauge_text_buffer, 2, 0, (pixel32_t){255, 97, 0});
+	renderer_draw_text((vec2_t){(226 + 24 - 16)*ONE, 236*ONE}, gauge_text_buffer, 2, 0, (pixel32_t){255, 97, 0, 255});
 	snprintf(gauge_text_buffer, 4, "%i", state.in_game.player.ammo);
-	renderer_draw_text((vec2_t){(314 + 24 - 16)*ONE, 236*ONE}, gauge_text_buffer, 2, 0, (pixel32_t){255, 97, 0});
+	renderer_draw_text((vec2_t){(314 + 24 - 16)*ONE, 236*ONE}, gauge_text_buffer, 2, 0, (pixel32_t){255, 97, 0, 255});
 
 	// Draw HUD - keycards
 	if (state.in_game.player.has_key_blue) renderer_draw_2d_quad_axis_aligned((vec2_t){(256 - 80 - 40)*ONE, 210*ONE}, (vec2_t){31*ONE, 20*ONE}, (vec2_t){194*ONE, 0*ONE}, (vec2_t){255*ONE, 40*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 5, 1);

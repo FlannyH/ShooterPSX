@@ -32,7 +32,7 @@ int main(void) {
     int mouse_lock = 0;
     input_unlock_mouse();
 
-    size_t selected_entity = 0;
+    int selected_entity = 0;
     int mouse_over_viewport = 0;
 
     while (!renderer_should_close()) {

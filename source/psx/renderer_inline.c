@@ -4,14 +4,14 @@
 static inline int frustrum_cull_aabb(const vec3_t min, const vec3_t max) {
     // We will transform these to screen space
     SVECTOR vertices[8] = {
-        ((SVECTOR) {min.x, min.y, min.z}),
-        ((SVECTOR) {min.x, min.y, max.z}),
-        ((SVECTOR) {min.x, max.y, min.z}),
-        ((SVECTOR) {min.x, max.y, max.z}),
-        ((SVECTOR) {max.x, min.y, min.z}),
-        ((SVECTOR) {max.x, min.y, max.z}),
-        ((SVECTOR) {max.x, max.y, min.z}),
-        ((SVECTOR) {max.x, max.y, max.z}),
+        ((SVECTOR) {min.x, min.y, min.z, 0}),
+        ((SVECTOR) {min.x, min.y, max.z, 0}),
+        ((SVECTOR) {min.x, max.y, min.z, 0}),
+        ((SVECTOR) {min.x, max.y, max.z, 0}),
+        ((SVECTOR) {max.x, min.y, min.z, 0}),
+        ((SVECTOR) {max.x, min.y, max.z, 0}),
+        ((SVECTOR) {max.x, max.y, min.z, 0}),
+        ((SVECTOR) {max.x, max.y, max.z, 0}),
     };
 
     // Transform vertices and store them back
@@ -33,8 +33,8 @@ static inline int frustrum_cull_aabb(const vec3_t min, const vec3_t max) {
     gte_stsz3(&vertices[6].vz, &vertices[7].vz, &padding_for_last_store);
 
     // Find screen aligned bounding box
-    SVECTOR after_min = (SVECTOR){INT16_MAX, INT16_MAX, INT16_MAX};
-    SVECTOR after_max = (SVECTOR){INT16_MIN, INT16_MIN, INT16_MIN};
+    SVECTOR after_min = (SVECTOR){INT16_MAX, INT16_MAX, INT16_MAX, 0};
+    SVECTOR after_max = (SVECTOR){INT16_MIN, INT16_MIN, INT16_MIN, 0};
     
     for (size_t i = 0; i < 8; ++i) {
         if (vertices[i].vx < after_min.vx) after_min.vx = vertices[i].vx;
@@ -264,7 +264,7 @@ static inline vertex_3d_t get_halfway_point(const vertex_3d_t v0, const vertex_3
     };
 }
 
-static inline void subdivide_twice_then_add_tex_triangle(const vertex_3d_t* verts, svec2_t* trans_vec_xy, scalar_t* trans_vec_z, int avg_z, int sub2_threshold) {
+static inline void subdivide_twice_then_add_tex_triangle(const vertex_3d_t* verts, svec2_t* trans_vec_xy, scalar_t* trans_vec_z, int sub2_threshold) {
     // Generate all 15 vertices
     #define vtx0 verts[0]
     #define vtx1 verts[1]
@@ -376,7 +376,7 @@ static inline void subdivide_twice_then_add_tex_triangle(const vertex_3d_t* vert
     return;
 }
 
-static inline void subdivide_once_then_add_tex_triangle(const vertex_3d_t* verts, svec2_t* trans_vec_xy, scalar_t* trans_vec_z, const scalar_t avg_z, const int sub1_threshold) {
+static inline void subdivide_once_then_add_tex_triangle(const vertex_3d_t* verts, svec2_t* trans_vec_xy, scalar_t* trans_vec_z, const int sub1_threshold) {
     // Let's calculate the center of each edge
     const vertex_3d_t ab = get_halfway_point(verts[0], verts[1]);
     const vertex_3d_t bc = get_halfway_point(verts[1], verts[2]);
@@ -472,14 +472,14 @@ static inline void draw_tex_triangle3d_fancy(const vertex_3d_t* verts) {
     // If very close, subdivide twice
     const scalar_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id;
     if (avg_z < sub2_threshold) {
-        subdivide_twice_then_add_tex_triangle(verts, sp->trans_vec_xy, sp->trans_vec_z, avg_z, sub2_threshold);
+        subdivide_twice_then_add_tex_triangle(verts, sp->trans_vec_xy, sp->trans_vec_z, sub2_threshold);
         return;
     }
     
     // If close, subdivice once
     const scalar_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)verts[1].tex_id;
     if (avg_z < sub1_threshold) {
-        subdivide_once_then_add_tex_triangle(verts, sp->trans_vec_xy, sp->trans_vec_z, avg_z, sub1_threshold);
+        subdivide_once_then_add_tex_triangle(verts, sp->trans_vec_xy, sp->trans_vec_z, sub1_threshold);
         return;
     }
 
@@ -545,7 +545,7 @@ static inline void draw_tex_triangle3d_fast(const vertex_3d_t* verts) {
     add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], verts[0], verts[1], verts[2], avg_z, verts[0].tex_id, 0);
 }
 
-static inline void subdivide_twice_then_add_tex_quad(const vertex_3d_t* verts, svec2_t* trans_vec_xy, scalar_t* trans_vec_z, int avg_z, int sub2_threshold) {
+static inline void subdivide_twice_then_add_tex_quad(const vertex_3d_t* verts, svec2_t* trans_vec_xy, scalar_t* trans_vec_z, int sub2_threshold) {
     // Generate all 25 vertices
     #define vtx0 verts[0]
     #define vtx1 verts[1]
@@ -715,7 +715,7 @@ static inline void subdivide_twice_then_add_tex_quad(const vertex_3d_t* verts, s
     return;
 }
 
-static inline void subdivide_once_then_add_tex_quad(const vertex_3d_t* verts, svec2_t* trans_vec_xy, scalar_t* trans_vec_z, const scalar_t avg_z, const int sub1_threshold) {
+static inline void subdivide_once_then_add_tex_quad(const vertex_3d_t* verts, svec2_t* trans_vec_xy, scalar_t* trans_vec_z, const int sub1_threshold) {
     // Let's calculate the new points we need
     const vertex_3d_t ab = get_halfway_point(verts[0], verts[1]);
     const vertex_3d_t bc = get_halfway_point(verts[1], verts[3]);
@@ -831,14 +831,14 @@ static inline void draw_tex_quad3d_fancy(const vertex_3d_t* verts) {
     // If very close, subdivide twice
     const scalar_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id;
     if (avg_z < sub2_threshold) {
-        subdivide_twice_then_add_tex_quad(verts, sp->trans_vec_xy, sp->trans_vec_z, avg_z, sub2_threshold);
+        subdivide_twice_then_add_tex_quad(verts, sp->trans_vec_xy, sp->trans_vec_z, sub2_threshold);
         return;
     }
     
     // If close, subdivice once
     const scalar_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)verts[1].tex_id;
     if (avg_z < sub1_threshold) {
-        subdivide_once_then_add_tex_quad(verts, sp->trans_vec_xy, sp->trans_vec_z, avg_z, sub1_threshold);
+        subdivide_once_then_add_tex_quad(verts, sp->trans_vec_xy, sp->trans_vec_z, sub1_threshold);
         return;
     }
 

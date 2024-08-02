@@ -1,7 +1,7 @@
 #include "renderer.h"
-
 #include <psxgte.h>
 #include <psxgpu.h>
+
 #include <string.h>
 
 #include "particles.h"
@@ -108,7 +108,8 @@ void renderer_begin_frame(const transform_t* camera_transform) {
 	renderer_set_depth_bias(0);
 
     // Get camera position
-    VECTOR position = *(VECTOR*)&camera_transform->position;
+    VECTOR position;
+    memcpy(&position, &camera_transform->position, sizeof(position));
     memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
     position.vx = -position.vx >> 12;
     position.vy = -position.vy >> 12;
@@ -451,7 +452,7 @@ int renderer_should_close(void) {
 
 void renderer_draw_particle_system(particle_system_t* system, scalar_t dt) {
     // Loop over the particles in chunks of 3
-    for (size_t i = 0; i < system->params->n_particles_max; ++i) {
+    for (int i = 0; i < system->params->n_particles_max; ++i) {
         particle_t* p = &system->particle_buffer[i];
 
         // If none of these are active, don't render them

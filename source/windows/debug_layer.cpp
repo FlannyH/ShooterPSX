@@ -168,7 +168,7 @@ void inspect_entity(size_t entity_id) {
 }
 
 #define PI 3.14159265358979f
-void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_slot, int* mouse_over_viewport, level_t* curr_level) {
+void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slot, int* mouse_over_viewport, level_t* curr_level) {
     ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
     static ImGui::FileBrowser file_dialog(ImGuiFileBrowserFlags_EnterNewFilename);
 
@@ -235,7 +235,7 @@ void debug_layer_manipulate_entity(transform_t* camera, size_t* selected_entity_
                 while ((output.size() % 4) != 0) output.push_back(0);
 
                 auto offset_in_file = output.size();
-                intptr_t offset = 0;
+                uintptr_t offset = 0;
                 do {
                     output.push_back(ptr[offset]);
                 } while (++offset < size_in_bytes);

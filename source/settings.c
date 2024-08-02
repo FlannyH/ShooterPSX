@@ -37,6 +37,7 @@ void state_enter_settings(void) {
 }
 
 void state_update_settings(int dt) {
+	(void)dt;
 	renderer_begin_frame(&id_transform);
 	input_update();
     

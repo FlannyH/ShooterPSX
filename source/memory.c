@@ -203,6 +203,7 @@ void* mem_alloc(size_t size, memory_category_t category) {
     }
     return result;
 #else
+	(void)category;
     return malloc(size);
 #endif
 }

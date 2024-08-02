@@ -71,45 +71,59 @@ int input_check_cheat_buffer(int n_inputs, const uint16_t* inputs_to_check) {
 }
 
 // Below this comment are dummy function implementations that are irrelevant for NDS, feel free to ignore
-void input_set_stick_deadzone(int8_t new_deadzone) {}
+void input_set_stick_deadzone(int8_t new_deadzone) {
+    (void)new_deadzone;
+}
 
 int input_has_analog(int player_id) {
+    (void)player_id;
     return 0; // NDS doesn't have joysticks, so always returns false
 }
 
 int8_t input_left_stick_x(int player_id) {
+    (void)player_id;
     return 0;
 }
 
 int8_t input_left_stick_x_relative(int player_id) {
+    (void)player_id;
     return 0;
 }
 
 int8_t input_left_stick_y(int player_id) {
+    (void)player_id;
     return 0;
 }
 
 int8_t input_left_stick_y_relative(int player_id) {
+    (void)player_id;
     return 0;
 }
 
 int8_t input_right_stick_x(int player_id) {
+    (void)player_id;
     return 0;
 }
 
 int8_t input_right_stick_x_relative(int player_id) {
+    (void)player_id;
     return 0;
 }
 
 int8_t input_right_stick_y(int player_id) {
+    (void)player_id;
     return 0;
 }
 
 int8_t input_right_stick_y_relative(int player_id) {
+    (void)player_id;
     return 0;
 }
 
-void input_rumble(uint8_t left_strength, uint8_t right_enable) {}
+void input_rumble(uint8_t left_strength, uint8_t right_enable) {
+    (void)left_strength;
+    (void)right_enable;
+}
 
 int input_mouse_connected(void) {
     return 0;
