@@ -31,6 +31,7 @@ void renderer_init(void) {
     glViewport(0, 0, 255, 191);
     vramSetBankA(VRAM_A_TEXTURE);    
     vramSetBankB(VRAM_B_TEXTURE);
+    vramSetBankD(VRAM_D_TEXTURE);
     vramSetBankF(VRAM_F_TEX_PALETTE);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
