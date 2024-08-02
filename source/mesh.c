@@ -48,7 +48,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack) {
         mesh_name_length |= (*mesh_name_cursor++) << 24;
 
         // Allocate memory for mesh name
-        char* string;
+        char* string = NULL;
         if (on_stack) {
             string = mem_stack_alloc(mesh_name_length + 1, stack);
         } 
