@@ -75,6 +75,9 @@ extern int primitive_occupation;
 extern int tex_level_start;
 extern int tex_entity_start;
 extern int tex_weapon_start;
+extern int vsync_enable;
+extern int is_pal;
+extern int res_x;
 extern int sections[N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE];
 #ifdef __cplusplus
 }

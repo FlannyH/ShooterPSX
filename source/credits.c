@@ -1,0 +1,89 @@
+#include "main.h"
+
+#include <string.h>
+
+#include "renderer.h"
+#include "memory.h"
+#include "input.h"
+#include "music.h"
+#include "text.h"
+
+#ifdef _PSX
+#include <psxcd.h>
+#include <psxgpu.h>
+#include <psxgte.h>
+#include <psxspu.h>
+#include <psxpad.h>
+#endif
+
+#ifdef _WINDOWS
+#include "windows/psx.h"
+#include "windows/debug_layer.h"
+#endif
+
+#ifdef _NDS
+#include "nds/psx.h"
+#include <filesystem.h>
+#endif
+
+void state_enter_credits(void) {
+	state.global.fade_level = 255;
+	while (state.global.fade_level > 0) {
+		renderer_begin_frame(&id_transform);
+		// Draw background
+		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
+		renderer_apply_fade(state.global.fade_level);
+		state.global.fade_level -= FADE_SPEED;
+		renderer_end_frame();
+	}
+	state.global.fade_level = 0;
+	state.credits.scroll = 0;
+	return;
+}
+void state_update_credits(int dt) {
+	renderer_begin_frame(&id_transform);
+
+	// Draw background
+	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
+
+	// Draw text
+	for (int i = 0; i < sizeof(text_credits) / sizeof(text_credits[0]); ++i) {
+		renderer_draw_text((vec2_t){256 * ONE, (state.credits.scroll + i * 16 * ONE) + (256 * ONE)}, text_credits[i], 1, 1, white);
+	}
+
+	// Scroll text
+	state.credits.scroll -= dt * 140;
+
+	renderer_end_frame();
+	input_update();
+	if (input_pressed(0xFFFF, 0) || state.credits.scroll < -5800000) {
+		current_state = STATE_TITLE_SCREEN;
+	}
+	return;
+}
+void state_exit_credits(void) {
+	music_stop();
+
+	// Fade
+	state.global.fade_level = 0;
+	while (state.global.fade_level < 255) {
+		renderer_begin_frame(&id_transform);
+		
+		// Draw background
+		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
+
+		// Draw text
+		for (int i = 0; i < sizeof(text_credits) / sizeof(text_credits[0]); ++i) {
+			renderer_draw_text((vec2_t){256 * ONE, (state.credits.scroll + i * 16 * ONE) + (256 * ONE)}, text_credits[i], 1, 1, white);
+		}
+		input_update();
+		renderer_apply_fade(state.global.fade_level);
+		state.global.fade_level += FADE_SPEED;
+		renderer_end_frame();
+	}
+	state.global.fade_level = 255;
+	state.title_screen.assets_in_memory = 0;
+}

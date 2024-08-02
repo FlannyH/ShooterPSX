@@ -1,6 +1,10 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include "renderer.h"
+#include "player.h"
+#include "vec3.h"
+
 int main(void);
 void init(void);
 
@@ -12,6 +16,66 @@ typedef enum {
     STATE_IN_GAME,
     STATE_PAUSE_MENU,
 } state_t;
+
+typedef struct {
+	struct {
+		int frame_counter;
+		int time_counter;
+		int show_debug;
+		int fade_level; // 255 means black, 0 means no fade
+		state_t state_to_return_to;
+	} global;
+	struct {
+		unsigned int doom_mode : 1;
+	} cheats;
+	struct {
+		int button_selected;
+		int button_pressed;
+		int assets_in_memory;
+	} title_screen;
+	struct {
+		int button_selected;
+		int button_pressed;
+	} settings;
+	struct {
+		scalar_t scroll;
+	} credits;
+	struct {
+		transform_t t_level;
+		model_t* m_level;
+		model_t* m_entity;
+		model_t* m_level_col_dbg;
+		model_t* m_weapons;
+		collision_mesh_t* m_level_col;
+		vislist_t v_level;
+    	level_collision_t bvh_level_model;
+		player_t player;
+		scalar_t gun_animation_timer;
+		scalar_t gun_animation_timer_sqrt;
+		scalar_t screen_shake_intensity_rotation;
+		scalar_t screen_shake_dampening_rotation;
+		scalar_t screen_shake_intensity_position;
+		scalar_t screen_shake_dampening_position;
+	} in_game;
+	struct {
+		int button_selected;
+		int button_pressed;
+	} pause_menu;
+	struct {
+		vec3_t shoot_origin_position;
+		vec3_t shoot_hit_position;
+	} debug;
+} state_vars_t;
+
+extern state_vars_t state;
+extern state_t current_state;
+extern state_t prev_state;
+
+#define FADE_SPEED 18
+#define FADE_SPEED_SLOW 5
+
+#define DEPTH_BIAS_VIEWMODELS 64
+#define DEPTH_BIAS_LEVEL 256
 
 // Title screen
 void state_enter_title_screen(void);
