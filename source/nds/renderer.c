@@ -115,7 +115,7 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_tran
     }
     glEnd();
     // Draw quads
-    glPolyFmt(POLY_ALPHA(31) | POLY_CULL_NONE);
+    glPolyFmt(POLY_ALPHA(31) | POLY_CULL_FRONT);
     glBegin(GL_QUADS);
     for (size_t i = 0; i < mesh->n_quads; ++i) {
         uint8_t tex_id = mesh->vertices[vert_idx].tex_id;
