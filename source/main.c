@@ -349,7 +349,7 @@ void state_enter_in_game(void) {
 	state.in_game.m_level_col_dbg = NULL; // model_load_collision_debug("\\assets\\models\\level.col", 1, STACK_LEVEL);
     state.in_game.m_level_col = model_load_collision("\\assets\\models\\level.col", 1, STACK_LEVEL);
 	state.in_game.v_level = vislist_load("\\assets\\models\\level.vis", 1, STACK_LEVEL);
-	state.in_game.m_weapons = model_load("\\assets\\models\\level.msh", 1, STACK_LEVEL);
+	state.in_game.m_weapons = model_load("\\assets\\models\\weapons.msh", 1, STACK_LEVEL);
 
 	entity_init();
 
