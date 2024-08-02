@@ -58,6 +58,11 @@ CODE_ENGINE_SHARED_C = camera.c \
 			  	  	   mesh.c \
 			  	  	   player.c \
 			  	  	   renderer_shared.c \
+					   title_screen.c \
+					   in_game.c \
+					   settings.c \
+					   pause_menu.c \
+					   credits.c \
 					   texture.c \
 			  	  	   vislist.c \
 				  	   entities/chaser.c \
