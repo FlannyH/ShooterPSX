@@ -57,6 +57,9 @@ void renderer_begin_frame(const transform_t* camera_transform) {
 void renderer_end_frame(void) {
     // todo: update delta time
     glFlush(0);
+    for (int i = 0; i < vsync_enable; ++i) {
+        swiWaitForVBlank();
+    }
 }
 
 void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform, int local, int tex_id_offset) {
