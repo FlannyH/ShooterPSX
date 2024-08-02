@@ -26,6 +26,7 @@
 
 #ifdef _NDS
 #include "nds/psx.h"
+#include <nds.h>
 #include <filesystem.h>
 #endif
 
@@ -90,11 +91,10 @@ void state_enter_in_game(void) {
     state.in_game.bvh_level_model = bvh_from_file("\\assets\\models\\level.col", 1, STACK_LEVEL);
 
 	// Load textures
-	texture_cpu_t *tex_level;
-	texture_cpu_t *entity_textures;
-	texture_cpu_t *weapon_textures;
+	texture_cpu_t *tex_level = NULL;
+	texture_cpu_t *entity_textures = NULL;
+	texture_cpu_t *weapon_textures = NULL;
 	mem_stack_release(STACK_TEMP);
-	printf("occupied STACK_TEMP: %i / %i\n", mem_stack_get_occupied(STACK_TEMP), mem_stack_get_size(STACK_TEMP));
 	tex_level_start = 0;
 	const uint32_t n_level_textures = texture_collection_load("\\assets\\models\\level.txc", &tex_level, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_level_textures; ++i) {
