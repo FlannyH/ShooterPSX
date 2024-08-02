@@ -17,18 +17,18 @@ void input_update(void) {
     uint16_t key_state = keysHeld();
     button_prev = button_curr;
     button_curr = 0;
-    if (key_state && KEY_A) button_curr |= PAD_CIRCLE;
-    if (key_state && KEY_B) button_curr |= PAD_CROSS;
-    if (key_state && KEY_X) button_curr |= PAD_TRIANGLE;
-    if (key_state && KEY_Y) button_curr |= PAD_SQUARE;
-    if (key_state && KEY_UP) button_curr |= PAD_UP;
-    if (key_state && KEY_LEFT) button_curr |= PAD_LEFT;
-    if (key_state && KEY_DOWN) button_curr |= PAD_DOWN;
-    if (key_state && KEY_RIGHT) button_curr |= PAD_RIGHT;
-    if (key_state && KEY_L) button_curr |= PAD_L2;
-    if (key_state && KEY_R) button_curr |= PAD_R2;
-    if (key_state && KEY_START) button_curr |= PAD_START;
-    if (key_state && KEY_SELECT) button_curr |= PAD_SELECT;
+    if (key_state & KEY_A) button_curr |= PAD_CIRCLE;
+    if (key_state & KEY_B) button_curr |= PAD_CROSS;
+    if (key_state & KEY_X) button_curr |= PAD_TRIANGLE;
+    if (key_state & KEY_Y) button_curr |= PAD_SQUARE;
+    if (key_state & KEY_UP) button_curr |= PAD_UP;
+    if (key_state & KEY_LEFT) button_curr |= PAD_LEFT;
+    if (key_state & KEY_DOWN) button_curr |= PAD_DOWN;
+    if (key_state & KEY_RIGHT) button_curr |= PAD_RIGHT;
+    if (key_state & KEY_L) button_curr |= PAD_L2;
+    if (key_state & KEY_R) button_curr |= PAD_R2;
+    if (key_state & KEY_START) button_curr |= PAD_START;
+    if (key_state & KEY_SELECT) button_curr |= PAD_SELECT;
     
     // Update cheat buffer
     button_pressed_this_frame = 0;
