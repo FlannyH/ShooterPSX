@@ -20,7 +20,7 @@ static vec2_t vec2_from_scalars(const scalar_t x, const scalar_t y) {
     return result;
 }
 
-static vec2_t vec2_from_int32s(int32_t x, int32_t y, int32_t z) {
+static vec2_t vec2_from_int32s(int32_t x, int32_t y) {
     vec2_t result;
     result.x = x;
     result.y = y;
@@ -109,7 +109,7 @@ static vec2_t vec2_normalize(const vec2_t a) {
     const scalar_t magnitude_squared = vec2_magnitude_squared(a);
     const scalar_t magnitude = scalar_sqrt(magnitude_squared);
     if (magnitude == 0) {
-        return vec2_from_int32s(0, 0, 0);
+        return vec2_from_int32s(0, 0);
     }
     const vec2_t a_normalized = vec2_div(a, vec2_from_scalar(magnitude));
     return a_normalized;
