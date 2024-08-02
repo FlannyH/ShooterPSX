@@ -19,6 +19,7 @@ void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl
     const vec2_t tr = {center.x + size.x/2, center.y - size.y/2};
     const vec2_t bl = {center.x - size.x/2, center.y + size.y/2};
     const vec2_t br = {center.x + size.x/2, center.y + size.y/2};
+    if ((tl.y > 256 * ONE) || (bl.y < 0) || (tl.x > 512 * ONE) || (tr.x < 0)) return;
     renderer_draw_2d_quad(tl, tr, bl, br, uv_tl, uv_br, color, depth, texture_id, is_page);
 }
 
