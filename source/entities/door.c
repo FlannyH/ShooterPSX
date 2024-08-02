@@ -62,6 +62,7 @@ mesh_t* update_mesh(entity_door_t* door) {
 }
 
 void entity_door_update(int slot, player_t* player, int dt) {
+	(void)dt;
 	entity_door_t* door = (entity_door_t*)&entity_pool[slot * entity_pool_stride];
 
 	vec3_t door_pos = door->entity_header.position;
@@ -133,4 +134,7 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	renderer_draw_mesh_shaded(door->entity_header.mesh, &render_transform, 0, tex_entity_start);
 }
 
-void entity_door_on_hit(int slot, int hitbox_index) {}
+void entity_door_on_hit(int slot, int hitbox_index) {
+	(void)slot;
+	(void)hitbox_index;
+}

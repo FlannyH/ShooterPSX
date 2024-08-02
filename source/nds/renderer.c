@@ -63,6 +63,10 @@ void renderer_end_frame(void) {
 }
 
 void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform, int local, int tex_id_offset) {
+    (void)mesh;
+    (void)model_transform;
+    (void)local;
+    (void)tex_id_offset;
     TODO_SOFT()
 }
 
@@ -124,7 +128,6 @@ void renderer_apply_fade(int fade_level) {
     glLoadIdentity();
 
     // Draw transparent quad
-    printf("adsfkhg\n");
     glBindTexture(0, texture_pages[4]);
     glPolyFmt(POLY_ALPHA(fade_level >> 3) | POLY_CULL_NONE);
     glColor3b(0, 0, 0);
@@ -148,6 +151,10 @@ void renderer_apply_fade(int fade_level) {
 }
 
 void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const transform_t* model_transform) {
+    (void)v0;
+    (void)v1;
+    (void)color;
+    (void)model_transform;
     TODO()
 }
 
@@ -176,6 +183,7 @@ void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8
 }
 
 void renderer_set_video_mode(int is_pal) {
+    (void)is_pal;
     TODO()
 }
 
@@ -196,5 +204,6 @@ int renderer_should_close(void) {
 }
 
 void renderer_set_depth_bias(int bias) {
+    (void)bias;
     TODO_SOFT()
 }

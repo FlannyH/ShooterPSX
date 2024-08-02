@@ -79,7 +79,7 @@ void renderer_draw_model_shaded(const model_t* model, const transform_t* model_t
         visfield_t combined = { 0, 0, 0, 0 };
 
         // Get all the vislist bitfields and combine them together
-        for (size_t i = 0; i < n_sections; ++i) {
+        for (int i = 0; i < n_sections; ++i) {
             combined.sections_0_31 |= vislist[sections[i]].sections_0_31;
             combined.sections_32_63 |= vislist[sections[i]].sections_32_63;
             combined.sections_64_95 |= vislist[sections[i]].sections_64_95;

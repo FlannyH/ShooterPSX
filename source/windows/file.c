@@ -7,12 +7,18 @@
 
 int file_read(const char* path, uint32_t** destination, size_t* size, int on_stack, stack_t stack) {
     // Modify file name to not be CD based
-    const size_t length = strlen(path) + 1; // Include the null terminator
-    char* new_path = mem_alloc(length, MEM_CAT_UNDEFINED);
+    const size_t length = strlen(path) + 2; // Include the null terminator
+    char* new_path = mem_stack_alloc(length, STACK_TEMP);
 
-    new_path[0] = '.';
-    memcpy(&new_path[1], path, length);
-    new_path[length] = 0;
+    if (path[length - 3] == ';') {    
+        new_path[0] = '.';
+        memcpy(&new_path[1], path, length - 2);
+        new_path[length - 2] = 0;
+    }
+    else {
+        strcpy(new_path+1, path);
+        strcpy(new_path, path);
+    }
 
     // Convert slashes to forward slashes, Linux build will cry otherwise
     for (size_t x = 0; x < length - 2; ++x) {
@@ -35,8 +41,8 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
     fseek(file, 0, SEEK_SET);
 
     // Allocate memory for the data
-	*destination = (uint32_t*)mem_alloc(*size, MEM_CAT_FILE);
-    memset(*destination, 0, (*size) + 1);
+	if (on_stack) *destination = (uint32_t*)mem_stack_alloc(*size, stack);
+	else *destination = (uint32_t*)mem_alloc(*size, MEM_CAT_FILE);
 
     // Read the data
     fread(*destination, sizeof(char), *size, file);

@@ -12,6 +12,8 @@ entity_chaser_t* entity_chaser_new(void) {
 }
 
 void entity_chaser_update(int slot, player_t* player, int dt) {
+	(void)player;
+	(void)dt;
 	entity_chaser_t* chaser = (entity_chaser_t*)&entity_pool[slot * entity_pool_stride];
 	vec3_t chaser_pos = chaser->entity_header.position;
 
@@ -75,6 +77,7 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 }
 
 void entity_chaser_on_hit(int slot, int hitbox_index) {
+	(void)slot;
 	if (hitbox_index == 0) {
 		// todo: handle body hits
 		printf("hit enemy body\n");

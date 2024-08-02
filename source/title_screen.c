@@ -64,6 +64,7 @@ void state_enter_title_screen(void) {
 }
 
 void state_update_title_screen(int dt) {
+    (void)dt;
 	renderer_begin_frame(&id_transform);
 	input_update();
 	ui_render_background();

@@ -719,7 +719,6 @@ level_collision_t bvh_from_file(const char* path, int on_stack, stack_t stack) {
         .primitives = (collision_triangle_3d_t*)(binary + header->triangle_data_offset),
         .indices = (uint16_t*)(binary + header->bvh_indices_offset),
         .nodes = (bvh_node_t*)(binary + header->bvh_nodes_offset),
-        .root = (bvh_node_t*)(binary + header->bvh_nodes_offset),
         .nav_graph_nodes = (nav_node_t*)(binary + header->nav_graph_offset + 2),
         .n_primitives = header->n_nodes,
         .n_nav_graph_nodes = *(uint16_t*)(binary + header->nav_graph_offset)

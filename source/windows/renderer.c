@@ -64,6 +64,8 @@ typedef enum { vertex, pixel, geometry, compute } ShaderType;
 static void DebugCallbackFunc(GLenum source, GLenum type, GLuint id,
 															GLenum severity, GLsizei length,
 															const GLchar *message, const GLvoid *userParam) {
+	(void)length;
+	(void)userParam;
 	// Skip some less useful info
 	if (id ==
 			131218) // http://stackoverflow.com/questions/12004396/opengl-debug-context-performance-warning
@@ -523,10 +525,6 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 #endif
 }
 
-void renderer_draw_triangles_shaded_2d(const vertex_2d_t *vertex_buffer, uint16_t n_verts, int16_t x, int16_t y) {
-
-}
-
 void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const transform_t* model_transform) {
     // Calculate model matrix
     mat4 model_matrix;
@@ -808,7 +806,9 @@ void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8
     mem_free(pixels);
 }
 
-void renderer_set_video_mode(int is_pal) {}
+void renderer_set_video_mode(int is_pal) {
+	(void)is_pal;
+}
 
 void renderer_set_depth_bias(int bias) {
 	curr_depth_bias = bias;

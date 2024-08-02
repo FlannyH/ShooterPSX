@@ -33,6 +33,7 @@ int icos(const int a) {
 }
 
 char* FntFlush(int id) {
+    (void)id;
     return 0;
 }
 

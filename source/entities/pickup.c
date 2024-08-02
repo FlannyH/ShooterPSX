@@ -73,7 +73,10 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
     }
 }
 
-void entity_pickup_on_hit(int slot, int hitbox_index) {}
+void entity_pickup_on_hit(int slot, int hitbox_index) {
+    (void)slot;
+    (void)hitbox_index;
+}
 
 #ifdef _LEVEL_EDITOR 
 const char* pickup_names[] = {

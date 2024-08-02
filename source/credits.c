@@ -46,7 +46,7 @@ void state_update_credits(int dt) {
 	ui_render_background();
 
 	// Draw text
-	for (int i = 0; i < sizeof(text_credits) / sizeof(text_credits[0]); ++i) {
+	for (int i = 0; i < (int)(sizeof(text_credits) / sizeof(text_credits[0])); ++i) {
 		renderer_draw_text((vec2_t){256 * ONE, (state.credits.scroll + i * 16 * ONE) + (256 * ONE)}, text_credits[i], 1, 1, white);
 	}
 
@@ -71,7 +71,7 @@ void state_exit_credits(void) {
 		ui_render_background();
 
 		// Draw text
-		for (int i = 0; i < sizeof(text_credits) / sizeof(text_credits[0]); ++i) {
+		for (int i = 0; i < (int)(sizeof(text_credits) / sizeof(text_credits[0])); ++i) {
 			renderer_draw_text((vec2_t){256 * ONE, (state.credits.scroll + i * 16 * ONE) + (256 * ONE)}, text_credits[i], 1, 1, white);
 		}
 		input_update();

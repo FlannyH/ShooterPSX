@@ -159,7 +159,10 @@ int input_check_cheat_buffer(int n_inputs, const uint16_t* inputs_to_check) {\
     return match;
 }
 
-void input_rumble(uint8_t left_strength, uint8_t right_enable){}
+void input_rumble(uint8_t left_strength, uint8_t right_enable){
+    (void)left_strength;
+    (void)right_enable;
+}
 
 int input_mouse_connected(void) {
     return 0;

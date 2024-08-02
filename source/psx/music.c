@@ -74,7 +74,7 @@ void music_load_sequence(const char* path) {
 
 }
 
-void music_play_sequence(int section) {
+void music_play_sequence(uint32_t section) {
 	// Is the section index valid?
 	if (section >= curr_loaded_seq->n_sections) {
 		printf("[ERROR] Attempt to play non-existent section!");
