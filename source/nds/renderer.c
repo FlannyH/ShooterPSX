@@ -12,7 +12,8 @@ int tex_weapon_start = 0;
 int res_x = 256;
 int vsync_enable = 1;
 int is_pal = 0;
-int textures[256];
+int textures[256] = {0};
+int texture_pages[8] = {0};
 
 void renderer_init(void) {
     videoSetMode(MODE_0_3D);
@@ -58,7 +59,7 @@ void renderer_end_frame(void) {
 }
 
 void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform, int local, int tex_id_offset) {
-    TODO()
+    TODO_SOFT()
 }
 
 void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {
@@ -82,7 +83,8 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 
     // Render quad
     glPolyFmt(POLY_ALPHA(color.a >> 3) | POLY_CULL_NONE);
-    glBindTexture(0, textures[texture_id]);
+    if (is_page) glBindTexture(0, texture_pages[texture_id]);
+    else glBindTexture(0, textures[texture_id]);
     glColor3b(
         scalar_clamp((int)color.r * 2, 0, 255),
         scalar_clamp((int)color.g * 2, 0, 255),
@@ -115,19 +117,21 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
 }
 
 void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index) {
+    if (textures[index] != 0) glDeleteTextures(1, &textures[index]);
     glGenTextures(1, &textures[index]);
     glBindTexture(0, textures[index]);
     if (glTexImage2D(0, 0, GL_RGB16, 64, 64, 0, TEXGEN_OFF | ((texture->palette[0].a == 0) ? GL_TEXTURE_COLOR0_TRANSPARENT : 0), texture->data) == 0) {
-        printf("Error loading texture page %i pixels\n", index);
+        printf("Error loading texture %i pixels\n", index);
     }
     if (glColorTableEXT(0, 0, 16, 0, 0, texture->palette) == 0) {
-        printf("Error loading texture page %i palette\n", index);
+        printf("Error loading texture %i palette\n", index);
     }
 }
 
 void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {
-    glGenTextures(1, &textures[index]);
-    glBindTexture(0, textures[index]);
+    if (texture_pages[index] != 0) glDeleteTextures(1, &texture_pages[index]);
+    glGenTextures(1, &texture_pages[index]);
+    glBindTexture(0, texture_pages[index]);
     if (glTexImage2D(0, 0, GL_RGB256, 256, 256, 0, TEXGEN_OFF | ((texture->palette[0].a == 0) ? GL_TEXTURE_COLOR0_TRANSPARENT : 0), texture->data) == 0) {
         printf("Error loading texture page %i pixels\n", index);
     }
@@ -157,5 +161,5 @@ int renderer_should_close(void) {
 }
 
 void renderer_set_depth_bias(int bias) {
-    TODO()
+    TODO_SOFT()
 }
