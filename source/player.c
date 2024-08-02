@@ -189,7 +189,7 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
 #endif
 
         // Did we hit anything?
-        if (!is_infinity(hit.distance)) {
+        if (!is_infinity(hit.distance) && hit.distance > 0) {
             // Eject player out of geometry
             const vec3_t amount_to_eject = (vec3_t){
                 scalar_mul(hit.normal.x, player_radius - hit.distance),
