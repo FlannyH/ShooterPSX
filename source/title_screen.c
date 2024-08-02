@@ -159,5 +159,10 @@ void state_exit_title_screen(void) {
 		state.global.fade_level += FADE_SPEED;
 		if (current_state == STATE_IN_GAME) music_set_volume(255 - state.global.fade_level);
 	}
+
+    // One last frame with the screen blank
 	state.global.fade_level = 255;
+    renderer_begin_frame(&id_transform);
+    renderer_apply_fade(state.global.fade_level);
+    renderer_end_frame();
 }
