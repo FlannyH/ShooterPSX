@@ -22,7 +22,7 @@ void renderer_init(void) {
     glInit();
     glEnable(GL_TEXTURE_2D);
     glFlush(0);
-    glClearColor(0, 0, 0, 31);
+    glClearColor(2, 2, 4, 31);
     glClearPolyID(63);
     glClearDepth(0x7FFF);
     glViewport(0, 0, 255, 191);
@@ -76,10 +76,10 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
     tr.x = ((tr.x * 2) / 512) - ONE;
     bl.x = ((bl.x * 2) / 512) - ONE;
     br.x = ((br.x * 2) / 512) - ONE;
-    tl.y = ONE - ((tl.y * 2) / 240);
-    tr.y = ONE - ((tr.y * 2) / 240);
-    bl.y = ONE - ((bl.y * 2) / 240);
-    br.y = ONE - ((br.y * 2) / 240);
+    tl.y = ONE - (((tl.y * 2) - (32 * ONE)) / 240);
+    tr.y = ONE - (((tr.y * 2) - (32 * ONE)) / 240);
+    bl.y = ONE - (((bl.y * 2) - (32 * ONE)) / 240);
+    br.y = ONE - (((br.y * 2) - (32 * ONE)) / 240);
 
     // Render quad
     glPolyFmt(POLY_ALPHA(color.a >> 3) | POLY_CULL_NONE);
