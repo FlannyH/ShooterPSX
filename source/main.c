@@ -187,6 +187,7 @@ void init(void) {
 void state_enter_title_screen(void) {
 	if (!state.title_screen.assets_in_memory) {
 		// Load graphics data
+#if defined(_PSX) || defined(_WINDOWS)
 		texture_cpu_t *tex_menu1;
 		texture_cpu_t *tex_menu2;
 		texture_cpu_t *tex_ui;
@@ -199,6 +200,16 @@ void state_enter_title_screen(void) {
 		mem_stack_release(STACK_TEMP);
 		texture_collection_load("\\assets\\models\\ui_tex\\ui.txc", &tex_ui, 1, STACK_TEMP);
 		renderer_upload_8bit_texture_page(tex_ui, 5);
+#elif defined(_NDS)
+		texture_cpu_t *tex_menu;
+		texture_cpu_t *tex_ui;
+		mem_stack_release(STACK_TEMP);
+		texture_collection_load("\\assets\\models\\ui_tex\\menu_ds.txc", &tex_menu, 1, STACK_TEMP);
+		renderer_upload_8bit_texture_page(tex_menu, 4);
+		mem_stack_release(STACK_TEMP);
+		texture_collection_load("\\assets\\models\\ui_tex\\ui.txc", &tex_ui, 1, STACK_TEMP);
+		renderer_upload_8bit_texture_page(tex_ui, 5);
+#endif
 		mem_stack_release(STACK_TEMP);
 		state.title_screen.assets_in_memory = 1;
 		mem_stack_release(STACK_MUSIC);
@@ -213,8 +224,12 @@ void state_update_title_screen(int dt) {
 	renderer_begin_frame(&id_transform);
 	input_update();
 	// Draw background
+#if defined(_PSX) || defined(_WINDOWS)
 	renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 3, 1);
 	renderer_draw_2d_quad_axis_aligned((vec2_t){384*ONE, 128*ONE}, (vec2_t){256*ONE, 256*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
+#elif defined(_NDS)
+	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 136*ONE}, (vec2_t){512*ONE, 240*ONE}, (vec2_t){0*ONE, 0*ONE}, (vec2_t){255*ONE, 191*ONE}, (pixel32_t){128, 128, 128, 255}, 3, 4, 1);
+#endif
 
 	// Draw Sub Nivis logo
 	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 85*ONE}, (vec2_t){128*ONE, 72*ONE}, (vec2_t){0*ONE, 184*ONE}, (vec2_t){128*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, 1);

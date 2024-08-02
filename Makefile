@@ -402,6 +402,7 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/GOURAUD.FSH \
 					  $(PATH_ASSETS)/models/weapons.txc \
 					  $(PATH_ASSETS)/models/ui_tex/menu1.txc \
 					  $(PATH_ASSETS)/models/ui_tex/menu2.txc \
+					  $(PATH_ASSETS)/models/ui_tex/menu_ds.txc \
 					  $(PATH_ASSETS)/models/ui_tex/ui.txc \
 					  $(PATH_ASSETS)/music/instr.sbk \
 					  $(PATH_ASSETS)/music/sequence/black.dss \
