@@ -67,9 +67,7 @@ void state_update_title_screen(int dt) {
 	renderer_begin_frame(&id_transform);
 	input_update();
 	ui_render_background();
-
-	// Draw Sub Nivis logo
-	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 85*ONE}, (vec2_t){128*ONE, 72*ONE}, (vec2_t){0*ONE, 184*ONE}, (vec2_t){128*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, 1);
+    ui_render_logo();
 
 	// Draw buttons
 	for (int y = 0; y < 3; ++y) {
@@ -154,14 +152,9 @@ void state_exit_title_screen(void) {
 	while (state.global.fade_level < 255) {
 		renderer_begin_frame(&id_transform);
 		input_update();
-
         ui_render_background();
-        
-		// Draw Sub Nivis logo
-		renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 85*ONE}, (vec2_t){128*ONE, 72*ONE}, (vec2_t){0*ONE, 184*ONE}, (vec2_t){128*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, 1);
-
+        ui_render_logo();
 		renderer_apply_fade(state.global.fade_level);
-
 		renderer_end_frame();
 		state.global.fade_level += FADE_SPEED;
 		if (current_state == STATE_IN_GAME) music_set_volume(255 - state.global.fade_level);
