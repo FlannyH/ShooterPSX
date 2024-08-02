@@ -13,7 +13,7 @@ void ui_render_background() {
 }
 
 void ui_render_logo() {
-
+    renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, 85*ONE}, (vec2_t){128*ONE, 72*ONE}, (vec2_t){0*ONE, 184*ONE}, (vec2_t){128*ONE, 255*ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, 1);
 }
 
 void ui_render_button() {
