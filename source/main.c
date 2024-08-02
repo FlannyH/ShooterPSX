@@ -34,6 +34,7 @@
 #ifdef _NDS
 #include "nds/psx.h"
 #include <filesystem.h>
+#include <nds.h>
 #endif
 
 #include <string.h>
@@ -121,6 +122,7 @@ void init(void) {
 	CdInit();
 #endif
 #ifdef _NDS
+	defaultExceptionHandler();
 	nitroFSInit(NULL);
 #endif
 }
