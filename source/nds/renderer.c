@@ -16,6 +16,11 @@ int textures[256] = {0};
 int texture_pages[8] = {0};
 int n_rendered_triangles = 0;
 int n_rendered_quads = 0;
+int vblank_counter = 0;
+
+void vblank_handler(void) {
+    ++vblank_counter;
+}
 
 void renderer_init(void) {
     videoSetMode(MODE_0_3D);
@@ -38,6 +43,10 @@ void renderer_init(void) {
     gluPerspective(90, 256.0 / 192.0, 0.01, 100);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+
+    // Set up hblank interrupt
+    irqSet(IRQ_VBLANK, vblank_handler);
+    irqEnable(IRQ_VBLANK);
 }
 
 int16_t angle_to_16(int angle) {
@@ -64,7 +73,7 @@ void renderer_begin_frame(const transform_t* camera_transform) {
 void renderer_end_frame(void) {
     // todo: update delta time
     glFlush(0);
-    for (int i = 0; i < vsync_enable; ++i) {
+    while (vblank_counter < vsync_enable) {
         swiWaitForVBlank();
     }
 }
@@ -264,7 +273,10 @@ void renderer_set_video_mode(int is_pal) {
 }
 
 int renderer_get_delta_time_raw(void) {
-    return vsync_enable; // todo: return actual number of vblanks this frame took, probably with a vblank interrupt
+    printf("%i\n", vblank_counter);
+    int result = vblank_counter;
+    vblank_counter = 0;
+    return result; // todo: return actual number of vblanks this frame took, probably with a vblank interrupt
 }
 
 int renderer_get_delta_time_ms(void) {
