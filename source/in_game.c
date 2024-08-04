@@ -8,6 +8,7 @@
 #include "random.h"
 #include "memory.h"
 #include "input.h"
+#include "level.h"
 #include "music.h"
 #include "text.h"
 
@@ -39,7 +40,7 @@ void state_enter_in_game(void) {
 
 	state.title_screen.assets_in_memory = 0;
 
-	// todo: level_load()
+	state.in_game.level = level_load("\\assets\\levels\\level1.lvl");
 
     // Init player
     state.in_game.player.position.x = 11705653 / 2;
@@ -55,72 +56,27 @@ void state_enter_in_game(void) {
 	vec3_debug(state.in_game.player.velocity);
 	vec3_debug(state.in_game.player.rotation);
 
-	// Load models
-    state.in_game.m_level = model_load("\\assets\\models\\level.msh", 1, STACK_LEVEL);
-	state.in_game.m_level_col_dbg = NULL; // model_load_collision_debug("\\assets\\models\\level.col", 1, STACK_LEVEL);
-    state.in_game.m_level_col = model_load_collision("\\assets\\models\\level.col", 1, STACK_LEVEL);
-	state.in_game.v_level = vislist_load("\\assets\\models\\level.vis", 1, STACK_LEVEL);
-	state.in_game.m_weapons = model_load("\\assets\\models\\weapons.msh", 1, STACK_LEVEL);
-
-	entity_init();
-
-	// debug entity
-	entity_door_t* door;
-	door = entity_door_new(); door->is_locked = 0; door->entity_header.position = (vec3_t){1325 * ONE, 1372 * ONE, 1699 * ONE}; door->is_big_door = 0; door->is_rotated = 0;
-	door = entity_door_new(); door->is_locked = 0; door->entity_header.position = (vec3_t){1209 * ONE, 1372 * ONE, 1699 * ONE}; door->is_big_door = 0; door->is_rotated = 0;
-	door = entity_door_new(); door->is_locked = 1; door->entity_header.position = (vec3_t){1121 * ONE, 1372 * ONE, 1755 * ONE}; door->is_big_door = 0; door->is_rotated = 1;
-	door = entity_door_new(); door->is_locked = 1; door->entity_header.position = (vec3_t){1053 * ONE, 1372 * ONE, 1682 * ONE}; door->is_big_door = 1; door->is_rotated = 0;
-	door = entity_door_new(); door->is_locked = 0; door->entity_header.position = (vec3_t){926 * ONE,  1164 * ONE, 1675 * ONE}; door->is_big_door = 0; door->is_rotated = 0;
-	door = entity_door_new(); door->is_locked = 1; door->entity_header.position = (vec3_t){501 * ONE,  1015 * ONE, 1944 * ONE}; door->is_big_door = 0; door->is_rotated = 1;
-
-	entity_pickup_t* pickup;
-	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*0)*ONE, 1294*ONE, (465+64*0)*ONE}; pickup->type = PICKUP_TYPE_AMMO_BIG;
-	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*0)*ONE, 1294*ONE, (465+64*1)*ONE}; pickup->type = PICKUP_TYPE_ARMOR_BIG;
-	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*0)*ONE, 1294*ONE, (465+64*2)*ONE}; pickup->type = PICKUP_TYPE_HEALTH_BIG;
-	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*1)*ONE, 1294*ONE, (465+64*0)*ONE}; pickup->type = PICKUP_TYPE_AMMO_SMALL;
-	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*1)*ONE, 1294*ONE, (465+64*1)*ONE}; pickup->type = PICKUP_TYPE_ARMOR_SMALL;
-	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*1)*ONE, 1294*ONE, (465+64*2)*ONE}; pickup->type = PICKUP_TYPE_HEALTH_SMALL;
-	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*2)*ONE, 1294*ONE, (465+64*0)*ONE}; pickup->type = PICKUP_TYPE_KEY_BLUE;
-	pickup = entity_pickup_new(); pickup->entity_header.position = (vec3_t){(1338 + 64*2)*ONE, 1294*ONE, (465+64*1)*ONE}; pickup->type = PICKUP_TYPE_KEY_YELLOW;
-
-	entity_crate_t* crate;
-	crate = entity_crate_new(); crate->entity_header.position = (vec3_t){(1338 + 64*3)*ONE, 1294*ONE, (465+64*0)*ONE}; crate->pickup_to_spawn = PICKUP_TYPE_HEALTH_BIG;
-
-
-	// Generate collision BVH
-    state.in_game.bvh_level_model = bvh_from_file("\\assets\\models\\level.col", 1, STACK_LEVEL);
-
-	// Load textures
-	texture_cpu_t *tex_level = NULL;
-	texture_cpu_t *entity_textures = NULL;
-	texture_cpu_t *weapon_textures = NULL;
-	mem_stack_release(STACK_TEMP);
-	tex_level_start = 0;
-	const uint32_t n_level_textures = texture_collection_load("\\assets\\models\\level.txc", &tex_level, 1, STACK_TEMP);
-	for (uint8_t i = 0; i < n_level_textures; ++i) {
-	    renderer_upload_texture(&tex_level[i], i + tex_level_start);
-	}
-    mem_stack_release(STACK_TEMP);
-	tex_entity_start = tex_level_start + n_level_textures;
+    // Load entity textures
+	texture_cpu_t *entity_textures;
+    tex_entity_start = tex_level_start + state.in_game.level.n_level_textures;
 	const uint32_t n_entity_textures = texture_collection_load("\\assets\\models\\entity.txc", &entity_textures, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_entity_textures; ++i) {
 	    renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
 	}
-    mem_stack_release(STACK_TEMP);
-	tex_weapon_start = tex_entity_start + n_entity_textures;
-	const uint32_t n_weapons_textures = texture_collection_load("\\assets\\models\\weapons.txc", &weapon_textures, 1, STACK_TEMP);
-	for (uint8_t i = 0; i < n_weapons_textures; ++i) {
+	mem_stack_release(STACK_TEMP);
+
+	// Load weapon textures
+	texture_cpu_t *weapon_textures;
+    tex_weapon_start = tex_entity_start + n_entity_textures;
+	const uint32_t n_weapon_textures = texture_collection_load("\\assets\\models\\weapons.txc", &weapon_textures, 1, STACK_TEMP);
+	for (uint8_t i = 0; i < n_weapon_textures; ++i) {
 	    renderer_upload_texture(&weapon_textures[i], i + tex_weapon_start);
 	}
 	mem_stack_release(STACK_TEMP);
-
-	// Start music
-	music_stop();
-	music_load_soundbank("\\assets\\music\\instr.sbk");
-	music_load_sequence("\\assets\\music\\sequence\\subnivis.dss");
-	music_play_sequence(0);
 	
-	music_set_volume(255);
+	// Load weapon models
+	state.in_game.m_weapons = model_load("\\assets\\models\\weapons.msh", 1, STACK_LEVEL);
+
 #ifdef _DEBUG
 #ifdef _PSX
 	FntLoad(320,256);
@@ -128,8 +84,6 @@ void state_enter_in_game(void) {
 #endif
 #endif
 	
-	mem_debug();
-
 	state.in_game.player.has_key_blue = 0;
 	state.in_game.player.has_key_yellow = 0;
 	state.in_game.player.health = 40;
@@ -186,15 +140,15 @@ void state_update_in_game(int dt) {
 
 	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
 
-	int n_sections = player_get_level_section(&state.in_game.player, state.in_game.v_level);
+	int n_sections = player_get_level_section(&state.in_game.player, state.in_game.level.vislist);
 	state.global.frame_counter += dt;
 #if defined(_DEBUG) && defined(_PSX)
 	if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
 	if (state.global.show_debug) {
 		PROFILE("input", input_update(), 1);
-		PROFILE("lvl_gfx", renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level.vislists, 0), 1);
+		PROFILE("lvl_gfx", renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists, 0), 1);
 		PROFILE("entity", entity_update_all(&state.in_game.player, dt), 1);
-		PROFILE("player", player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt, state.global.time_counter), 1);
+		PROFILE("player", player_update(&state.in_game.player, &state.in_game.level.collision_bvh, dt, state.global.time_counter), 1);
 		FntPrint(-1, "sections: ");
 		for (int i = 0; i < n_sections; ++i) FntPrint(-1, "%i, ", sections[i]);
 		FntPrint(-1, "\n");
@@ -239,9 +193,9 @@ void state_update_in_game(int dt) {
 	else {
 #endif
 		input_update();
-		renderer_draw_model_shaded(state.in_game.m_level, &state.in_game.t_level, state.in_game.v_level.vislists, 0);
+		renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists, 0);
 		entity_update_all(&state.in_game.player, dt);
-		player_update(&state.in_game.player, &state.in_game.bvh_level_model, dt, state.global.time_counter);
+		player_update(&state.in_game.player, &state.in_game.level.collision_bvh, dt, state.global.time_counter);
 #if defined(_DEBUG) && defined(_PSX)
 	}
 #endif
@@ -276,7 +230,7 @@ void state_update_in_game(int dt) {
 			ray.position = vec3_muls(ray.position, -COL_SCALE);
 			ray.inv_direction = vec3_div((vec3_t){ONE, ONE, ONE}, ray.direction);
 			rayhit_t hit;
-			bvh_intersect_ray(&state.in_game.bvh_level_model, ray, &hit);
+			bvh_intersect_ray(&state.in_game.level.collision_bvh, ray, &hit);
 			for (size_t i = 0; i < entity_n_active_aabb; ++i) {
 				rayhit_t entity_hit;
 				if (ray_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, ray, &entity_hit)) {

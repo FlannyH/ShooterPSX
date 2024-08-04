@@ -54,7 +54,7 @@ int main(void) {
 	setup_timers();
 	// Init state variables
 	memset(&state, 0, sizeof(state));
-	state.in_game.t_level = (transform_t){{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}};
+	state.in_game.level = (level_t){0};
 	state.global.frame_counter = 0;
 	state.global.show_debug = 0;
 

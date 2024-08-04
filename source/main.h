@@ -3,6 +3,7 @@
 
 #include "renderer.h"
 #include "player.h"
+#include "level.h"
 #include "vec3.h"
 
 int main(void);
@@ -41,14 +42,9 @@ typedef struct {
 		scalar_t scroll;
 	} credits;
 	struct {
-		transform_t t_level;
-		model_t* m_level;
+		level_t level;
 		model_t* m_entity;
-		model_t* m_level_col_dbg;
 		model_t* m_weapons;
-		collision_mesh_t* m_level_col;
-		vislist_t v_level;
-    	level_collision_t bvh_level_model;
 		player_t player;
 		scalar_t gun_animation_timer;
 		scalar_t gun_animation_timer_sqrt;

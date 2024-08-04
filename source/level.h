@@ -35,6 +35,8 @@ typedef struct {
     vislist_t vislist;
     level_collision_t collision_bvh;
     // todo: add other fields as specified in FLVL documentation
+
+    int n_level_textures;
 } level_t;                                 
 
 level_t level_load(const char* level_path); // Load level from path, including .LVL;1 extension.
