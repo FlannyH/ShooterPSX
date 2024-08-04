@@ -421,8 +421,7 @@ void renderer_begin_frame(const transform_t *camera_transform) {
     else if (input_held(PAD_TRIANGLE, 0)) {
         memcpy(view_matrix, view_matrix_third_person, sizeof(view_matrix_third_person));
     }
-    else
-    {
+    else {
         memcpy(view_matrix, view_matrix_normal, sizeof(view_matrix_normal));
     }
 

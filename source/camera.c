@@ -17,11 +17,9 @@
 #define MOVEMENT_SPEED 64
 
 void camera_update_flycam(transform_t* camera_transform, int dt_ms) {
-    if (input_is_connected(0))
-    {
+    if (input_is_connected(0)) {
         // For dual-analog and dual-shock (analog input)
         if (input_has_analog(0)) {
-
             // Moving forwards and backwards
             camera_transform->position.x -= (((hisin(camera_transform->rotation.y) * hicos(camera_transform->rotation.x)) >> 12) * (input_left_stick_y(0))) * (MOVEMENT_SPEED * dt_ms) >> 12;
             camera_transform->position.y += (hisin(camera_transform->rotation.x) * (input_left_stick_y(0))) * (MOVEMENT_SPEED * dt_ms) >> 12;
@@ -45,7 +43,6 @@ void camera_update_flycam(transform_t* camera_transform, int dt_ms) {
         }
 
         if (input_held(PAD_R2, 0)) {
-
             // Slide down
             camera_transform->position.x += ((hisin(camera_transform->rotation.y) * hisin(camera_transform->rotation.x))) * (MOVEMENT_SPEED * dt_ms) >> 12;
             camera_transform->position.y += hicos(camera_transform->rotation.x) * (MOVEMENT_SPEED * dt_ms) >> 12;
