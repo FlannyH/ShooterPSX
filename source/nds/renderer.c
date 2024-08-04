@@ -29,6 +29,7 @@ void renderer_init(void) {
     glInit();
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
+    glEnable(GL_ANTIALIAS);
     glFlush(0);
     glClearColor(2, 2, 4, 31);
     glClearPolyID(63);
