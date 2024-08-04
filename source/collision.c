@@ -94,11 +94,15 @@ void handle_node_intersection_vertical_cylinder(level_collision_t* self, const b
 
 void bvh_intersect_ray(level_collision_t* self, ray_t ray, rayhit_t* hit) {
     hit->distance = INT32_MAX;
+    if (self == NULL) return;
+    if (self->root == NULL) return;
     handle_node_intersection_ray(self, self->root, ray, hit, 0);
 }
 
 void bvh_intersect_vertical_cylinder(level_collision_t* bvh, vertical_cylinder_t cyl, rayhit_t* hit) {
     hit->distance = INT32_MAX;
+    if (bvh == NULL) return;
+    if (bvh->root == NULL) return;
     handle_node_intersection_vertical_cylinder(bvh, bvh->root, cyl, hit, 0);
 }
 
@@ -156,6 +160,8 @@ void debug_draw(const level_collision_t* self, const bvh_node_t* node, const int
 }
 
 void bvh_debug_draw(const level_collision_t* bvh, const int min_depth, const int max_depth, const pixel32_t color) {
+    if (bvh == NULL) return;
+    if (bvh->root == NULL) return;
     debug_draw(bvh, bvh->root, min_depth, max_depth, 0, color);
 }
 
