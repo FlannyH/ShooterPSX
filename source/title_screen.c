@@ -132,7 +132,7 @@ void state_update_title_screen(int dt) {
 	else {
 		sprintf(curr_pointer, "NTSC\n");  curr_pointer += strlen("NTSC ");
 	}
-#ifdef DEBUG_CAMERA
+#ifdef _DEBUG_CAMERA
 	sprintf(curr_pointer, "FREECAM\n");  curr_pointer += strlen("FREECAM ");
 #endif
 

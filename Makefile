@@ -144,7 +144,7 @@ windows: INCLUDE_DIRS = source \
 			   external/imgui \
 			   $(PATH_LIB_WIN)/gl3w/include
 windows: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
-level_editor: DEFINES = _WINDOWS _WIN32 _LEVEL_EDITOR
+level_editor: DEFINES = _WINDOWS _WIN32 _LEVEL_EDITOR _DEBUG_CAMERA
 level_editor: LIBRARIES = glfw3 stdc++ gdi32 opengl32
 level_editor: CC = gcc
 level_editor: CXX = g++
