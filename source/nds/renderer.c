@@ -71,7 +71,6 @@ void renderer_begin_frame(const transform_t* camera_transform) {
 }
 
 void renderer_end_frame(void) {
-    // todo: update delta time
     glFlush(0);
     while (vblank_counter < vsync_enable) {
         swiWaitForVBlank();
@@ -269,7 +268,7 @@ void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8
 
 void renderer_set_video_mode(int is_pal) {
     (void)is_pal;
-    TODO()
+    return; // NDS has no pal mode so ignore all of this
 }
 
 int renderer_get_delta_time_raw(void) {
