@@ -11,13 +11,17 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
     char* new_path = mem_stack_alloc(length, STACK_TEMP);
 
     if (path[length - 3] == ';') {    
+        new_path = mem_stack_alloc(length, STACK_TEMP);
         new_path[0] = '.';
         memcpy(&new_path[1], path, length - 2);
         new_path[length - 2] = 0;
     }
+    else if (path[0] == '\\' || path[0] == '/') {
+        new_path = mem_stack_alloc(length, STACK_TEMP);
+        strcpy(new_path, path + 1); // Get rid of the leading '/'
+    }
     else {
-        new_path[0] = '.';
-        strcpy(new_path+1, path);
+        strcpy(new_path, path);
     }
 
     // Convert slashes to forward slashes, Linux build will cry otherwise
