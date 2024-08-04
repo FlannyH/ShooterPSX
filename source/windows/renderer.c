@@ -189,9 +189,6 @@ bool load_shader_part(char *path, const ShaderType type, const GLuint *program) 
 	if (file_read(path, &shader_data, &shader_size, 1, STACK_TEMP) == 0) {
 		// Log error
 		printf("[ERROR] Shader %s not found!\n", path);
-
-		// Clean up
-		mem_free(shader_data);
 		return false;
 	}
 
