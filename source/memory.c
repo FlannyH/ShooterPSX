@@ -138,6 +138,50 @@ void mem_stack_release(stack_t stack) {
 	}
 }
 
+size_t mem_stack_get_marker(stack_t stack) {
+	switch (stack) {
+		case STACK_LEVEL:
+			return mem_stack_cursor_level;
+			break;
+		case STACK_MUSIC:
+			return mem_stack_cursor_music;
+			break;
+		case STACK_TEMP:
+			return mem_stack_cursor_temp;
+			break;
+		case STACK_ENTITY:
+			return mem_stack_cursor_entity;
+			break;
+		case STACK_VRAM_SWAP:
+			return mem_stack_cursor_vram_swap;
+			break;
+		default:
+			return 0;
+			break;
+	}
+}
+void mem_stack_reset_to_marker(stack_t stack, size_t marker) {
+	switch (stack) {
+		case STACK_LEVEL:
+			mem_stack_cursor_level = marker;
+			break;
+		case STACK_MUSIC:
+			mem_stack_cursor_music = marker;
+			break;
+		case STACK_TEMP:
+			mem_stack_cursor_temp = marker;
+			break;
+		case STACK_ENTITY:
+			mem_stack_cursor_entity = marker;
+			break;
+		case STACK_VRAM_SWAP:
+			mem_stack_cursor_vram_swap = marker;
+			break;
+		default:
+			break;
+	}
+}
+
 size_t mem_stack_get_size(stack_t stack) {
 	switch (stack) {
 		case STACK_LEVEL:

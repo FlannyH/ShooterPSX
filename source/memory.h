@@ -25,6 +25,8 @@ void mem_init(void);
 void* mem_alloc(size_t size, memory_category_t category);
 void* mem_stack_alloc(size_t size, stack_t stack);
 void mem_stack_release(stack_t stack);
+size_t mem_stack_get_marker(stack_t stack);
+void mem_stack_reset_to_marker(stack_t stack, size_t marker);
 size_t mem_stack_get_size(stack_t stack);
 size_t mem_stack_get_occupied(stack_t stack);
 size_t mem_stack_get_free(stack_t stack);
