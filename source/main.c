@@ -42,7 +42,6 @@
 int widescreen = 0;
 state_t current_state = STATE_NONE;
 state_t prev_state = STATE_NONE;
-int should_transition_state = 0;
 state_vars_t state;
 
 int main(void) {
