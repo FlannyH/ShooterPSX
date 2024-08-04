@@ -16,8 +16,8 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
         new_path[length - 2] = 0;
     }
     else {
+        new_path[0] = '.';
         strcpy(new_path+1, path);
-        strcpy(new_path, path);
     }
 
     // Convert slashes to forward slashes, Linux build will cry otherwise
