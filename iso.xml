@@ -65,6 +65,9 @@
             <file name="SUBNIVIS.EXE"	type="data" source="temp/psx/SubNivis.exe" />
             <file name="SYSTEM.CNF"		type="data" source="system.cnf" />
             <dir name="ASSETS">
+				<dir name="LEVELS">
+					<file name="LEVEL1.LVL"	type="data"	source="assets/levels/level1.lvl" />
+				</dir>
 				<dir name="MODELS">
 					<file name="LEVEL.MSH"	type="data" source="assets/models/level.msh" />
 					<file name="LEVEL.TXC"	type="data" source="assets/models/level.txc" />
