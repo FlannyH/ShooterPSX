@@ -14,6 +14,7 @@ int should_transition_state = 0;
 state_vars_t state;
 
 int main(void) {
+    mem_init();
     renderer_init();
     input_init();
 	entity_init();
