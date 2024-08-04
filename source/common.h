@@ -5,7 +5,7 @@
 
 #ifndef _NDS
 //#define PAL
-//#define DEBUG_CAMERA
+//#define _DEBUG_CAMERA
 #define _DEBUG
 #endif
 
@@ -14,6 +14,7 @@
 #define TODO()  printf("%s:%i: todo!\n", __FILE__, __LINE__); \
                 while(1) {;;}
 #define TODO_SOFT()  printf("%s:%i: todo!\n", __FILE__, __LINE__);
+#define REACH_TEST() printf("%s:%i: ok\n", __FILE__, __LINE__);
 
 #define KiB (1024)
 #define MiB (1024 * KiB)
