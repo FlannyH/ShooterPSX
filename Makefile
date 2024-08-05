@@ -418,6 +418,7 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/GOURAUD.FSH \
 					  $(PATH_ASSETS)/music/sequence/energia.dss \
 					  $(PATH_ASSETS)/music/sequence/justice.dss \
 					  $(PATH_ASSETS)/music/sequence/level1.dss \
+					  $(PATH_ASSETS)/music/sequence/level2.dss \
 					  $(PATH_ASSETS)/music/sequence/level3.dss \
 					  $(PATH_ASSETS)/music/sequence/pitchtst.dss \
 					  $(PATH_ASSETS)/music/sequence/subnivis.dss
