@@ -7,7 +7,7 @@
 
 #define size_stack_temp (350  * KiB)
 #define size_stack_level (960 * KiB)
-#define size_stack_music (64 * KiB)
+#define size_stack_music (100 * KiB)
 #define size_stack_entity (64 * KiB)
 #define size_stack_vram_swap (1 * KiB)
 uint32_t* mem_stack_temp = NULL;
