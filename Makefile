@@ -53,6 +53,9 @@ PATH_LIB_NDS = $(BLOCKSDS)/libs/libnds/lib
 CODE_ENGINE_SHARED_C = camera.c \
 			  	  	   collision.c \
 					   credits.c \
+					   debug_menu_main.c \
+					   debug_menu_music.c \
+					   debug_menu_level.c \
 			  	  	   entity.c \
 					   in_game.c \
 			  	  	   level.c \
@@ -389,7 +392,9 @@ tools: obj2psx midi2psx psx_vislist_generator psx_soundfont_generator
 # For levels, make the first 2 art .col, .vis, and then the rest. this way everything can be built in the right order
 COMPILED_ASSET_LIST = $(PATH_ASSETS)/GOURAUD.FSH \
 					  $(PATH_ASSETS)/GOURAUD.VSH \
+					  $(PATH_ASSETS)/levels/test.lvl \
 					  $(PATH_ASSETS)/levels/level1.lvl \
+					  $(PATH_ASSETS)/levels/level2.lvl \
 					  $(PATH_ASSETS)/models/entity.msh \
 					  $(PATH_ASSETS)/models/entity.txc \
 					  $(PATH_ASSETS)/models/level.col \

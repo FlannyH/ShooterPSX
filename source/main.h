@@ -16,6 +16,9 @@ typedef enum {
     STATE_CREDITS,
     STATE_IN_GAME,
     STATE_PAUSE_MENU,
+    STATE_DEBUG_MENU_MAIN,
+	STATE_DEBUG_MENU_LEVEL,
+	STATE_DEBUG_MENU_MUSIC,
 } state_t;
 
 typedef struct {
@@ -62,6 +65,18 @@ typedef struct {
 		vec3_t shoot_origin_position;
 		vec3_t shoot_hit_position;
 	} debug;
+	struct {
+		int button_selected;
+		int button_pressed;
+	} debug_menu_main;
+	struct {
+		int button_selected;
+		int button_pressed;
+	} debug_menu_music;
+	struct {
+		int button_selected;
+		int button_pressed;
+	} debug_menu_level;
 } state_vars_t;
 
 extern state_vars_t state;
@@ -98,5 +113,20 @@ void state_exit_in_game(void);
 void state_enter_pause_menu(void);
 void state_update_pause_menu(int dt);
 void state_exit_pause_menu(void);
+
+// Debug menu main
+void state_enter_debug_menu_main(void);
+void state_update_debug_menu_main(int dt);
+void state_exit_debug_menu_main(void);
+
+// Debug menu music
+void state_enter_debug_menu_music(void);
+void state_update_debug_menu_music(int dt);
+void state_exit_debug_menu_music(void);
+
+// Debug menu level
+void state_enter_debug_menu_level(void);
+void state_update_debug_menu_level(int dt);
+void state_exit_debug_menu_level(void);
 
 #endif

@@ -100,4 +100,28 @@ static const char* text_credits[] = {
     "Nicole de Jong",
 };
 
+static const char* text_debug_menu_main[] = {
+    "DEBUG",
+    "MUSIC TEST",
+    "LEVEL SELECT",
+    "MAIN MENU"
+};
+
+static const char* text_debug_menu_music[] = {
+    "MUSIC TEST",
+    "level1.dss",
+    "level2.dss",
+    "level3.dss",
+    "subnivis.dss",
+    "EXIT"
+};
+
+static const char* text_debug_menu_level[] = {
+    "LEVEL SELECT",
+    "test.lvl",
+    "level1.lvl",
+    "level2.lvl",
+    "EXIT"
+};
+
 #endif

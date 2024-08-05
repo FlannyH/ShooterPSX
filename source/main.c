@@ -62,7 +62,7 @@ int main(void) {
 	input_set_stick_deadzone(36);
 
 	// Let's start here
-	current_state = STATE_TITLE_SCREEN;
+	current_state = STATE_DEBUG_MENU_MAIN;
 
     while (!renderer_should_close()) {
 #ifndef _WIN32
@@ -80,33 +80,42 @@ int main(void) {
 		if (current_state != prev_state) {
 			// Exit the previous state
 			switch(prev_state) {
-				case STATE_NONE:			/* nothing */ 					break;
-				case STATE_TITLE_SCREEN: 	state_exit_title_screen(); 		break;
-				case STATE_CREDITS: 		state_exit_credits(); 			break;
-				case STATE_SETTINGS: 		state_exit_settings(); 			break;
-				case STATE_IN_GAME: 		state_exit_in_game(); 			break;
-				case STATE_PAUSE_MENU: 		state_exit_pause_menu(); 		break;
+				case STATE_NONE:				/* nothing */ 						break;
+				case STATE_TITLE_SCREEN: 		state_exit_title_screen(); 			break;
+				case STATE_CREDITS: 			state_exit_credits(); 				break;
+				case STATE_SETTINGS: 			state_exit_settings(); 				break;
+				case STATE_IN_GAME: 			state_exit_in_game(); 				break;
+				case STATE_PAUSE_MENU: 			state_exit_pause_menu(); 			break;
+				case STATE_DEBUG_MENU_MAIN:		state_exit_debug_menu_main(); 		break;
+				case STATE_DEBUG_MENU_LEVEL:	state_exit_debug_menu_level(); 		break;
+				case STATE_DEBUG_MENU_MUSIC:	state_exit_debug_menu_music(); 		break;
 			}
 			// Enter the current state
 			switch(current_state) {
-				case STATE_NONE:			/* nothing */ 					break;
-				case STATE_TITLE_SCREEN:	state_enter_title_screen();		break;
-				case STATE_CREDITS:			state_enter_credits();			break;
-				case STATE_SETTINGS:		state_enter_settings();			break;
-				case STATE_IN_GAME:			state_enter_in_game();			break;
-				case STATE_PAUSE_MENU:		state_enter_pause_menu();		break;
+				case STATE_NONE:				/* nothing */ 						break;
+				case STATE_TITLE_SCREEN:		state_enter_title_screen();			break;
+				case STATE_CREDITS:				state_enter_credits();				break;
+				case STATE_SETTINGS:			state_enter_settings();				break;
+				case STATE_IN_GAME:				state_enter_in_game();				break;
+				case STATE_PAUSE_MENU:			state_enter_pause_menu();			break;
+				case STATE_DEBUG_MENU_MAIN:		state_enter_debug_menu_main();		break;
+				case STATE_DEBUG_MENU_LEVEL:	state_enter_debug_menu_level();		break;
+				case STATE_DEBUG_MENU_MUSIC:	state_enter_debug_menu_music();		break;
 			}
 		}
 
 		// Update the current state
 		prev_state = current_state;
 		switch(current_state) {
-			case STATE_NONE:			/* nothing */ 							break;
-			case STATE_TITLE_SCREEN:	state_update_title_screen(delta_time);	break;
-			case STATE_CREDITS:			state_update_credits(delta_time);		break;
-			case STATE_SETTINGS:		state_update_settings(delta_time);		break;
-			case STATE_IN_GAME:			state_update_in_game(delta_time);		break;
-			case STATE_PAUSE_MENU:		state_update_pause_menu(delta_time);	break;
+			case STATE_NONE:				/* nothing */ 								break;
+			case STATE_TITLE_SCREEN:		state_update_title_screen(delta_time);		break;
+			case STATE_CREDITS:				state_update_credits(delta_time);			break;
+			case STATE_SETTINGS:			state_update_settings(delta_time);			break;
+			case STATE_IN_GAME:				state_update_in_game(delta_time);			break;
+			case STATE_PAUSE_MENU:			state_update_pause_menu(delta_time);		break;
+			case STATE_DEBUG_MENU_MAIN:		state_update_debug_menu_main(delta_time);	break;
+			case STATE_DEBUG_MENU_LEVEL:	state_update_debug_menu_level(delta_time);	break;
+			case STATE_DEBUG_MENU_MUSIC:	state_update_debug_menu_music(delta_time);	break;
 		}
 	}
 #ifdef _WINDOWS

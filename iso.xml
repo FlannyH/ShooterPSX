@@ -66,7 +66,9 @@
             <file name="SYSTEM.CNF"		type="data" source="system.cnf" />
             <dir name="ASSETS">
 				<dir name="LEVELS">
+					<file name="TEST.LVL"	type="data"	source="assets/levels/test.lvl" />
 					<file name="LEVEL1.LVL"	type="data"	source="assets/levels/level1.lvl" />
+					<file name="LEVEL2.LVL"	type="data"	source="assets/levels/level2.lvl" />
 				</dir>
 				<dir name="MODELS">
 					<file name="LEVEL.MSH"	type="data" source="assets/models/level.msh" />
@@ -99,6 +101,7 @@
 						<file name="BLACK.DSS"	type="data" source="assets/music/sequence/black.dss" />
 						<file name="PITCHTST.DSS"	type="data" source="assets/music/sequence/pitchtst.dss" />
 						<file name="LEVEL1.DSS"	type="data" source="assets/music/sequence/level1.dss" />
+						<file name="LEVEL2.DSS"	type="data" source="assets/music/sequence/level2.dss" />
 						<file name="LEVEL3.DSS"	type="data" source="assets/music/sequence/level3.dss" />
 						<file name="SUBNIVIS.DSS"	type="data" source="assets/music/sequence/subnivis.dss" />
 					</dir>
