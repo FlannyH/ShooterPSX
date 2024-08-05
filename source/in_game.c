@@ -40,7 +40,7 @@ void state_enter_in_game(void) {
 
 	state.title_screen.assets_in_memory = 0;
 
-	state.in_game.level = level_load("\\assets\\levels\\level1.lvl");
+	state.in_game.level = level_load(state.in_game.level_load_path);
 
     // Init player
     state.in_game.player.position.x = 11705653 / 2;

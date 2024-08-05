@@ -111,6 +111,7 @@ void state_update_title_screen(int dt) {
 		state.title_screen.button_pressed = 0;
 		switch (state.title_screen.button_selected) {
 			case 0: // start game
+				state.in_game.level_load_path = "\\assets\\levels\\level1.lvl";
 				current_state = STATE_IN_GAME;
 				break;
 			case 1: // settings

@@ -52,6 +52,7 @@ typedef struct {
 		scalar_t screen_shake_dampening_rotation;
 		scalar_t screen_shake_intensity_position;
 		scalar_t screen_shake_dampening_position;
+		char* level_load_path;
 	} in_game;
 	struct {
 		int button_selected;
