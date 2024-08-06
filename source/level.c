@@ -76,6 +76,7 @@ level_t level_load(const char* level_path) {
 
     // Start new music
     music_stop();
+    mem_stack_release(STACK_MUSIC);
     if (path_music[0] != 0 && path_bank[0] != 0) {
         music_load_soundbank(path_bank);
         music_load_sequence(path_music);
