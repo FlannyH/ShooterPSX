@@ -68,6 +68,7 @@ level_t level_load(const char* level_path) {
         .vislist = vislist_load(path_vislist, 1, STACK_LEVEL),
         .collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL),
         .n_level_textures = n_level_textures,
+        .player_spawn = level_header->player_spawn,
     };
 
     // Load entities

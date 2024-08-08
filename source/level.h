@@ -34,6 +34,7 @@ typedef struct {
     transform_t transform;
     vislist_t vislist;
     level_collision_t collision_bvh;
+    svec3_t player_spawn;
     // todo: add other fields as specified in FLVL documentation
 
     int n_level_textures;

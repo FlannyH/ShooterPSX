@@ -173,6 +173,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     static ImGui::FileBrowser file_dialog(ImGuiFileBrowserFlags_EnterNewFilename);
 
     // Level metadata
+    static vec3_t player_spawn = (vec3_t){ 0, 0, 0 };
     static char* level_path = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
     static char* path_music = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
     static char* path_bank = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
@@ -214,6 +215,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             strcpy(level_name, binary_section + header->level_name_offset);
 
             *curr_level = level_load(level_path);
+            player_spawn = vec3_from_svec3(curr_level->player_spawn);
         };
 
         auto save = [curr_level]() {
@@ -259,9 +261,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_types, (n_entities + 3) & ~0x03), // 4-byte padding
                 .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_pool, entity_pool_stride * n_entities),
                 .level_name_offset = (uint32_t)write_text_and_get_offset(binary_section, level_name),
-                .player_spawn = {
-                    .x = 0, .y = 0, .z = 0
-                },
+                .player_spawn = svec3_from_vec3(player_spawn),
                 .n_entities = (uint16_t)n_entities,
             };
 
@@ -344,6 +344,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         ImGui::InputText("Model Path", path_model, 255);
         ImGui::InputText("Model LOD Path", path_model_lod, 255);
         ImGui::InputText("Level Name", level_name, 255);
+        inspect_vec3(&player_spawn, "Player Spawn");
+
         if (ImGui::Button("Hot reload")) {
             mem_stack_release(STACK_LEVEL);
             mem_stack_release(STACK_ENTITY);

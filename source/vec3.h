@@ -56,6 +56,14 @@ ALWAYS_INLINE vec3_t vec3_from_svec3(svec3_t vec) {
     return result;
 }
 
+ALWAYS_INLINE svec3_t svec3_from_vec3(vec3_t vec) {
+    svec3_t result;
+    result.x = vec.x / ONE;
+    result.y = vec.y / ONE;
+    result.z = vec.z / ONE;
+    return result;
+}
+
 ALWAYS_INLINE vec3_t vec3_add(const vec3_t a, const vec3_t b) {
     vec3_t result;
     result.x = a.x + b.x;
