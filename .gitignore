@@ -6,5 +6,6 @@ license_data.dat
 .vs/
 .vscode/settings.json
 .vscode/launch.json
+.vscode/tasks.json
 *.blend1
 assets/
