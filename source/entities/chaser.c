@@ -6,7 +6,8 @@ extern state_vars_t state;
 #define CHASER_BEHAVIOUR_PERIOD 16
 #define CHASER_REACTION_TIME_MIN 200 // in milliseconds
 #define CHASER_REACTION_TIME_MAX 400 
-#define CHASER_AGGRO_DISTANCE_SQUARED 100*1000
+#define CHASER_AGGRO_DISTANCE_SQUARED 320000*1000
+#define CHASER_RETREAT_DISTANCE_SQUARED 80000*1000
 
 entity_chaser_t* entity_chaser_new(void) {
 	// Allocate memory for the entity
@@ -89,33 +90,44 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 			// It also makes their reaction times more realistic so there's that too
 			chaser->behavior_timer = random_range(CHASER_REACTION_TIME_MIN, CHASER_REACTION_TIME_MAX);
 
+			int player_visible = 0;
+
 			// Find distance to player
 			const vec3_t chaser_to_player = vec3_sub(player->position, chaser_pos);
 			const scalar_t dist_chaser_to_player_squared = vec3_magnitude_squared(chaser_to_player);
 
-			ray_t ray = {
-				.position = chaser_pos,
-				.direction = vec3_normalize(chaser_to_player),
-				.length = INT32_MAX,
-			};
-			ray.inv_direction = vec3_div((vec3_t){ONE, ONE, ONE}, ray.direction);
+			// If the player is too far away, ignore them, and don't bother with a raycast
+			if (dist_chaser_to_player_squared > CHASER_AGGRO_DISTANCE_SQUARED) {
+				printf("player too far\n");
+			}
 
-			rayhit_t hit = {0};
-			bvh_intersect_ray(&state.in_game.level.collision_bvh, ray, &hit);
+			else {
+				ray_t ray = {
+					.position = chaser_pos,
+					.direction = vec3_normalize(chaser_to_player),
+					.length = INT32_MAX,
+				};
+				ray.inv_direction = vec3_div((vec3_t){ONE, ONE, ONE}, ray.direction);
 
-			// Assume the player isnt visible
-			int player_visible = 0;
+				rayhit_t hit = {0};
+				bvh_intersect_ray(&state.in_game.level.collision_bvh, ray, &hit);
 
-			// If the ray didn't hit anything, the player is visible
-			if (is_infinity(hit.distance)) 
-				player_visible = 1;
+				// If the ray didn't hit anything, the player is visible
+				if (is_infinity(hit.distance)) 
+					player_visible = 1;
 
-			// If the ray hit something that's further away from the enemy than the player is, the player is visible
-			else if (scalar_mul(hit.distance, hit.distance) > dist_chaser_to_player_squared)
-				player_visible = 1;
+				// If the ray hit something that's further away from the enemy than the player is, the player is visible
+				else if (scalar_mul(hit.distance, hit.distance) > dist_chaser_to_player_squared)
+					player_visible = 1;
+			}
 
-			if (player_visible) printf("player is visible\n");
-			else printf("player is not visible\n");
+			if (player_visible) {
+				// If player is a bit far away, chase them
+				if (dist_chaser_to_player_squared > CHASER_RETREAT_DISTANCE_SQUARED)
+					printf("chase player\n");
+				else
+					printf("retreat from player\n");
+			}
 		}
 	}
 
