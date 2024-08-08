@@ -8,7 +8,7 @@
 | u32 | path_bank_offset      | Offset to string containing the path to the soundbank file (.sbk) to use in this level       |
 | u32 | path_texture_offset   | Offset to string containing the path to the level texture collection file (.txc) to load in this level    |
 | u32 | path_collision_offset | Offset to string containing the path to the collision model file (.col) to load in this level    |
-| u32 | path_vislist_offset   | Offset to string containing the path to the collision model file (.col) to load in this level    |
+| u32 | path_vislist_offset   | Offset to string containing the path to the visibility list file (.col) to load in this level    |
 | u32 | path_model_offset     | Offset to string containing the path to the level model file (.msh) to load in this level    |
 | u32 | path_model_lod_offset | Optional offset to string containing the path to the level model file (.msh) to load in this level. Set to 0 if not using LODs. |
 | u32 | entity_types_offset | Offset to the u8 array of entity types  |
