@@ -137,8 +137,8 @@ windows: DEFINES = _WINDOWS _WIN32
 windows: LIBRARIES = glfw3 stdc++ gdi32 opengl32
 windows: CC = gcc
 windows: CXX = g++
-windows: CFLAGS += $(patsubst %, -D%, $(DEFINES))
-windows: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20
+windows: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -g
+windows: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20 -g
 windows: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_WIN)) -std=c++20
 windows: INCLUDE_DIRS = source \
 			   external/cglm/include \
@@ -151,8 +151,8 @@ level_editor: DEFINES = _WINDOWS _WIN32 _LEVEL_EDITOR _DEBUG_CAMERA
 level_editor: LIBRARIES = glfw3 stdc++ gdi32 opengl32
 level_editor: CC = gcc
 level_editor: CXX = g++
-level_editor: CFLAGS += $(patsubst %, -D%, $(DEFINES)) 
-level_editor: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20
+level_editor: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -g
+level_editor: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20 -g
 level_editor: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_WIN)) -std=c++20
 level_editor: INCLUDE_DIRS = source \
 			   external/cglm/include \
