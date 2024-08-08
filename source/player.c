@@ -175,7 +175,7 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
             .is_wall_check = 1,
         };
         rayhit_t hit;
-#ifndef DEBUG_CAMERA
+#ifndef _DEBUG_CAMERA
         bvh_intersect_vertical_cylinder(level_bvh, cyl, &hit);
         for (size_t i = 0; i < entity_n_active_aabb; ++i) {
             rayhit_t curr_hit;
@@ -215,7 +215,7 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
         player_radius_squared = scalar_mul(player_radius_scalar, player_radius_scalar);
     }
     is_grounded = 0;
-#ifndef DEBUG_CAMERA
+#ifndef _DEBUG_CAMERA
     apply_gravity(self, dt_ms);
     check_ground_collision(self, level_bvh, dt_ms);
 #endif
@@ -227,7 +227,7 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
     vec2_t vel_2d = {self->velocity.x, self->velocity.z};
     scalar_t speed_1d = vec2_magnitude(vel_2d);
     self->transform.position.x = -self->position.x * (4096 / COL_SCALE);
-#ifdef DEBUG_CAMERA
+#ifdef _DEBUG_CAMERA
     self->transform.position.y = -self->position.y * (4096 / COL_SCALE);
 #else
     self->transform.position.y = -self->position.y * (4096 / COL_SCALE) + isin(time_counter * 12) * speed_1d / 64;
