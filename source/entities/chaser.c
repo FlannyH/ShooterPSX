@@ -73,6 +73,9 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 #ifdef _LEVEL_EDITOR
 	drawing_entity_id = slot;
 #endif
+	if (chaser->entity_header.mesh == NULL) {
+		chaser->entity_header.mesh = model_find_mesh(entity_models, "19_enemy_chaser_idle");
+	}
 	renderer_draw_mesh_shaded(chaser->entity_header.mesh, &render_transform, 0, tex_entity_start);
 }
 
