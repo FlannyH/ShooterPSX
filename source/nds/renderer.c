@@ -273,7 +273,6 @@ void renderer_set_video_mode(int is_pal) {
 }
 
 int renderer_get_delta_time_raw(void) {
-    printf("%i\n", vblank_counter);
     int result = vblank_counter;
     vblank_counter = 0;
     return result; // todo: return actual number of vblanks this frame took, probably with a vblank interrupt

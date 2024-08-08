@@ -77,7 +77,6 @@ void state_update_debug_menu_main(int dt) {
 	if (input_pressed(PAD_CROSS, 0)) {
 		state.debug_menu_main.button_pressed = 1;
 	}
-    printf("%i\n", state.debug_menu_main.button_selected);
 
 	// Handle button presses
 	if (input_released(PAD_CROSS, 0)) {
