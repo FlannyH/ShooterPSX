@@ -93,6 +93,8 @@ void entity_debug(void);
 int entity_how_many_active(void);
 #endif
 
+extern int n_entity_textures;
+
 #ifdef __cplusplus
 }
 #endif

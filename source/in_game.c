@@ -4,6 +4,7 @@
 #include "entities/chaser.h"
 #include "entities/crate.h"
 #include "entities/door.h"
+#include "entity.h"
 #include "renderer.h"
 #include "random.h"
 #include "memory.h"
@@ -51,15 +52,6 @@ void state_enter_in_game(void) {
 	vec3_debug(state.in_game.player.position);
 	vec3_debug(state.in_game.player.velocity);
 	vec3_debug(state.in_game.player.rotation);
-
-    // Load entity textures
-	texture_cpu_t *entity_textures;
-    tex_entity_start = tex_level_start + state.in_game.level.n_level_textures;
-	const uint32_t n_entity_textures = texture_collection_load("\\assets\\models\\entity.txc", &entity_textures, 1, STACK_TEMP);
-	for (uint8_t i = 0; i < n_entity_textures; ++i) {
-	    renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
-	}
-	mem_stack_release(STACK_TEMP);
 
 	// Load weapon textures
 	texture_cpu_t *weapon_textures;

@@ -7,6 +7,8 @@
 #include "entities/crate.h"
 #include "entities/door.h"
 #include "mesh.h"
+#include "main.h"
+extern state_vars_t state;
 
 entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
 uint8_t entity_types[ENTITY_LIST_LENGTH];
@@ -14,6 +16,7 @@ uint8_t* entity_pool = NULL;
 size_t entity_pool_stride = 0;
 size_t entity_n_active_aabb;
 model_t* entity_models = NULL;
+int n_entity_textures = 0;
 
 void entity_update_all(player_t* player, int dt) {
 	// Reset counters
@@ -64,6 +67,15 @@ void entity_init(void) {
 
 	// Load model collection
     entity_models = model_load("\\assets\\models\\entity.msh", 1, STACK_ENTITY);
+
+    // Load entity textures
+	texture_cpu_t *entity_textures;
+    tex_entity_start = tex_level_start + state.in_game.level.n_level_textures;
+	n_entity_textures = texture_collection_load("\\assets\\models\\entity.txc", &entity_textures, 1, STACK_TEMP);
+	for (uint8_t i = 0; i < n_entity_textures; ++i) {
+	    renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
+	}
+	mem_stack_release(STACK_TEMP);
 }
 
 void entity_register_collision_box(const entity_collision_box_t* box) {

@@ -373,14 +373,6 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 renderer_upload_texture(&tex_level[i], i + tex_level_start);
             }
 
-            // Load entity textures
-            texture_cpu_t* entity_textures;
-            tex_entity_start = tex_level_start + n_level_textures;
-            const uint32_t n_entity_textures = texture_collection_load("\\assets\\models\\entity.txc", &entity_textures, 1, STACK_TEMP);
-            for (uint8_t i = 0; i < n_entity_textures; ++i) {
-                renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
-            }
-
             curr_level->collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL);
             
             player->position = player_spawn_position;
