@@ -3,6 +3,7 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include "../level.h"
+#include "../player.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,7 +16,7 @@ void debug_layer_end(void);
 void debug_layer_update_gameplay(void);
 void debug_layer_update_editor(void);
 void debug_layer_close(void);
-void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slot, int* mouse_over_viewport, level_t* curr_level);
+void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slot, int* mouse_over_viewport, level_t* curr_level, player_t* player);
 
 #ifdef __cplusplus
 }

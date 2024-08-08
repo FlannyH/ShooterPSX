@@ -1,7 +1,13 @@
 #ifndef PLAYER_H
 #define PLAYER_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "fixed_point.h"
 #include "renderer.h"
+#include "vec3.h"
 
 #define MAX_HEALTH 100
 #define MAX_ARMOR 50
@@ -37,4 +43,8 @@ const static int32_t jump_ground_threshold = 16000 / 8;
 
 void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms, const int time_counter);
 int player_get_level_section(player_t* self, const vislist_t vis);
+
+#ifdef __cplusplus
+}
+#endif
 #endif // PLAYER_H

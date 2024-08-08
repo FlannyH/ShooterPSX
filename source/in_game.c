@@ -41,15 +41,10 @@ void state_enter_in_game(void) {
 	state.title_screen.assets_in_memory = 0;
 
 	state.in_game.level = level_load(state.in_game.level_load_path);
-	state.in_game.player.position = vec3_from_svec3(state.in_game.level.player_spawn);
+	state.in_game.player.position = vec3_from_svec3(state.in_game.level.player_spawn_position);
+	state.in_game.player.rotation = state.in_game.level.player_spawn_rotation;
 
     // Init player
-    // state.in_game.player.position.x = 11705653 / 2;
-   	// state.in_game.player.position.y = 11413985 / 2;
-    // state.in_game.player.position.z = 2112866  / 2;
-	state.in_game.player.rotation.x = 0;
-	state.in_game.player.rotation.y = 4096 * 16;
-	state.in_game.player.rotation.z = 0;
     state.in_game.player.velocity.x = 0;
    	state.in_game.player.velocity.y = 0;
     state.in_game.player.velocity.z = 0;

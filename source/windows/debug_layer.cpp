@@ -168,12 +168,13 @@ void inspect_entity(size_t entity_id) {
 }
 
 #define PI 3.14159265358979f
-void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slot, int* mouse_over_viewport, level_t* curr_level) {
+void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slot, int* mouse_over_viewport, level_t* curr_level, player_t* player) {
     ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
     static ImGui::FileBrowser file_dialog(ImGuiFileBrowserFlags_EnterNewFilename);
 
     // Level metadata
-    static vec3_t player_spawn = (vec3_t){ 0, 0, 0 };
+    static vec3_t player_spawn_position = (vec3_t){ 0, 0, 0 };
+    static vec3_t player_spawn_rotation = (vec3_t){ 0, 0, 0 };
     static char* level_path = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
     static char* path_music = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
     static char* path_bank = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
@@ -199,7 +200,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     }
     ImGui::Begin("Level Metadata");
     {
-        auto load = [curr_level]() {
+        auto load = [curr_level, player]() {
             uint32_t* data;
             size_t size;
             file_read(level_path, &data, &size, 1, STACK_TEMP);
@@ -215,7 +216,11 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             strcpy(level_name, binary_section + header->level_name_offset);
 
             *curr_level = level_load(level_path);
-            player_spawn = vec3_from_svec3(curr_level->player_spawn);
+            player_spawn_position = vec3_from_svec3(curr_level->player_spawn_position);
+            player_spawn_rotation = curr_level->player_spawn_rotation;
+            player->position = player_spawn_position;
+            player->rotation = player_spawn_rotation;
+            player_update(player, &curr_level->collision_bvh, 0, 0); // Tick the player with 0 delta time to update the camera transform
         };
 
         auto save = [curr_level]() {
@@ -261,7 +266,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_types, (n_entities + 3) & ~0x03), // 4-byte padding
                 .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_pool, entity_pool_stride * n_entities),
                 .level_name_offset = (uint32_t)write_text_and_get_offset(binary_section, level_name),
-                .player_spawn = svec3_from_vec3(player_spawn),
+                .player_spawn_position = svec3_from_vec3(player_spawn_position),
+                .player_spawn_rotation = player_spawn_rotation,
                 .n_entities = (uint16_t)n_entities,
             };
 
@@ -344,7 +350,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         ImGui::InputText("Model Path", path_model, 255);
         ImGui::InputText("Model LOD Path", path_model_lod, 255);
         ImGui::InputText("Level Name", level_name, 255);
-        inspect_vec3(&player_spawn, "Player Spawn");
+        inspect_vec3(&player_spawn_position, "Player Spawn Position");
+        inspect_vec3(&player_spawn_rotation, "Player Spawn Rotation");
 
         if (ImGui::Button("Hot reload")) {
             mem_stack_release(STACK_LEVEL);
@@ -352,7 +359,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
             // Load graphics and collision data
             curr_level->graphics = model_load(path_model, 1, STACK_LEVEL);
-            curr_level->collision_mesh_debug = model_load_collision_debug(path_collision, 1, STACK_LEVEL);
+            curr_level->collision_mesh_debug = model_load_collision_debug(path_collision, 0, (stack_t)0);
             curr_level->collision_mesh = model_load_collision(path_collision, 1, STACK_LEVEL);
             curr_level->transform = { {0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096} };
             curr_level->vislist = vislist_load(path_vislist, 1, STACK_LEVEL);
@@ -374,6 +381,10 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             }
 
             curr_level->collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL);
+            
+            player->position = player_spawn_position;
+            player->rotation = player_spawn_rotation;
+            player_update(player, &curr_level->collision_bvh, 0, 0); // Tick the player with 0 delta time to update the camera transform
         }
     }
     ImGui::End();
@@ -391,6 +402,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             if (ImGui::DragFloat3("Position", vec_float)) {
                 camera->position = vec3_from_floats(-vec_float[0], -vec_float[1], -vec_float[2]); 
             }
+            inspect_vec3(&camera->rotation, "Rotation");
             ImGui::TreePop();
         }
     }
