@@ -246,7 +246,6 @@ $(PATH_BUILD_WIN)/$(PROJECT_NAME): mkdir_output_win windows_dependencies $(OBJ_W
 	@$(CXX) -o $@ $(OBJ_WIN) $(OBJ_IMGUI) $(LINKER_FLAGS)
 	@echo Copying assets
 	@cp -r $(PATH_ASSETS) $(dir $@)
-	
 
 $(PATH_BUILD_LEVEL_EDITOR)/imgui.ini:
 	@mkdir -p $(dir $@)
