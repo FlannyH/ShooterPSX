@@ -6,8 +6,19 @@
 extern "C" {
 #endif
 
+typedef enum {
+    CHASER_WAIT,
+    CHASER_RETURN_HOME,
+    CHASER_CHASE_PLAYER,
+    CHASER_FLEE_PLAYER,
+} entity_chaser_state_t;
+
 typedef struct {
     entity_header_t entity_header;
+    int curr_navmesh_node;
+    int target_navmesh_node;
+    entity_chaser_state_t state;
+    int behavior_timer;
 } entity_chaser_t;
 
 entity_chaser_t* entity_chaser_new(void);

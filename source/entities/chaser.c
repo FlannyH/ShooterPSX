@@ -1,5 +1,13 @@
 #include "chaser.h"
 
+#include "../random.h"
+#include "../main.h"
+extern state_vars_t state;
+#define CHASER_BEHAVIOUR_PERIOD 16
+#define CHASER_REACTION_TIME_MIN 200 // in milliseconds
+#define CHASER_REACTION_TIME_MAX 400 
+#define CHASER_AGGRO_DISTANCE_SQUARED 100*1000
+
 entity_chaser_t* entity_chaser_new(void) {
 	// Allocate memory for the entity
 	entity_chaser_t* entity = (entity_chaser_t*)&entity_pool[entity_alloc(ENTITY_CHASER) * entity_pool_stride];
@@ -7,13 +15,14 @@ entity_chaser_t* entity_chaser_new(void) {
 	entity->entity_header.rotation = (vec3_t){ 0, 0, 0 };
 	entity->entity_header.scale = (vec3_t){ ONE, ONE, ONE };
 	entity->entity_header.mesh = model_find_mesh(entity_models, "19_enemy_chaser_idle");
+	entity->curr_navmesh_node = -1;
+	entity->target_navmesh_node = -1;
+	entity->state = CHASER_WAIT;
 
 	return entity;
 }
 
 void entity_chaser_update(int slot, player_t* player, int dt) {
-	(void)player;
-	(void)dt;
 	entity_chaser_t* chaser = (entity_chaser_t*)&entity_pool[slot * entity_pool_stride];
 	vec3_t chaser_pos = chaser->entity_header.position;
 
@@ -57,8 +66,59 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 	entity_register_collision_box(&box_body);
 	entity_register_collision_box(&box_head);
 
-	// todo: implement behaviour
-	
+	// If the enemy doesn't know where it is, figure that out
+	if (chaser->curr_navmesh_node == -1) {
+		scalar_t curr_min_distance = INT32_MAX;
+
+		for (int i = 0; i < state.in_game.level.collision_bvh.n_nav_graph_nodes; ++i) {
+			vec3_t node_position = vec3_from_svec3(state.in_game.level.collision_bvh.nav_graph_nodes[i].position);
+			scalar_t distance_squared = vec3_magnitude_squared(vec3_sub(node_position, chaser_pos));
+			if (distance_squared >= 0 && distance_squared < curr_min_distance) {
+				curr_min_distance = distance_squared;
+				chaser->curr_navmesh_node = i;
+			}
+		}
+	}
+
+	if (chaser->state == CHASER_WAIT) {
+		// Wait for the entity behavior timer to reach the desired value
+		chaser->behavior_timer -= dt;
+		if (chaser->behavior_timer <= 0) {
+			// Set timer to random value in milliseconds - mostly to reduce lag lol
+			// Random timers for each enemy means the raycasts are more spread out
+			// It also makes their reaction times more realistic so there's that too
+			chaser->behavior_timer = random_range(CHASER_REACTION_TIME_MIN, CHASER_REACTION_TIME_MAX);
+
+			// Find distance to player
+			const vec3_t chaser_to_player = vec3_sub(player->position, chaser_pos);
+			const scalar_t dist_chaser_to_player_squared = vec3_magnitude_squared(chaser_to_player);
+
+			ray_t ray = {
+				.position = chaser_pos,
+				.direction = vec3_normalize(chaser_to_player),
+				.length = INT32_MAX,
+			};
+			ray.inv_direction = vec3_div((vec3_t){ONE, ONE, ONE}, ray.direction);
+
+			rayhit_t hit = {0};
+			bvh_intersect_ray(&state.in_game.level.collision_bvh, ray, &hit);
+
+			// Assume the player isnt visible
+			int player_visible = 0;
+
+			// If the ray didn't hit anything, the player is visible
+			if (is_infinity(hit.distance)) 
+				player_visible = 1;
+
+			// If the ray hit something that's further away from the enemy than the player is, the player is visible
+			else if (scalar_mul(hit.distance, hit.distance) > dist_chaser_to_player_squared)
+				player_visible = 1;
+
+			if (player_visible) printf("player is visible\n");
+			else printf("player is not visible\n");
+		}
+	}
+
 	// Render
 	transform_t render_transform;
 	render_transform.position.x = -chaser_pos.x / COL_SCALE;
