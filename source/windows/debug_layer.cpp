@@ -12,6 +12,7 @@
 #include <imfilebrowser.h>
 #include <format>
 #include "../entities/pickup.h"
+#include "../entities/chaser.h"
 #include "../entities/crate.h"
 #include "../entities/door.h"
 #include "../renderer.h"
@@ -443,6 +444,10 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                     break;
                 case ENTITY_CRATE:
                     entity = (entity_header_t*)entity_crate_new();
+                    entity->position = spawn_pos;
+                    break;
+                case ENTITY_CHASER:
+                    entity = (entity_header_t*)entity_chaser_new();
                     entity->position = spawn_pos;
                     break;
             }
