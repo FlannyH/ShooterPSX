@@ -6,9 +6,9 @@ extern state_vars_t state;
 #define CHASER_BEHAVIOUR_PERIOD 16
 #define CHASER_REACTION_TIME_MIN 200 // in milliseconds
 #define CHASER_REACTION_TIME_MAX 400 
-#define CHASER_AGGRO_DISTANCE_SQUARED 320000*1000
-#define CHASER_FLEE_DISTANCE_SQUARED 64000*1000
-#define CHASER_NODE_REACH_DISTANCE_SQUARED 4000*1000
+#define CHASER_AGGRO_DISTANCE_SQUARED (320000*1000)
+#define CHASER_FLEE_DISTANCE_SQUARED (64000*1000)
+#define CHASER_NODE_REACH_DISTANCE_SQUARED (20000*1000)
 
 // Slightly cursed but it makes the rest of the code more readable so eh
 #define n_nav_graph_nodes state.in_game.level.collision_bvh.n_nav_graph_nodes
@@ -91,6 +91,8 @@ void chaser_wait(entity_chaser_t* chaser, player_t* player, int dt) {
 }
 
 void chaser_chase_player(entity_chaser_t* chaser, player_t* player, int dt) {
+	if (chaser->curr_navmesh_node < 0 || chaser->curr_navmesh_node >= n_nav_graph_nodes) 
+		return;
 	const vec3_t chaser_pos = chaser->entity_header.position;
 
 	// Find neighbor node that's closest to the player
@@ -101,7 +103,7 @@ void chaser_chase_player(entity_chaser_t* chaser, player_t* player, int dt) {
 			scalar_t closest_distance_squared = INT32_MAX;
 			for (size_t i = 0; i < 4; ++i) {
 				const uint16_t neighbor_id = nav_graph_nodes[chaser->curr_navmesh_node].neighbor_ids[i];
-				if (neighbor_id == 0xFFFF) break;
+				if (neighbor_id == 0xFFFF || neighbor_id >= n_nav_graph_nodes) break;
 				const vec3_t node_position = vec3_from_svec3(nav_graph_nodes[neighbor_id].position);
 				const scalar_t distance_squared = vec3_magnitude_squared(vec3_sub(node_position, player->position));
 				if (distance_squared < closest_distance_squared) {
@@ -213,13 +215,13 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 		}
 		chaser->velocity = vec3_muls(velocity_normalized, velocity_scalar);
 
-		chaser->entity_header.position.x += chaser->velocity.x * dt;
-		chaser->entity_header.position.y += chaser->velocity.y * dt;
-		chaser->entity_header.position.z += chaser->velocity.z * dt;
+		chaser->entity_header.position.x += (chaser->velocity.x / 256) * dt;
+		chaser->entity_header.position.y += (chaser->velocity.y / 256) * dt;
+		chaser->entity_header.position.z += (chaser->velocity.z / 256) * dt;
 	}
 
 	// Add a force towards the target node
-	if (chaser->target_navmesh_node >= 0) {
+	if (chaser->target_navmesh_node >= 0 && chaser->target_navmesh_node < n_nav_graph_nodes) {
 		const vec3_t target_pos = vec3_from_svec3(nav_graph_nodes[chaser->target_navmesh_node].position);
 		const vec3_t target_dir = vec3_normalize(vec3_sub(target_pos, chaser_pos));
 		chaser->velocity = vec3_add(chaser->velocity, vec3_muls(target_dir, chaser_acceleration * dt));
