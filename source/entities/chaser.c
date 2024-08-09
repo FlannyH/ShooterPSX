@@ -7,7 +7,12 @@ extern state_vars_t state;
 #define CHASER_REACTION_TIME_MIN 200 // in milliseconds
 #define CHASER_REACTION_TIME_MAX 400 
 #define CHASER_AGGRO_DISTANCE_SQUARED 320000*1000
-#define CHASER_RETREAT_DISTANCE_SQUARED 80000*1000
+#define CHASER_FLEE_DISTANCE_SQUARED 64000*1000
+#define CHASER_NODE_REACH_DISTANCE_SQUARED 4000*1000
+
+// Slightly cursed but it makes the rest of the code more readable so eh
+#define n_nav_graph_nodes state.in_game.level.collision_bvh.n_nav_graph_nodes
+#define nav_graph_nodes state.in_game.level.collision_bvh.nav_graph_nodes
 
 entity_chaser_t* entity_chaser_new(void) {
 	// Allocate memory for the entity
@@ -19,8 +24,108 @@ entity_chaser_t* entity_chaser_new(void) {
 	entity->curr_navmesh_node = -1;
 	entity->target_navmesh_node = -1;
 	entity->state = CHASER_WAIT;
+	entity->velocity = vec3_from_scalar(0);
+	entity->behavior_timer = 0;
+	entity->last_known_player_pos = vec3_from_scalar(0);
 
 	return entity;
+}
+
+void chaser_wait(entity_chaser_t* chaser, player_t* player, int dt) {
+	(void)dt;
+	const vec3_t chaser_pos = chaser->entity_header.position;
+
+	// Wait for the entity behavior timer to reach the desired value
+	if (chaser->behavior_timer <= 0) {
+		// Set timer to random value in milliseconds - mostly to reduce lag lol
+		// Random timers for each enemy means the raycasts are more spread out
+		// It also makes their reaction times more realistic so there's that too
+		chaser->behavior_timer = random_range(CHASER_REACTION_TIME_MIN, CHASER_REACTION_TIME_MAX);
+
+		int player_visible = 0;
+
+		// Find distance to player
+		const vec3_t chaser_to_player = vec3_sub(player->position, chaser_pos);
+		const scalar_t dist_chaser_to_player_squared = vec3_magnitude_squared(chaser_to_player);
+
+		// If the player is too far away, ignore them, and don't bother with a raycast
+		if (dist_chaser_to_player_squared > CHASER_AGGRO_DISTANCE_SQUARED) {
+			// printf("player too far\n");
+		}
+
+		else {
+			ray_t ray = {
+				.position = chaser_pos,
+				.direction = vec3_normalize(chaser_to_player),
+				.length = INT32_MAX,
+			};
+			ray.inv_direction = vec3_div((vec3_t){ONE, ONE, ONE}, ray.direction);
+
+			rayhit_t hit = {0};
+			bvh_intersect_ray(&state.in_game.level.collision_bvh, ray, &hit);
+
+			// If the ray didn't hit anything, the player is visible
+			if (is_infinity(hit.distance)) 
+				player_visible = 1;
+
+			// If the ray hit something that's further away from the enemy than the player is, the player is visible
+			else if (scalar_mul(hit.distance, hit.distance) > dist_chaser_to_player_squared)
+				player_visible = 1;
+		}
+
+		if (player_visible) {
+			chaser->last_known_player_pos = player->position;
+
+			// If player is a bit far away, chase them
+			chaser->behavior_timer = 0; // Act immediately after switching state
+			if (dist_chaser_to_player_squared > CHASER_FLEE_DISTANCE_SQUARED) {
+				// printf("chase\n");
+				chaser->state = CHASER_CHASE_PLAYER;
+			}
+			else {
+				// printf("flee\n");
+				chaser->state = CHASER_FLEE_PLAYER;
+			}
+		}
+	}
+}
+
+void chaser_chase_player(entity_chaser_t* chaser, player_t* player, int dt) {
+	const vec3_t chaser_pos = chaser->entity_header.position;
+
+	// Find neighbor node that's closest to the player
+	if (chaser->behavior_timer <= 0) {
+		// Find closest node to player
+		chaser->behavior_timer = random_range(CHASER_REACTION_TIME_MIN, CHASER_REACTION_TIME_MAX);
+		if ((chaser->target_navmesh_node == -1) || (chaser->target_navmesh_node == chaser->curr_navmesh_node)) {
+			scalar_t closest_distance_squared = INT32_MAX;
+			for (size_t i = 0; i < 4; ++i) {
+				const uint16_t neighbor_id = nav_graph_nodes[chaser->curr_navmesh_node].neighbor_ids[i];
+				if (neighbor_id == 0xFFFF) break;
+				const vec3_t node_position = vec3_from_svec3(nav_graph_nodes[neighbor_id].position);
+				const scalar_t distance_squared = vec3_magnitude_squared(vec3_sub(node_position, player->position));
+				if (distance_squared < closest_distance_squared) {
+					closest_distance_squared = distance_squared;
+					chaser->target_navmesh_node = neighbor_id;
+				}
+			}
+		}
+
+		// If we're close enough to shoot, switch to that state
+		const scalar_t distance_to_player_squared = vec3_magnitude_squared(vec3_sub(chaser_pos, player->position));
+		if (distance_to_player_squared < CHASER_FLEE_DISTANCE_SQUARED) {
+			// printf("shoot\n");
+			chaser->state = CHASER_SHOOT;
+		}
+	}
+}
+
+void chaser_flee_player(entity_chaser_t* chaser, player_t* player, int dt) {
+	chaser->state = CHASER_WAIT;
+}
+
+void chaser_shoot(entity_chaser_t* chaser, player_t* player, int dt) {
+	chaser->state = CHASER_WAIT;
 }
 
 void entity_chaser_update(int slot, player_t* player, int dt) {
@@ -71,8 +176,8 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 	if (chaser->curr_navmesh_node == -1) {
 		scalar_t curr_min_distance = INT32_MAX;
 
-		for (int i = 0; i < state.in_game.level.collision_bvh.n_nav_graph_nodes; ++i) {
-			vec3_t node_position = vec3_from_svec3(state.in_game.level.collision_bvh.nav_graph_nodes[i].position);
+		for (int i = 0; i < n_nav_graph_nodes; ++i) {
+			const vec3_t node_position = vec3_from_svec3(nav_graph_nodes[i].position);
 			scalar_t distance_squared = vec3_magnitude_squared(vec3_sub(node_position, chaser_pos));
 			if (distance_squared >= 0 && distance_squared < curr_min_distance) {
 				curr_min_distance = distance_squared;
@@ -81,53 +186,53 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 		}
 	}
 
-	if (chaser->state == CHASER_WAIT) {
-		// Wait for the entity behavior timer to reach the desired value
-		chaser->behavior_timer -= dt;
-		if (chaser->behavior_timer <= 0) {
-			// Set timer to random value in milliseconds - mostly to reduce lag lol
-			// Random timers for each enemy means the raycasts are more spread out
-			// It also makes their reaction times more realistic so there's that too
-			chaser->behavior_timer = random_range(CHASER_REACTION_TIME_MIN, CHASER_REACTION_TIME_MAX);
+	if (chaser->behavior_timer > 0) chaser->behavior_timer -= dt;
+	switch (chaser->state) {
+		case CHASER_WAIT: 			chaser_wait(chaser, player, dt);			break;
+		case CHASER_CHASE_PLAYER: 	chaser_chase_player(chaser, player, dt);	break;
+		case CHASER_FLEE_PLAYER: 	chaser_flee_player(chaser, player, dt);		break;
+		case CHASER_SHOOT: 			chaser_shoot(chaser, player, dt);			break;
+		default: break;
+	}
 
-			int player_visible = 0;
+	// Handle velocity
+	scalar_t velocity_scalar = scalar_sqrt(vec3_magnitude_squared(chaser->velocity));
+	if (velocity_scalar > 0) {
+		vec3_t velocity_normalized = vec3_divs(chaser->velocity, velocity_scalar);
 
-			// Find distance to player
-			const vec3_t chaser_to_player = vec3_sub(player->position, chaser_pos);
-			const scalar_t dist_chaser_to_player_squared = vec3_magnitude_squared(chaser_to_player);
+		// fallback because for some reason my level editor isnt exporting the right values
+		if (velocity_scalar > 1000000) {
+			velocity_normalized = vec3_from_scalar(0);
+			velocity_scalar = 0;
+		}
+		if (velocity_scalar > chaser_max_speed) {
+			velocity_scalar = chaser_max_speed;
+		}
+		if (velocity_scalar > chaser_drag * dt) {
+			velocity_scalar -= chaser_drag * dt;
+		}
+		chaser->velocity = vec3_muls(velocity_normalized, velocity_scalar);
 
-			// If the player is too far away, ignore them, and don't bother with a raycast
-			if (dist_chaser_to_player_squared > CHASER_AGGRO_DISTANCE_SQUARED) {
-				printf("player too far\n");
-			}
+		chaser->entity_header.position.x += chaser->velocity.x * dt;
+		chaser->entity_header.position.y += chaser->velocity.y * dt;
+		chaser->entity_header.position.z += chaser->velocity.z * dt;
+	}
 
-			else {
-				ray_t ray = {
-					.position = chaser_pos,
-					.direction = vec3_normalize(chaser_to_player),
-					.length = INT32_MAX,
-				};
-				ray.inv_direction = vec3_div((vec3_t){ONE, ONE, ONE}, ray.direction);
+	// Add a force towards the target node
+	if (chaser->target_navmesh_node >= 0) {
+		const vec3_t target_pos = vec3_from_svec3(nav_graph_nodes[chaser->target_navmesh_node].position);
+		const vec3_t target_dir = vec3_normalize(vec3_sub(target_pos, chaser_pos));
+		chaser->velocity = vec3_add(chaser->velocity, vec3_muls(target_dir, chaser_acceleration * dt));
 
-				rayhit_t hit = {0};
-				bvh_intersect_ray(&state.in_game.level.collision_bvh, ray, &hit);
-
-				// If the ray didn't hit anything, the player is visible
-				if (is_infinity(hit.distance)) 
-					player_visible = 1;
-
-				// If the ray hit something that's further away from the enemy than the player is, the player is visible
-				else if (scalar_mul(hit.distance, hit.distance) > dist_chaser_to_player_squared)
-					player_visible = 1;
-			}
-
-			if (player_visible) {
-				// If player is a bit far away, chase them
-				if (dist_chaser_to_player_squared > CHASER_RETREAT_DISTANCE_SQUARED)
-					printf("chase player\n");
-				else
-					printf("retreat from player\n");
-			}
+		// If we're close to the target node, set that node as the current node
+		// printf("state: %i, curr: %i, target: %i\n", chaser->state, chaser->curr_navmesh_node, chaser->target_navmesh_node);
+		const scalar_t distance_to_target_node_squared = vec3_magnitude_squared(vec3_sub(chaser_pos, target_pos));
+		// printf("chaser_pos: "); vec3_debug(chaser_pos);
+		// printf("target_pos: "); vec3_debug(target_pos);
+		// printf("distance_to_target_node_squared: "); scalar_debug(distance_to_target_node_squared);
+		if (distance_to_target_node_squared < CHASER_NODE_REACH_DISTANCE_SQUARED) {
+			// printf("node target reached!\n");
+			chaser->curr_navmesh_node = chaser->target_navmesh_node;
 		}
 	}
 
