@@ -264,5 +264,6 @@ mesh_t* model_find_mesh(const model_t* model, const char* mesh_name) {
             return mesh;
         }
     }
+    printf("[ERROR] Could not find mesh with name '%s'!\n", mesh_name);
     return 0;
 }
