@@ -272,7 +272,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 .n_entities = (uint16_t)n_entities,
             };
 
-            FILE* file = fopen(level_path, "w");
+            FILE* file = fopen(level_path, "wb");
             fwrite(&header, sizeof(header), 1, file);
             fwrite(binary_section.data(), sizeof(binary_section[0]), binary_section.size(), file);
             fclose(file);
