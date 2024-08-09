@@ -75,6 +75,7 @@ level_t level_load(const char* level_path) {
     // Load entities
     memcpy(entity_pool, level_entity_pool, entity_pool_stride * level_header->n_entities);
     memcpy(entity_types, level_entity_types, level_header->n_entities);
+    entity_sanitize();
 
     // Start new music
     music_stop();
