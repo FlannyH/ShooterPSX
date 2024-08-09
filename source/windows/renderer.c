@@ -243,6 +243,7 @@ GLuint shader_from_file(char *vert_path, char *frag_path) {
 void renderer_init(void) {
 	// Create OpenGL window
 	glfwInit();
+	glfwWindowHint(GLFW_REFRESH_RATE, 15);
 	window = glfwCreateWindow(320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, "ShooterPSX", NULL, NULL);
 	if (window == NULL) {
 		printf("[ERROR] Could not open OpenGL window! Aborting.");
@@ -324,10 +325,11 @@ void renderer_init(void) {
 	glfwGetWindowSize(window, &w, &h);
 	#endif
 }
-
+double lasttime = 0.0;
 void renderer_begin_frame(const transform_t *camera_transform) {
 	curr_depth_bias = 0;
     cam_transform = *camera_transform;
+	lasttime = glfwGetTime();
 	// Set up viewport
 #ifdef _LEVEL_EDITOR
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -434,6 +436,8 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 }
 
 void renderer_end_frame(void) {
+	while (glfwGetTime() < lasttime + (1.0/60.0)) {}
+    lasttime += 1.0/60.0;
 	update_delta_time_ms();
 	// Flip buffers
 	glfwSwapInterval(vsync_enable);
