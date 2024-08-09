@@ -52,6 +52,7 @@ typedef struct {
 		entity_door_t door;
 		entity_pickup_t pickup;
 		entity_crate_t crate;
+		entity_chaser_t chaser;
 	};
 } entity_union;
 
