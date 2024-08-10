@@ -22,6 +22,7 @@ typedef struct {
     int16_t state;
     int16_t behavior_timer;
     vec3_t last_known_player_pos;
+    vec3_t home_position;
     vec3_t velocity; // scaled by 256 for precision sake
 } entity_chaser_t;
 
