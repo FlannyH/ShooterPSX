@@ -9,8 +9,8 @@ extern "C" {
 typedef enum {
     CHASER_WAIT,
     CHASER_RETURN_HOME,
-    CHASER_CHASE_PLAYER,
-    CHASER_FLEE_PLAYER,
+    CHASER_CHASE,
+    CHASER_FLEE,
     CHASER_STRAFE,
     CHASER_SHOOT,
 } entity_chaser_state_t;
