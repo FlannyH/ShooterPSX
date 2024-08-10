@@ -11,15 +11,16 @@ typedef enum {
     CHASER_RETURN_HOME,
     CHASER_CHASE_PLAYER,
     CHASER_FLEE_PLAYER,
+    CHASER_STRAFE,
     CHASER_SHOOT,
 } entity_chaser_state_t;
 
 typedef struct {
     entity_header_t entity_header;
-    int curr_navmesh_node;
-    int target_navmesh_node;
-    entity_chaser_state_t state;
-    int behavior_timer;
+    int16_t curr_navmesh_node;
+    int16_t target_navmesh_node;
+    int16_t state;
+    int16_t behavior_timer;
     vec3_t last_known_player_pos;
     vec3_t velocity; // scaled by 256 for precision sake
 } entity_chaser_t;
@@ -30,7 +31,7 @@ void entity_chaser_on_hit(int slot, int hitbox_index);
 
 const static int32_t chaser_acceleration = 600;
 const static int32_t chaser_max_speed = 70000;
-const static int32_t chaser_drag = 200;
+const static int32_t chaser_drag = 100;
 
 #ifdef __cplusplus
 }
