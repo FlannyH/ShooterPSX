@@ -236,7 +236,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 return string_offset_in_file;
             };
 
-            auto write_data_and_get_offset = [](std::vector<uint8_t>& output, void* data, size_t size_in_bytes) {
+            auto write_data_and_get_offset = [](std::vector<uint8_t>& output, const void* data, size_t size_in_bytes) {
                 uint8_t* ptr = (uint8_t*)data;
                 
                 // align to 4 bytes
@@ -251,9 +251,25 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             };
 
             // Construct level header and write into binary section as we go along
-            entity_sanitize();
             entity_defragment(); // make entity allocations contiguous and compact so we can save space...
-            auto n_entities = entity_how_many_active(); // ...and reuse this function
+            int n_entities = entity_how_many_active(); // ...and reuse this function
+
+            // Serialize the entities, removing all pointers in the process
+            std::vector<uint8_t> entity_data_serialized;
+            for (intptr_t i = 0; i < n_entities; ++i) {
+                // Get header
+                const entity_header_t header = *((entity_header_t*)(entity_pool + (entity_pool_stride * i)));
+
+                // Write entity header
+                write_data_and_get_offset(entity_data_serialized, &header.position, sizeof(vec3_t));
+                write_data_and_get_offset(entity_data_serialized, &header.rotation, sizeof(vec3_t));
+                write_data_and_get_offset(entity_data_serialized, &header.scale, sizeof(vec3_t));
+
+                // Write entity data
+                const uint8_t* entity_data = entity_pool + (entity_pool_stride * i) + sizeof(entity_header_t);
+                const size_t size = entity_pool_stride - sizeof(entity_header_t);
+                write_data_and_get_offset(entity_data_serialized, entity_data, size);
+            }
 
             level_header_t header = {
                 .file_magic = MAGIC_FLVL,
@@ -265,7 +281,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 .path_model_offset = (uint32_t)write_text_and_get_offset(binary_section, path_model),
                 .path_model_lod_offset = (uint32_t)write_text_and_get_offset(binary_section, path_model_lod),
                 .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_types, (n_entities + 3) & ~0x03), // 4-byte padding
-                .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_pool, entity_pool_stride * n_entities),
+                .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_data_serialized.data(), entity_data_serialized.size() * sizeof(entity_data_serialized[0])),
                 .level_name_offset = (uint32_t)write_text_and_get_offset(binary_section, level_name),
                 .player_spawn_position = svec3_from_vec3(player_spawn_position),
                 .player_spawn_rotation = player_spawn_rotation,
