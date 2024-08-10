@@ -62,6 +62,12 @@ typedef struct {
 } entity_header_t;
 
 typedef struct {
+	vec3_t position;
+	vec3_t rotation;
+	vec3_t scale;
+} entity_header_serialized_t;
+
+typedef struct {
 	uint8_t type;
 } entity_slot_t;
 

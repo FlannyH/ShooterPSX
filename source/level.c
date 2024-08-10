@@ -73,9 +73,30 @@ level_t level_load(const char* level_path) {
     };
 
     // Load entities
-    memcpy(entity_pool, level_entity_pool, entity_pool_stride * level_header->n_entities);
-    memcpy(entity_types, level_entity_types, level_header->n_entities);
+    intptr_t level_entity_pool_stride = entity_pool_stride - sizeof(entity_header_t) + sizeof(entity_header_serialized_t);
+    
+    // Deserialize entity data
+    for (int i = 0; i < level_header->n_entities; ++i) {
+        // Find where data needs to be read
+        entity_header_serialized_t* src_entity_header = (entity_header_serialized_t*)(level_entity_pool + (i * level_entity_pool_stride));
+        uint8_t* src_entity_data = (uint8_t*)&src_entity_header[1]; // right after the entity header
+
+        // Find where data needs to be written
+        entity_header_t* dst_entity_header = (entity_header_t*)(entity_pool + (i * entity_pool_stride));
+        uint8_t* dst_entity_data = (uint8_t*)&dst_entity_header[1]; // right after the entity header
+        
+        // Write entity header
+        dst_entity_header->position = src_entity_header->position;
+        dst_entity_header->rotation = src_entity_header->rotation;
+        dst_entity_header->scale = src_entity_header->scale;
+        dst_entity_header->mesh = NULL;
+
+        // Copy entity data - we just need to copy everything after the header, so subtract the header size
+        memcpy(dst_entity_data, src_entity_data, entity_pool_stride - sizeof(entity_header_t));
+    }
     entity_sanitize();
+
+    memcpy(entity_types, level_entity_types, level_header->n_entities);
 
     // Start new music
     music_stop();
