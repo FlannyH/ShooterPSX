@@ -138,7 +138,7 @@ void bvh_partition(const level_collision_t* bvh, const axis_t axis, const scalar
 }
 
 void debug_draw(const level_collision_t* self, const bvh_node_t* node, const int min_depth, const int max_depth, const int curr_depth, const pixel32_t color) {
-    transform_t trans = { {0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096} };
+    transform_t trans = { {0, 0, 0}, {0, 0, 0}, {-ONE, -ONE, -ONE} };
 
     // Draw box of this node - only if within the depth bounds
     if (curr_depth > max_depth) {
@@ -149,8 +149,8 @@ void debug_draw(const level_collision_t* self, const bvh_node_t* node, const int
         renderer_debug_draw_aabb(&node->bounds, color, &trans);
     }
 
-    // If child nodes exist
-    if (node->primitive_count == 0) {
+    // If this is a leaf node, stop here
+    if (node->primitive_count != 0) {
         return;
     }
 
@@ -180,7 +180,7 @@ void bvh_debug_draw_nav_graph(const level_collision_t* bvh) {
             svec3_t s_pos2 = bvh->nav_graph_nodes[id_neighbor].position;
             s_pos2.y += 2;
             const vec3_t pos2 = vec3_from_svec3(s_pos2);
-            renderer_debug_draw_line(pos1, pos2, red, &id_transform);
+            renderer_debug_draw_line(pos1, pos2, (pixel32_t){ .r = 255, .g = 0, .b = 0, .a = 80 }, &id_transform);
         }
     }
 }
