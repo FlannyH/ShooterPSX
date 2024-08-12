@@ -61,7 +61,6 @@ int main(void) {
         
         renderer_begin_frame(&player.transform);
         {
-            renderer_draw_model_shaded(level.graphics, &level.transform, NULL, 0);
             entity_update_all(&player, 0);
             
             debug_layer_begin();

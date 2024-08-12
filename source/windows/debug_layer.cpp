@@ -187,6 +187,18 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     static char* level_name = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
     static bool initialized = false;
 
+    // Debug state
+    static bool render_level_graphics = true;
+    static bool render_level_collision = false;
+    static bool render_level_bvh = false;
+    static bool render_level_nav_graph = false;
+    
+    if (render_level_graphics) renderer_draw_model_shaded(curr_level->graphics, &curr_level->transform, NULL, 0);
+    if (render_level_collision) renderer_draw_model_shaded(curr_level->collision_mesh_debug, &id_transform, NULL, 0);
+    if (render_level_bvh) bvh_debug_draw(&curr_level->collision_bvh, 0, 128, (pixel32_t){ .r = 160, .g = 240, .b = 80, .a = 255 });
+    if (render_level_nav_graph) bvh_debug_draw_nav_graph(&curr_level->collision_bvh);
+
+
     if (!initialized) {
         level_path[0] = 0;
         path_music[0] = 0;
@@ -412,6 +424,13 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 camera->position = vec3_from_floats(-vec_float[0], -vec_float[1], -vec_float[2]); 
             }
             inspect_vec3(&camera->rotation, "Rotation");
+            ImGui::TreePop();
+        }
+        if (ImGui::TreeNodeEx("Debug Render Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
+            ImGui::Checkbox("Render level graphics", &render_level_graphics);
+            ImGui::Checkbox("Render level collision", &render_level_collision);
+            ImGui::Checkbox("Render Level BVH", &render_level_bvh);
+            ImGui::Checkbox("Render Level navgraph", &render_level_nav_graph);
             ImGui::TreePop();
         }
     }
