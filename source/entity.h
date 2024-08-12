@@ -51,6 +51,7 @@ typedef enum {
 	ENTITY_MESH_CHASER_BOTTOM2,
 	ENTITY_MESH_CHASER_GUN,
 	ENTITY_MESH_CRATE,
+	N_ENTITY_MESH_IDS,
 } entity_mesh_id_t;
 
 // All entities are assumed have this data. Add it as the first member of an entity struct.

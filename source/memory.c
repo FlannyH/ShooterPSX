@@ -256,8 +256,6 @@ void mem_free(void* ptr) {
 #ifdef _DEBUG
     for (size_t i = 0; i < 512; ++i) {
         if (allocated_memory_pointers[i] == ptr) {
-            // printf("freeing %i bytes for category %s\n", allocated_memory_size[i], mem_cat_strings[allocated_memory_category[i]]);
-
             allocated_memory_pointers[i] = NULL;
             allocated_memory_size[i] = 0;
             allocated_memory_category[i] = 0;

@@ -16,21 +16,6 @@ int n_ray_triangle_intersects = 0;
 int n_vertical_cylinder_aabb_intersects = 0;
 int n_vertical_cylinder_triangle_intersects = 0;
 
-aabb_t bvh_get_bounds(const level_collision_t* bvh, const uint16_t first, const uint16_t count)
-{
-    aabb_t result;
-    result.max = vec3_from_int32s(INT32_MIN, INT32_MIN, INT32_MIN);
-    result.min = vec3_from_int32s(INT32_MAX, INT32_MAX, INT32_MAX);
-    for (int i = 0; i < count; i++)
-    {
-        const aabb_t curr_primitive_bounds = collision_triangle_get_bounds(&bvh->primitives[bvh->indices[first + i]]);
-
-        result.min = vec3_min(result.min, curr_primitive_bounds.min);
-        result.max = vec3_max(result.max, curr_primitive_bounds.max);
-    }
-    return result;
-}
-
 void handle_node_intersection_ray(level_collision_t* self, const bvh_node_t* current_node, const ray_t ray, rayhit_t* hit, const int rec_depth) {
     // Intersect current node
     if (ray_aabb_intersect(&current_node->bounds, ray))
@@ -106,39 +91,10 @@ void bvh_intersect_vertical_cylinder(level_collision_t* bvh, vertical_cylinder_t
     handle_node_intersection_vertical_cylinder(bvh, bvh->root, cyl, hit, 0);
 }
 
-void bvh_swap_primitives(uint16_t* a, uint16_t* b) {
-    const int tmp = *a;
-    *a = *b;
-    *b = tmp;
-}
-
-void bvh_partition(const level_collision_t* bvh, const axis_t axis, const scalar_t pivot, const uint16_t start, const uint16_t count, uint16_t* split_index) {
-    int i = start;
-    for (int j = start; j < start + count; j++)
-    {
-        // Get min and max of the axis we want
-        const aabb_t bounds = collision_triangle_get_bounds(&bvh->primitives[bvh->indices[j]]);
-
-        // Get center
-        vec3_t center = vec3_add(bounds.min, bounds.max);
-        center.x = center.x >> 1;
-        center.y = center.y >> 1;
-        center.z = center.z >> 1;
-        const scalar_t* center_points = (scalar_t*)&center;
-
-        // If the current primitive's center's <axis>-component is greated than the pivot's <axis>-component
-        if (center_points[(size_t)axis] > pivot && (j != i))
-        {
-            // Move the primitive's index to the first partition of this node
-            bvh_swap_primitives(&bvh->indices[i], &bvh->indices[j]);
-            i++;
-        }
-    }
-    *split_index = i;
-}
-
 void debug_draw(const level_collision_t* self, const bvh_node_t* node, const int min_depth, const int max_depth, const int curr_depth, const pixel32_t color) {
-    transform_t trans = { {0, 0, 0}, {0, 0, 0}, {-ONE, -ONE, -ONE} };
+    const transform_t trans = { {0, 0, 0}, {0, 0, 0}, {-ONE, -ONE, -ONE} };
+
+    if (!self) return;
 
     // Draw box of this node - only if within the depth bounds
     if (curr_depth > max_depth) {
@@ -166,6 +122,8 @@ void bvh_debug_draw(const level_collision_t* bvh, const int min_depth, const int
 }
 
 void bvh_debug_draw_nav_graph(const level_collision_t* bvh) {
+    if (!bvh) return;
+
     for (size_t i = 0; i < bvh->n_nav_graph_nodes; ++i) {
         svec3_t s_pos1 = bvh->nav_graph_nodes[i].position;
         s_pos1.y += 2;
@@ -186,6 +144,10 @@ void bvh_debug_draw_nav_graph(const level_collision_t* bvh) {
 }
 
 int point_aabb_intersect(const aabb_t* aabb, vec3_t point) {
+#ifdef _DEBUG
+    if (!aabb) return 0;
+#endif
+
     return (point.x >= aabb->min.x)
     &&     (point.y >= aabb->min.y)
     &&     (point.z >= aabb->min.z)
@@ -195,6 +157,11 @@ int point_aabb_intersect(const aabb_t* aabb, vec3_t point) {
 }
 
 int ray_aabb_intersect_fancy(const aabb_t* aabb, ray_t ray, rayhit_t* hit) {
+#ifdef _DEBUG
+    if (!aabb) return 0;
+    if (!hit) return 0;
+#endif
+
     n_ray_aabb_intersects++;
     // If the ray starts inside the box, always intersect
     if (point_aabb_intersect(aabb, ray.position)) {
@@ -233,6 +200,10 @@ int ray_aabb_intersect_fancy(const aabb_t* aabb, ray_t ray, rayhit_t* hit) {
 }
 
 int ray_aabb_intersect(const aabb_t* aabb, ray_t ray) {
+#ifdef _DEBUG
+    if (!aabb) return 0;
+#endif
+
     n_ray_aabb_intersects++;
     const scalar_t tx1 = scalar_mul(aabb->min.x - ray.position.x, ray.inv_direction.x);
     const scalar_t tx2 = scalar_mul(aabb->max.x - ray.position.x, ray.inv_direction.x);
@@ -256,6 +227,11 @@ int ray_aabb_intersect(const aabb_t* aabb, ray_t ray) {
 }
 
 int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_t* hit) {
+#ifdef _DEBUG
+    if (!triangle) return 0;
+    if (!hit) return 0;
+#endif
+
     n_ray_triangle_intersects++;
 #define SHIFT_COUNT 5
     vec3_t vtx0 = vec3_shift_right(triangle->v0, SHIFT_COUNT);
@@ -306,6 +282,10 @@ int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_
 
 // Approximation!
 int vertical_cylinder_aabb_intersect(const aabb_t* aabb, const vertical_cylinder_t vertical_cylinder) {
+#ifdef _DEBUG
+    if (!aabb) return 0;
+#endif
+
     n_vertical_cylinder_aabb_intersects++;
 
     // The rest can be done in 2D
@@ -327,6 +307,11 @@ int vertical_cylinder_aabb_intersect(const aabb_t* aabb, const vertical_cylinder
 }
 
 int vertical_cylinder_aabb_intersect_fancy(const aabb_t* aabb, const vertical_cylinder_t vertical_cylinder, rayhit_t* hit) {
+#ifdef _DEBUG
+    if (!aabb) return 0;
+    if (!hit) return 0;
+#endif
+
     // Check the Y axis first. If this does not overlap, there can not be a collision.
     if ((vertical_cylinder.bottom.y + vertical_cylinder.height) < aabb->min.y) return 0; // If top of cylinder is below the AABB, no intersect
     if (vertical_cylinder.bottom.y < aabb->max.y) return 0; // If bottom of cylinder is above the AABB, no intersect
@@ -374,6 +359,8 @@ scalar_t get_progress_of_p_on_ab(vec2_t a, vec2_t b, vec2_t p) {
 // for some reason the function used for the 3d triangles doesn't work in 2d? so i made my own instead
 // u_out is 1.0 p lies on v0, and v_out is 1.0 if p lies on v1
 vec2_t find_closest_point_on_triangle_2d(vec2_t v0, vec2_t v1, vec2_t v2, vec2_t p, scalar_t* u_out, scalar_t* v_out) {
+    PANIC_IF("u_out or w_out is null!", (!u_out) || (!v_out));
+
     // This is what we hope to return after this
     vec2_t closest_point;
 
@@ -444,6 +431,8 @@ vec2_t find_closest_point_on_triangle_2d(vec2_t v0, vec2_t v1, vec2_t v2, vec2_t
 }
 
 vec3_t find_closest_point_on_triangle_3d(vec3_t a, vec3_t b, vec3_t c, vec3_t p, scalar_t* v_out, scalar_t* w_out) {
+    PANIC_IF("u_out or w_out is null!", (!v_out) || (!w_out));
+
     // Calculate vectors
     const vec3_t ab = vec3_sub(b, a);
     const vec3_t ac = vec3_sub(c, a);
@@ -497,6 +486,11 @@ vec3_t find_closest_point_on_triangle_3d(vec3_t a, vec3_t b, vec3_t c, vec3_t p,
 }
 
 int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vertical_cylinder_t vertical_cylinder, rayhit_t* hit) {
+#ifdef _DEBUG
+    if (!triangle) return 0;
+    if (!hit) return 0;
+#endif
+
     n_vertical_cylinder_triangle_intersects++;
 
     if (vertical_cylinder.is_wall_check) {
@@ -629,6 +623,10 @@ vec3_t closest_point_on_line_segment(vec3_t a, vec3_t b, vec3_t point) {
 }
 
 int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere, rayhit_t* hit) {
+#ifdef _DEBUG
+    if (!triangle) return 0;
+    if (!hit) return 0;
+#endif
     const vec3_t p0 = vec3_shift_right(triangle->v0, 4);
     const vec3_t p1 = vec3_shift_right(triangle->v1, 4);
     const vec3_t p2 = vec3_shift_right(triangle->v2, 4);

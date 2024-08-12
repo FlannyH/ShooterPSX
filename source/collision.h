@@ -10,11 +10,9 @@
 
 // BVH construction
 level_collision_t bvh_from_file(const char* path, int on_stack, stack_t stack);
-aabb_t bvh_get_bounds(const level_collision_t* bvh, uint16_t first, uint16_t count);
 void bvh_construct(level_collision_t* bvh, const col_mesh_file_tri_t* primitives, const uint16_t n_primitives);
 void bvh_subdivide(level_collision_t* bvh, bvh_node_t* node, int recursion_depth);
 void bvh_swap_primitives(uint16_t* a, uint16_t* b);
-void bvh_partition(const level_collision_t* bvh, axis_t axis, scalar_t pivot, uint16_t start, uint16_t count, uint16_t* split_index);
 void bvh_from_mesh(level_collision_t* bvh, const mesh_t* mesh);
 void bvh_from_model(level_collision_t* bvh, const collision_mesh_t* mesh);
 void bvh_debug_draw(const level_collision_t* bvh, int min_depth, int max_depth, pixel32_t color);

@@ -210,6 +210,9 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
 }
 
 void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms, const int time_counter) {
+    if (!self) return;
+    if (!level_bvh) return;
+
     if (player_radius_squared == 0) {
         const scalar_t player_radius_scalar = player_radius;
         player_radius_squared = scalar_mul(player_radius_scalar, player_radius_scalar);
@@ -281,6 +284,8 @@ void draw_structure(const vislist_t vis) {
 }
 
 int player_get_level_section(player_t* self, const vislist_t vis) {
+    if (!self) return 0;
+
     // Get player position
     svec3_t position = {
         -self->position.x / COL_SCALE,

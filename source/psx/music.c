@@ -11,12 +11,15 @@
 #include "fixed_point.h"
 
 // Channels
-spu_channel_t spu_channel[24];
-midi_channel_t midi_channel[16];
+#define N_SPU_CHANNELS 24
+#define N_MIDI_CHANNELS 16
+spu_channel_t spu_channel[N_SPU_CHANNELS];
+midi_channel_t midi_channel[N_MIDI_CHANNELS];
 
 // Instruments
 instrument_description_t* instruments = NULL;
 instrument_region_header_t* instrument_regions = NULL;
+size_t n_instrument_regions = 0;
 
 // Sequence
 dyn_song_seq_header_t* curr_loaded_seq = NULL;
@@ -51,6 +54,7 @@ void music_load_soundbank(const char* path) {
 	size_t region_size = sizeof(instrument_region_header_t) * sbk_header->n_samples;
 	instruments = (instrument_description_t*)mem_stack_alloc(inst_size, STACK_MUSIC);
 	instrument_regions = (instrument_region_header_t*)mem_stack_alloc(region_size, STACK_MUSIC);
+	n_instrument_regions = sbk_header->n_samples;
 	memcpy(instruments, inst_data, inst_size);
 	memcpy(instrument_regions, region_data, region_size);
 }
@@ -85,14 +89,14 @@ void music_play_sequence(uint32_t section) {
 	// It is! Find where the data is
 	uint32_t* header_end = (uint32_t*)(curr_loaded_seq + 1); // start of header + 1 whole struct's worth of bytes
 	uint32_t* section_table = header_end + (curr_loaded_seq->offset_section_table / 4); // find the section table and get the entry
-	PANIC_IF("misaligned data!", (((intptr_t)header_end) & 0x03) != 0);
-	PANIC_IF("misaligned data!", (((intptr_t)section_table) & 0x03) != 0);
+	PANIC_IF("misaligned music data!", (((intptr_t)header_end) & 0x03) != 0);
+	PANIC_IF("misaligned music section table!", (((intptr_t)section_table) & 0x03) != 0);
 	sequence_pointer = ((uint8_t*)header_end) + curr_loaded_seq->offset_section_data + section_table[section];
 	
 	// Initialize variables
 	music_playing = 1;
 	wait_timer = 1;
-	for (size_t i = 0; i < 16; ++i) {
+	for (size_t i = 0; i < N_MIDI_CHANNELS; ++i) {
 		midi_channel[i].volume = 127;
 		midi_channel[i].panning = 127;
 		midi_channel[i].pitch_wheel = 0;
@@ -100,10 +104,12 @@ void music_play_sequence(uint32_t section) {
 	memset(spu_channel, 0, sizeof(spu_channel));
 }
 
-spu_stage_on_t staged_note_on_events[24] = {0};
-spu_stage_off_t staged_note_off_events[24] = {0};
+#define MAX_STAGED_NOTE_EVENTS 24
+spu_stage_on_t staged_note_on_events[MAX_STAGED_NOTE_EVENTS] = {0};
+spu_stage_off_t staged_note_off_events[MAX_STAGED_NOTE_EVENTS] = {0};
 int n_staged_note_on_events = 0;
 int n_staged_note_off_events = 0;
+
 void music_tick(int delta_time) {
 	if (music_playing == 0) {
 		return;
@@ -126,6 +132,11 @@ void music_tick(int delta_time) {
 				.key = key,
 				.midi_channel = (command & 0x0F),
 			};
+
+			// Bounds check so our note queue doesn't overflow and write out of bounds
+			if (n_staged_note_off_events >= MAX_STAGED_NOTE_EVENTS) {
+				wait_timer++;
+			}
 		}
 
 		// Play Note
@@ -152,7 +163,11 @@ void music_tick(int delta_time) {
 
 			// Find first instrument region that fits, and start playing the note
 			const uint16_t n_regions = instruments[midi_chn->instrument].n_regions;
+			const uint16_t region_id_start = instruments[midi_chn->instrument].region_start_index;
+
+			PANIC_IF("region id will go out of bounds!", (region_id_start >= n_instrument_regions) || ((region_id_start + n_regions) > n_instrument_regions));
 			const instrument_region_header_t* regions = &instrument_regions[instruments[midi_chn->instrument].region_start_index];
+
 			for (size_t i = 0; i < n_regions; ++i) {
 				if (key >= regions[i].key_min 
 				&& key <= regions[i].key_max) {
@@ -160,7 +175,10 @@ void music_tick(int delta_time) {
 					scalar_t s_velocity = ((scalar_t)velocity) * ONE;
 					scalar_t s_channel_volume = ((scalar_t)midi_chn->volume) * (ONE / 256) * regions[i].volume_multiplier;
 					s_velocity = scalar_mul(s_velocity, s_channel_volume);
+
 					int panning = ((int)midi_chn->panning + (int)regions[i].panning) / 2;
+					PANIC_IF("note panning out of bounds!", panning < 0 || panning > 255);
+
 					vec2_t stereo_volume = {
 						scalar_mul((uint32_t)lut_panning[255 - panning], s_velocity),
 						scalar_mul((uint32_t)lut_panning[panning], s_velocity),
@@ -172,7 +190,8 @@ void music_tick(int delta_time) {
 						coarse_min = midi_chn->pitch_wheel / 1000;
 						coarse_max = coarse_min + 1;
 						fine = ((midi_chn->pitch_wheel * 256) / 1000) & 0xFF;
-					} else {
+					} 
+					else {
 						coarse_max = (midi_chn->pitch_wheel + 1) / 1000;
 						coarse_min = coarse_max - 1;
 						fine = ((midi_chn->pitch_wheel * 256) / 1000) & 0xFF;
@@ -274,7 +293,7 @@ void music_tick(int delta_time) {
 	uint32_t note_off = 0;
 	for (int stage_i = 0; stage_i < n_staged_note_off_events; ++stage_i) {
 		// Find channels that have this key and this channel
-		for (int spu_i = 0; spu_i < 24; ++spu_i) {
+		for (int spu_i = 0; spu_i < MAX_STAGED_NOTE_EVENTS; ++spu_i) {
 			// If the MIDI key and channel match, kill this note
 			if (staged_note_off_events[stage_i].key == spu_channel[spu_i].key
 			&& staged_note_off_events[stage_i].midi_channel == spu_channel[spu_i].midi_channel) {
@@ -286,7 +305,7 @@ void music_tick(int delta_time) {
 	for (int i = 0; i < n_staged_note_on_events; ++i) {
 		// Find free channel
 		int channel_id = 0;
-		for (channel_id = 0; channel_id < 24; ++channel_id) {
+		for (channel_id = 0; channel_id < MAX_STAGED_NOTE_EVENTS; ++channel_id) {
 			if (SPU_CH_ADSR_VOL(channel_id) != 0) continue;
 			if (note_on & (1 << channel_id)) continue;
 			if (note_off & (1 << channel_id)) continue;
@@ -311,23 +330,12 @@ void music_tick(int delta_time) {
 		spu_channel[channel_id].velocity = staged_note_on_events[i].velocity;
 	}
 
-
-	//FntPrint(-1, "spu: ");
-	//for (int i = 0; i < 24; ++i) FntPrint(-1, "%i", SPU_CH_ADSR_VOL(i) != 0);
-	//FntPrint(-1, "\n");
-	//FntPrint(-1, "on:  ");
-	//for (int i = 0; i < 24; ++i) FntPrint(-1, "%i", (note_on & (1 << i)) != 0);
-	//FntPrint(-1, "\n");
-	//FntPrint(-1, "off: ");
-	//for (int i = 0; i < 24; ++i) FntPrint(-1, "%i", (note_off & (1 << i)) != 0);
-	//FntPrint(-1, "\n");
-
 	WARN_IF("note_off and note_on staged on same channel!", (note_off & note_on) != 0);
 	SpuSetKey(0, note_off);
 	SpuSetKey(1, note_on);
 
 	// Handle channel volumes
-	for (size_t i = 0; i < 24; ++i) {
+	for (size_t i = 0; i < N_SPU_CHANNELS; ++i) {
 		// Calculate velocity
 		spu_channel_t* spu_ch = &spu_channel[i];
 		midi_channel_t* midi_ch = &midi_channel[spu_channel[i].midi_channel];
@@ -339,6 +347,7 @@ void music_tick(int delta_time) {
 		scalar_t s_velocity = ((scalar_t)spu_ch->velocity) * ONE;
 		scalar_t s_channel_volume = ((scalar_t)midi_ch->volume) * (ONE / 256) * instrument_regions[spu_ch->region].volume_multiplier;
 		s_velocity = scalar_mul(s_velocity, s_channel_volume);
+
 		int panning = ((int)midi_ch->panning + (int)instrument_regions[spu_ch->region].panning) / 2;
 		vec2_t stereo_volume = {
 			scalar_mul((uint32_t)lut_panning[255 - panning], s_velocity),
@@ -349,7 +358,7 @@ void music_tick(int delta_time) {
 	}
 
 	// Handle channel pitches
-	for (size_t i = 0; i < 24; ++i) {
+	for (size_t i = 0; i < N_SPU_CHANNELS; ++i) {
 		spu_channel_t* spu_ch = &spu_channel[i];
 		midi_channel_t* midi_ch = &midi_channel[spu_channel[i].midi_channel];
 
@@ -372,6 +381,7 @@ void music_tick(int delta_time) {
 		}
 
 		// Calculate A and B for lerp
+		PANIC_IF("SPU channel's instrument region is out of bounds!", spu_ch->region >= n_instrument_regions);
 		const uint32_t sample_rate_a = ((uint32_t)instrument_regions[spu_ch->region].sample_rate * (uint32_t)lut_note_pitch[spu_ch->key + coarse_min]) >> 8;
 		const uint32_t sample_rate_b = ((uint32_t)instrument_regions[spu_ch->region].sample_rate * (uint32_t)lut_note_pitch[spu_ch->key + coarse_max]) >> 8;
 		uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-fine)) + (sample_rate_b * (fine)))) >> 4;

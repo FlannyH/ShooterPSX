@@ -6,6 +6,8 @@
 #include "memory.h"
 
 uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures, int on_stack, stack_t stack) { // returns number of textures loaded
+    if (out_textures == NULL) return 0;
+
     // Read the file
     uint32_t* file_data;
     size_t size;

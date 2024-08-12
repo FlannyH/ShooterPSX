@@ -17,6 +17,8 @@
 #define MOVEMENT_SPEED 64
 
 void camera_update_flycam(transform_t* camera_transform, int dt_ms) {
+    if (!camera_transform) return;
+
     if (input_is_connected(0)) {
         // For dual-analog and dual-shock (analog input)
         if (input_has_analog(0)) {

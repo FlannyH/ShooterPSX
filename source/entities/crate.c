@@ -14,6 +14,10 @@ entity_crate_t* entity_crate_new(void) {
 }
 
 void entity_crate_update(int slot, player_t* player, int dt) {
+	PANIC_IF("entity_models is null!", entity_models == NULL);
+	PANIC_IF("entity_models->meshes is null!", entity_models->meshes == NULL);
+	PANIC_IF("entity_models does not contain enough meshes!", entity_models->n_meshes < N_ENTITY_MESH_IDS);
+
 	(void)dt;
 	(void)player;
 	entity_crate_t* crate = (entity_crate_t*)&entity_pool[slot * entity_pool_stride];

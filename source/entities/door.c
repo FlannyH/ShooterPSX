@@ -58,6 +58,8 @@ mesh_t* update_mesh(entity_door_t* door) {
 			}
 		}
 	}
+	
+	PANIC_IF("Door entity could not find mesh!", mesh == NULL);
 	return mesh;
 }
 

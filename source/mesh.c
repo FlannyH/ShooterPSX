@@ -211,6 +211,10 @@ collision_mesh_t* model_load_collision(const char* path, int on_stack, stack_t s
 }
 
 aabb_t triangle_get_bounds(const triangle_3d_t* self) {
+#ifdef _DEBUG
+    if (!self) return;
+#endif
+
     aabb_t result;
     result.min = vec3_min(
         vec3_min(
@@ -230,6 +234,10 @@ aabb_t triangle_get_bounds(const triangle_3d_t* self) {
 }
 
 aabb_t collision_triangle_get_bounds(const collision_triangle_3d_t* self) {
+#ifdef _DEBUG
+    if (!self) return;
+#endif
+
     aabb_t result;
     result.min = vec3_min(
         vec3_min(

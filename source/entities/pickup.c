@@ -32,6 +32,8 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
             case PICKUP_TYPE_KEY_BLUE:     pickup->entity_header.mesh = model_find_mesh(entity_models, "14_pickup_key_blue");     break;
             case PICKUP_TYPE_KEY_YELLOW:   pickup->entity_header.mesh = model_find_mesh(entity_models, "15_pickup_key_yellow");   break;
         }
+
+    PANIC_IF("Pickup entity could not find mesh!", pickup->entity_header.mesh == NULL);
     }
 
     // Rotate

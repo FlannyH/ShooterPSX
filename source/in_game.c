@@ -262,6 +262,8 @@ void state_update_in_game(int dt) {
 	}
 
 	// We render the player's weapons last, because we need the view matrices to be reset
+	PANIC_IF("trying to render non-existent weapon meshes!", (state.in_game.m_weapons == NULL) || (state.in_game.m_weapons->meshes == NULL ) || (state.in_game.m_weapons->n_meshes < 2));
+
 	renderer_set_depth_bias(DEPTH_BIAS_VIEWMODELS);
 	if (state.in_game.player.has_gun || 1) {
 		transform_t gun_transform;
