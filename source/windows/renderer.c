@@ -243,7 +243,6 @@ GLuint shader_from_file(char *vert_path, char *frag_path) {
 void renderer_init(void) {
 	// Create OpenGL window
 	glfwInit();
-	glfwWindowHint(GLFW_REFRESH_RATE, 15);
 	window = glfwCreateWindow(320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, "ShooterPSX", NULL, NULL);
 	if (window == NULL) {
 		printf("[ERROR] Could not open OpenGL window! Aborting.");
