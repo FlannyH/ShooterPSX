@@ -137,7 +137,7 @@ all: submodules tools assets windows level_editor psx nds
 windows: DEFINES = _WINDOWS
 windows: LIBRARIES = glfw3 stdc++ 
 ifeq ($(OS),Windows_NT)
-	windows: LIBRARIES += gdi32 opengl32
+windows: LIBRARIES += gdi32 opengl32
 endif
 # ifeq ($(OS),Windows_NT)
 # 	windows: LIBRARIES += gdi32 opengl32
@@ -399,10 +399,7 @@ psx_vislist_generator:
 psx_soundfont_generator:
 	@mkdir -p $(PATH_TOOLS_BIN)
 	@echo Building $@
-	@mkdir -p $(PATH_TEMP)/psx_soundfont_generator
-	@cmake -S tools/psx_soundfont_generator -B $(PATH_TEMP)/psx_soundfont_generator
-	@make -C $(PATH_TEMP)/psx_soundfont_generator
-	@cp tools/psx_soundfont_generator/output/psx_soundfont_generator$(EXE_EXT) $(PATH_TOOLS_BIN)
+	@make -C tools/psx_soundfont_generator TARGET_DIR=$(PATH_TOOLS_BIN)
 
 tools: obj2psx midi2psx psx_vislist_generator psx_soundfont_generator
 
