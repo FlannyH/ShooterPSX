@@ -36,6 +36,7 @@ PATH_ASSETS_TO_BUILD = assets_to_build
 PATH_TEMP = temp
 PATH_BUILD = build
 PATH_ASSETS = assets
+PATH_TOOLS_BIN = tools/bin/
 
 PATH_TEMP_PSX = 		  $(PATH_TEMP)/psx
 PATH_TEMP_WIN = 		  $(PATH_TEMP)/windows
@@ -133,8 +134,14 @@ CXXFLAGS = -Wall -Wextra -std=c++20 -Wno-unused-function -Wno-unused-variable -W
 all: submodules tools assets windows level_editor psx nds 
 
 # Windows target
-windows: DEFINES = _WINDOWS _WIN32
-windows: LIBRARIES = glfw3 stdc++ gdi32 opengl32
+windows: DEFINES = _WINDOWS
+windows: LIBRARIES = glfw3 stdc++ 
+ifeq ($(OS),Windows_NT)
+	windows: LIBRARIES += gdi32 opengl32
+endif
+# ifeq ($(OS),Windows_NT)
+# 	windows: LIBRARIES += gdi32 opengl32
+# endif
 windows: CC = gcc
 windows: CXX = g++
 windows: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -g
@@ -177,7 +184,7 @@ windows_dependencies: submodules glfw gl3w imgui imguizmo
 
 glfw:
 	mkdir -p $(PATH_LIB_WIN)/glfw
-	@cmake -S external/glfw -B $(PATH_LIB_WIN)/glfw -G "MSYS Makefiles"
+	@cmake -S external/glfw -B $(PATH_LIB_WIN)/glfw
 	make -C $(PATH_LIB_WIN)/glfw glfw
 	cp $(PATH_LIB_WIN)/glfw/src/libglfw3.a $(PATH_LIB_WIN)
 
@@ -185,7 +192,7 @@ OBJ_WIN += $(PATH_LIB_WIN)/gl3w.o
 OBJ_LEVEL_EDITOR += $(PATH_LIB_WIN)/gl3w.o
 gl3w:
 	mkdir -p $(PATH_LIB_WIN)/gl3w
-	@cmake -S external/gl3w -B $(PATH_LIB_WIN)/gl3w -G "MSYS Makefiles"
+	@cmake -S external/gl3w -B $(PATH_LIB_WIN)/gl3w
 	make -C $(PATH_LIB_WIN)/gl3w 
 	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $(PATH_LIB_WIN)/gl3w/src/gl3w.c -o $(PATH_LIB_WIN)/gl3w.o
 
@@ -372,26 +379,30 @@ $(PATH_BUILD_NDS)/$(PROJECT_NAME).nds: $(PATH_TEMP_NDS)/$(PROJECT_NAME).elf
 nds: tools assets $(PATH_BUILD_NDS)/$(PROJECT_NAME).nds
 
 obj2psx:
+	@mkdir -p $(PATH_TOOLS_BIN)
 	@echo Building $@
 	@cargo build --release --manifest-path=tools/obj2psx/Cargo.toml
-	@cp tools/obj2psx/target/release/deps/obj2psx$(EXE_EXT) tools/
+	@cp tools/obj2psx/target/release/obj2psx$(EXE_EXT) $(PATH_TOOLS_BIN)
 
 midi2psx:
+	@mkdir -p $(PATH_TOOLS_BIN)
 	@echo Building $@
 	@cargo build --release --manifest-path=tools/midi2psx/Cargo.toml
-	@cp tools/midi2psx/target/release/deps/midi2psx$(EXE_EXT) tools/
+	@cp tools/midi2psx/target/release/midi2psx$(EXE_EXT) $(PATH_TOOLS_BIN)
 
 psx_vislist_generator:
+	@mkdir -p $(PATH_TOOLS_BIN)
 	@echo Building $@
 	@cargo build --release --manifest-path=tools/psx_vislist_generator/Cargo.toml
-	@cp tools/psx_vislist_generator/target/release/deps/psx_vislist_generator$(EXE_EXT) tools/
+	@cp tools/psx_vislist_generator/target/release/psx_vislist_generator$(EXE_EXT) $(PATH_TOOLS_BIN)
 
 psx_soundfont_generator:
+	@mkdir -p $(PATH_TOOLS_BIN)
 	@echo Building $@
 	@mkdir -p $(PATH_TEMP)/psx_soundfont_generator
-	@cmake -S tools/psx_soundfont_generator -B $(PATH_TEMP)/psx_soundfont_generator -G "MSYS Makefiles"
+	@cmake -S tools/psx_soundfont_generator -B $(PATH_TEMP)/psx_soundfont_generator
 	@make -C $(PATH_TEMP)/psx_soundfont_generator
-	@cp tools/psx_soundfont_generator/output/psx_soundfont_generator$(EXE_EXT) tools/
+	@cp tools/psx_soundfont_generator/output/psx_soundfont_generator$(EXE_EXT) $(PATH_TOOLS_BIN)
 
 tools: obj2psx midi2psx psx_vislist_generator psx_soundfont_generator
 
@@ -455,40 +466,40 @@ $(PATH_ASSETS)/levels/%.lvl: $(PATH_ASSETS_TO_BUILD)/levels/%.lvl
 $(PATH_ASSETS)/models/%.vis: $(PATH_ASSETS_TO_BUILD)/models/%.obj
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@tools/obj2psx$(EXE_EXT) --input $< --output $(basename $@) --split
+	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $(basename $@) --split
 	@echo Compiling vislist $<
-	@tools/psx_vislist_generator$(EXE_EXT) $(basename $@).msh $(basename $@).col $@
+	@$(PATH_TOOLS_BIN)/psx_vislist_generator$(EXE_EXT) $(basename $@).msh $(basename $@).col $@
 
 # Collision model
 $(PATH_ASSETS)/models/%.col: $(PATH_ASSETS_TO_BUILD)/models/%_col.obj
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@tools/obj2psx$(EXE_EXT) --input $< --output $(basename $@) --collision
+	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $(basename $@) --collision
 
 # Any other model, like weapon models or entity models
 $(PATH_ASSETS)/models/%.msh: $(PATH_ASSETS_TO_BUILD)/models/%.obj
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@tools/obj2psx$(EXE_EXT) --input $< --output $(basename $@)
+	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $(basename $@)
 $(PATH_ASSETS)/models/%.txc: $(PATH_ASSETS)/models/%.msh
 
 # UI textures
 $(PATH_ASSETS)/models/ui_tex/%.txc: $(PATH_ASSETS_TO_BUILD)/models/ui_tex/%.png
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@tools/obj2psx$(EXE_EXT) --input $< --output $@
+	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $@
 
 # Soundbank
 $(PATH_ASSETS)/music/%.sbk: $(PATH_ASSETS_TO_BUILD)/music/%.csv
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@tools/psx_soundfont_generator$(EXE_EXT) $< $@
+	@$(PATH_TOOLS_BIN)/psx_soundfont_generator$(EXE_EXT) $< $@
 
 # Music sequences
 $(PATH_ASSETS)/music/sequence/%.dss: $(PATH_ASSETS_TO_BUILD)/music/sequence/%.mid
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@tools/midi2psx$(EXE_EXT) $< $@
+	@$(PATH_TOOLS_BIN)/midi2psx$(EXE_EXT) $< $@
 
 assets: $(COMPILED_ASSET_LIST)
 

@@ -50,7 +50,7 @@ static void warn_if(const char* error_if_false, const int condition, const int l
 #define WARN_IF(error_if_false, condition) (warn_if(error_if_false, condition, __LINE__, __FILE__))
 #define PANIC_IF(error_if_false, condition) (panic_if(error_if_false, condition, __LINE__, __FILE__))
 
-#ifdef _WIN32
+#ifdef _WINDOWS
     #define PROFILE(name, function, timer) function
 #elif defined(_NDS)
     #define PROFILE(name, function, timer) function

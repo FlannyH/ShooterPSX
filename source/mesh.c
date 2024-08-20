@@ -77,7 +77,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack) {
         model->meshes[i].bounds.max.z = mesh_descriptions[i].z_max;
         model->meshes[i].name = string;
 
-#ifdef _WIN32
+#ifdef _WINDOWS
         // Convert quads to triangles
         mesh_t* mesh = &model->meshes[i];
         vertex_3d_t* new_verts = mem_alloc(((mesh->n_triangles * 3) + (mesh->n_quads * 6)) * sizeof(vertex_3d_t), MEM_CAT_MODEL);
@@ -211,9 +211,7 @@ collision_mesh_t* model_load_collision(const char* path, int on_stack, stack_t s
 }
 
 aabb_t triangle_get_bounds(const triangle_3d_t* self) {
-#ifdef _DEBUG
-    if (!self) return;
-#endif
+    PANIC_IF("Trying to get triangle bounds from nullptr!", self == NULL);
 
     aabb_t result;
     result.min = vec3_min(
@@ -234,9 +232,7 @@ aabb_t triangle_get_bounds(const triangle_3d_t* self) {
 }
 
 aabb_t collision_triangle_get_bounds(const collision_triangle_3d_t* self) {
-#ifdef _DEBUG
-    if (!self) return;
-#endif
+    PANIC_IF("Trying to get triangle bounds from nullptr!", self == NULL);
 
     aabb_t result;
     result.min = vec3_min(
