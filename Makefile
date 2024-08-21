@@ -517,10 +517,10 @@ clean:
 	rm -rf $(PATH_TEMP)
 	rm -rf $(PATH_BUILD)
 	rm -rf $(PATH_ASSETS)
-	rm -f tools/midi2psx$(EXE_EXT)
-	rm -f tools/obj2psx$(EXE_EXT)
-	rm -f tools/psx_soundfont_generator$(EXE_EXT)
-	rm -f tools/psx_vislist_generator$(EXE_EXT)
+	rm -f $(PATH_TOOLS_BIN)/midi2psx$(EXE_EXT)
+	rm -f $(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT)
+	rm -f $(PATH_TOOLS_BIN)/psx_soundfont_generator$(EXE_EXT)
+	rm -f $(PATH_TOOLS_BIN)/psx_vislist_generator$(EXE_EXT)
 	cargo clean --manifest-path=tools/obj2psx/Cargo.toml
 	cargo clean --manifest-path=tools/midi2psx/Cargo.toml
 	cargo clean --manifest-path=tools/psx_vislist_generator/Cargo.toml
