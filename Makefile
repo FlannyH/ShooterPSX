@@ -21,10 +21,13 @@ endif
 # Find BlocksDS for NDS target
 ifeq ($(BLOCKSDS),)
 	ifneq ($(wildcard C:/msys64/opt/wonderful/thirdparty/blocksds/core)),)
-		BLOCKSDS = C:/msys64/opt/wonderful/thirdparty/blocksds/core
+		BLOCKSDS := C:/msys64/opt/wonderful/thirdparty/blocksds/core
 	endif
 	ifneq ($(wildcard /opt/wonderful/thirdparty/blocksds/core)),)
-		BLOCKSDS = /opt/wonderful/thirdparty/blocksds/core
+		BLOCKSDS := /opt/wonderful/thirdparty/blocksds/core
+	endif
+	ifneq ($(wildcard /opt/blocksds/core)),)
+		BLOCKSDS := /opt/blocksds/core
 	endif
 endif
 
