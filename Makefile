@@ -182,19 +182,27 @@ submodules:
 	
 windows_dependencies: submodules glfw gl3w imgui imguizmo
 
+GLFW_LIB_PATHS = $(PATH_LIB_WIN)/glfw/src/libglfw3.a \
+				 $(PATH_LIB_WIN)/glfw/src/glfw3.lib \
+				 $(PATH_LIB_WIN)/glfw/src/Debug/glfw3.lib \
+				 $(PATH_LIB_WIN)/glfw/src/Release/glfw3.lib \
+
+# Build glfw - using Unix Makefiles generator because we're already using Make anyway
 glfw:
 	mkdir -p $(PATH_LIB_WIN)/glfw
-	@cmake -S external/glfw -B $(PATH_LIB_WIN)/glfw
-	make -C $(PATH_LIB_WIN)/glfw glfw
+	@cmake -S external/glfw -B $(PATH_LIB_WIN)/glfw -G "Unix Makefiles"
+	@cmake --build $(PATH_LIB_WIN)/glfw --target glfw
 	cp $(PATH_LIB_WIN)/glfw/src/libglfw3.a $(PATH_LIB_WIN)
+	@echo Could not find compiled glfw library!
+
 
 OBJ_WIN += $(PATH_LIB_WIN)/gl3w.o
 OBJ_LEVEL_EDITOR += $(PATH_LIB_WIN)/gl3w.o
 gl3w:
 	mkdir -p $(PATH_LIB_WIN)/gl3w
-	@cmake -S external/gl3w -B $(PATH_LIB_WIN)/gl3w
-	make -C $(PATH_LIB_WIN)/gl3w 
-	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $(PATH_LIB_WIN)/gl3w/src/gl3w.c -o $(PATH_LIB_WIN)/gl3w.o
+	@cmake -S external/gl3w -B $(PATH_LIB_WIN)/gl3w -G "Unix Makefiles"
+	@cmake --build $(PATH_LIB_WIN)/gl3w
+	$(CC) -std=c11 -I$(PATH_LIB_WIN)/gl3w/include -c $(PATH_LIB_WIN)/gl3w/src/gl3w.c -o $(PATH_LIB_WIN)/gl3w.o
 
 # Define the base directories
 IMGUI_SRC_DIR = external/imgui
@@ -399,7 +407,7 @@ psx_vislist_generator:
 psx_soundfont_generator:
 	@mkdir -p $(PATH_TOOLS_BIN)
 	@echo Building $@
-	@make -C tools/psx_soundfont_generator TARGET_DIR=$(PATH_TOOLS_BIN)
+	@make -C tools/psx_soundfont_generator TARGET_DIR=../../$(PATH_TOOLS_BIN)
 
 tools: obj2psx midi2psx psx_vislist_generator psx_soundfont_generator
 
