@@ -13,7 +13,7 @@ ifeq ($(GCC_ARM_NONE_EABI_PATH),)
 	ifneq ($(wildcard /opt/wonderful/toolchain/gcc-arm-none-eabi),)
 		GCC_ARM_NONE_EABI_PATH = /opt/wonderful/toolchain/gcc-arm-none-eabi
 	endif
-	ifneq ($(wildcard C:/msys64/opt/wonderful/toolchain/gcc-arm-none-eabi)),)
+	ifneq ($(wildcard C:/msys64/opt/wonderful/toolchain/gcc-arm-none-eabi),)
 		GCC_ARM_NONE_EABI_PATH = C:/msys64/opt/wonderful/toolchain/gcc-arm-none-eabi
 	endif
 endif
