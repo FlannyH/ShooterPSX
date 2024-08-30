@@ -75,6 +75,7 @@ extern int primitive_occupation;
 extern int tex_level_start;
 extern int tex_entity_start;
 extern int tex_weapon_start;
+extern int tex_alloc_cursor;
 extern int vsync_enable;
 extern int is_pal;
 extern int res_x;

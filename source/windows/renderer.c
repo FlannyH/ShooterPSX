@@ -50,6 +50,7 @@ int vsync_enable = 0; // 0 = unlocked, 1 = 60 fps or 50 fps, 2 = 30 fps or 25 fp
 int tex_entity_start = 0;
 int tex_weapon_start = 0;
 int tex_level_start = 0;
+int tex_alloc_cursor = 0;
 int res_x = 512; // Pretend it's the same as PSX
 
 #ifdef _LEVEL_EDITOR

@@ -9,6 +9,7 @@ vec3_t camera_dir;
 int tex_level_start = 0;
 int tex_entity_start = 0;
 int tex_weapon_start = 0;
+int tex_alloc_cursor = 0;
 int res_x = 256;
 int vsync_enable = 1;
 int is_pal = 0;

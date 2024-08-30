@@ -395,7 +395,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
             // Load level textures
             texture_cpu_t* tex_level;
-            tex_level_start = 0;
+            tex_level_start = tex_alloc_cursor;
             const uint32_t n_level_textures = texture_collection_load(path_texture, &tex_level, 1, STACK_TEMP);
             for (uint8_t i = 0; i < n_level_textures; ++i) {
                 renderer_upload_texture(&tex_level[i], i + tex_level_start);

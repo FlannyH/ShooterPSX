@@ -41,6 +41,7 @@ void state_enter_in_game(void) {
 
 	state.title_screen.assets_in_memory = 0;
 
+	tex_alloc_cursor = 0;
 	state.in_game.level = level_load(state.in_game.level_load_path);
 	state.in_game.player.position = vec3_from_svec3(state.in_game.level.player_spawn_position);
 	state.in_game.player.rotation = state.in_game.level.player_spawn_rotation;
@@ -55,11 +56,12 @@ void state_enter_in_game(void) {
 
 	// Load weapon textures
 	texture_cpu_t *weapon_textures;
-    tex_weapon_start = tex_entity_start + n_entity_textures;
+    tex_weapon_start = tex_alloc_cursor;
 	const uint32_t n_weapon_textures = texture_collection_load("\\assets\\models\\weapons.txc", &weapon_textures, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_weapon_textures; ++i) {
 	    renderer_upload_texture(&weapon_textures[i], i + tex_weapon_start);
 	}
+	tex_alloc_cursor += n_weapon_textures;
 	mem_stack_release(STACK_TEMP);
 	
 	// Load weapon models

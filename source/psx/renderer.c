@@ -55,6 +55,7 @@ int primitive_occupation = 0;
 int tex_level_start = 0;
 int tex_entity_start = 0;
 int tex_weapon_start = 0;
+int tex_alloc_cursor = 0;
 
 // Textures
 pixel32_t textures_avg_colors[256];

@@ -49,11 +49,12 @@ level_t level_load(const char* level_path) {
 
     // Load level textures
 	texture_cpu_t *tex_level;
-    tex_level_start = 0;
+    tex_level_start = tex_alloc_cursor;
 	const uint32_t n_level_textures = texture_collection_load(path_textures, &tex_level, 1, STACK_TEMP);
     for (uint8_t i = 0; i < n_level_textures; ++i) {
 	    renderer_upload_texture(&tex_level[i], i + tex_level_start);
 	}
+	tex_alloc_cursor += n_level_textures;
     mem_stack_reset_to_marker(STACK_TEMP, marker);
 
     level_t level = (level_t) {
