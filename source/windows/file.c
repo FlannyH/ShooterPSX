@@ -51,5 +51,6 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
     // Read the data
     fread(*destination, sizeof(char), *size, file);
     printf("[INFO] Loaded file %s\n", new_path);
+    fclose(file);
     return 1;
 }
