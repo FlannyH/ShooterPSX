@@ -10,7 +10,7 @@ https://github.com/FlannyH/ShooterPSX/assets/60531875/5cb85d24-7a6c-44a8-9a6b-af
 4. Navigate to folder `build/windows/` and open SubNivis executable
 
 ### PlayStation 1
-1. Install Rust compiler and install make
+1. Install Rust compiler and install `make`
 2. [Install PSn00bSDK](https://github.com/Lameguy64/PSn00bSDK/blob/master/doc/installation.md) and make sure you do set `PSN00BSDK_LIBS` environment variable to the `psn00bsdk/lib/libpsn00b/` folder, as described in the PSn00bSDK wiki.
 3. Rip the license data file from any PS1 game you own, and save it to the repository's root folder as `license_data.dat`
 4. Open command prompt and type `make psx`
