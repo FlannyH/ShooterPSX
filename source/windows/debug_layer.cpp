@@ -192,11 +192,44 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     static bool render_level_collision = false;
     static bool render_level_bvh = false;
     static bool render_level_nav_graph = false;
+    static bool render_level_vislist_regions = false;
+    static int render_level_bvh_start_depth = 0;
+    static int render_level_bvh_end_depth = 6;
     
     if (render_level_graphics) renderer_draw_model_shaded(curr_level->graphics, &curr_level->transform, NULL, 0);
     if (render_level_collision) renderer_draw_model_shaded(curr_level->collision_mesh_debug, &id_transform, NULL, 0);
-    if (render_level_bvh) bvh_debug_draw(&curr_level->collision_bvh, 0, 128, (pixel32_t){ .r = 160, .g = 240, .b = 80, .a = 255 });
+    if (render_level_bvh) bvh_debug_draw(&curr_level->collision_bvh, render_level_bvh_start_depth, render_level_bvh_end_depth, (pixel32_t){ .r = 160, .g = 240, .b = 80, .a = 255 });
     if (render_level_nav_graph) bvh_debug_draw_nav_graph(&curr_level->collision_bvh);
+    if (render_level_vislist_regions) {
+        uint32_t node_stack[2048] = {0};
+        uint32_t node_handle_ptr = 0;
+        uint32_t node_add_ptr = 1;
+        // printf("draw");
+        while (node_handle_ptr != node_add_ptr) {
+            // check a node
+            visbvh_node_t* node = &curr_level->vislist.bvh_root[node_stack[node_handle_ptr]];
+            
+            aabb_t aabb;
+            aabb.min = vec3_shift_right(vec3_from_svec3(node->min), 3);
+            aabb.max = vec3_shift_right(vec3_from_svec3(node->max), 3);
+            
+            // If the node is an interior node
+            if ((node->child_or_vis_index & 0x80000000) == 0) {
+                // Add the 2 children to the stack
+                node_stack[node_add_ptr] = node->child_or_vis_index;
+                node_add_ptr = (node_add_ptr + 1) % 2048;
+                node_stack[node_add_ptr] = node->child_or_vis_index + 1;
+                node_add_ptr = (node_add_ptr + 1) % 2048;
+            }
+            else {
+                // Draw
+                const static transform_t trans = { {0,0,0},{0,0,0}, {4096, 4096, 4096} };
+                renderer_debug_draw_aabb(&aabb, green, &trans);
+            }
+
+            node_handle_ptr = (node_handle_ptr + 1) % 2048;
+        }
+    }
 
 
     if (!initialized) {
@@ -429,7 +462,10 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         if (ImGui::TreeNodeEx("Debug Render Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
             ImGui::Checkbox("Render level graphics", &render_level_graphics);
             ImGui::Checkbox("Render level collision", &render_level_collision);
-            ImGui::Checkbox("Render Level BVH", &render_level_bvh);
+            ImGui::Checkbox("Render level BVH", &render_level_bvh);
+            ImGui::DragInt("Min level", &render_level_bvh_start_depth);
+            ImGui::DragInt("Max level", &render_level_bvh_end_depth);
+            ImGui::Checkbox("Render level vislist regions", &render_level_vislist_regions);
             ImGui::Checkbox("Render Level navgraph", &render_level_nav_graph);
             ImGui::TreePop();
         }
