@@ -401,7 +401,7 @@ static inline void subdivide_once_then_add_tex_triangle(const vertex_3d_t* verts
     gte_stotz(&avg_z_5324);
     add_tex_triangle(trans_vec_xy[0], trans_vec_xy[3], trans_vec_xy[5], verts[0], ab, ca, avg_z_035, verts[0].tex_id + tex_id_start, 0);
     add_tex_triangle(trans_vec_xy[3], trans_vec_xy[1], trans_vec_xy[4], ab, verts[1], bc, avg_z_314, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[5], trans_vec_xy[3], trans_vec_xy[2], trans_vec_xy[4], ca, ab, bc, verts[2], avg_z_5324, verts[0].tex_id + tex_id_start, 0);
+    add_tex_quad(trans_vec_xy[5], trans_vec_xy[3], trans_vec_xy[2], trans_vec_xy[4], ca, ab, verts[2], bc, avg_z_5324, verts[0].tex_id + tex_id_start, 0);
 
     // Filler triangles
     scalar_t max_z = trans_vec_z[0];
