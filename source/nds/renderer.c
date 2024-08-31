@@ -106,7 +106,8 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_tran
     glBegin(GL_TRIANGLES);
     for (size_t i = 0; i < mesh->n_triangles; ++i) {
         uint8_t tex_id = mesh->vertices[vert_idx].tex_id;
-        if (tex_id != 255 && tex_id != 254) glBindTexture(0, textures[(int)tex_id + tex_id_offset]);
+        if (tex_id == 254) continue;
+        if (tex_id != 255) glBindTexture(0, textures[(int)tex_id + tex_id_offset]);
         else glBindTexture(0, 0);
         const vertex_3d_t v0 = mesh->vertices[vert_idx];
         const vertex_3d_t v1 = mesh->vertices[vert_idx + 2];
@@ -129,7 +130,8 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_tran
     glBegin(GL_QUADS);
     for (size_t i = 0; i < mesh->n_quads; ++i) {
         uint8_t tex_id = mesh->vertices[vert_idx].tex_id;
-        if (tex_id != 255 && tex_id != 254) glBindTexture(0, textures[(int)tex_id + tex_id_offset]);
+        if (tex_id == 254) continue;
+        if (tex_id != 255) glBindTexture(0, textures[(int)tex_id + tex_id_offset]);
         else glBindTexture(0, 0);
         const vertex_3d_t v0 = mesh->vertices[vert_idx];
         const vertex_3d_t v1 = mesh->vertices[vert_idx + 1];
