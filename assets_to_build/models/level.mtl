@@ -1,15 +1,5 @@
-# Blender 4.1.1 MTL File: 'level.blend'
+# Blender 4.2.1 LTS MTL File: 'level.blend'
 # www.blender.org
-
-newmtl black
-Ns 250.000000
-Ka 1.000000 1.000000 1.000000
-Ks 0.500000 0.500000 0.500000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 2
-map_Kd level_tex/black.png
 
 newmtl blue_concrete
 Ns 0.000000
@@ -160,6 +150,16 @@ Ni 1.450000
 d 1.000000
 illum 1
 map_Kd level_tex/grid_wall.png
+
+newmtl occluder
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd level_tex/black.png
 
 newmtl orange_tech
 Ns 250.000000
