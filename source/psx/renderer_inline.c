@@ -416,6 +416,9 @@ static inline void subdivide_once_then_add_tex_triangle(const vertex_3d_t* verts
 
 // Transform and add to queue a textured, shaded triangle, with automatic subdivision based on size, fading to solid color in the distance.
 static inline void draw_tex_triangle3d_fancy(const vertex_3d_t* verts) {
+    // If this is an occluder, don't render it
+    if (verts[0].tex_id == 254) return;
+    
     // Transform the first 3 vertices
     struct scratchpad {
         svec2_t trans_vec_xy[15];
@@ -497,6 +500,9 @@ static inline void draw_tex_triangle3d_fancy(const vertex_3d_t* verts) {
 
 // Transform and add to queue a textured, shaded triangle, ignoring the fading and subdivision
 static inline void draw_tex_triangle3d_fast(const vertex_3d_t* verts) {
+    // If this is an occluder, don't render it
+    if (verts[0].tex_id == 254) return;
+
     // Transform the 3 vertices
     gte_ldv3(
         &verts[0],
@@ -768,6 +774,9 @@ static inline void subdivide_once_then_add_tex_quad(const vertex_3d_t* verts, sv
 
 // Transform and add to queue a textured, shaded quad, with automatic subdivision based on size, fading to solid color in the distance.
 static inline void draw_tex_quad3d_fancy(const vertex_3d_t* verts) {
+    // If this is an occluder, don't render it
+    if (verts[0].tex_id == 254) return;
+
     // Transform the first 3 vertices
     struct scratchpad {
         svec2_t trans_vec_xy[25];
@@ -852,6 +861,9 @@ static inline void draw_tex_quad3d_fancy(const vertex_3d_t* verts) {
 
 // Transform and add to queue a textured, shaded quad, ignoring the fading and subdivision
 static inline void draw_tex_quad3d_fast(const vertex_3d_t* verts) {
+    // If this is an occluder, don't render it
+    if (verts[0].tex_id == 254) return;
+
     // Transform the first 3 vertices
     svec2_t trans_vec_xy[4];
     scalar_t trans_vec_z[4];
