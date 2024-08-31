@@ -390,7 +390,7 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 	glm_translate(view_matrix_normal, position);
 
     // Set view matrix for top down debug
-    vec3 top_down_position = { position[0], 3000, position[2] };
+    vec3 top_down_position = { position[0], position[1] + 12000, position[2] };
     glm_mat4_identity(view_matrix_topdown);
     glm_rotate_x(view_matrix_topdown, PI / 2.0f, view_matrix_topdown);
     glm_rotate_z(view_matrix_topdown, PI, view_matrix_topdown);
