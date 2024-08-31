@@ -18,8 +18,8 @@ void main()
 
     if (texture_is_page == 0) {
         vec2 texture_offset = vec2(
-	        (floor((out_texture / 4) + 0.1f) * 64), 
-	        (mod(floor(out_texture + 0.1), 4) * 64)
+            (floor((out_texture / 4) + 0.1f) * 64), 
+            (mod(floor(out_texture + 0.1), 4) * 64)
         );
         pixel_coord = texture_offset + (out_texcoord / vec2(4.0f));
     } 
@@ -29,7 +29,10 @@ void main()
             256.0 + out_texcoord.y
         );
     }
-	frag_color = vec4(out_color, alpha) * (texture_bound == 1 ? texture(tex, vec2(pixel_coord / vec2(2048.0f, 512.0f))) : vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    frag_color = vec4(out_color, alpha);
+    if (texture_bound == 1 && (abs(out_texture - 255.f) > 0.5f)) {
+        frag_color *= texture(tex, vec2(pixel_coord / vec2(2048.0f, 512.0f)));
+    } 
     if (frag_color.a < 0.001f) {
         discard;
     }
