@@ -358,17 +358,15 @@ static inline void subdivide_twice_then_add_tex_triangle(const vertex_3d_t* vert
     if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2]; 
     max_z >>= 2;
     
-    if (((max_z + curr_ot_bias + 1) < ORD_TBL_LENGTH) && max_z >= sub2_threshold) {
-        add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[3], vtx0, vtx1, vtx3, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[0], trans_vec_xy[3], trans_vec_xy[6], vtx0, vtx3, vtx6, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[3], trans_vec_xy[1], trans_vec_xy[7], vtx3, vtx1, vtx7, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[4], vtx1, vtx2, vtx4, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[1], trans_vec_xy[4], trans_vec_xy[8], vtx1, vtx4, vtx8, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[4], trans_vec_xy[2], trans_vec_xy[9], vtx4, vtx2, vtx9, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[0], trans_vec_xy[2], trans_vec_xy[5], vtx0, vtx2, vtx5, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[0], trans_vec_xy[5], trans_vec_xy[11], vtx0, vtx5, vtx11, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[5], trans_vec_xy[2], trans_vec_xy[10], vtx5, vtx2, vtx10, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    }
+    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[3], vtx0, vtx1, vtx3, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[3], trans_vec_xy[6], vtx0, vtx3, vtx6, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[3], trans_vec_xy[1], trans_vec_xy[7], vtx3, vtx1, vtx7, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[4], vtx1, vtx2, vtx4, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[1], trans_vec_xy[4], trans_vec_xy[8], vtx1, vtx4, vtx8, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[4], trans_vec_xy[2], trans_vec_xy[9], vtx4, vtx2, vtx9, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[2], trans_vec_xy[5], vtx0, vtx2, vtx5, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[5], trans_vec_xy[11], vtx0, vtx5, vtx11, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[5], trans_vec_xy[2], trans_vec_xy[10], vtx5, vtx2, vtx10, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
 
     #undef vtx0
     #undef vtx1
@@ -411,11 +409,9 @@ static inline void subdivide_once_then_add_tex_triangle(const vertex_3d_t* verts
     if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2]; 
     max_z >>= 2;
 
-    if (((max_z + curr_ot_bias + 1) < ORD_TBL_LENGTH) && max_z >= sub1_threshold) {
-        add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[3], verts[0], verts[1], ab, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[4], verts[1], verts[2], bc, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[2], trans_vec_xy[0], trans_vec_xy[5], verts[2], verts[0], ca, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    }
+    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[3], verts[0], verts[1], ab, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[4], verts[1], verts[2], bc, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[2], trans_vec_xy[0], trans_vec_xy[5], verts[2], verts[0], ca, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
 }
 
 // Transform and add to queue a textured, shaded triangle, with automatic subdivision based on size, fading to solid color in the distance.
@@ -693,20 +689,18 @@ static inline void subdivide_twice_then_add_tex_quad(const vertex_3d_t* verts, s
     if (trans_vec_z[3] > max_z) max_z = trans_vec_z[3];
     max_z >>= 2;
 
-    if (((max_z + curr_ot_bias + 1) < ORD_TBL_LENGTH) && max_z >= sub2_threshold) {
-        add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[4], vtx0, vtx1, vtx4, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[0], trans_vec_xy[4], trans_vec_xy[9], vtx0, vtx4, vtx9, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[4], trans_vec_xy[1], trans_vec_xy[10], vtx4, vtx1, vtx10, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[1], trans_vec_xy[3], trans_vec_xy[8], vtx1, vtx3, vtx8, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[1], trans_vec_xy[8], trans_vec_xy[19], vtx1, vtx8, vtx19, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[8], trans_vec_xy[3], trans_vec_xy[24], vtx8, vtx3, vtx24, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[3], trans_vec_xy[2], trans_vec_xy[5], vtx3, vtx2, vtx5, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[3], trans_vec_xy[5], trans_vec_xy[14], vtx3, vtx5, vtx14, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[5], trans_vec_xy[2], trans_vec_xy[13], vtx5, vtx2, vtx13, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[2], trans_vec_xy[0], trans_vec_xy[7], vtx2, vtx0, vtx7, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[2], trans_vec_xy[7], trans_vec_xy[20], vtx2, vtx7, vtx20, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[7], trans_vec_xy[0], trans_vec_xy[15], vtx7, vtx0, vtx15, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    }
+    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[4], vtx0, vtx1, vtx4, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[4], trans_vec_xy[9], vtx0, vtx4, vtx9, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[4], trans_vec_xy[1], trans_vec_xy[10], vtx4, vtx1, vtx10, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[1], trans_vec_xy[3], trans_vec_xy[8], vtx1, vtx3, vtx8, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[1], trans_vec_xy[8], trans_vec_xy[19], vtx1, vtx8, vtx19, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[8], trans_vec_xy[3], trans_vec_xy[24], vtx8, vtx3, vtx24, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[3], trans_vec_xy[2], trans_vec_xy[5], vtx3, vtx2, vtx5, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[3], trans_vec_xy[5], trans_vec_xy[14], vtx3, vtx5, vtx14, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[5], trans_vec_xy[2], trans_vec_xy[13], vtx5, vtx2, vtx13, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[2], trans_vec_xy[0], trans_vec_xy[7], vtx2, vtx0, vtx7, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[2], trans_vec_xy[7], trans_vec_xy[20], vtx2, vtx7, vtx20, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[7], trans_vec_xy[0], trans_vec_xy[15], vtx7, vtx0, vtx15, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
 
     #undef vtx0
     #undef vtx1
@@ -764,12 +758,10 @@ static inline void subdivide_once_then_add_tex_quad(const vertex_3d_t* verts, sv
     if (trans_vec_z[3] > max_z) max_z = trans_vec_z[3];
     max_z >>= 2;
 
-    if (((max_z + curr_ot_bias + 1) < ORD_TBL_LENGTH) && max_z >= sub1_threshold) {
-        add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[4], verts[0], verts[1], ab, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[1], trans_vec_xy[3], trans_vec_xy[5], verts[1], verts[3], bc, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[3], trans_vec_xy[2], trans_vec_xy[6], verts[3], verts[2], cd, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-        add_tex_triangle(trans_vec_xy[2], trans_vec_xy[0], trans_vec_xy[7], verts[2], verts[0], da, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    }
+    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[4], verts[0], verts[1], ab, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[1], trans_vec_xy[3], trans_vec_xy[5], verts[1], verts[3], bc, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[3], trans_vec_xy[2], trans_vec_xy[6], verts[3], verts[2], cd, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    add_tex_triangle(trans_vec_xy[2], trans_vec_xy[0], trans_vec_xy[7], verts[2], verts[0], da, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
 
     return;
 }
