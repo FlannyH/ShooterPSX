@@ -390,10 +390,10 @@ static inline void subdivide_once_then_add_tex_triangle(const vertex_3d_t* verts
     int avg_z_035;
     int avg_z_314;
     int avg_z_5324;
-    gte_ldsz3(trans_vec_z[10], trans_vec_z[3], trans_vec_z[5]);
+    gte_ldsz3(trans_vec_z[0], trans_vec_z[3], trans_vec_z[5]);
     gte_avsz3();
     gte_stotz(&avg_z_035);
-    gte_ldsz3(trans_vec_z[0], trans_vec_z[3], trans_vec_z[5]);
+    gte_ldsz3(trans_vec_z[3], trans_vec_z[1], trans_vec_z[4]);
     gte_avsz3();
     gte_stotz(&avg_z_314);
     gte_ldsz4(trans_vec_z[5], trans_vec_z[3], trans_vec_z[2], trans_vec_z[4]);
