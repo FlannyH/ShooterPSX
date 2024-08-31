@@ -33,4 +33,7 @@ void main()
     if (frag_color.a < 0.001f) {
         discard;
     }
+    if (abs(out_texture - 254.0f) < 0.5f)  {
+        discard;
+    }
 }
