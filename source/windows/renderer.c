@@ -565,7 +565,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE, &view_matrix[0][0]);
     glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
 	glUniform1i(glGetUniformLocation(shader, "texture_is_page"), 0);
-	glUniform1i(glGetUniformLocation(shader, "curr_depth_bias"), curr_depth_bias);
+	glUniform1i(glGetUniformLocation(shader, "curr_depth_bias"), curr_depth_bias - 16);
 	glUniform1f(glGetUniformLocation(shader, "alpha"), 1.0f);
 
     // Copy data into it
@@ -586,7 +586,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
         &line, GL_STATIC_DRAW);
 
     // Enable depth and draw
-    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
     glDrawArrays(GL_LINES, 0, 2);
