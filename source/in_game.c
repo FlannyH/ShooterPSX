@@ -33,6 +33,9 @@
 #endif
 
 void state_enter_in_game(void) {
+#ifdef BENCHMARK_MODE
+	state.global.time_counter = 0;
+#endif
 	input_lock_mouse();
 	if (prev_state == STATE_PAUSE_MENU) return;
 
@@ -101,6 +104,42 @@ void state_update_in_game(int dt) {
 	camera_transform.position.y += scalar_mul((random_u32() % 8192) - 4096, state.in_game.screen_shake_intensity_position);
 	camera_transform.position.z += scalar_mul((random_u32() % 8192) - 4096, state.in_game.screen_shake_intensity_position);
 	renderer_begin_frame(&camera_transform);
+
+#ifdef BENCHMARK_MODE
+	widescreen = 1;
+	vsync_enable = 0;
+	const transform_t benchmark_positions[] = {
+		(transform_t) { .position = (vec3_t){ 5849088, 5363200, 1052672 }, .rotation = (vec3_t){ 0, 65536, 0 } }, // starting area
+		(transform_t) { .position = (vec3_t){ 2695122, 4257280, 7820815 }, .rotation = (vec3_t){ 1272, 43970, 0 } }, // near pillar bottom
+		(transform_t) { .position = (vec3_t){ 2798083, 4777824, 7800474 }, .rotation = (vec3_t){ -1134, 40496, 0 } }, // near pillar top
+		(transform_t) { .position = (vec3_t){ 161404, 4247552, 6456851 }, .rotation = (vec3_t){ 4492, 76632, 0 } }, // near pillar top
+	};
+
+	const int teleport_index = state.global.time_counter / (1000 * 5);
+	if (teleport_index < 4) {
+		state.in_game.player.position = benchmark_positions[teleport_index].position;
+		state.in_game.player.rotation = benchmark_positions[teleport_index].rotation;
+	}
+
+	static char debug_text_buffer[64] = {0};
+	static int fps = 0;
+	static int timer = 0;
+	static int prev_frame_counter = 0;
+	timer += dt;
+	if (timer > 1000) {
+		timer -= 1000;
+		fps = state.global.frame_counter - prev_frame_counter;
+		prev_frame_counter = state.global.frame_counter;
+	}
+	if (state.global.frame_counter)
+	snprintf(debug_text_buffer, 64, "%i fps\n%i ms", fps, dt);
+	renderer_draw_text((vec2_t){32 * ONE, 32 * ONE}, debug_text_buffer, 0, 0, (fps >= 30) ? green : red);
+
+	snprintf(debug_text_buffer, 64, "position: %8i %8i %8i", state.in_game.player.position.x, state.in_game.player.position.y, state.in_game.player.position.z);
+	renderer_draw_text((vec2_t){32 * ONE, 128 * ONE}, debug_text_buffer, 0, 0, (fps >= 30) ? green : red);
+	snprintf(debug_text_buffer, 64, "rotation: %8i %8i %8i", state.in_game.player.rotation.x, state.in_game.player.rotation.y, state.in_game.player.rotation.z);
+	renderer_draw_text((vec2_t){32 * ONE, 144 * ONE}, debug_text_buffer, 0, 0, (fps >= 30) ? green : red);
+#endif
 
 	// Draw crosshair
 	renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, (128 + 8*(!is_pal))*ONE}, (vec2_t){32*ONE, 20*ONE}, (vec2_t){96*ONE, 40*ONE}, (vec2_t){127*ONE, 59*ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, 1);
@@ -183,9 +222,24 @@ void state_update_in_game(int dt) {
 	else {
 #endif
 		input_update();
+#if defined(_PSX) && defined(BENCHMARK_MODE)
+		const uint32_t timer_value_before = TIMER_VALUE(1) & 0xFFFF;
 		renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists, 0);
+		uint32_t timer_value_after = TIMER_VALUE(1) & 0xFFFF;
+		if (timer_value_after < timer_value_before) timer_value_after += 0x10000;
+		snprintf(debug_text_buffer, 64, "LEVEL: %i HBLANKS", timer_value_after - timer_value_before);	
+		renderer_set_depth_bias(0);
+		renderer_draw_text((vec2_t){32 * ONE, 64 * ONE}, debug_text_buffer, 0, 0, (fps >= 30) ? green : red);	
+#else
+		renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists, 0);
+#endif
+
 		entity_update_all(&state.in_game.player, dt);
+#ifdef BENCHMARK_MODE
+		player_update(&state.in_game.player, &state.in_game.level.collision_bvh, 0, state.global.time_counter);
+#else
 		player_update(&state.in_game.player, &state.in_game.level.collision_bvh, dt, state.global.time_counter);
+#endif
 #if defined(_DEBUG) && defined(_PSX)
 	}
 #endif
