@@ -170,7 +170,7 @@ void state_update_in_game(int dt) {
 	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
 
 	int n_sections = player_get_level_section(&state.in_game.player, state.in_game.level.vislist);
-	state.global.frame_counter += dt;
+	state.global.frame_counter += 1;
 #if defined(_DEBUG) && defined(_PSX)
 	if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
 	if (state.global.show_debug) {
