@@ -418,6 +418,7 @@ tools: obj2psx midi2psx psx_vislist_generator psx_soundfont_generator
 COMPILED_ASSET_LIST = $(PATH_ASSETS)/GOURAUD.FSH \
 					  $(PATH_ASSETS)/GOURAUD.VSH \
 					  $(PATH_ASSETS)/levels/test.lvl \
+					  $(PATH_ASSETS)/levels/test2.lvl \
 					  $(PATH_ASSETS)/levels/level1.lvl \
 					  $(PATH_ASSETS)/levels/level2.lvl \
 					  $(PATH_ASSETS)/models/entity.msh \
@@ -434,6 +435,10 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/GOURAUD.FSH \
 					  $(PATH_ASSETS)/models/test.vis \
 					  $(PATH_ASSETS)/models/test.msh \
 					  $(PATH_ASSETS)/models/test.txc \
+					  $(PATH_ASSETS)/models/test2.col \
+					  $(PATH_ASSETS)/models/test2.vis \
+					  $(PATH_ASSETS)/models/test2.msh \
+					  $(PATH_ASSETS)/models/test2.txc \
 					  $(PATH_ASSETS)/models/weapons.msh \
 					  $(PATH_ASSETS)/models/weapons.txc \
 					  $(PATH_ASSETS)/models/ui_tex/menu1.txc \

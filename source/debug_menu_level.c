@@ -49,6 +49,7 @@ void state_update_debug_menu_level(int dt) {
 
 	char* levels[] = {
 		"\\assets\\levels\\test.lvl",
+		"\\assets\\levels\\test2.lvl",
 		"\\assets\\levels\\level1.lvl",
 		"\\assets\\levels\\level2.lvl",
 	};
@@ -77,7 +78,7 @@ void state_update_debug_menu_level(int dt) {
 		state.debug_menu_level.button_selected--;
 		state.debug_menu_level.button_pressed = 0;
 	}
-	if (input_pressed(PAD_DOWN, 0) && state.debug_menu_level.button_selected < 3) {
+	if (input_pressed(PAD_DOWN, 0) && state.debug_menu_level.button_selected < 4) {
 		state.debug_menu_level.button_selected++;
 		state.debug_menu_level.button_pressed = 0;
 	}
@@ -92,11 +93,12 @@ void state_update_debug_menu_level(int dt) {
 			case 0:
 			case 1: 
 			case 2: 
+			case 3: 
 				mem_stack_release(STACK_TEMP);
 				state.in_game.level_load_path = levels[state.debug_menu_level.button_selected];
 				current_state = STATE_IN_GAME;
 				break;
-			case 3:
+			case 4:
                 current_state = STATE_DEBUG_MENU_MAIN;
 				break;
 		}

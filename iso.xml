@@ -67,6 +67,7 @@
             <dir name="ASSETS">
 				<dir name="LEVELS">
 					<file name="TEST.LVL"	type="data"	source="assets/levels/test.lvl" />
+					<file name="TEST2.LVL"	type="data"	source="assets/levels/test2.lvl" />
 					<file name="LEVEL1.LVL"	type="data"	source="assets/levels/level1.lvl" />
 					<file name="LEVEL2.LVL"	type="data"	source="assets/levels/level2.lvl" />
 				</dir>
@@ -83,6 +84,10 @@
 					<file name="TEST.TXC"	type="data" source="assets/models/test.txc" />
 					<file name="TEST.COL"	type="data" source="assets/models/test.col" />
 					<file name="TEST.VIS"	type="data" source="assets/models/test.vis" />
+					<file name="TEST2.MSH"	type="data" source="assets/models/test2.msh" />
+					<file name="TEST2.TXC"	type="data" source="assets/models/test2.txc" />
+					<file name="TEST2.COL"	type="data" source="assets/models/test2.col" />
+					<file name="TEST2.VIS"	type="data" source="assets/models/test2.vis" />
 					<file name="ENTITY.MSH"	type="data" source="assets/models/entity.msh" />
 					<file name="ENTITY.TXC"	type="data" source="assets/models/entity.txc" />
 					<file name="WEAPONS.MSH"	type="data" source="assets/models/weapons.msh" />

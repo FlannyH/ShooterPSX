@@ -119,6 +119,7 @@ static const char* text_debug_menu_music[] = {
 static const char* text_debug_menu_level[] = {
     "LEVEL SELECT",
     "test.lvl",
+    "test2.lvl",
     "level1.lvl",
     "level2.lvl",
     "EXIT"
