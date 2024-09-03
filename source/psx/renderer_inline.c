@@ -715,7 +715,7 @@ static inline void subdivide_twice_then_add_tex_quad(const vertex_3d_t* verts, s
     return;
 }
 
-static inline void subdivide_once_then_add_tex_quad(const vertex_3d_t* verts, svec2_t* trans_vec_xy, scalar_t* trans_vec_z, const int sub1_threshold) {
+static inline void subdivide_once_then_add_tex_quad(const vertex_3d_t* verts, svec2_t* trans_vec_xy, scalar_t* trans_vec_z, const int avg_z, const int sub1_threshold) {
     // Let's calculate the new points we need
     const vertex_3d_t ab = get_halfway_point(verts[0], verts[1]);
     const vertex_3d_t bc = get_halfway_point(verts[1], verts[3]);
@@ -750,6 +750,19 @@ static inline void subdivide_once_then_add_tex_quad(const vertex_3d_t* verts, sv
     gte_ldsz4(trans_vec_z[8], trans_vec_z[5], trans_vec_z[6], trans_vec_z[3]);
     gte_avsz4();
     gte_stotz(&avg_z_8563);
+
+    // If we're very close to the sub1 threshold, smooth the transition between subdiv levels by nudging the center towards the uncorrected position along the diagonal of the quad
+    const int transition_period = 16;
+    const int dist_to_threshold = (sub1_threshold - avg_z) / 4; // avg_z is always less than sub1_threshold
+    if (dist_to_threshold < transition_period) {
+        const svec2_t diagonal_screen_center = (svec2_t){
+            .x = (trans_vec_xy[1].x / 2) + (trans_vec_xy[2].x / 2),
+            .y = (trans_vec_xy[1].y / 2) + (trans_vec_xy[2].y / 2),
+        };
+        const svec2_t world_center = trans_vec_xy[8];
+        trans_vec_xy[8].x = ((world_center.x * dist_to_threshold) + (diagonal_screen_center.x * (transition_period - dist_to_threshold))) / transition_period;
+        trans_vec_xy[8].y = ((world_center.y * dist_to_threshold) + (diagonal_screen_center.y * (transition_period - dist_to_threshold))) / transition_period;
+    }
 
     // Draw them
     add_tex_quad(trans_vec_xy[0], trans_vec_xy[4], trans_vec_xy[7], trans_vec_xy[8], verts[0], ab, da, center, avg_z_0478, verts[0].tex_id + tex_id_start, 0);
@@ -839,7 +852,7 @@ static inline void draw_tex_quad3d_fancy(const vertex_3d_t* verts) {
     // If close, subdivice once
     const scalar_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)verts[1].tex_id;
     if (avg_z < sub1_threshold) {
-        subdivide_once_then_add_tex_quad(verts, sp->trans_vec_xy, sp->trans_vec_z, sub1_threshold);
+        subdivide_once_then_add_tex_quad(verts, sp->trans_vec_xy, sp->trans_vec_z, avg_z, sub1_threshold);
         return;
     }
 
