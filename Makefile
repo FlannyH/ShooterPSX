@@ -81,6 +81,7 @@ CODE_ENGINE_SHARED_C = camera.c \
 # Source files specific to PSX
 CODE_ENGINE_PSX_C = psx/file.c \
 				    psx/input.c \
+				    psx/mesh.c \
 				    psx/music.c \
 				    psx/renderer.c \
 				    psx/timer.c 
@@ -88,6 +89,7 @@ CODE_ENGINE_PSX_C = psx/file.c \
 # Source files specific to Windows
 CODE_ENGINE_WIN_C = windows/file.c \
 				    windows/input.c \
+				    windows/mesh.c \
 				    windows/music.c \
 				    windows/psx.c \
 				    windows/renderer.c 
@@ -97,6 +99,7 @@ CODE_ENGINE_WIN_CPP = windows/debug_layer.cpp
 CODE_ENGINE_NDS_C = nds/psx.c \
 				    nds/file.c \
 				    nds/input.c \
+				    nds/mesh.c \
 				    nds/music.c \
 				    nds/renderer.c \
 				    nds/timer.c 
