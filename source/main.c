@@ -68,11 +68,11 @@ int main(void) {
 #ifndef _WINDOWS
         int delta_time_raw = renderer_get_delta_time_raw();
         int delta_time = renderer_convert_dt_raw_to_ms(delta_time_raw);
-        if (delta_time > 40) {
-            delta_time = 40;
-        }
+		// printf("%i, %i\n", delta_time_raw, delta_time);
 #else
         int delta_time = renderer_get_delta_time_ms();
+#endif
+#ifndef BENCHMARK_MODE
         delta_time = scalar_min(delta_time, 40);
 #endif
 		state.global.time_counter += delta_time;
