@@ -68,7 +68,7 @@ void state_enter_in_game(void) {
 	mem_stack_release(STACK_TEMP);
 	
 	// Load weapon models
-	state.in_game.m_weapons = model_load("\\assets\\models\\weapons.msh", 1, STACK_LEVEL);
+	state.in_game.m_weapons = model_load("\\assets\\models\\weapons.msh", 1, STACK_LEVEL, tex_weapon_start);
 
 #ifdef _DEBUG
 #ifdef _PSX

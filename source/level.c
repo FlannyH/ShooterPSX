@@ -58,13 +58,11 @@ level_t level_load(const char* level_path) {
     mem_stack_reset_to_marker(STACK_TEMP, marker);
 
     level_t level = (level_t) {
-        .graphics = model_load(path_graphics, 1, STACK_LEVEL),
 #ifdef _LEVEL_EDITOR
         .collision_mesh_debug = model_load_collision_debug(path_collision, 0, 0),
 #else
         .collision_mesh_debug = NULL,
 #endif
-        .collision_mesh = model_load_collision(path_collision, 1, STACK_LEVEL),
         .transform = (transform_t){{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}},
         .vislist = vislist_load(path_vislist, 1, STACK_LEVEL),
         .collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL),
@@ -72,6 +70,11 @@ level_t level_load(const char* level_path) {
         .player_spawn_position = level_header->player_spawn_position,
         .player_spawn_rotation = level_header->player_spawn_rotation,
     };
+    mem_stack_reset_to_marker(STACK_TEMP, marker);
+    level.graphics = model_load(path_graphics, 1, STACK_LEVEL, tex_level_start);
+    mem_stack_reset_to_marker(STACK_TEMP, marker);
+    level.collision_mesh = model_load_collision(path_collision, 1, STACK_LEVEL);
+    mem_stack_reset_to_marker(STACK_TEMP, marker);
 
     // Load entities
     intptr_t level_entity_pool_stride = entity_pool_stride - sizeof(entity_header_t) + sizeof(entity_header_serialized_t);

@@ -66,9 +66,6 @@ void entity_init(void) {
 	entity_pool_stride = sizeof(entity_union);
 	entity_pool = mem_stack_alloc(ENTITY_LIST_LENGTH * sizeof(entity_union), STACK_ENTITY);
 
-	// Load model collection
-    entity_models = model_load("\\assets\\models\\entity.msh", 1, STACK_ENTITY);
-
     // Load entity textures
 	texture_cpu_t *entity_textures;
     tex_entity_start = tex_alloc_cursor;
@@ -77,6 +74,10 @@ void entity_init(void) {
 	    renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
 	}
 	tex_alloc_cursor += n_entity_textures;
+	mem_stack_release(STACK_TEMP);
+
+	// Load model collection
+    entity_models = model_load("\\assets\\models\\entity.msh", 1, STACK_ENTITY, tex_entity_start);
 	mem_stack_release(STACK_TEMP);
 }
 
