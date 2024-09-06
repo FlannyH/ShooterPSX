@@ -1,254 +1,118 @@
 #include <psxgte.h>
 #include <inline_c.h>
 
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
+
+// Vertically the primitive's CLUT to 16 pixels, and then add the fade level to the Y coordinate
+#define SET_DISTANCE_FADE(primitive, fade_level) \
+    primitive.clut &= 0b111110000111111; \
+    primitive.clut |= fade_level << 6;
+
+#define gte_stsz01( r0, r1 ) __asm__ volatile ( \
+	"swc2	$17, 0( %0 );"	\
+	"swc2	$18, 0( %1 );"	\
+	:						\
+	: "r"( r0 ), "r"( r1 )	\
+	: "memory" )
+
+// Also overwrites the primitive code, so do this before calling setPolyGT3() etc
+#define COPY_COLOR(src, dest) *(uint32_t*)dest = *(uint32_t*)src;
+
+#define COPY_POS(src, dest) *(uint32_t*)dest = *(uint32_t*)src;
+#define COPY_UV(src, dest) *(uint16_t*)dest = *(uint16_t*)src;
+
+static inline void halfway_rgb_uv(uint8_t const *const src_a, uint8_t const *const src_b, uint8_t* dest) {
+    // hacky, but works specifically for GT3 and GT4's memory layouts
+    struct rgb_uv_t {
+        uint8_t r, g, b, code;
+        uint16_t x, y;
+        uint8_t u, v;
+    };
+
+    // lmao so many consts
+    struct rgb_uv_t const *const src_a_cast = (struct rgb_uv_t const *const)src_a; 
+    struct rgb_uv_t const *const src_b_cast = (struct rgb_uv_t const *const)src_b; 
+    struct rgb_uv_t* dest_cast = (struct rgb_uv_t*)dest; 
+    dest_cast->r = (src_a_cast->r / 2) + (src_b_cast->r / 2);
+    dest_cast->g = (src_a_cast->g / 2) + (src_b_cast->g / 2);
+    dest_cast->b = (src_a_cast->b / 2) + (src_b_cast->b / 2);
+    dest_cast->u = (src_a_cast->u / 2) + (src_b_cast->u / 2);
+    dest_cast->v = (src_a_cast->v / 2) + (src_b_cast->v / 2);
+}
+
+static inline void copy_rgb_uv(uint8_t const *const src, uint8_t* dest) {
+    // hacky, but works specifically for GT3 and GT4's memory layouts
+    struct rgb_uv_t {
+        uint8_t r, g, b, code;
+        uint16_t x, y;
+        uint8_t u, v;
+    };
+
+    struct rgb_uv_t const *const src_cast = (struct rgb_uv_t const *const)src; 
+    struct rgb_uv_t* dest_cast = (struct rgb_uv_t*)dest; 
+    dest_cast->r = src_cast->r;
+    dest_cast->g = src_cast->g;
+    dest_cast->b = src_cast->b;
+    dest_cast->u = src_cast->u;
+    dest_cast->v = src_cast->v;
+}
+
 static inline int frustrum_cull_aabb(const vec3_t min, const vec3_t max) {
+    return 0;
     // We will transform these to screen space
-    SVECTOR vertices[8] = {
-        ((SVECTOR) {min.x, min.y, min.z, 0}),
-        ((SVECTOR) {min.x, min.y, max.z, 0}),
-        ((SVECTOR) {min.x, max.y, min.z, 0}),
-        ((SVECTOR) {min.x, max.y, max.z, 0}),
-        ((SVECTOR) {max.x, min.y, min.z, 0}),
-        ((SVECTOR) {max.x, min.y, max.z, 0}),
-        ((SVECTOR) {max.x, max.y, min.z, 0}),
-        ((SVECTOR) {max.x, max.y, max.z, 0}),
+    aligned_position_t vertices[8] = {
+        ((aligned_position_t) {.x = min.x, .y = min.y, .z = min.z}),
+        ((aligned_position_t) {.x = min.x, .y = min.y, .z = max.z}),
+        ((aligned_position_t) {.x = min.x, .y = max.y, .z = min.z}),
+        ((aligned_position_t) {.x = min.x, .y = max.y, .z = max.z}),
+        ((aligned_position_t) {.x = max.x, .y = min.y, .z = min.z}),
+        ((aligned_position_t) {.x = max.x, .y = min.y, .z = max.z}),
+        ((aligned_position_t) {.x = max.x, .y = max.y, .z = min.z}),
+        ((aligned_position_t) {.x = max.x, .y = max.y, .z = max.z}),
     };
 
     // Transform vertices and store them back
-    int16_t padding_for_last_store;
     // 0, 1, 2
-    gte_ldv3(&vertices[0].vx, &vertices[1].vx, &vertices[2].vx);
+    gte_ldv3(&vertices[0].x, &vertices[1].x, &vertices[2].x);
     gte_rtpt();
-    gte_stsxy3(&vertices[0].vx, &vertices[1].vx, &vertices[2].vx);
-    gte_stsz3(&vertices[0].vz, &vertices[1].vz, &vertices[2].vz);
+    gte_stsxy3(&vertices[0].x, &vertices[1].x, &vertices[2].x);
+    gte_stsz3(&vertices[0].z, &vertices[1].z, &vertices[2].z);
     // 3, 4, 5
-    gte_ldv3(&vertices[3].vx, &vertices[4].vx, &vertices[5].vx);
+    gte_ldv3(&vertices[3].x, &vertices[4].x, &vertices[5].x);
     gte_rtpt();
-    gte_stsxy3(&vertices[3].vx, &vertices[4].vx, &vertices[5].vx);
-    gte_stsz3(&vertices[3].vz, &vertices[4].vz, &vertices[5].vz);
+    gte_stsxy3(&vertices[3].x, &vertices[4].x, &vertices[5].x);
+    gte_stsz3(&vertices[3].z, &vertices[4].z, &vertices[5].z);
     // 6, 7
-    gte_ldv01(&vertices[6].vx, &vertices[7].vx);
+    gte_ldv01(&vertices[6].x, &vertices[7].x);
     gte_rtpt();
-    gte_stsxy01(&vertices[6].vx, &vertices[7].vx);
-    gte_stsz3(&vertices[6].vz, &vertices[7].vz, &padding_for_last_store);
+    gte_stsxy01(&vertices[6].x, &vertices[7].x);
+    gte_stsz01(&vertices[6].z, &vertices[7].z);
 
     // Find screen aligned bounding box
-    SVECTOR after_min = (SVECTOR){INT16_MAX, INT16_MAX, INT16_MAX, 0};
-    SVECTOR after_max = (SVECTOR){INT16_MIN, INT16_MIN, INT16_MIN, 0};
+    aligned_position_t after_min = (aligned_position_t){.x = INT16_MAX, .y = INT16_MAX, .z = INT16_MAX};
+    aligned_position_t after_max = (aligned_position_t){.x = INT16_MIN, .y = INT16_MIN, .z = INT16_MIN};
     
     for (size_t i = 0; i < 8; ++i) {
-        if (vertices[i].vx < after_min.vx) after_min.vx = vertices[i].vx;
-        if (vertices[i].vx > after_max.vx) after_max.vx = vertices[i].vx;
-        if (vertices[i].vy < after_min.vy) after_min.vy = vertices[i].vy;
-        if (vertices[i].vy > after_max.vy) after_max.vy = vertices[i].vy;
-        if (vertices[i].vz < after_min.vz) after_min.vz = vertices[i].vz;
-        if (vertices[i].vz > after_max.vz) after_max.vz = vertices[i].vz;
+        if (vertices[i].x < after_min.x) after_min.x = vertices[i].x;
+        if (vertices[i].x > after_max.x) after_max.x = vertices[i].x;
+        if (vertices[i].y < after_min.y) after_min.y = vertices[i].y;
+        if (vertices[i].y > after_max.y) after_max.y = vertices[i].y;
+        if (vertices[i].z < after_min.z) after_min.z = vertices[i].z;
+        if (vertices[i].z > after_max.z) after_max.z = vertices[i].z;
     }
 
     // If this screen aligned bounding box is off screen, do not draw this mesh
     #define FRUSCUL_PAD_X 0 // these are in case I ever want to add a safe zone
     #define FRUSCUL_PAD_Y 0 // or for debugging.
-    if (after_max.vx < 0+FRUSCUL_PAD_X) return 1; // mesh is to the left of the screen
-    if (after_max.vy < 0+FRUSCUL_PAD_Y) return 1; // mesh is above the screen
-    if (after_max.vz == 0) return 1; // mesh is behind the screen
-    if (after_min.vz > MESH_RENDER_DISTANCE) return 1; // mesh is too far away
-    if (after_min.vx > res_x-FRUSCUL_PAD_X) return 1; // mesh is to the right of the screen
-    if (after_min.vy > curr_res_y-FRUSCUL_PAD_Y) return 1; // mesh is below the screen
+    if (after_max.x < 0+FRUSCUL_PAD_X) return 1; // mesh is to the left of the screen
+    if (after_max.y < 0+FRUSCUL_PAD_Y) return 1; // mesh is above the screen
+    if (after_max.z == 0) return 1; // mesh is behind the screen
+    if (after_min.z > MESH_RENDER_DISTANCE) return 1; // mesh is too far away
+    if (after_min.x > res_x-FRUSCUL_PAD_X) return 1; // mesh is to the right of the screen
+    if (after_min.y > curr_res_y-FRUSCUL_PAD_Y) return 1; // mesh is below the screen
     #undef FRUSCUL_PAD_X
     #undef FRUSCUL_PAD_Y
     return 0;
-}
-
-static inline uint8_t mul_8x8(const uint8_t a, const uint8_t b) {
-    uint16_t c = ((uint16_t)a * (uint16_t)b) >> 8;
-    if (c > 255) c = 255;
-    return (uint8_t)c;
-}
-
-// Queues textured triangle primitive
-static inline void add_tex_triangle(
-    const svec2_t p0, 
-    const svec2_t p1, 
-    const svec2_t p2, 
-    const vertex_3d_t v0, 
-    const vertex_3d_t v1, 
-    const vertex_3d_t v2, 
-    const scalar_t avg_z, 
-    const int tex_id, 
-    const int16_t clut_fade
-) {	
-    // Allocate new triangle
-    ++n_polygons_drawn;
-    POLY_GT3* new_triangle = (POLY_GT3*)next_primitive;
-    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
-
-    // Populate triangle data
-    setPolyGT3(new_triangle); 
-    setXY3(new_triangle, 
-        p0.x, p0.y,
-        p1.x, p1.y,
-        p2.x, p2.y
-    );
-    setRGB0(new_triangle, v0.r >> 1, v0.g >> 1, v0.b >> 1);
-    setRGB1(new_triangle, v1.r >> 1, v1.g >> 1, v1.b >> 1);
-    setRGB2(new_triangle, v2.r >> 1, v2.g >> 1, v2.b >> 1);
-    const uint8_t tex_offset_x = ((tex_id) & 0b00001100) << 4;
-    const uint8_t tex_offset_y = ((tex_id) & 0b00000011) << 6;
-    new_triangle->clut = getClut(palettes[tex_id].x, palettes[tex_id].y + clut_fade);
-    new_triangle->tpage = getTPage(0, 0, textures[tex_id].x, textures[tex_id].y);
-    setUV3(new_triangle,
-        (v0.u >> 2) + tex_offset_x,
-        (v0.v >> 2) + tex_offset_y,
-        (v1.u >> 2) + tex_offset_x,
-        (v1.v >> 2) + tex_offset_y,
-        (v2.u >> 2) + tex_offset_x,
-        (v2.v >> 2) + tex_offset_y
-    );
-    addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, new_triangle);
-}
-
-// Queues textured quad primitive
-static inline void add_tex_quad(
-    const svec2_t p0, 
-    const svec2_t p1, 
-    const svec2_t p2, 
-    const svec2_t p3, 
-    const vertex_3d_t v0, 
-    const vertex_3d_t v1, 
-    const vertex_3d_t v2, 
-    const vertex_3d_t v3, 
-    const scalar_t avg_z, 
-    const int tex_id, 
-    const int16_t clut_fade
-) {	
-    // Allocate new triangle
-    ++n_polygons_drawn;
-    POLY_GT4* new_quad = (POLY_GT4*)next_primitive;
-    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
-
-    // Populate triangle data
-    setPolyGT4(new_quad); 
-    setXY4(new_quad, 
-        p0.x, p0.y,
-        p1.x, p1.y,
-        p2.x, p2.y,
-        p3.x, p3.y
-    );
-    setRGB0(new_quad, v0.r >> 1, v0.g >> 1, v0.b >> 1);
-    setRGB1(new_quad, v1.r >> 1, v1.g >> 1, v1.b >> 1);
-    setRGB2(new_quad, v2.r >> 1, v2.g >> 1, v2.b >> 1);
-    setRGB3(new_quad, v3.r >> 1, v3.g >> 1, v3.b >> 1);
-    const uint8_t tex_offset_x = ((tex_id) & 0b00001100) << 4;
-    const uint8_t tex_offset_y = ((tex_id) & 0b00000011) << 6;
-    new_quad->clut = getClut(palettes[tex_id].x, palettes[tex_id].y + clut_fade);
-    new_quad->tpage = getTPage(0, 0, textures[tex_id].x, textures[tex_id].y);
-    setUV4(new_quad,
-        (v0.u >> 2) + tex_offset_x, (v0.v >> 2) + tex_offset_y,
-        (v1.u >> 2) + tex_offset_x, (v1.v >> 2) + tex_offset_y,
-        (v2.u >> 2) + tex_offset_x, (v2.v >> 2) + tex_offset_y,
-        (v3.u >> 2) + tex_offset_x, (v3.v >> 2) + tex_offset_y
-    );
-    addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, new_quad);
-}
-
-// Queues untextured triangle primitive
-static inline void add_untex_triangle(
-    const svec2_t p0, 
-    const svec2_t p1, 
-    const svec2_t p2, 
-    const vertex_3d_t v0, 
-    const vertex_3d_t v1, 
-    const vertex_3d_t v2, 
-    const scalar_t avg_z
-) {
-    // Create primitive
-    ++n_polygons_drawn;
-    POLY_G3* new_triangle = (POLY_G3*)next_primitive;
-    next_primitive += sizeof(POLY_G3) / sizeof(*next_primitive);
-
-    // Initialize the entry in the render queue
-    setPolyG3(new_triangle);
-
-    // Set the vertex positions of the triangle
-    setXY3(new_triangle, 
-        p0.x, p0.y,
-        p1.x, p1.y,
-        p2.x, p2.y
-    );
-
-    // Set the vertex colors of the triangle
-    setRGB0(new_triangle,
-        mul_8x8(v0.r, textures_avg_colors[v0.tex_id + tex_id_start].r),
-        mul_8x8(v0.g, textures_avg_colors[v0.tex_id + tex_id_start].g),
-        mul_8x8(v0.b, textures_avg_colors[v0.tex_id + tex_id_start].b)
-    );
-    setRGB1(new_triangle,
-        mul_8x8(v1.r, textures_avg_colors[v0.tex_id + tex_id_start].r),
-        mul_8x8(v1.g, textures_avg_colors[v0.tex_id + tex_id_start].g),
-        mul_8x8(v1.b, textures_avg_colors[v0.tex_id + tex_id_start].b)
-    );
-    setRGB2(new_triangle,
-        mul_8x8(v2.r, textures_avg_colors[v0.tex_id + tex_id_start].r),
-        mul_8x8(v2.g, textures_avg_colors[v0.tex_id + tex_id_start].g),
-        mul_8x8(v2.b, textures_avg_colors[v0.tex_id + tex_id_start].b)
-    );
-    
-    // Add the triangle to the draw queue
-    addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, new_triangle);
-}
-
-// Queues untextured quad primitive
-static inline void add_untex_quad(
-    const svec2_t p0, 
-    const svec2_t p1,
-    const svec2_t p2, 
-    const svec2_t p3, 
-    const vertex_3d_t v0, 
-    const vertex_3d_t v1, 
-    const vertex_3d_t v2, 
-    const vertex_3d_t v3, 
-    const scalar_t avg_z
-) {
-    // Create primitive
-    ++n_polygons_drawn;
-    POLY_G4* new_quad = (POLY_G4*)next_primitive;
-    next_primitive += sizeof(POLY_G4) / sizeof(*next_primitive);
-
-    // Initialize the entry in the render queue
-    setPolyG4(new_quad);
-
-    // Set the vertex positions of the quad
-    setXY4(new_quad, 
-        p0.x, p0.y,
-        p1.x, p1.y,
-        p2.x, p2.y,
-        p3.x, p3.y
-    );
-
-    // Set the vertex colors of the quad
-    setRGB0(new_quad,
-        mul_8x8(v0.r, textures_avg_colors[v0.tex_id + tex_id_start].r),
-        mul_8x8(v0.g, textures_avg_colors[v0.tex_id + tex_id_start].g),
-        mul_8x8(v0.b, textures_avg_colors[v0.tex_id + tex_id_start].b)
-    );
-    setRGB1(new_quad,
-        mul_8x8(v1.r, textures_avg_colors[v0.tex_id + tex_id_start].r),
-        mul_8x8(v1.g, textures_avg_colors[v0.tex_id + tex_id_start].g),
-        mul_8x8(v1.b, textures_avg_colors[v0.tex_id + tex_id_start].b)
-    );
-    setRGB2(new_quad,
-        mul_8x8(v2.r, textures_avg_colors[v0.tex_id + tex_id_start].r),
-        mul_8x8(v2.g, textures_avg_colors[v0.tex_id + tex_id_start].g),
-        mul_8x8(v2.b, textures_avg_colors[v0.tex_id + tex_id_start].b)
-    );
-    setRGB3(new_quad,
-        mul_8x8(v3.r, textures_avg_colors[v0.tex_id + tex_id_start].r),
-        mul_8x8(v3.g, textures_avg_colors[v0.tex_id + tex_id_start].g),
-        mul_8x8(v3.b, textures_avg_colors[v0.tex_id + tex_id_start].b)
-    );
-    
-    // Add the triangle to the draw queue
-    addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, new_quad);
 }
 
 static inline vertex_3d_t get_halfway_point(const vertex_3d_t v0, const vertex_3d_t v1) {
@@ -264,174 +128,956 @@ static inline vertex_3d_t get_halfway_point(const vertex_3d_t v0, const vertex_3
     };
 }
 
-static inline void subdivide_twice_then_add_tex_triangle(const vertex_3d_t* verts, svec2_t* trans_vec_xy, scalar_t* trans_vec_z, int sub2_threshold) {
-    // Generate all 15 vertices
-    #define vtx0 verts[0]
-    #define vtx1 verts[1]
-    #define vtx2 verts[2]
-    const vertex_3d_t vtx3 = get_halfway_point(vtx0, vtx1);
-    const vertex_3d_t vtx4 = get_halfway_point(vtx1, vtx2);
-    const vertex_3d_t vtx5 = get_halfway_point(vtx0, vtx2);
-    gte_ldv3(&vtx3.x, &vtx4.x, &vtx5.x);
-    gte_rtpt();
-    const vertex_3d_t vtx6 = get_halfway_point(vtx0, vtx3);
-    const vertex_3d_t vtx7 = get_halfway_point(vtx1, vtx3);
-    const vertex_3d_t vtx8 = get_halfway_point(vtx1, vtx4);
-    gte_stsxy3c(&trans_vec_xy[3]);
-    gte_stsz3c(&trans_vec_z[3]);
-    gte_ldv3(&vtx6.x, &vtx7.x, &vtx8.x);
-    gte_rtpt();
-    const vertex_3d_t vtx9 = get_halfway_point(vtx4, vtx2);
-    const vertex_3d_t vtx10 = get_halfway_point(vtx5, vtx2);
-    const vertex_3d_t vtx11 = get_halfway_point(vtx5, vtx0);
-    gte_stsxy3c(&trans_vec_xy[6]);
-    gte_stsz3c(&trans_vec_z[6]);
-    gte_ldv3(&vtx9.x, &vtx10.x, &vtx11.x);
-    gte_rtpt();
-    const vertex_3d_t vtx12 = get_halfway_point(vtx5, vtx3);
-    const vertex_3d_t vtx13 = get_halfway_point(vtx12, vtx8);
-    const vertex_3d_t vtx14 = get_halfway_point(vtx5, vtx4);
-    gte_stsxy3c(&trans_vec_xy[9]);
-    gte_stsz3c(&trans_vec_z[9]);
-    gte_ldv3(&vtx12.x, &vtx13.x, &vtx14.x);
-    gte_rtpt();
-    gte_stsxy3c(&trans_vec_xy[12]);
-    gte_stsz3c(&trans_vec_z[12]);
-
-    // Calculate average Z values
-    int avg_z_06b;
-    int avg_z_bc5;
-    int avg_z_5ea;
-    int avg_z_a92;
-    int avg_z_63bc;
-    int avg_z_37cd;
-    int avg_z_71d8;
-    int avg_z_cd5e;
-    int avg_z_d8e4;
-    int avg_z_e4a9;
-    gte_ldsz3(trans_vec_z[0], trans_vec_z[6], trans_vec_z[11]);
-    gte_avsz3();
-    gte_stotz(&avg_z_06b);
-    gte_ldsz3(trans_vec_z[11], trans_vec_z[12], trans_vec_z[5]);
-    gte_avsz3();
-    gte_stotz(&avg_z_bc5);
-    gte_ldsz3(trans_vec_z[5], trans_vec_z[14], trans_vec_z[10]);
-    gte_avsz3();
-    gte_stotz(&avg_z_5ea);
-    gte_ldsz3(trans_vec_z[10], trans_vec_z[9], trans_vec_z[2]);
-    gte_avsz3();
-    gte_stotz(&avg_z_a92);
-    gte_ldsz4(trans_vec_z[6], trans_vec_z[3], trans_vec_z[11], trans_vec_z[12]);
-    gte_avsz4();
-    gte_stotz(&avg_z_63bc);
-    gte_ldsz4(trans_vec_z[3], trans_vec_z[7], trans_vec_z[12], trans_vec_z[13]);
-    gte_avsz4();
-    gte_stotz(&avg_z_37cd);
-    gte_ldsz4(trans_vec_z[7], trans_vec_z[1], trans_vec_z[13], trans_vec_z[8]);
-    gte_avsz4();
-    gte_stotz(&avg_z_71d8);
-    gte_ldsz4(trans_vec_z[12], trans_vec_z[13], trans_vec_z[5], trans_vec_z[14]);
-    gte_avsz4();
-    gte_stotz(&avg_z_cd5e);
-    gte_ldsz4(trans_vec_z[13], trans_vec_z[8], trans_vec_z[14], trans_vec_z[4]);
-    gte_avsz4();
-    gte_stotz(&avg_z_d8e4);
-    gte_ldsz4(trans_vec_z[14], trans_vec_z[4], trans_vec_z[10], trans_vec_z[9]);
-    gte_avsz4();
-    gte_stotz(&avg_z_e4a9);
-
-    // Add to queue
-    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[6], trans_vec_xy[11], vtx0, vtx6, vtx11, avg_z_06b, verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[11], trans_vec_xy[12], trans_vec_xy[5], vtx11, vtx12, vtx5, avg_z_bc5, verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[5], trans_vec_xy[14], trans_vec_xy[10], vtx5, vtx14, vtx10, avg_z_5ea, verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[10], trans_vec_xy[9], trans_vec_xy[2], vtx10, vtx9, vtx2, avg_z_a92, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[6], trans_vec_xy[3], trans_vec_xy[11], trans_vec_xy[12], vtx6, vtx3, vtx11, vtx12, avg_z_63bc, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[3], trans_vec_xy[7], trans_vec_xy[12], trans_vec_xy[13], vtx3, vtx7, vtx12, vtx13, avg_z_37cd, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[7], trans_vec_xy[1], trans_vec_xy[13], trans_vec_xy[8], vtx7, vtx1, vtx13, vtx8, avg_z_71d8, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[12], trans_vec_xy[13], trans_vec_xy[5], trans_vec_xy[14], vtx12, vtx13, vtx5, vtx14, avg_z_cd5e, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[13], trans_vec_xy[8], trans_vec_xy[14], trans_vec_xy[4], vtx13, vtx8, vtx14, vtx4, avg_z_d8e4, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[14], trans_vec_xy[4], trans_vec_xy[10], trans_vec_xy[9], vtx14, vtx4, vtx10, vtx9, avg_z_e4a9, verts[0].tex_id + tex_id_start, 0);
-
-    // Filler triangles
-    scalar_t max_z = trans_vec_z[0];
-    if (trans_vec_z[1] > max_z) max_z = trans_vec_z[1];
-    if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2]; 
-    max_z >>= 2;
-    
-    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[3], vtx0, vtx1, vtx3, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[3], trans_vec_xy[6], vtx0, vtx3, vtx6, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[3], trans_vec_xy[1], trans_vec_xy[7], vtx3, vtx1, vtx7, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[4], vtx1, vtx2, vtx4, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[1], trans_vec_xy[4], trans_vec_xy[8], vtx1, vtx4, vtx8, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[4], trans_vec_xy[2], trans_vec_xy[9], vtx4, vtx2, vtx9, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[2], trans_vec_xy[5], vtx0, vtx2, vtx5, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[5], trans_vec_xy[11], vtx0, vtx5, vtx11, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[5], trans_vec_xy[2], trans_vec_xy[10], vtx5, vtx2, vtx10, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-
-    #undef vtx0
-    #undef vtx1
-    #undef vtx2
-    return;
+static inline aligned_position_t get_halfway_position(const aligned_position_t v0, const aligned_position_t v1) {
+    return (aligned_position_t) {
+        .x = v0.x + ((v1.x - v0.x) >> 1),
+        .y = v0.y + ((v1.y - v0.y) >> 1),
+        .z = v0.z + ((v1.z - v0.z) >> 1),
+    };
 }
 
-static inline void subdivide_once_then_add_tex_triangle(const vertex_3d_t* verts, svec2_t* trans_vec_xy, scalar_t* trans_vec_z, const int sub1_threshold) {
-    // Let's calculate the center of each edge
-    const vertex_3d_t ab = get_halfway_point(verts[0], verts[1]);
-    const vertex_3d_t bc = get_halfway_point(verts[1], verts[2]);
-    const vertex_3d_t ca = get_halfway_point(verts[2], verts[0]);
-
-    // Transform them
-    gte_ldv3(&ab.x, &bc.x, &ca.x);
-    gte_rtpt();
-    gte_stsxy3c(&trans_vec_xy[3]);
-    gte_stsz3c(&trans_vec_z[3]);
-
-    // Draw them
-    int avg_z_035;
-    int avg_z_314;
-    int avg_z_5324;
-    gte_ldsz3(trans_vec_z[0], trans_vec_z[3], trans_vec_z[5]);
-    gte_avsz3();
-    gte_stotz(&avg_z_035);
-    gte_ldsz3(trans_vec_z[3], trans_vec_z[1], trans_vec_z[4]);
-    gte_avsz3();
-    gte_stotz(&avg_z_314);
-    gte_ldsz4(trans_vec_z[5], trans_vec_z[3], trans_vec_z[2], trans_vec_z[4]);
-    gte_avsz4();
-    gte_stotz(&avg_z_5324);
-    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[3], trans_vec_xy[5], verts[0], ab, ca, avg_z_035, verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[3], trans_vec_xy[1], trans_vec_xy[4], ab, verts[1], bc, avg_z_314, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[5], trans_vec_xy[3], trans_vec_xy[2], trans_vec_xy[4], ca, ab, verts[2], bc, avg_z_5324, verts[0].tex_id + tex_id_start, 0);
+void draw_level1_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, const size_t poly_idx, scalar_t otz) {
+    // 0-----1       0--3--1
+    // |    /        |  | /
+    // |  /     -->  5--4    + filler at the edges to fix gaps
+    // |/            | /
+    // 2             2
+    //  
+    // Subdivided triangle
+    POLY_GT4* quad_0354 = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT3* tri_314 = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_542 = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
 
     // Filler triangles
-    scalar_t max_z = trans_vec_z[0];
-    if (trans_vec_z[1] > max_z) max_z = trans_vec_z[1];
-    if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2]; 
-    max_z >>= 2;
+    POLY_GT3* tri_250 = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_031 = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_142 = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
 
-    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[3], verts[0], verts[1], ab, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[4], verts[1], verts[2], bc, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[2], trans_vec_xy[0], trans_vec_xy[5], verts[2], verts[0], ca, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
+    // Store first 3 vertices' positions - we still have those in the GTE registers
+    gte_stsxy0(&quad_0354->x0); // XY0
+    gte_stsxy0(&tri_250->x2);
+    gte_stsxy0(&tri_031->x0);
+    gte_stsxy1(&tri_314->x1); // XY1
+    gte_stsxy1(&tri_031->x2);
+    gte_stsxy1(&tri_142->x0);
+    gte_stsxy2(&tri_542->x2); // XY2
+    gte_stsxy2(&tri_250->x0);
+    gte_stsxy2(&tri_142->x2);
+
+    // Generate extra positions for subdivision
+    const aligned_position_t v3 = get_halfway_position(mesh->vtx_pos_and_size[vert_idx + 0], mesh->vtx_pos_and_size[vert_idx + 1]);
+    const aligned_position_t v4 = get_halfway_position(mesh->vtx_pos_and_size[vert_idx + 1], mesh->vtx_pos_and_size[vert_idx + 2]);
+    const aligned_position_t v5 = get_halfway_position(mesh->vtx_pos_and_size[vert_idx + 2], mesh->vtx_pos_and_size[vert_idx + 0]);
+
+    // Start transforming them - we'll get back here later
+    gte_ldv3(&v3.x, &v4.x, &v5.x);
+    gte_rtpt();
+
+    // Copy over the vertex attributes we already have
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r0, &quad_0354->r0); // v0
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r0, &tri_250->r2);
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r0, &tri_031->r0);
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r1, &tri_314->r1); // v1
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r1, &tri_031->r2);
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r1, &tri_142->r0);
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r2, &tri_542->r2); // v2
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r2, &tri_250->r0);
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r2, &tri_142->r2);
+
+    // The rest needs to be interpolated and duplicated
+    halfway_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r0, &mesh->tex_tris[drawbuffer][poly_idx].r1, &quad_0354->r1);
+    halfway_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r1, &mesh->tex_tris[drawbuffer][poly_idx].r2, &quad_0354->r3);
+    halfway_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r2, &mesh->tex_tris[drawbuffer][poly_idx].r0, &quad_0354->r2);
+    copy_rgb_uv(&quad_0354->r1, &tri_314->r0); // v3
+    copy_rgb_uv(&quad_0354->r1, &tri_031->r1);
+    copy_rgb_uv(&quad_0354->r3, &tri_314->r2); // v4
+    copy_rgb_uv(&quad_0354->r3, &tri_542->r1);
+    copy_rgb_uv(&quad_0354->r3, &tri_142->r1);
+    copy_rgb_uv(&quad_0354->r2, &tri_542->r0); // v5
+    copy_rgb_uv(&quad_0354->r2, &tri_250->r1);
+
+    // Oh right we still have the positions in the GTE registers
+    gte_stsxy0(&quad_0354->x1); // XY3
+    gte_stsxy0(&tri_314->x0);
+    gte_stsxy0(&tri_031->x1);
+    gte_stsxy1(&quad_0354->x3); // XY4
+    gte_stsxy1(&tri_314->x2);
+    gte_stsxy1(&tri_542->x1);
+    gte_stsxy1(&tri_142->x1);
+    gte_stsxy2(&quad_0354->x2); // XY5
+    gte_stsxy2(&tri_542->x0);
+    gte_stsxy2(&tri_250->x1);
+
+    // Copy constants
+    quad_0354->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;   quad_0354->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage;
+    tri_314->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;     tri_314->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage;
+    tri_542->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;     tri_542->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage;
+    tri_250->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;     tri_250->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage;
+    tri_031->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;     tri_031->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage;
+    tri_142->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;     tri_142->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage;
+
+    // Add to ordering table for rendering
+    setPolyGT4(quad_0354);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_0354);
+    setPolyGT3(tri_314);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_314);
+    setPolyGT3(tri_542);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_542);
+    setPolyGT3(tri_250);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_250);
+    setPolyGT3(tri_031);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_031);
+    setPolyGT3(tri_142);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_142);
+}
+
+void draw_level2_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, const size_t poly_idx, scalar_t otz) {
+    // 0-----------1      0--3--4--5--1
+    // |          /       |  |  |  | / 
+    // |        /         6--7--8--9
+    // |       /          |  |  | /
+    // |     /       -->  A--B--C   + filler at the edges to fix gaps
+    // |    /             |  | /
+    // |  /               D--E
+    // | /                | /
+    // 2                  2
+
+    // Subdivided triangle
+    POLY_GT4* quad_0367 = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_3478 = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_4589 = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_67AB = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_78BC = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_ABDE = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT3* tri_519 = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_89C = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_BCE = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_DE2 = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+
+    // Filler triangles
+    POLY_GT3* tri_043 = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_415 = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_C91 = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_2EC = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_2DA = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_A60 = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+
+    // Get all the interpolated positions
+    #define v0 mesh->vtx_pos_and_size[vert_idx + 0]
+    #define v1 mesh->vtx_pos_and_size[vert_idx + 1]
+    #define v2 mesh->vtx_pos_and_size[vert_idx + 2]
+    const aligned_position_t v4 = get_halfway_position(v0, v1);
+    const aligned_position_t vC = get_halfway_position(v1, v2);
+    const aligned_position_t vA = get_halfway_position(v2, v0);
+    const aligned_position_t v3 = get_halfway_position(v4, v0);
+    const aligned_position_t v5 = get_halfway_position(v4, v1);
+    const aligned_position_t v9 = get_halfway_position(vC, v1);
+    const aligned_position_t vE = get_halfway_position(vC, v2);
+    const aligned_position_t vD = get_halfway_position(vA, v2);
+    const aligned_position_t v6 = get_halfway_position(vA, v0);
+    const aligned_position_t v8 = get_halfway_position(vC, v4);
+    const aligned_position_t vB = get_halfway_position(vA, vC);
+    const aligned_position_t v7 = get_halfway_position(vC, v8);
+    #undef v0
+    #undef v1
+    #undef v2
+
+    // Store 012 - we still have those in the GTE registers
+    gte_stsxy0(&quad_0367->x0); // XY 0
+    gte_stsxy0(&tri_043->x0);        
+    gte_stsxy0(&tri_A60->x2);        
+    gte_stsxy1(&tri_519->x1);   // XY 1    
+    gte_stsxy1(&tri_415->x1);        
+    gte_stsxy1(&tri_C91->x2);        
+    gte_stsxy2(&tri_DE2->x2);   // XY 2    
+    gte_stsxy2(&tri_2EC->x0);        
+    gte_stsxy2(&tri_2DA->x0);        
+
+    // Start transform 345
+    gte_ldv3(&v3.x, &v4.x, &v5.x);
+    gte_rtpt();
+
+    // Copy attributes for 012
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r0, &quad_0367->r0); // v0
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r0, &tri_043->r0);             
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r0, &tri_A60->r2);             
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r1, &tri_519->r1);   // v1
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r1, &tri_415->r1);             
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r1, &tri_C91->r2);             
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r2, &tri_DE2->r2);   // v2
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r2, &tri_2EC->r0);             
+    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r2, &tri_2DA->r0);             
+
+    // Store transformed 345
+    gte_stsxy0(&quad_0367->x1); // XY 3
+    gte_stsxy0(&quad_3478->x0);     
+    gte_stsxy0(&tri_043->x2);       
+    gte_stsxy1(&quad_3478->x1); // XY 4
+    gte_stsxy1(&quad_4589->x0);     
+    gte_stsxy1(&tri_043->x1);       
+    gte_stsxy1(&tri_415->x0);       
+    gte_stsxy2(&quad_4589->x1); // XY 5
+    gte_stsxy2(&tri_519->x0);       
+    gte_stsxy2(&tri_415->x2);       
+
+    // Start transform 678
+    gte_ldv3(&v6.x, &v7.x, &v8.x);
+    gte_rtpt();
+
+    // For the sake of my own sanity for the rest of this function - goes for any subsequent defines too
+    #define vtx_r0 mesh->tex_tris[drawbuffer][poly_idx].r0
+    #define vtx_r1 mesh->tex_tris[drawbuffer][poly_idx].r1
+    #define vtx_r2 mesh->tex_tris[drawbuffer][poly_idx].r2
+
+    // Interpolate and copy attributes for 4CA
+    #define vtx_r4 quad_3478->r1
+    #define vtx_rC quad_78BC->r3
+    #define vtx_rA quad_67AB->r2
+    halfway_rgb_uv(&vtx_r0, &vtx_r1, &quad_3478->r1);  // v4: between 0-1
+    halfway_rgb_uv(&vtx_r1, &vtx_r2, &quad_78BC->r3);  // vC: between 1-2
+    halfway_rgb_uv(&vtx_r2, &vtx_r0, &quad_67AB->r2);  // vA: between 2-0
+    copy_rgb_uv(&vtx_r4, &quad_4589->r0); // v4
+    copy_rgb_uv(&vtx_r4, &tri_043->r1);       
+    copy_rgb_uv(&vtx_r4, &tri_415->r0);     
+    copy_rgb_uv(&vtx_rC, &tri_89C->r2);  // vC
+    copy_rgb_uv(&vtx_rC, &tri_BCE->r1);
+    copy_rgb_uv(&vtx_rC, &tri_C91->r0);
+    copy_rgb_uv(&vtx_rC, &tri_2EC->r2);
+    copy_rgb_uv(&vtx_rA, &quad_ABDE->r0); // vA   
+    copy_rgb_uv(&vtx_rA, &tri_2DA->r2);       
+    copy_rgb_uv(&vtx_rA, &tri_A60->r0);
+
+    // Store transformed 678
+    gte_stsxy0(&quad_0367->x2);  // XY 6
+    gte_stsxy0(&quad_67AB->x0); 
+    gte_stsxy0(&tri_A60->x1); 
+    gte_stsxy1(&quad_0367->x3);  // XY 7
+    gte_stsxy1(&quad_3478->x2); 
+    gte_stsxy1(&quad_67AB->x1); 
+    gte_stsxy1(&quad_78BC->x0); 
+    gte_stsxy2(&quad_3478->x3); // XY 8
+    gte_stsxy2(&quad_4589->x2);  
+    gte_stsxy2(&quad_78BC->x1); 
+    gte_stsxy2(&tri_89C->x0); 
+
+    // Start transform 9AB
+    gte_ldv3(&v9.x, &vA.x, &vB.x);
+    gte_rtpt();
+    
+    // Interpolate attributes for 359
+    #define vtx_r3 quad_0367->r1
+    #define vtx_r5 quad_4589->r1
+    #define vtx_r9 quad_4589->r3
+    halfway_rgb_uv(&vtx_r0, &vtx_r4, &quad_0367->r1);  // v3: between 0-4
+    halfway_rgb_uv(&vtx_r4, &vtx_r1, &quad_4589->r1);  // v5: between 4-1
+    halfway_rgb_uv(&vtx_r1, &vtx_rC, &quad_4589->r3);  // v9: between 1-C
+    copy_rgb_uv(&vtx_r3, &quad_3478->r0); // v3
+    copy_rgb_uv(&vtx_r3, &tri_043->r2);
+    copy_rgb_uv(&vtx_r5, &tri_519->r0); // v5
+    copy_rgb_uv(&vtx_r5, &tri_415->r2);
+    copy_rgb_uv(&vtx_r9, &tri_519->r2); // v9
+    copy_rgb_uv(&vtx_r9, &tri_89C->r1);
+    copy_rgb_uv(&vtx_r9, &tri_C91->r1);
+
+    // Store transformed 9AB
+    gte_stsxy0(&quad_4589->x3); // XY 9
+    gte_stsxy0(&tri_519->x2); 
+    gte_stsxy0(&tri_89C->x1); 
+    gte_stsxy0(&tri_C91->x1); 
+    gte_stsxy1(&quad_67AB->x2);  // XY A
+    gte_stsxy1(&quad_ABDE->x0); 
+    gte_stsxy1(&tri_2DA->x2); 
+    gte_stsxy1(&tri_A60->x0); 
+    gte_stsxy2(&quad_67AB->x3); // XY B
+    gte_stsxy2(&quad_78BC->x2); 
+    gte_stsxy2(&quad_ABDE->x1);  
+    gte_stsxy2(&tri_BCE->x0); 
+
+    // Start transform CDE
+    gte_ldv3(&vC.x, &vD.x, &vE.x);
+    gte_rtpt();
+
+    // Interpolate attributes for ED6
+    #define vtx_rE quad_ABDE->r3
+    #define vtx_rD quad_ABDE->r2
+    #define vtx_r6 quad_0367->r2
+    halfway_rgb_uv(&vtx_rC, &vtx_r2, &quad_ABDE->r3);  // vE: between C-2
+    halfway_rgb_uv(&vtx_r2, &vtx_rA, &quad_ABDE->r2);  // vD: between 2-A
+    halfway_rgb_uv(&vtx_rA, &vtx_r0, &quad_0367->r2);  // v6: between A-0
+    copy_rgb_uv(&vtx_rE, &tri_BCE->r2); // vE
+    copy_rgb_uv(&vtx_rE, &tri_DE2->r1);
+    copy_rgb_uv(&vtx_rE, &tri_2EC->r1);
+    copy_rgb_uv(&vtx_rD, &tri_DE2->r0); // vD
+    copy_rgb_uv(&vtx_rD, &tri_2DA->r1);
+    copy_rgb_uv(&vtx_r6, &quad_67AB->r0); // v6
+    copy_rgb_uv(&vtx_r6, &tri_A60->r1);
+
+    // Interpolate attributes for 8B7
+    #define vtx_r8 quad_3478->r3
+    #define vtx_rB quad_67AB->r3
+    #define vtx_r7 quad_0367->r3
+    halfway_rgb_uv(&vtx_r4, &vtx_rC, &quad_3478->r3);  // v8: between 4-C
+    halfway_rgb_uv(&vtx_rA, &vtx_rC, &quad_67AB->r3);  // vB: between A-C
+    halfway_rgb_uv(&vtx_r6, &vtx_r8, &quad_0367->r3);  // v7: between 6-8
+    copy_rgb_uv(&vtx_r8, &quad_4589->r2); // v8
+    copy_rgb_uv(&vtx_r8, &quad_78BC->r1);
+    copy_rgb_uv(&vtx_r8, &tri_89C->r0);
+    copy_rgb_uv(&vtx_rB, &quad_78BC->r2); // vB
+    copy_rgb_uv(&vtx_rB, &quad_ABDE->r1);
+    copy_rgb_uv(&vtx_rB, &tri_BCE->r0);
+    copy_rgb_uv(&vtx_r7, &quad_3478->r2); // v7
+    copy_rgb_uv(&vtx_r7, &quad_67AB->r1);
+    copy_rgb_uv(&vtx_r7, &quad_78BC->r0);
+
+    // Store transformed CDE
+    gte_stsxy0(&quad_78BC->x3);  // XY C
+    gte_stsxy0(&tri_89C->x2); 
+    gte_stsxy0(&tri_BCE->x1); 
+    gte_stsxy0(&tri_C91->x0); 
+    gte_stsxy0(&tri_2EC->x2); 
+    gte_stsxy1(&quad_ABDE->x2);  // XY D
+    gte_stsxy1(&tri_DE2->x0); 
+    gte_stsxy1(&tri_2DA->x1); 
+    gte_stsxy2(&quad_ABDE->x3);  // XY E
+    gte_stsxy2(&tri_BCE->x2); 
+    gte_stsxy2(&tri_DE2->x1); 
+    gte_stsxy2(&tri_2EC->x1); 
+
+    // Copy constant fields
+    quad_0367->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;    quad_0367->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    quad_3478->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;    quad_3478->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    quad_4589->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;    quad_4589->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    quad_67AB->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;    quad_67AB->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    quad_78BC->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;    quad_78BC->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    quad_ABDE->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;    quad_ABDE->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    tri_519->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_519->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    tri_89C->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_89C->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    tri_BCE->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_BCE->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    tri_DE2->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_DE2->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    tri_043->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_043->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    tri_415->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_415->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    tri_C91->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_C91->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    tri_2EC->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_2EC->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    tri_2DA->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_2DA->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    tri_A60->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_A60->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+
+    #undef vtx_r0
+    #undef vtx_r1
+    #undef vtx_r2
+    #undef vtx_r3
+    #undef vtx_r4
+    #undef vtx_r5
+    #undef vtx_r6
+    #undef vtx_r7
+    #undef vtx_r8
+    #undef vtx_r9
+    #undef vtx_rA
+    #undef vtx_rB
+    #undef vtx_rC
+    #undef vtx_rD
+    #undef vtx_rE
+    #undef vtx_rF
+
+    // Add to ordering table for rendering
+    setPolyGT4(quad_0367);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_0367);
+    setPolyGT4(quad_3478);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_3478);
+    setPolyGT4(quad_4589);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_4589);
+    setPolyGT4(quad_67AB);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_67AB);
+    setPolyGT4(quad_78BC);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_78BC);
+    setPolyGT4(quad_ABDE);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_ABDE);
+    setPolyGT3(tri_519);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_519);
+    setPolyGT3(tri_89C);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_89C);
+    setPolyGT3(tri_BCE);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_BCE);
+    setPolyGT3(tri_DE2);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_DE2);
+    setPolyGT3(tri_043);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_043);
+    setPolyGT3(tri_415);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_415);
+    setPolyGT3(tri_C91);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_C91);
+    setPolyGT3(tri_2EC);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_2EC);
+    setPolyGT3(tri_2DA);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_2DA);
+    setPolyGT3(tri_A60);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_A60);
+}
+
+void draw_level1_subdivided_quad(const mesh_t* mesh, const size_t vert_idx, const size_t poly_idx, scalar_t otz) {
+    // 0-----1       0--4--1
+    // |     |       |  |  |
+    // |     |  -->  5--8--6  + filler at the edges to fix gaps
+    // |     |       |  |  |
+    // 2-----3       2--7--3
+
+    // Subdivided quad
+    POLY_GT4* quad_0458 = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_4186 = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_5827 = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_8673 = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+
+    // Filler triangles
+    POLY_GT3* tri_014 = (POLY_GT3*)next_primitive;    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_136 = (POLY_GT3*)next_primitive;    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_327 = (POLY_GT3*)next_primitive;    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_205 = (POLY_GT3*)next_primitive;    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+
+    // Copy position for 0, was stored earlier in `draw_tex_quad3d_fancy()`
+    COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &quad_0458->x0); // XY 0
+    COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &tri_014->x0);
+    COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &tri_205->x1);
+
+    // GTE still holds positions 123 - store them
+    gte_stsxy0(&quad_4186->x1); // XY 1
+    gte_stsxy0(&tri_014->x1);
+    gte_stsxy0(&tri_136->x0);
+    gte_stsxy1(&quad_5827->x2); // XY 2
+    gte_stsxy1(&tri_327->x1);
+    gte_stsxy1(&tri_205->x0);
+    gte_stsxy2(&quad_8673->x3); // XY 3
+    gte_stsxy2(&tri_136->x1);
+    gte_stsxy2(&tri_327->x0);
+
+    // Interpolate positions
+    const aligned_position_t v4 = get_halfway_position(mesh->vtx_pos_and_size[vert_idx + 0], mesh->vtx_pos_and_size[vert_idx + 1]);
+    const aligned_position_t v5 = get_halfway_position(mesh->vtx_pos_and_size[vert_idx + 0], mesh->vtx_pos_and_size[vert_idx + 2]);
+    const aligned_position_t v6 = get_halfway_position(mesh->vtx_pos_and_size[vert_idx + 1], mesh->vtx_pos_and_size[vert_idx + 3]);
+    const aligned_position_t v7 = get_halfway_position(mesh->vtx_pos_and_size[vert_idx + 2], mesh->vtx_pos_and_size[vert_idx + 3]);
+    const aligned_position_t v8 = get_halfway_position(v5, v6);
+
+    // Start transform 456
+    gte_ldv3(&v4.x, &v5.x, &v6.x);
+    gte_rtpt();
+
+    // Copy attributes for 0123
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r0, &quad_0458->r0); // v0
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r0, &tri_014->r0);
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r0, &tri_205->r1);
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r1, &quad_4186->r1); // v1
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r1, &tri_014->r1);
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r1, &tri_136->r0);
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r2, &quad_5827->r2); // v2
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r2, &tri_327->r1);
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r2, &tri_205->r0);
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r3, &quad_8673->r3); // v3
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r3, &tri_136->r1);
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r3, &tri_327->r0);
+
+    // Store positions 456
+    gte_stsxy0(&quad_0458->x1); // XY 4
+    gte_stsxy0(&quad_4186->x0);
+    gte_stsxy0(&tri_014->x2);
+    gte_stsxy1(&quad_0458->x2); // XY 5
+    gte_stsxy1(&quad_5827->x0);
+    gte_stsxy1(&tri_205->x2);
+    gte_stsxy2(&quad_4186->x3); // XY 6
+    gte_stsxy2(&quad_8673->x1);
+    gte_stsxy2(&tri_136->x2);
+
+    // Transform positions 78 - we do RTPT but ignore the last vertex
+    gte_ldv01(&v7.x, &v8.x);
+    gte_rtpt();
+
+    // Copy attributes for 45678
+    halfway_rgb_uv(&mesh->tex_quads[0][poly_idx].r0, &mesh->tex_quads[0][poly_idx].r1, &quad_0458->r1); // XY 4
+    copy_rgb_uv(&quad_0458->r1, &quad_4186->r0);
+    copy_rgb_uv(&quad_0458->r1, &tri_014->r2);
+    halfway_rgb_uv(&mesh->tex_quads[0][poly_idx].r0, &mesh->tex_quads[0][poly_idx].r2, &quad_0458->r2); // XY 5
+    copy_rgb_uv(&quad_0458->r2, &quad_5827->r0);
+    copy_rgb_uv(&quad_0458->r2, &tri_205->r2);
+    halfway_rgb_uv(&mesh->tex_quads[0][poly_idx].r1, &mesh->tex_quads[0][poly_idx].r3, &quad_4186->r3); // XY 6
+    copy_rgb_uv(&quad_4186->r3, &quad_8673->r1);
+    copy_rgb_uv(&quad_4186->r3, &tri_136->r2);
+    halfway_rgb_uv(&mesh->tex_quads[0][poly_idx].r2, &mesh->tex_quads[0][poly_idx].r3, &quad_5827->r3); // XY 7
+    copy_rgb_uv(&quad_5827->r3, &quad_8673->r2);
+    copy_rgb_uv(&quad_5827->r3, &tri_327->r2);
+    halfway_rgb_uv(&quad_0458->r2, &quad_4186->r3, &quad_0458->r3); // XY 8
+    copy_rgb_uv(&quad_0458->r3, &quad_4186->r2);
+    copy_rgb_uv(&quad_0458->r3, &quad_5827->r1);
+    copy_rgb_uv(&quad_0458->r3, &quad_8673->r0);
+
+    // Store positions 78
+    gte_stsxy0(&quad_5827->x3); // XY 7
+    gte_stsxy0(&quad_8673->x2);
+    gte_stsxy0(&tri_327->x2);
+    gte_stsxy1(&quad_0458->x3); // XY 8
+    gte_stsxy1(&quad_4186->x2);
+    gte_stsxy1(&quad_5827->x1);
+    gte_stsxy1(&quad_8673->x0);
+
+    // Copy constants
+    const uint16_t clut = mesh->tex_quads[0][poly_idx].clut & 0b111110000111111; // reset distance fade palette index
+    const uint16_t tpage = mesh->tex_quads[0][poly_idx].tpage;
+    quad_0458->clut = clut;   quad_0458->tpage = tpage;
+    quad_4186->clut = clut;   quad_4186->tpage = tpage;
+    quad_5827->clut = clut;   quad_5827->tpage = tpage;
+    quad_8673->clut = clut;   quad_8673->tpage = tpage;
+    tri_014->clut = clut;     tri_014->tpage = tpage;
+    tri_136->clut = clut;     tri_136->tpage = tpage;
+    tri_327->clut = clut;     tri_327->tpage = tpage;
+    tri_205->clut = clut;     tri_205->tpage = tpage;
+
+    // Add to ordering table for rendering
+    setPolyGT4(quad_0458);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_0458);
+    setPolyGT4(quad_4186);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_4186);
+    setPolyGT4(quad_5827);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_5827);
+    setPolyGT4(quad_8673);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_8673);
+    setPolyGT3(tri_014);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_014);
+    setPolyGT3(tri_136);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_136);
+    setPolyGT3(tri_327);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_327);
+    setPolyGT3(tri_205);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_205);
+}
+
+void draw_level2_subdivided_quad(const mesh_t* mesh, const size_t vert_idx, const size_t poly_idx, scalar_t otz) {
+    // 0-----------1       0--8--4--9--1    
+    // |           |       |  |  |  |  |    
+    // |           |       F--K--G--L--A    
+    // |           |       |  |  |  |  |  
+    // |           |  -->  7--J--O--H--5  + filler at the edges to fix gaps           
+    // |           |       |  |  |  |  |  
+    // |           |       E--N--I--M--B    
+    // |           |       |  |  |  |  |  
+    // 2-----------3       2--D--6--C--3
+
+    #define v0 mesh->vtx_pos_and_size[vert_idx + 0]
+    #define v1 mesh->vtx_pos_and_size[vert_idx + 1]
+    #define v2 mesh->vtx_pos_and_size[vert_idx + 2]
+    #define v3 mesh->vtx_pos_and_size[vert_idx + 3]
+
+    // Subdivided quad
+    POLY_GT4* quad_08FK = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_84KG = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_49GL = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_91LA = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_FK7J = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_KGJO = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_GLOH = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_LAH5 = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_7JEN = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_JONI = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_OHIM = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_H5MB = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_EN2D = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_NID6 = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_IM6C = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    POLY_GT4* quad_MBC3 = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+
+    // Filler triangles
+    POLY_GT3* tri_048 = (POLY_GT3*)next_primitive;    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_419 = (POLY_GT3*)next_primitive;    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_15A = (POLY_GT3*)next_primitive;    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_53B = (POLY_GT3*)next_primitive;    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_36C = (POLY_GT3*)next_primitive;    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_62D = (POLY_GT3*)next_primitive;    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_27E = (POLY_GT3*)next_primitive;    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    POLY_GT3* tri_70F = (POLY_GT3*)next_primitive;    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+
+    // Copy the first position from what we did before calling this function
+    COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &quad_08FK->x0);
+    COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &tri_048->x0);
+    COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &tri_70F->x1);
+    COPY_COLOR(&mesh->tex_quads[0][poly_idx].r0, &quad_08FK->r0);
+    COPY_COLOR(&mesh->tex_quads[0][poly_idx].r0, &tri_048->r0);
+    COPY_COLOR(&mesh->tex_quads[0][poly_idx].r0, &tri_70F->r1);
+    COPY_UV(&mesh->tex_quads[0][poly_idx].u0, &quad_08FK->u0);
+    COPY_UV(&mesh->tex_quads[0][poly_idx].u0, &tri_048->u0);
+    COPY_UV(&mesh->tex_quads[0][poly_idx].u0, &tri_70F->u1);
+
+    #define vtx_r0 mesh->tex_quads[0][poly_idx].r0
+    #define vtx_r1 mesh->tex_quads[0][poly_idx].r1
+    #define vtx_r2 mesh->tex_quads[0][poly_idx].r2
+    #define vtx_r3 mesh->tex_quads[0][poly_idx].r3
+    #define vtx_r4 quad_84KG->r1
+    #define vtx_r5 quad_LAH5->r3
+    #define vtx_r6 quad_NID6->r3
+    #define vtx_r7 quad_FK7J->r2
+    #define vtx_r8 quad_08FK->r1
+    #define vtx_r9 quad_49GL->r1
+    #define vtx_rA quad_91LA->r3
+    #define vtx_rB quad_H5MB->r3
+    #define vtx_rC quad_IM6C->r3
+    #define vtx_rD quad_EN2D->r3
+    #define vtx_rE quad_7JEN->r2
+    #define vtx_rF quad_08FK->r2
+    #define vtx_rG quad_84KG->r3
+    #define vtx_rH quad_GLOH->r3
+    #define vtx_rI quad_JONI->r3
+    #define vtx_rJ quad_FK7J->r3
+    #define vtx_rK quad_08FK->r3
+    #define vtx_rL quad_49GL->r3
+    #define vtx_rM quad_OHIM->r3
+    #define vtx_rN quad_7JEN->r3
+    #define vtx_rO quad_KGJO->r3
+
+    // Store positions 123
+    gte_stsxy0(&quad_91LA->x1); // XY 1
+    gte_stsxy0(&tri_419->x1);
+    gte_stsxy0(&tri_15A->x0);
+    gte_stsxy1(&quad_EN2D->x2); // XY 2
+    gte_stsxy1(&tri_62D->x1);
+    gte_stsxy1(&tri_27E->x0);
+    gte_stsxy2(&quad_MBC3->x3); // XY 3
+    gte_stsxy2(&tri_53B->x1);
+    gte_stsxy2(&tri_36C->x0);
+
+    // Copy attributes for 123
+    copy_rgb_uv(&vtx_r1, &quad_91LA->r1); // v1
+    copy_rgb_uv(&vtx_r1, &tri_419->r1);
+    copy_rgb_uv(&vtx_r1, &tri_15A->r0);
+    copy_rgb_uv(&vtx_r2, &quad_EN2D->r2); // v2
+    copy_rgb_uv(&vtx_r2, &tri_62D->r1);
+    copy_rgb_uv(&vtx_r2, &tri_27E->r0);
+    copy_rgb_uv(&vtx_r3, &quad_MBC3->r3); // v3
+    copy_rgb_uv(&vtx_r3, &tri_53B->r1);
+    copy_rgb_uv(&vtx_r3, &tri_36C->r0);
+
+    // Interpolate vertex positions for 456
+    const aligned_position_t v4 = get_halfway_position(v0, v1);
+    const aligned_position_t v5 = get_halfway_position(v1, v3);
+    const aligned_position_t v6 = get_halfway_position(v2, v3);
+
+    // Transform 456
+    gte_ldv3(&v4.x, &v5.x, &v6.x);
+    gte_rtpt();
+
+    // Copy attributes for 456
+    halfway_rgb_uv(&vtx_r0, &vtx_r1, &vtx_r4);
+    halfway_rgb_uv(&vtx_r1, &vtx_r3, &vtx_r5);
+    halfway_rgb_uv(&vtx_r2, &vtx_r3, &vtx_r6);
+    copy_rgb_uv(&vtx_r4, &quad_84KG->r1); // v4
+    copy_rgb_uv(&vtx_r4, &quad_49GL->r0);
+    copy_rgb_uv(&vtx_r4, &tri_048->r1);
+    copy_rgb_uv(&vtx_r4, &tri_419->r0);
+    copy_rgb_uv(&vtx_r5, &quad_LAH5->r3); // v5
+    copy_rgb_uv(&vtx_r5, &quad_H5MB->r1);
+    copy_rgb_uv(&vtx_r5, &tri_15A->r1);
+    copy_rgb_uv(&vtx_r5, &tri_53B->r0);
+    copy_rgb_uv(&vtx_r6, &quad_NID6->r3); // v6
+    copy_rgb_uv(&vtx_r6, &quad_IM6C->r2);
+    copy_rgb_uv(&vtx_r6, &tri_36C->r1);
+    copy_rgb_uv(&vtx_r6, &tri_62D->r0);
+
+    // Store positions 456
+    gte_stsxy0(&quad_84KG->x1); // XY 4
+    gte_stsxy0(&quad_49GL->x0);
+    gte_stsxy0(&tri_048->x1);
+    gte_stsxy0(&tri_419->x0);
+    gte_stsxy1(&quad_LAH5->x3); // XY 5
+    gte_stsxy1(&quad_H5MB->x1);
+    gte_stsxy1(&tri_15A->x1);
+    gte_stsxy1(&tri_53B->x0);
+    gte_stsxy2(&quad_NID6->x3); // XY 6
+    gte_stsxy2(&quad_IM6C->x2);
+    gte_stsxy2(&tri_36C->x1);
+    gte_stsxy2(&tri_62D->x0);
+
+    // Interpolate vertex positions for 789
+    const aligned_position_t v7 = get_halfway_position(v0, v2);
+    const aligned_position_t v8 = get_halfway_position(v0, v4);
+    const aligned_position_t v9 = get_halfway_position(v4, v1);
+
+    // Transform 789
+    gte_ldv3(&v7.x, &v8.x, &v9.x);
+    gte_rtpt();
+
+    // Copy attributes for 789
+    halfway_rgb_uv(&vtx_r0, &vtx_r2, &vtx_r7);
+    halfway_rgb_uv(&vtx_r0, &vtx_r4, &vtx_r8);
+    halfway_rgb_uv(&vtx_r4, &vtx_r1, &vtx_r9);
+    copy_rgb_uv(&vtx_r7, &quad_FK7J->r2); // v7
+    copy_rgb_uv(&vtx_r7, &quad_7JEN->r0);
+    copy_rgb_uv(&vtx_r7, &tri_27E->r1);
+    copy_rgb_uv(&vtx_r7, &tri_70F->r0);
+    copy_rgb_uv(&vtx_r8, &quad_08FK->r1); // v8
+    copy_rgb_uv(&vtx_r8, &quad_84KG->r0);
+    copy_rgb_uv(&vtx_r8, &tri_048->r2);
+    copy_rgb_uv(&vtx_r9, &quad_49GL->r1); // v9
+    copy_rgb_uv(&vtx_r9, &quad_91LA->r0);
+    copy_rgb_uv(&vtx_r9, &tri_419->r2);
+
+    // Store positions 789
+    gte_stsxy0(&quad_FK7J->x2); // XY 7
+    gte_stsxy0(&quad_7JEN->x0);
+    gte_stsxy0(&tri_27E->x1);
+    gte_stsxy0(&tri_70F->x0);
+    gte_stsxy1(&quad_08FK->x1); // XY 8
+    gte_stsxy1(&quad_84KG->x0);
+    gte_stsxy1(&tri_048->x2);
+    gte_stsxy2(&quad_49GL->x1); // XY 9
+    gte_stsxy2(&quad_91LA->x0);
+    gte_stsxy2(&tri_419->x2);
+
+    // Interpolate vertex positions for ABC
+    const aligned_position_t vA = get_halfway_position(v1, v5);
+    const aligned_position_t vB = get_halfway_position(v5, v3);
+    const aligned_position_t vC = get_halfway_position(v6, v3);
+
+    // Transform ABC
+    gte_ldv3(&vA.x, &vB.x, &vC.x);
+    gte_rtpt();
+
+    // Copy attributes for ABC
+    halfway_rgb_uv(&vtx_r1, &vtx_r5, &vtx_rA);
+    halfway_rgb_uv(&vtx_r5, &vtx_r3, &vtx_rB);
+    halfway_rgb_uv(&vtx_r6, &vtx_r3, &vtx_rC);
+    copy_rgb_uv(&vtx_rA, &quad_91LA->r3); // vA
+    copy_rgb_uv(&vtx_rA, &quad_LAH5->r1);
+    copy_rgb_uv(&vtx_rA, &tri_15A->r2);
+    copy_rgb_uv(&vtx_rB, &quad_H5MB->r3); // vB
+    copy_rgb_uv(&vtx_rB, &quad_MBC3->r1);
+    copy_rgb_uv(&vtx_rB, &tri_53B->r2);
+    copy_rgb_uv(&vtx_rC, &quad_IM6C->r3); // vC
+    copy_rgb_uv(&vtx_rC, &quad_MBC3->r2);
+    copy_rgb_uv(&vtx_rC, &tri_36C->r2);
+
+    // Store positions ABC
+    gte_stsxy0(&quad_91LA->x3); // XY A
+    gte_stsxy0(&quad_LAH5->x1);
+    gte_stsxy0(&tri_15A->x2);
+    gte_stsxy1(&quad_H5MB->x3); // XY B
+    gte_stsxy1(&quad_MBC3->x1);
+    gte_stsxy1(&tri_53B->x2);
+    gte_stsxy2(&quad_IM6C->x3); // XY C
+    gte_stsxy2(&quad_MBC3->x2);
+    gte_stsxy2(&tri_36C->x2);
+
+    // Interpolate vertex positions for DEF
+    const aligned_position_t vD = get_halfway_position(v2, v6);
+    const aligned_position_t vE = get_halfway_position(v7, v2);
+    const aligned_position_t vF = get_halfway_position(v0, v7);
+
+    // Transform DEF
+    gte_ldv3(&vD.x, &vE.x, &vF.x);
+    gte_rtpt();
+
+    // Copy attributes for DEF
+    halfway_rgb_uv(&vtx_r2, &vtx_r6, &vtx_rD);
+    halfway_rgb_uv(&vtx_r7, &vtx_r2, &vtx_rE);
+    halfway_rgb_uv(&vtx_r0, &vtx_r7, &vtx_rF);
+    copy_rgb_uv(&vtx_rD, &quad_EN2D->r3); // vD
+    copy_rgb_uv(&vtx_rD, &quad_NID6->r2);
+    copy_rgb_uv(&vtx_rD, &tri_62D->r2);
+    copy_rgb_uv(&vtx_rE, &quad_7JEN->r2); // vE
+    copy_rgb_uv(&vtx_rE, &quad_EN2D->r0);
+    copy_rgb_uv(&vtx_rE, &tri_27E->r2);
+    copy_rgb_uv(&vtx_rF, &quad_08FK->r2); // vF
+    copy_rgb_uv(&vtx_rF, &quad_FK7J->r0);
+    copy_rgb_uv(&vtx_rF, &tri_70F->r2);
+
+    // Store positions DEF
+    gte_stsxy0(&quad_EN2D->x3); // XY D
+    gte_stsxy0(&quad_NID6->x2);
+    gte_stsxy0(&tri_62D->x2);
+    gte_stsxy1(&quad_7JEN->x2); // XY E
+    gte_stsxy1(&quad_EN2D->x0);
+    gte_stsxy1(&tri_27E->x2);
+    gte_stsxy2(&quad_08FK->x2); // XY F
+    gte_stsxy2(&quad_FK7J->x0);
+    gte_stsxy2(&tri_70F->x2);
+
+    // Interpolate vertex positions for GHI
+    const aligned_position_t vG = get_halfway_position(vF, vA);
+    const aligned_position_t vH = get_halfway_position(v9, vC);
+    const aligned_position_t vI = get_halfway_position(vE, vB);
+
+    // Transform GHI
+    gte_ldv3(&vG.x, &vH.x, &vI.x);
+    gte_rtpt();
+
+    // Copy attributes for GHI
+    halfway_rgb_uv(&vtx_rF, &vtx_rA, &vtx_rG);
+    halfway_rgb_uv(&vtx_r9, &vtx_rC, &vtx_rH);
+    halfway_rgb_uv(&vtx_rE, &vtx_rB, &vtx_rI);
+    copy_rgb_uv(&vtx_rG, &quad_84KG->r3); // vG
+    copy_rgb_uv(&vtx_rG, &quad_49GL->r2);
+    copy_rgb_uv(&vtx_rG, &quad_KGJO->r1);
+    copy_rgb_uv(&vtx_rG, &quad_GLOH->r0);
+    copy_rgb_uv(&vtx_rH, &quad_GLOH->r3); // vH
+    copy_rgb_uv(&vtx_rH, &quad_LAH5->r2);
+    copy_rgb_uv(&vtx_rH, &quad_OHIM->r1);
+    copy_rgb_uv(&vtx_rH, &quad_H5MB->r0);
+    copy_rgb_uv(&vtx_rI, &quad_JONI->r3); // vI
+    copy_rgb_uv(&vtx_rI, &quad_OHIM->r2);
+    copy_rgb_uv(&vtx_rI, &quad_NID6->r1);
+    copy_rgb_uv(&vtx_rI, &quad_IM6C->r0);
+
+    // Store positions GHI
+    gte_stsxy0(&quad_84KG->x3); // XY G
+    gte_stsxy0(&quad_49GL->x2);
+    gte_stsxy0(&quad_KGJO->x1);
+    gte_stsxy0(&quad_GLOH->x0);
+    gte_stsxy1(&quad_GLOH->x3); // XY H
+    gte_stsxy1(&quad_LAH5->x2);
+    gte_stsxy1(&quad_OHIM->x1);
+    gte_stsxy1(&quad_H5MB->x0);
+    gte_stsxy2(&quad_JONI->x3); // XY I
+    gte_stsxy2(&quad_OHIM->x2);
+    gte_stsxy2(&quad_NID6->x1);
+    gte_stsxy2(&quad_IM6C->x0);
+
+    // Interpolate vertex positions for JKL
+    const aligned_position_t vJ = get_halfway_position(v8, vD);
+    const aligned_position_t vK = get_halfway_position(v8, vJ);
+    const aligned_position_t vL = get_halfway_position(v9, vH);
+
+    // Transform JKL
+    gte_ldv3(&vJ.x, &vK.x, &vL.x);
+    gte_rtpt();
+
+    // Copy attributes for JKL
+    halfway_rgb_uv(&vtx_r8, &vtx_rD, &vtx_rJ);
+    halfway_rgb_uv(&vtx_r8, &vtx_rJ, &vtx_rK);
+    halfway_rgb_uv(&vtx_r9, &vtx_rH, &vtx_rL);
+    copy_rgb_uv(&vtx_rJ, &quad_FK7J->r3); // vJ
+    copy_rgb_uv(&vtx_rJ, &quad_KGJO->r2);
+    copy_rgb_uv(&vtx_rJ, &quad_7JEN->r1);
+    copy_rgb_uv(&vtx_rJ, &quad_JONI->r0);
+    copy_rgb_uv(&vtx_rK, &quad_08FK->r3); // vK
+    copy_rgb_uv(&vtx_rK, &quad_84KG->r2);
+    copy_rgb_uv(&vtx_rK, &quad_FK7J->r1);
+    copy_rgb_uv(&vtx_rK, &quad_KGJO->r0);
+    copy_rgb_uv(&vtx_rL, &quad_49GL->r3); // vL
+    copy_rgb_uv(&vtx_rL, &quad_91LA->r2);
+    copy_rgb_uv(&vtx_rL, &quad_GLOH->r1);
+    copy_rgb_uv(&vtx_rL, &quad_LAH5->r0);
+
+    // Store positions JKL
+    gte_stsxy0(&quad_FK7J->x3); // XY J
+    gte_stsxy0(&quad_KGJO->x2);
+    gte_stsxy0(&quad_7JEN->x1);
+    gte_stsxy0(&quad_JONI->x0);
+    gte_stsxy1(&quad_08FK->x3); // XY K
+    gte_stsxy1(&quad_84KG->x2);
+    gte_stsxy1(&quad_FK7J->x1);
+    gte_stsxy1(&quad_KGJO->x0);
+    gte_stsxy2(&quad_49GL->x3); // XY L
+    gte_stsxy2(&quad_91LA->x2);
+    gte_stsxy2(&quad_GLOH->x1);
+    gte_stsxy2(&quad_LAH5->x0);
+
+    // Interpolate vertex positions for MNO
+    const aligned_position_t vM = get_halfway_position(vC, vH);
+    const aligned_position_t vN = get_halfway_position(vE, vI);
+    const aligned_position_t vO = get_halfway_position(v4, v6);
+
+    // Transform MNO
+    gte_ldv3(&vM.x, &vN.x, &vO.x);
+    gte_rtpt();
+
+    // Copy attributes for MNO
+    halfway_rgb_uv(&vtx_rC, &vtx_rH, &vtx_rM);
+    halfway_rgb_uv(&vtx_rE, &vtx_rI, &vtx_rN);
+    halfway_rgb_uv(&vtx_r4, &vtx_r6, &vtx_rO);
+    copy_rgb_uv(&vtx_rM, &quad_OHIM->r3); // vM
+    copy_rgb_uv(&vtx_rM, &quad_H5MB->r2);
+    copy_rgb_uv(&vtx_rM, &quad_IM6C->r1);
+    copy_rgb_uv(&vtx_rM, &quad_MBC3->r0);
+    copy_rgb_uv(&vtx_rN, &quad_7JEN->r3); // vN
+    copy_rgb_uv(&vtx_rN, &quad_JONI->r2);
+    copy_rgb_uv(&vtx_rN, &quad_EN2D->r1);
+    copy_rgb_uv(&vtx_rN, &quad_NID6->r0);
+    copy_rgb_uv(&vtx_rO, &quad_KGJO->r3); // vO
+    copy_rgb_uv(&vtx_rO, &quad_GLOH->r2);
+    copy_rgb_uv(&vtx_rO, &quad_JONI->r1);
+    copy_rgb_uv(&vtx_rO, &quad_OHIM->r0);
+
+    // Store positions MNO
+    gte_stsxy0(&quad_OHIM->x3); // XY M
+    gte_stsxy0(&quad_H5MB->x2);
+    gte_stsxy0(&quad_IM6C->x1);
+    gte_stsxy0(&quad_MBC3->x0);
+    gte_stsxy1(&quad_7JEN->x3); // XY N
+    gte_stsxy1(&quad_JONI->x2);
+    gte_stsxy1(&quad_EN2D->x1);
+    gte_stsxy1(&quad_NID6->x0);
+    gte_stsxy2(&quad_KGJO->x3); // XY O
+    gte_stsxy2(&quad_GLOH->x2);
+    gte_stsxy2(&quad_JONI->x1);
+    gte_stsxy2(&quad_OHIM->x0);
+
+    // Copy constant fields
+    const uint16_t clut = mesh->tex_quads[0][poly_idx].clut & 0b111110000111111; // reset distance fade palette index
+    const uint16_t tpage = mesh->tex_quads[0][poly_idx].tpage;
+    quad_08FK->clut = clut;    quad_08FK->tpage = tpage;
+    quad_84KG->clut = clut;    quad_84KG->tpage = tpage;
+    quad_49GL->clut = clut;    quad_49GL->tpage = tpage;
+    quad_91LA->clut = clut;    quad_91LA->tpage = tpage;
+    quad_FK7J->clut = clut;    quad_FK7J->tpage = tpage;
+    quad_KGJO->clut = clut;    quad_KGJO->tpage = tpage;
+    quad_GLOH->clut = clut;    quad_GLOH->tpage = tpage;
+    quad_LAH5->clut = clut;    quad_LAH5->tpage = tpage;
+    quad_7JEN->clut = clut;    quad_7JEN->tpage = tpage;
+    quad_JONI->clut = clut;    quad_JONI->tpage = tpage;
+    quad_OHIM->clut = clut;    quad_OHIM->tpage = tpage;
+    quad_H5MB->clut = clut;    quad_H5MB->tpage = tpage;
+    quad_EN2D->clut = clut;    quad_EN2D->tpage = tpage;
+    quad_NID6->clut = clut;    quad_NID6->tpage = tpage;
+    quad_IM6C->clut = clut;    quad_IM6C->tpage = tpage;
+    quad_MBC3->clut = clut;    quad_MBC3->tpage = tpage;
+    tri_048->clut = clut;    tri_048->tpage = tpage;
+    tri_419->clut = clut;    tri_419->tpage = tpage;
+    tri_15A->clut = clut;    tri_15A->tpage = tpage;
+    tri_53B->clut = clut;    tri_53B->tpage = tpage;
+    tri_36C->clut = clut;    tri_36C->tpage = tpage;
+    tri_62D->clut = clut;    tri_62D->tpage = tpage;
+    tri_27E->clut = clut;    tri_27E->tpage = tpage;
+    tri_70F->clut = clut;    tri_70F->tpage = tpage;
+
+    #undef vtx_r0
+    #undef vtx_r1
+    #undef vtx_r2
+    #undef vtx_r3
+    #undef vtx_r4
+    #undef vtx_r5
+    #undef vtx_r6
+    #undef vtx_r7
+    #undef vtx_r8
+    #undef vtx_r9
+    #undef vtx_r10
+    #undef vtx_r11
+    #undef vtx_r12
+    #undef vtx_r13
+    #undef vtx_r14
+    #undef vtx_r15
+    #undef vtx_r16
+    #undef vtx_r17
+    #undef vtx_r18
+    #undef vtx_r19
+    #undef vtx_r20
+    #undef vtx_r21
+    #undef vtx_r22
+    #undef vtx_r23
+    #undef vtx_r24
+    #undef v0
+    #undef v1
+    #undef v2
+    #undef v3
+
+    // Add to ordering table for rendering
+    setPolyGT4(quad_08FK);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_08FK);
+    setPolyGT4(quad_84KG);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_84KG);
+    setPolyGT4(quad_49GL);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_49GL);
+    setPolyGT4(quad_91LA);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_91LA);
+    setPolyGT4(quad_FK7J);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_FK7J);
+    setPolyGT4(quad_KGJO);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_KGJO);
+    setPolyGT4(quad_GLOH);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_GLOH);
+    setPolyGT4(quad_LAH5);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_LAH5);
+    setPolyGT4(quad_7JEN);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_7JEN);
+    setPolyGT4(quad_JONI);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_JONI);
+    setPolyGT4(quad_OHIM);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_OHIM);
+    setPolyGT4(quad_H5MB);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_H5MB);
+    setPolyGT4(quad_EN2D);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_EN2D);
+    setPolyGT4(quad_NID6);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_NID6);
+    setPolyGT4(quad_IM6C);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_IM6C);
+    setPolyGT4(quad_MBC3);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_MBC3);
+    setPolyGT3(tri_048);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_048);
+    setPolyGT3(tri_419);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_419);
+    setPolyGT3(tri_15A);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_15A);
+    setPolyGT3(tri_53B);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_53B);
+    setPolyGT3(tri_36C);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_36C);
+    setPolyGT3(tri_62D);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_62D);
+    setPolyGT3(tri_27E);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_27E);
+    setPolyGT3(tri_70F);    addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, tri_70F);
 }
 
 // Transform and add to queue a textured, shaded triangle, with automatic subdivision based on size, fading to solid color in the distance.
-static inline void draw_tex_triangle3d_fancy(const vertex_3d_t* verts) {
+static inline void draw_tex_triangle3d_fancy(const mesh_t* mesh, const size_t vert_idx, const size_t poly_idx) {
     // If this is an occluder, don't render it
-    if (verts[0].tex_id == 254) return;
+    if (mesh->vtx_pos_and_size[vert_idx + 0].tex_id == 254) return;
     
-    // Transform the first 3 vertices
-    struct scratchpad {
-        svec2_t trans_vec_xy[15];
-        scalar_t trans_vec_z[15];
-    };
-
-    struct scratchpad* sp = (struct scratchpad*)SCRATCHPAD;
-
     // Transform the 3 vertices
     gte_ldv3(
-        &verts[0],
-        &verts[1],
-        &verts[2]
+        &mesh->vtx_pos_and_size[vert_idx + 0].x,
+        &mesh->vtx_pos_and_size[vert_idx + 1].x,
+        &mesh->vtx_pos_and_size[vert_idx + 2].x
     );
     gte_rtpt();
 
@@ -441,355 +1087,52 @@ static inline void draw_tex_triangle3d_fancy(const vertex_3d_t* verts) {
     gte_stopz(&p);
     if (p <= 0) return;
 
-    // Store transformed position, and center depth
-    scalar_t avg_z;
-    gte_stsxy3c(&sp->trans_vec_xy[0]);
-    gte_stsz3c(&sp->trans_vec_z[0]);
+    // Get depth
     gte_avsz3();
+    int avg_z;
     gte_stotz(&avg_z);
-    
+
     // Depth culling
     if ((avg_z + curr_ot_bias) >= ORD_TBL_LENGTH || (avg_z <= 0)) return;
-
-    // Cull if off screen
-    int n_left = 1;
-    int n_right = 1;
-    int n_up = 1;
-    int n_down = 1;
-    for (size_t i = 0; i < 3; ++i) {
-        if (sp->trans_vec_xy[i].x < 0) n_left <<= 1;
-        if (sp->trans_vec_xy[i].x > res_x) n_right <<= 1;
-        if (sp->trans_vec_xy[i].y < 0) n_up <<= 1;
-        if (sp->trans_vec_xy[i].y > curr_res_y ) n_down <<= 1;
-    }
-    // If all vertices are off to one side of the screen, one of the values will be shifted left 3x.
-    // When OR-ing the bits together, the result will be %00001???.
-    // Shifting that value to the right 3x drops off the irrelevant ??? bits, returning 1 if all vertices are to one side, and 0 if not
-    const int off_to_one_side = (n_left | n_right | n_up | n_down) >> 3;
-    if (off_to_one_side) return;
-
+    
     // If very close, subdivide twice
-    const scalar_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id;
+    const int32_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub2_threshold) {
-        subdivide_twice_then_add_tex_triangle(verts, sp->trans_vec_xy, sp->trans_vec_z, sub2_threshold);
+        draw_level2_subdivided_triangle(mesh, vert_idx, poly_idx, avg_z);
         return;
     }
-    
-    // If close, subdivice once
-    const scalar_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)verts[1].tex_id;
+
+    // // If close, subdivice once
+    const int32_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub1_threshold) {
-        subdivide_once_then_add_tex_triangle(verts, sp->trans_vec_xy, sp->trans_vec_z, sub1_threshold);
+        SET_DISTANCE_FADE(mesh->tex_quads[drawbuffer][poly_idx], 0);
+        draw_level1_subdivided_triangle(mesh, vert_idx, poly_idx, avg_z);
         return;
     }
 
-    // If normal distance, add triangle normally
-    if (avg_z < TRI_THRESHOLD_FADE_END) {
-        // Calculate CLUT fade
-        int16_t clut_fade = ((N_CLUT_FADES-1) * (avg_z - TRI_THRESHOLD_FADE_START)) / (TRI_THRESHOLD_FADE_END - TRI_THRESHOLD_FADE_START);
-        if (clut_fade > (N_CLUT_FADES-1)) clut_fade = (N_CLUT_FADES-1);
-        else if (clut_fade < 0) clut_fade = 0;
-        add_tex_triangle(sp->trans_vec_xy[0], sp->trans_vec_xy[1], sp->trans_vec_xy[2], verts[0], verts[1], verts[2], avg_z, verts[0].tex_id + tex_id_start, clut_fade);
-        return;
-    }
+    // If quad is far away, render textured, fading into single color when further away
+    // Calculate CLUT fade
+    int16_t clut_fade = ((N_CLUT_FADES-1) * (avg_z - TRI_THRESHOLD_FADE_START)) / (TRI_THRESHOLD_FADE_END - TRI_THRESHOLD_FADE_START);
+    if (clut_fade > (N_CLUT_FADES-1)) clut_fade = (N_CLUT_FADES-1);
+    else if (clut_fade < 0) clut_fade = 0;
 
-    // If far away, calculate colors and add untextured triangle
-    else {
-        add_untex_triangle(sp->trans_vec_xy[0], sp->trans_vec_xy[1], sp->trans_vec_xy[2], verts[0], verts[1], verts[2], avg_z);
-    }
-}
-
-// Transform and add to queue a textured, shaded triangle, ignoring the fading and subdivision
-static inline void draw_tex_triangle3d_fast(const vertex_3d_t* verts) {
-    // If this is an occluder, don't render it
-    if (verts[0].tex_id == 254) return;
-
-    // Transform the 3 vertices
-    gte_ldv3(
-        &verts[0],
-        &verts[1],
-        &verts[2]
-    );
-    gte_rtpt();
-
-    // Backface culling
-    int p;
-    gte_nclip();
-    gte_stopz(&p);
-    if (p <= 0) return;
-
-    // Store transformed position, and center depth
-    svec2_t trans_vec_xy[3];
-    scalar_t avg_z;
-    gte_stsxy3c(&trans_vec_xy[0]);
-    gte_avsz3();
-    gte_stotz(&avg_z);
-    
-    // Depth culling
-    if ((avg_z + curr_ot_bias) >= ORD_TBL_LENGTH || (avg_z <= 0)) return;
-
-    // Cull if off screen
-    int n_left = 1;
-    int n_right = 1;
-    int n_up = 1;
-    int n_down = 1;
-    for (size_t i = 0; i < 3; ++i) {
-        if (trans_vec_xy[i].x < 0) n_left <<= 1;
-        if (trans_vec_xy[i].x > res_x) n_right <<= 1;
-        if (trans_vec_xy[i].y < 0) n_up <<= 1;
-        if (trans_vec_xy[i].y > curr_res_y ) n_down <<= 1;
-    }
-    // If all vertices are off to one side of the screen, one of the values will be shifted left 3x.
-    // When OR-ing the bits together, the result will be %00001???.
-    // Shifting that value to the right 3x drops off the irrelevant ??? bits, returning 1 if all vertices are to one side, and 0 if not
-    const int off_to_one_side = (n_left | n_right | n_up | n_down) >> 3;
-    if (off_to_one_side) return;
-
-    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], verts[0], verts[1], verts[2], avg_z, verts[0].tex_id, 0);
-}
-
-static inline void subdivide_twice_then_add_tex_quad(const vertex_3d_t* verts, svec2_t* trans_vec_xy, scalar_t* trans_vec_z, int sub2_threshold) {
-    // Generate all 25 vertices
-    #define vtx0 verts[0]
-    #define vtx1 verts[1]
-    #define vtx2 verts[2]
-    #define vtx3 verts[3]
-    const vertex_3d_t vtx4 = get_halfway_point(vtx0, vtx1);
-    const vertex_3d_t vtx5 = get_halfway_point(vtx2, vtx3);
-    const vertex_3d_t vtx6 = get_halfway_point(vtx4, vtx5);
-    gte_ldv3(&vtx4.x, &vtx5.x, &vtx6.x);
-    gte_rtpt();
-    const vertex_3d_t vtx7 = get_halfway_point(vtx0, vtx2);
-    const vertex_3d_t vtx8 = get_halfway_point(vtx1, vtx3);
-    const vertex_3d_t vtx9 = get_halfway_point(vtx0, vtx4);
-    gte_stsxy3c(&trans_vec_xy[4]);
-    gte_stsz3c(&trans_vec_z[4]);
-    gte_ldv3(&vtx7.x, &vtx8.x, &vtx9.x);
-    gte_rtpt();
-    const vertex_3d_t vtx10 = get_halfway_point(vtx4, vtx1);
-    const vertex_3d_t vtx11 = get_halfway_point(vtx7, vtx6);
-    const vertex_3d_t vtx12 = get_halfway_point(vtx6, vtx8);
-    gte_stsxy3c(&trans_vec_xy[7]);
-    gte_stsz3c(&trans_vec_z[7]);
-    gte_ldv3(&vtx10.x, &vtx11.x, &vtx12.x);
-    gte_rtpt();
-    const vertex_3d_t vtx13 = get_halfway_point(vtx2, vtx5);
-    const vertex_3d_t vtx14 = get_halfway_point(vtx5, vtx3);
-    const vertex_3d_t vtx15 = get_halfway_point(vtx0, vtx7);
-    gte_stsxy3c(&trans_vec_xy[10]);
-    gte_stsz3c(&trans_vec_z[10]);
-    gte_ldv3(&vtx13.x, &vtx14.x, &vtx15.x);
-    gte_rtpt();
-    const vertex_3d_t vtx16 = get_halfway_point(vtx9, vtx11);
-    const vertex_3d_t vtx17 = get_halfway_point(vtx4, vtx6);
-    const vertex_3d_t vtx18 = get_halfway_point(vtx10, vtx12);
-    gte_stsxy3c(&trans_vec_xy[13]);
-    gte_stsz3c(&trans_vec_z[13]);
-    gte_ldv3(&vtx16.x, &vtx17.x, &vtx18.x);
-    gte_rtpt();
-    const vertex_3d_t vtx19 = get_halfway_point(vtx1, vtx8);
-    const vertex_3d_t vtx20 = get_halfway_point(vtx7, vtx2);
-    const vertex_3d_t vtx21 = get_halfway_point(vtx11, vtx13);
-    gte_stsxy3c(&trans_vec_xy[16]);
-    gte_stsz3c(&trans_vec_z[16]);
-    gte_ldv3(&vtx19.x, &vtx20.x, &vtx21.x);
-    gte_rtpt();
-    const vertex_3d_t vtx22 = get_halfway_point(vtx6, vtx5);
-    const vertex_3d_t vtx23 = get_halfway_point(vtx12, vtx14);
-    const vertex_3d_t vtx24 = get_halfway_point(vtx8, vtx3);
-    gte_stsxy3c(&trans_vec_xy[19]);
-    gte_stsz3c(&trans_vec_z[19]);
-    gte_ldv3(&vtx22.x, &vtx23.x, &vtx24.x);
-    gte_rtpt();
-    gte_stsxy3c(&trans_vec_xy[22]);
-    gte_stsz3c(&trans_vec_z[22]);
-
-    // Calculate average Z values    
-    int avg_z_0_9_15_16;
-    int avg_z_9_4_16_17;
-    int avg_z_4_10_17_18;
-    int avg_z_10_1_18_19;
-    int avg_z_15_16_7_11;
-    int avg_z_16_17_11_6;
-    int avg_z_17_18_6_12;
-    int avg_z_18_19_12_8;
-    int avg_z_7_11_20_21;
-    int avg_z_11_6_21_22;
-    int avg_z_6_12_22_23;
-    int avg_z_12_8_23_24;
-    int avg_z_20_21_2_13;
-    int avg_z_21_22_13_5;
-    int avg_z_22_23_5_14;
-    int avg_z_23_24_14_3;
-    gte_ldsz4(trans_vec_z[0], trans_vec_z[9], trans_vec_z[15], trans_vec_z[16]);
-    gte_avsz4();
-    gte_stotz(&avg_z_0_9_15_16);
-    gte_ldsz4(trans_vec_z[9], trans_vec_z[4], trans_vec_z[16], trans_vec_z[17]);
-    gte_avsz4();
-    gte_stotz(&avg_z_9_4_16_17);
-    gte_ldsz4(trans_vec_z[4], trans_vec_z[10], trans_vec_z[17], trans_vec_z[18]);
-    gte_avsz4();
-    gte_stotz(&avg_z_4_10_17_18);
-    gte_ldsz4(trans_vec_z[10], trans_vec_z[1], trans_vec_z[18], trans_vec_z[19]);
-    gte_avsz4();
-    gte_stotz(&avg_z_10_1_18_19);
-    gte_ldsz4(trans_vec_z[15], trans_vec_z[16], trans_vec_z[7], trans_vec_z[11]);
-    gte_avsz4();
-    gte_stotz(&avg_z_15_16_7_11);
-    gte_ldsz4(trans_vec_z[16], trans_vec_z[17], trans_vec_z[11], trans_vec_z[6]);
-    gte_avsz4();
-    gte_stotz(&avg_z_16_17_11_6);
-    gte_ldsz4(trans_vec_z[17], trans_vec_z[18], trans_vec_z[6], trans_vec_z[12]);
-    gte_avsz4();
-    gte_stotz(&avg_z_17_18_6_12);
-    gte_ldsz4(trans_vec_z[18], trans_vec_z[19], trans_vec_z[12], trans_vec_z[8]);
-    gte_avsz4();
-    gte_stotz(&avg_z_18_19_12_8);
-    gte_ldsz4(trans_vec_z[7], trans_vec_z[11], trans_vec_z[20], trans_vec_z[21]);
-    gte_avsz4();
-    gte_stotz(&avg_z_7_11_20_21);
-    gte_ldsz4(trans_vec_z[11], trans_vec_z[6], trans_vec_z[21], trans_vec_z[22]);
-    gte_avsz4();
-    gte_stotz(&avg_z_11_6_21_22);
-    gte_ldsz4(trans_vec_z[6], trans_vec_z[12], trans_vec_z[22], trans_vec_z[23]);
-    gte_avsz4();
-    gte_stotz(&avg_z_6_12_22_23);
-    gte_ldsz4(trans_vec_z[12], trans_vec_z[8], trans_vec_z[23], trans_vec_z[24]);
-    gte_avsz4();
-    gte_stotz(&avg_z_12_8_23_24);
-    gte_ldsz4(trans_vec_z[20], trans_vec_z[21], trans_vec_z[2], trans_vec_z[13]);
-    gte_avsz4();
-    gte_stotz(&avg_z_20_21_2_13);
-    gte_ldsz4(trans_vec_z[21], trans_vec_z[22], trans_vec_z[13], trans_vec_z[5]);
-    gte_avsz4();
-    gte_stotz(&avg_z_21_22_13_5);
-    gte_ldsz4(trans_vec_z[22], trans_vec_z[23], trans_vec_z[5], trans_vec_z[14]);
-    gte_avsz4();
-    gte_stotz(&avg_z_22_23_5_14);
-    gte_ldsz4(trans_vec_z[23], trans_vec_z[24], trans_vec_z[14], trans_vec_z[3]);
-    gte_avsz4();
-    gte_stotz(&avg_z_23_24_14_3);
-
-
-    // Add to queue
-    add_tex_quad(trans_vec_xy[0], trans_vec_xy[9], trans_vec_xy[15], trans_vec_xy[16], vtx0, vtx9, vtx15, vtx16, avg_z_0_9_15_16, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[9], trans_vec_xy[4], trans_vec_xy[16], trans_vec_xy[17], vtx9, vtx4, vtx16, vtx17, avg_z_9_4_16_17, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[4], trans_vec_xy[10], trans_vec_xy[17], trans_vec_xy[18], vtx4, vtx10, vtx17, vtx18, avg_z_4_10_17_18, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[10], trans_vec_xy[1], trans_vec_xy[18], trans_vec_xy[19], vtx10, vtx1, vtx18, vtx19, avg_z_10_1_18_19, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[15], trans_vec_xy[16], trans_vec_xy[7], trans_vec_xy[11], vtx15, vtx16, vtx7, vtx11, avg_z_15_16_7_11, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[16], trans_vec_xy[17], trans_vec_xy[11], trans_vec_xy[6], vtx16, vtx17, vtx11, vtx6, avg_z_16_17_11_6, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[17], trans_vec_xy[18], trans_vec_xy[6], trans_vec_xy[12], vtx17, vtx18, vtx6, vtx12, avg_z_17_18_6_12, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[18], trans_vec_xy[19], trans_vec_xy[12], trans_vec_xy[8], vtx18, vtx19, vtx12, vtx8, avg_z_18_19_12_8, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[7], trans_vec_xy[11], trans_vec_xy[20], trans_vec_xy[21], vtx7, vtx11, vtx20, vtx21, avg_z_7_11_20_21, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[11], trans_vec_xy[6], trans_vec_xy[21], trans_vec_xy[22], vtx11, vtx6, vtx21, vtx22, avg_z_11_6_21_22, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[6], trans_vec_xy[12], trans_vec_xy[22], trans_vec_xy[23], vtx6, vtx12, vtx22, vtx23, avg_z_6_12_22_23, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[12], trans_vec_xy[8], trans_vec_xy[23], trans_vec_xy[24], vtx12, vtx8, vtx23, vtx24, avg_z_12_8_23_24, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[20], trans_vec_xy[21], trans_vec_xy[2], trans_vec_xy[13], vtx20, vtx21, vtx2, vtx13, avg_z_20_21_2_13, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[21], trans_vec_xy[22], trans_vec_xy[13], trans_vec_xy[5], vtx21, vtx22, vtx13, vtx5, avg_z_21_22_13_5, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[22], trans_vec_xy[23], trans_vec_xy[5], trans_vec_xy[14], vtx22, vtx23, vtx5, vtx14, avg_z_22_23_5_14, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[23], trans_vec_xy[24], trans_vec_xy[14], trans_vec_xy[3], vtx23, vtx24, vtx14, vtx3, avg_z_23_24_14_3, verts[0].tex_id + tex_id_start, 0);
-
-    // Filler triangles
-    scalar_t max_z = trans_vec_z[0];
-    if (trans_vec_z[1] > max_z) max_z = trans_vec_z[1];
-    if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2]; 
-    if (trans_vec_z[3] > max_z) max_z = trans_vec_z[3];
-    max_z >>= 2;
-
-    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[4], vtx0, vtx1, vtx4, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[4], trans_vec_xy[9], vtx0, vtx4, vtx9, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[4], trans_vec_xy[1], trans_vec_xy[10], vtx4, vtx1, vtx10, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[1], trans_vec_xy[3], trans_vec_xy[8], vtx1, vtx3, vtx8, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[1], trans_vec_xy[8], trans_vec_xy[19], vtx1, vtx8, vtx19, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[8], trans_vec_xy[3], trans_vec_xy[24], vtx8, vtx3, vtx24, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[3], trans_vec_xy[2], trans_vec_xy[5], vtx3, vtx2, vtx5, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[3], trans_vec_xy[5], trans_vec_xy[14], vtx3, vtx5, vtx14, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[5], trans_vec_xy[2], trans_vec_xy[13], vtx5, vtx2, vtx13, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[2], trans_vec_xy[0], trans_vec_xy[7], vtx2, vtx0, vtx7, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[2], trans_vec_xy[7], trans_vec_xy[20], vtx2, vtx7, vtx20, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[7], trans_vec_xy[0], trans_vec_xy[15], vtx7, vtx0, vtx15, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-
-    #undef vtx0
-    #undef vtx1
-    #undef vtx2
-    #undef vtx3
-    return;
-}
-
-static inline void subdivide_once_then_add_tex_quad(const vertex_3d_t* verts, svec2_t* trans_vec_xy, scalar_t* trans_vec_z, const int sub1_threshold) {
-    // Let's calculate the new points we need
-    const vertex_3d_t ab = get_halfway_point(verts[0], verts[1]);
-    const vertex_3d_t bc = get_halfway_point(verts[1], verts[3]);
-    const vertex_3d_t cd = get_halfway_point(verts[3], verts[2]);
-    const vertex_3d_t da = get_halfway_point(verts[2], verts[0]);
-    const vertex_3d_t center = get_halfway_point(ab, cd);
-
-    // Transform them
-    gte_ldv3(&ab.x, &bc.x, &cd.x);
-    gte_rtpt();
-    gte_stsxy3c(&trans_vec_xy[4]);
-    gte_stsz3c(&trans_vec_z[4]);
-    gte_ldv01(&da.x, &center.x);
-    gte_rtpt();
-    gte_stsxy3c(&trans_vec_xy[7]);
-    gte_stsz3c(&trans_vec_z[7]);
-
-    // Calculate average Z
-    int avg_z_0478;
-    int avg_z_4185;
-    int avg_z_7826;
-    int avg_z_8563;
-    gte_ldsz4(trans_vec_z[0], trans_vec_z[4], trans_vec_z[7], trans_vec_z[8]);
-    gte_avsz4();
-    gte_stotz(&avg_z_0478);
-    gte_ldsz4(trans_vec_z[4], trans_vec_z[1], trans_vec_z[8], trans_vec_z[5]);
-    gte_avsz4();
-    gte_stotz(&avg_z_4185);
-    gte_ldsz4(trans_vec_z[7], trans_vec_z[8], trans_vec_z[2], trans_vec_z[6]);
-    gte_avsz4();
-    gte_stotz(&avg_z_7826);
-    gte_ldsz4(trans_vec_z[8], trans_vec_z[5], trans_vec_z[6], trans_vec_z[3]);
-    gte_avsz4();
-    gte_stotz(&avg_z_8563);
-
-    // Draw them
-    add_tex_quad(trans_vec_xy[0], trans_vec_xy[4], trans_vec_xy[7], trans_vec_xy[8], verts[0], ab, da, center, avg_z_0478, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[4], trans_vec_xy[1], trans_vec_xy[8], trans_vec_xy[5], ab, verts[1], center, bc, avg_z_4185, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[7], trans_vec_xy[8], trans_vec_xy[2], trans_vec_xy[6], da, center, verts[2], cd, avg_z_7826, verts[0].tex_id + tex_id_start, 0);
-    add_tex_quad(trans_vec_xy[8], trans_vec_xy[5], trans_vec_xy[6], trans_vec_xy[3], center, bc, cd, verts[3], avg_z_8563, verts[0].tex_id + tex_id_start, 0);
-
-    // Filler triangles
-    scalar_t max_z = trans_vec_z[0];
-    if (trans_vec_z[1] > max_z) max_z = trans_vec_z[1];
-    if (trans_vec_z[2] > max_z) max_z = trans_vec_z[2];
-    if (trans_vec_z[3] > max_z) max_z = trans_vec_z[3];
-    max_z >>= 2;
-
-    add_tex_triangle(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[4], verts[0], verts[1], ab, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[1], trans_vec_xy[3], trans_vec_xy[5], verts[1], verts[3], bc, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[3], trans_vec_xy[2], trans_vec_xy[6], verts[3], verts[2], cd, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-    add_tex_triangle(trans_vec_xy[2], trans_vec_xy[0], trans_vec_xy[7], verts[2], verts[0], da, (max_z + 1), verts[0].tex_id + tex_id_start, 0);
-
+    // Store data into primitive struct
+    gte_stsxy3_gt3(&mesh->tex_tris[drawbuffer][poly_idx]);
+    SET_DISTANCE_FADE(mesh->tex_tris[drawbuffer][poly_idx], clut_fade);
+    addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, &mesh->tex_tris[drawbuffer][poly_idx]);
     return;
 }
 
 // Transform and add to queue a textured, shaded quad, with automatic subdivision based on size, fading to solid color in the distance.
-static inline void draw_tex_quad3d_fancy(const vertex_3d_t* verts) {
+static inline void draw_tex_quad3d_fancy(const mesh_t* mesh, const size_t vert_idx, const size_t poly_idx) {
     // If this is an occluder, don't render it
-    if (verts[0].tex_id == 254) return;
+    if (mesh->vtx_pos_and_size[vert_idx + 0].tex_id == 254) return;
 
     // Transform the first 3 vertices
-    struct scratchpad {
-        svec2_t trans_vec_xy[25];
-        scalar_t trans_vec_z[25];
-    };
-
-    struct scratchpad* sp = (struct scratchpad*)SCRATCHPAD;
-
-    scalar_t avg_z;
     gte_ldv3(
-        &verts[0],
-        &verts[1],
-        &verts[2]
+        &mesh->vtx_pos_and_size[vert_idx + 0].x,
+        &mesh->vtx_pos_and_size[vert_idx + 1].x,
+        &mesh->vtx_pos_and_size[vert_idx + 2].x
     );
     gte_rtpt();
 
@@ -799,117 +1142,80 @@ static inline void draw_tex_quad3d_fancy(const vertex_3d_t* verts) {
     gte_stopz(&p);
     if (p <= 0) return;
 
-    // Store transformed position, and center depth
-    gte_stsxy3c(&sp->trans_vec_xy[0]);
-    gte_stsz3c(&sp->trans_vec_z[0]);
-    gte_ldv0(&verts[3]);
+    // Store the first vertex, as it will be pushed out by the RTPS call down a couple lines
+    gte_stsxy0(&mesh->tex_quads[drawbuffer][poly_idx].x0);
+
+    // Transform the last vertex
+    gte_ldv0(&mesh->vtx_pos_and_size[vert_idx + 3].x);
     gte_rtps();
-    gte_stsxy(&sp->trans_vec_xy[3]);
-    gte_stsz(&sp->trans_vec_z[3]);
+
+    // Get depth
     gte_avsz4();
+    int avg_z;
     gte_stotz(&avg_z);
 
     // Depth culling
-    if ((avg_z + curr_ot_bias) >= ORD_TBL_LENGTH || ((avg_z >> 0) <= 0)) return;
+    if ((avg_z + curr_ot_bias) >= ORD_TBL_LENGTH || (avg_z <= 0)) return;
 
-    // Cull if off screen
+    // Store the other 3 vertices
+    gte_stsxy0(&mesh->tex_quads[drawbuffer][poly_idx].x1);
+    gte_stsxy1(&mesh->tex_quads[drawbuffer][poly_idx].x2);
+    gte_stsxy2(&mesh->tex_quads[drawbuffer][poly_idx].x3);
+
+    // Cull if off screen - subdivision is expensive
     int n_left = 1;
     int n_right = 1;
     int n_up = 1;
     int n_down = 1;
-    for (size_t i = 0; i < 4; ++i) {
-        if (sp->trans_vec_xy[i].x < 0) n_left <<= 1;
-        if (sp->trans_vec_xy[i].x > res_x) n_right <<= 1;
-        if (sp->trans_vec_xy[i].y < 0) n_up <<= 1;
-        if (sp->trans_vec_xy[i].y > curr_res_y ) n_down <<= 1;
-    }
+
+    #define poly mesh->tex_quads[drawbuffer][poly_idx]
+    if (poly.x0 < 0)            n_left <<= 1;   
+    if (poly.y0 < 0)            n_up <<= 1;
+    if (poly.x0 > res_x)        n_right <<= 1;  
+    if (poly.y0 > curr_res_y)   n_down <<= 1;
+    if (poly.x1 < 0)            n_left <<= 1;   
+    if (poly.y1 < 0)            n_up <<= 1;
+    if (poly.x1 > res_x)        n_right <<= 1;  
+    if (poly.y1 > curr_res_y)   n_down <<= 1;
+    if (poly.x2 < 0)            n_left <<= 1;   
+    if (poly.y2 < 0)            n_up <<= 1;
+    if (poly.x2 > res_x)        n_right <<= 1;  
+    if (poly.y2 > curr_res_y)   n_down <<= 1;
+    if (poly.x3 < 0)            n_left <<= 1;   
+    if (poly.y3 < 0)            n_up <<= 1;
+    if (poly.x3 > res_x)        n_right <<= 1;  
+    if (poly.y3 > curr_res_y)   n_down <<= 1;
+    #undef poly
+
     // If all vertices are off to one side of the screen, one of the values will be shifted left 4x.
     // When OR-ing the bits together, the result will be %0001????.
     // Shifting that value to the right 4x drops off the irrelevant ???? bits, returning 1 if all vertices are to one side, and 0 if not
     const int off_to_one_side = (n_left | n_right | n_up | n_down) >> 4;
     if (off_to_one_side) return;
-    
+
     // If very close, subdivide twice
-    const scalar_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)verts[1].tex_id;
+    const int32_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub2_threshold) {
-        subdivide_twice_then_add_tex_quad(verts, sp->trans_vec_xy, sp->trans_vec_z, sub2_threshold);
+        draw_level2_subdivided_quad(mesh, vert_idx, poly_idx, avg_z);
         return;
     }
-    
-    // If close, subdivice once
-    const scalar_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)verts[1].tex_id;
+
+    // // If close, subdivice once
+    const int32_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub1_threshold) {
-        subdivide_once_then_add_tex_quad(verts, sp->trans_vec_xy, sp->trans_vec_z, sub1_threshold);
+        SET_DISTANCE_FADE(mesh->tex_quads[drawbuffer][poly_idx], 0);
+        draw_level1_subdivided_quad(mesh, vert_idx, poly_idx, avg_z);
         return;
     }
 
-    // If normal distance, add quad normally
-    if (avg_z < TRI_THRESHOLD_FADE_END) {
-        // Calculate CLUT fade
-        int16_t clut_fade = ((N_CLUT_FADES-1) * (avg_z - TRI_THRESHOLD_FADE_START)) / (TRI_THRESHOLD_FADE_END - TRI_THRESHOLD_FADE_START);
-        if (clut_fade > (N_CLUT_FADES-1)) clut_fade = (N_CLUT_FADES-1);
-        else if (clut_fade < 0) clut_fade = 0;
-        add_tex_quad(sp->trans_vec_xy[0], sp->trans_vec_xy[1], sp->trans_vec_xy[2], sp->trans_vec_xy[3], verts[0], verts[1], verts[2], verts[3], avg_z, verts[0].tex_id + tex_id_start, clut_fade);
-        return;
-    }
+    // If quad is far away, render textured, fading into single color when further away
+    // Calculate CLUT fade
+    int16_t clut_fade = ((N_CLUT_FADES-1) * (avg_z - TRI_THRESHOLD_FADE_START)) / (TRI_THRESHOLD_FADE_END - TRI_THRESHOLD_FADE_START);
+    if (clut_fade > (N_CLUT_FADES-1)) clut_fade = (N_CLUT_FADES-1);
+    else if (clut_fade < 0) clut_fade = 0;
 
-    // If far away, calculate colors and add untextured quad
-    else {
-        add_untex_quad(sp->trans_vec_xy[0], sp->trans_vec_xy[1], sp->trans_vec_xy[2], sp->trans_vec_xy[3], verts[0], verts[1], verts[2], verts[3], avg_z);
-    }
-}
-
-// Transform and add to queue a textured, shaded quad, ignoring the fading and subdivision
-static inline void draw_tex_quad3d_fast(const vertex_3d_t* verts) {
-    // If this is an occluder, don't render it
-    if (verts[0].tex_id == 254) return;
-
-    // Transform the first 3 vertices
-    svec2_t trans_vec_xy[4];
-    scalar_t trans_vec_z[4];
-    scalar_t avg_z;
-    gte_ldv3(
-        &verts[0],
-        &verts[1],
-        &verts[2]
-    );
-    gte_rtpt();
-
-    // Backface culling
-    int p;
-    gte_nclip();
-    gte_stopz(&p);
-    if (p <= 0) return;
-
-    // Store transformed position, and center depth
-    gte_stsxy3c(&trans_vec_xy[0]);
-    gte_stsz3c(&trans_vec_z[0]);
-    gte_ldv0(&verts[3]);
-    gte_rtps();
-    gte_stsxy(&trans_vec_xy[3]);
-    gte_stsz(&trans_vec_z[3]);
-    gte_avsz4();
-    gte_stotz(&avg_z);
-
-    // Depth culling
-    if ((avg_z + curr_ot_bias) >= ORD_TBL_LENGTH || ((avg_z + curr_ot_bias) <= 0)) return;
-
-    // Cull if off screen
-    int n_left = 1;
-    int n_right = 1;
-    int n_up = 1;
-    int n_down = 1;
-    for (size_t i = 0; i < 4; ++i) {
-        if (trans_vec_xy[i].x < 0) n_left <<= 1;
-        if (trans_vec_xy[i].x > res_x) n_right <<= 1;
-        if (trans_vec_xy[i].y < 0) n_up <<= 1;
-        if (trans_vec_xy[i].y > curr_res_y ) n_down <<= 1;
-    }
-    // If all vertices are off to one side of the screen, one of the values will be shifted left 4x.
-    // When OR-ing the bits together, the result will be %0001????.
-    // Shifting that value to the right 4x drops off the irrelevant ???? bits, returning 1 if all vertices are to one side, and 0 if not
-    const int off_to_one_side = (n_left | n_right | n_up | n_down) >> 4;
-    if (off_to_one_side) return;
-
-    add_tex_quad(trans_vec_xy[0], trans_vec_xy[1], trans_vec_xy[2], trans_vec_xy[3], verts[0], verts[1], verts[2], verts[3], avg_z, verts[0].tex_id, 0);
+    // Store final bit of data into primitive struct
+    SET_DISTANCE_FADE(mesh->tex_quads[drawbuffer][poly_idx], clut_fade);
+    addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, &mesh->tex_quads[drawbuffer][poly_idx]);
+    return;
 }
