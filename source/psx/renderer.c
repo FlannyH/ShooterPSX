@@ -24,7 +24,6 @@ int curr_res_y = RES_Y_NTSC;
 
 // Primitives
 uint32_t ord_tbl[2][ORD_TBL_LENGTH];
-uint32_t primitive_buffer[2][(128 * KiB) / sizeof(uint32_t)];
 uint32_t* next_primitive;
 
 // Rendering parameters
@@ -51,7 +50,6 @@ int n_meshes_total = 0;
 int n_polygons_drawn = 0;
 int delta_time_raw_curr = 0;
 int delta_time_raw_prev = 0;
-int primitive_occupation = 0;
 int tex_level_start = 0;
 int tex_entity_start = 0;
 int tex_weapon_start = 0;
@@ -89,7 +87,6 @@ void renderer_init(void) {
 
     //Set to drawbuffer 0
     drawbuffer = 0;
-    next_primitive = primitive_buffer[0];
 
     // Clear ordering tables
     ClearOTagR(ord_tbl[0], ORD_TBL_LENGTH);
@@ -106,6 +103,12 @@ void renderer_init(void) {
 }
 
 void renderer_begin_frame(const transform_t* camera_transform) {
+    mem_stack_release(STACK_TEMP);
+
+    // Set the next primitive to draw to be the first primitive in the buffer
+    uint32_t* primitive_buffer_on_temp_stack = (uint32_t*)mem_stack_alloc(256 * KiB, STACK_TEMP);
+    next_primitive = &primitive_buffer_on_temp_stack[drawbuffer * ((128 * KiB) / sizeof(uint32_t))];
+
 	renderer_set_depth_bias(0);
 
     // Get camera position
@@ -150,13 +153,8 @@ void renderer_end_frame(void) {
         frame_counter = VSync(-1);
     }
 
-	primitive_occupation = (int)(intptr_t)((uint8_t*)next_primitive - (uint8_t*)&primitive_buffer[drawbuffer]);
-
     // Flip buffer counter
     drawbuffer = !drawbuffer;
-
-    // Set the next primitive to draw to be the first primitive in the buffer
-    next_primitive = primitive_buffer[drawbuffer];
 
     // Clear render queue
     ClearOTagR(ord_tbl[drawbuffer], ORD_TBL_LENGTH);
