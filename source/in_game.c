@@ -120,7 +120,8 @@ void state_update_in_game(int dt) {
 		state.in_game.player.position = benchmark_positions[teleport_index].position;
 		state.in_game.player.rotation = benchmark_positions[teleport_index].rotation;
 	}
-
+#endif
+#ifdef FPS_COUNTER
 	static char debug_text_buffer[64] = {0};
 	static int fps = 0;
 	static int timer = 0;
@@ -134,11 +135,6 @@ void state_update_in_game(int dt) {
 	if (state.global.frame_counter)
 	snprintf(debug_text_buffer, 64, "%i fps\n%i ms", fps, dt);
 	renderer_draw_text((vec2_t){32 * ONE, 32 * ONE}, debug_text_buffer, 0, 0, (fps >= 30) ? green : red);
-
-	snprintf(debug_text_buffer, 64, "position: %8i %8i %8i", state.in_game.player.position.x, state.in_game.player.position.y, state.in_game.player.position.z);
-	renderer_draw_text((vec2_t){32 * ONE, 128 * ONE}, debug_text_buffer, 0, 0, (fps >= 30) ? green : red);
-	snprintf(debug_text_buffer, 64, "rotation: %8i %8i %8i", state.in_game.player.rotation.x, state.in_game.player.rotation.y, state.in_game.player.rotation.z);
-	renderer_draw_text((vec2_t){32 * ONE, 144 * ONE}, debug_text_buffer, 0, 0, (fps >= 30) ? green : red);
 #endif
 
 	// Draw crosshair
@@ -222,7 +218,7 @@ void state_update_in_game(int dt) {
 	else {
 #endif
 		input_update();
-#if defined(_PSX) && defined(BENCHMARK_MODE)
+#if defined(_PSX) && defined(FPS_COUNTER)
 		const uint32_t timer_value_before = TIMER_VALUE(1) & 0xFFFF;
 		renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists, 0);
 		uint32_t timer_value_after = TIMER_VALUE(1) & 0xFFFF;
@@ -341,7 +337,7 @@ void state_update_in_game(int dt) {
 		gun_transform.scale.y = ONE;
 		gun_transform.scale.z = ONE;
         input_rumble(state.in_game.gun_animation_timer_sqrt > 0 * 255, 0);
-		renderer_draw_mesh_shaded(&state.in_game.m_weapons->meshes[1], &gun_transform, 1, tex_weapon_start);
+		//renderer_draw_mesh_shaded(&state.in_game.m_weapons->meshes[1], &gun_transform, 1, tex_weapon_start);
 	} 
 	// Sword
 	{
@@ -357,7 +353,7 @@ void state_update_in_game(int dt) {
 		sword_transform.scale.x = ONE;
 		sword_transform.scale.y = ONE;
 		sword_transform.scale.z = ONE;
-		renderer_draw_mesh_shaded(&state.in_game.m_weapons->meshes[0], &sword_transform, 1, tex_weapon_start);
+		//renderer_draw_mesh_shaded(&state.in_game.m_weapons->meshes[0], &sword_transform, 1, tex_weapon_start);
 	} 
 
 	renderer_end_frame();
