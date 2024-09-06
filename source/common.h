@@ -9,7 +9,8 @@
 #define _DEBUG
 #endif
 
-#define BENCHMARK_MODE
+// #define BENCHMARK_MODE
+#define FPS_COUNTER
 
 #define ALWAYS_INLINE __attribute__((always_inline)) inline
 
