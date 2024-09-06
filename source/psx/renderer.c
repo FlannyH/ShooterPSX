@@ -201,14 +201,13 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_tran
     ++n_meshes_drawn;
 
     // Loop over each triangle
-    // todo: if mesh->vertices[vert_idx].tex_id == 255, draw untex, but still subdivide
     size_t vert_idx = 0;
     for (size_t i = 0; i < mesh->n_triangles; ++i) {
-        draw_tex_triangle3d_fancy(&mesh->vertices[vert_idx]);
+        draw_tex_triangle3d_fancy(mesh, vert_idx, i);
         vert_idx += 3;
     }
     for (size_t i = 0; i < mesh->n_quads; ++i) {
-        draw_tex_quad3d_fancy(&mesh->vertices[vert_idx]);
+        draw_tex_quad3d_fancy(mesh, vert_idx, i);
         vert_idx += 4;
     }
 
