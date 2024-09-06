@@ -65,6 +65,33 @@ typedef struct {
     vec3_t normal;
 } collision_triangle_3d_t;
 
+#ifdef _PSX 
+#include <psxgpu.h>
+
+typedef struct {
+    union {
+        struct {
+            int16_t x, y, z;
+            uint8_t poly_size;
+            uint8_t tex_id;
+        };
+        struct {
+            uint32_t vxy;
+            uint32_t vz;
+        };
+    };
+} aligned_position_t;
+
+typedef struct {
+    uint16_t n_triangles;
+    uint16_t n_quads;
+    POLY_GT3* tex_tris[2]; // double buffered
+    POLY_GT4* tex_quads[2]; // double buffered
+    aligned_position_t* vtx_pos_and_size;
+    aabb_t bounds;
+    char* name;
+} mesh_t;
+#else
 typedef struct {
     uint16_t n_triangles;
     uint16_t n_quads;
@@ -72,6 +99,7 @@ typedef struct {
     aabb_t bounds;
     char* name;
 } mesh_t;
+#endif
 
 #define MAGIC_FMSH 0x48534D46
 typedef struct {
