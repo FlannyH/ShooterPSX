@@ -45,6 +45,9 @@ state_t prev_state = STATE_NONE;
 state_vars_t state;
 
 int main(void) {
+	#ifdef _PSX
+	InitHeap((void*)0x80200000, 0x00400000);
+	#endif
 	mem_init();
 	mem_debug();
 	// Init systems
