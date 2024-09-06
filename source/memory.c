@@ -5,11 +5,11 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define size_stack_temp (350  * KiB)
-#define size_stack_level (960 * KiB)
-#define size_stack_music (100 * KiB)
-#define size_stack_entity (64 * KiB)
-#define size_stack_vram_swap (1 * KiB)
+#define size_stack_temp (533  * KiB)
+#define size_stack_level (1469 * KiB)
+#define size_stack_music (256 * KiB)
+#define size_stack_entity (180 * KiB)
+#define size_stack_vram_swap (4)
 uint32_t* mem_stack_temp = NULL;
 uint32_t* mem_stack_level = NULL;
 uint32_t* mem_stack_music = NULL;
