@@ -106,7 +106,6 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
         }
 
         const vertex_3d_t* verts = &vertex_data[mesh_descriptions[mesh_id].vertex_start];
-        printf("verts: %p\n", verts);
 
         size_t vert_index = 0;
         for (size_t poly_index = 0; poly_index < n_tris; ++poly_index) {
