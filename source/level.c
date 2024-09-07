@@ -12,14 +12,17 @@ extern uint8_t entity_types[ENTITY_LIST_LENGTH];
 extern uint8_t* entity_pool;
 
 level_t level_load(const char* level_path) {
-    // Read the file 
-    uint32_t* file_data = NULL;
-    size_t size = 0;
+    // Wait until done rendering (it uses the temporary stack), then clear the memory stacks
+    DrawSync(0);
+
     mem_stack_release(STACK_TEMP);
     mem_stack_release(STACK_LEVEL);
     mem_stack_release(STACK_ENTITY);
     entity_init();
 
+    // Read the file 
+    uint32_t* file_data = NULL;
+    size_t size = 0;
     file_read(level_path, &file_data, &size, 1, STACK_TEMP);
 
     // Get header data
