@@ -12,8 +12,10 @@ extern uint8_t entity_types[ENTITY_LIST_LENGTH];
 extern uint8_t* entity_pool;
 
 level_t level_load(const char* level_path) {
+#ifdef _PSX
     // Wait until done rendering (it uses the temporary stack), then clear the memory stacks
     DrawSync(0);
+#endif
 
     mem_stack_release(STACK_TEMP);
     mem_stack_release(STACK_LEVEL);
