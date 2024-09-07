@@ -73,8 +73,6 @@ level_t level_load(const char* level_path) {
     mem_stack_reset_to_marker(STACK_TEMP, marker);
     level.graphics = model_load(path_graphics, 1, STACK_LEVEL, tex_level_start);
     mem_stack_reset_to_marker(STACK_TEMP, marker);
-    level.collision_mesh = model_load_collision(path_collision, 1, STACK_LEVEL);
-    mem_stack_reset_to_marker(STACK_TEMP, marker);
 
     // Load entities
     intptr_t level_entity_pool_stride = entity_pool_stride - sizeof(entity_header_t) + sizeof(entity_header_serialized_t);
