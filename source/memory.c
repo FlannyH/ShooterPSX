@@ -5,10 +5,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define size_stack_temp (533  * KiB)
-#define size_stack_level (1469 * KiB)
-#define size_stack_music (256 * KiB)
-#define size_stack_entity (180 * KiB)
+#define size_stack_temp (333  * KiB)
+#define size_stack_level (1024 * KiB)
+#define size_stack_music (100 * KiB)
+#define size_stack_entity (112 * KiB)
 #define size_stack_vram_swap (4)
 uint32_t* mem_stack_temp = NULL;
 uint32_t* mem_stack_level = NULL;
@@ -106,7 +106,6 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 		return NULL;
 	}
 	printf("which we have! move on :D\n");
-	printf("allocated to %p\n", cursor);
 #endif
 
 	// Convert size from bytes to words
