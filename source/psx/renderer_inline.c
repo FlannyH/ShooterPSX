@@ -271,7 +271,7 @@ void draw_level2_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, 
     const aligned_position_t v6 = get_halfway_position(vA, v0);
     const aligned_position_t v8 = get_halfway_position(vC, v4);
     const aligned_position_t vB = get_halfway_position(vA, vC);
-    const aligned_position_t v7 = get_halfway_position(vC, v8);
+    const aligned_position_t v7 = get_halfway_position(vC, v0);
     #undef v0
     #undef v1
     #undef v2
