@@ -1100,14 +1100,14 @@ static inline void draw_tex_triangle3d_fancy(const mesh_t* mesh, const size_t ve
     if ((avg_z + curr_ot_bias) >= ORD_TBL_LENGTH || (avg_z <= 0)) return;
     
     // If very close, subdivide twice
-    const int32_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
+    const int32_t sub2_threshold = ((vsync_enable == 2) ? TRI_THRESHOLD_MUL_SUB2_30 : TRI_THRESHOLD_MUL_SUB2_60) * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub2_threshold) {
         draw_level2_subdivided_triangle(mesh, vert_idx, poly_idx, avg_z);
         return;
     }
 
     // // If close, subdivice once
-    const int32_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
+    const int32_t sub1_threshold = ((vsync_enable == 2) ? TRI_THRESHOLD_MUL_SUB1_30 : TRI_THRESHOLD_MUL_SUB1_60) * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub1_threshold) {
         draw_level1_subdivided_triangle(mesh, vert_idx, poly_idx, avg_z);
         return;
@@ -1197,14 +1197,14 @@ static inline void draw_tex_quad3d_fancy(const mesh_t* mesh, const size_t vert_i
     if (off_to_one_side) return;
 
     // If very close, subdivide twice
-    const int32_t sub2_threshold = TRI_THRESHOLD_MUL_SUB2 * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
+    const int32_t sub2_threshold = ((vsync_enable == 2) ? TRI_THRESHOLD_MUL_SUB2_30 : TRI_THRESHOLD_MUL_SUB2_60) * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub2_threshold) {
         draw_level2_subdivided_quad(mesh, vert_idx, poly_idx, avg_z);
         return;
     }
 
     // // If close, subdivice once
-    const int32_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
+    const int32_t sub1_threshold = ((vsync_enable == 2) ? TRI_THRESHOLD_MUL_SUB1_30 : TRI_THRESHOLD_MUL_SUB1_60) * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub1_threshold) {
         draw_level1_subdivided_quad(mesh, vert_idx, poly_idx, avg_z);
         return;
