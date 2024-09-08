@@ -416,15 +416,10 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         inspect_vec3(&player_spawn_rotation, "Player Spawn Rotation");
 
         if (ImGui::Button("Hot reload")) {
+            mem_stack_release(STACK_TEMP);
             mem_stack_release(STACK_LEVEL);
             mem_stack_release(STACK_ENTITY);
-
-            // Load graphics and collision data
-            curr_level->graphics = model_load(path_model, 1, STACK_LEVEL);
-            curr_level->collision_mesh_debug = model_load_collision_debug(path_collision, 0, (stack_t)0);
-            curr_level->collision_mesh = model_load_collision(path_collision, 1, STACK_LEVEL);
-            curr_level->transform = { {0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096} };
-            curr_level->vislist = vislist_load(path_vislist, 1, STACK_LEVEL);
+            entity_init();
 
             // Load level textures
             texture_cpu_t* tex_level;
@@ -433,6 +428,13 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             for (uint8_t i = 0; i < n_level_textures; ++i) {
                 renderer_upload_texture(&tex_level[i], i + tex_level_start);
             }
+
+            // Load graphics and collision data
+            curr_level->graphics = model_load(path_model, 1, STACK_LEVEL, tex_level_start);
+            curr_level->collision_mesh_debug = model_load_collision_debug(path_collision, 0, (stack_t)0);
+            curr_level->collision_mesh = model_load_collision(path_collision, 1, STACK_LEVEL);
+            curr_level->transform = { {0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096} };
+            curr_level->vislist = vislist_load(path_vislist, 1, STACK_LEVEL);
 
             curr_level->collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL);
             
