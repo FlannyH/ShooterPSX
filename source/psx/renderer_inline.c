@@ -174,20 +174,20 @@ void draw_level1_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, 
     gte_rtpt();
 
     // Copy over the vertex attributes we already have
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r0, &quad_0354->r0); // v0
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r0, &tri_250->r2);
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r0, &tri_031->r0);
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r1, &tri_314->r1); // v1
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r1, &tri_031->r2);
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r1, &tri_142->r0);
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r2, &tri_542->r2); // v2
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r2, &tri_250->r0);
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r2, &tri_142->r2);
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r0, &quad_0354->r0); // v0
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r0, &tri_250->r2);
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r0, &tri_031->r0);
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r1, &tri_314->r1); // v1
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r1, &tri_031->r2);
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r1, &tri_142->r0);
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r2, &tri_542->r2); // v2
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r2, &tri_250->r0);
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r2, &tri_142->r2);
 
     // The rest needs to be interpolated and duplicated
-    halfway_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r0, &mesh->tex_tris[drawbuffer][poly_idx].r1, &quad_0354->r1);
-    halfway_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r1, &mesh->tex_tris[drawbuffer][poly_idx].r2, &quad_0354->r3);
-    halfway_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r2, &mesh->tex_tris[drawbuffer][poly_idx].r0, &quad_0354->r2);
+    halfway_rgb_uv(&mesh->tex_tris[0][poly_idx].r0, &mesh->tex_tris[0][poly_idx].r1, &quad_0354->r1);
+    halfway_rgb_uv(&mesh->tex_tris[0][poly_idx].r1, &mesh->tex_tris[0][poly_idx].r2, &quad_0354->r3);
+    halfway_rgb_uv(&mesh->tex_tris[0][poly_idx].r2, &mesh->tex_tris[0][poly_idx].r0, &quad_0354->r2);
     copy_rgb_uv(&quad_0354->r1, &tri_314->r0); // v3
     copy_rgb_uv(&quad_0354->r1, &tri_031->r1);
     copy_rgb_uv(&quad_0354->r3, &tri_314->r2); // v4
@@ -209,12 +209,14 @@ void draw_level1_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, 
     gte_stsxy2(&tri_250->x1);
 
     // Copy constants
-    quad_0354->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;   quad_0354->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage;
-    tri_314->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;     tri_314->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage;
-    tri_542->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;     tri_542->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage;
-    tri_250->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;     tri_250->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage;
-    tri_031->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;     tri_031->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage;
-    tri_142->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;     tri_142->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage;
+    const uint16_t clut = mesh->tex_tris[0][poly_idx].clut & 0b111110000111111; // reset distance fade palette index
+    const uint16_t tpage = mesh->tex_tris[0][poly_idx].tpage;
+    quad_0354->clut = clut;   quad_0354->tpage = tpage;
+    tri_314->clut = clut;     tri_314->tpage = tpage;
+    tri_542->clut = clut;     tri_542->tpage = tpage;
+    tri_250->clut = clut;     tri_250->tpage = tpage;
+    tri_031->clut = clut;     tri_031->tpage = tpage;
+    tri_142->clut = clut;     tri_142->tpage = tpage;
 
     // Add to ordering table for rendering
     setPolyGT4(quad_0354);  addPrim(ord_tbl[drawbuffer] + otz + curr_ot_bias, quad_0354);
@@ -292,15 +294,15 @@ void draw_level2_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, 
     gte_rtpt();
 
     // Copy attributes for 012
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r0, &quad_0367->r0); // v0
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r0, &tri_043->r0);             
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r0, &tri_A60->r2);             
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r1, &tri_519->r1);   // v1
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r1, &tri_415->r1);             
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r1, &tri_C91->r2);             
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r2, &tri_DE2->r2);   // v2
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r2, &tri_2EC->r0);             
-    copy_rgb_uv(&mesh->tex_tris[drawbuffer][poly_idx].r2, &tri_2DA->r0);             
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r0, &quad_0367->r0); // v0
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r0, &tri_043->r0);             
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r0, &tri_A60->r2);             
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r1, &tri_519->r1);   // v1
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r1, &tri_415->r1);             
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r1, &tri_C91->r2);             
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r2, &tri_DE2->r2);   // v2
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r2, &tri_2EC->r0);             
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r2, &tri_2DA->r0);             
 
     // Store transformed 345
     gte_stsxy0(&quad_0367->x1); // XY 3
@@ -319,9 +321,9 @@ void draw_level2_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, 
     gte_rtpt();
 
     // For the sake of my own sanity for the rest of this function - goes for any subsequent defines too
-    #define vtx_r0 mesh->tex_tris[drawbuffer][poly_idx].r0
-    #define vtx_r1 mesh->tex_tris[drawbuffer][poly_idx].r1
-    #define vtx_r2 mesh->tex_tris[drawbuffer][poly_idx].r2
+    #define vtx_r0 mesh->tex_tris[0][poly_idx].r0
+    #define vtx_r1 mesh->tex_tris[0][poly_idx].r1
+    #define vtx_r2 mesh->tex_tris[0][poly_idx].r2
 
     // Interpolate and copy attributes for 4CA
     #define vtx_r4 quad_3478->r1
@@ -438,22 +440,24 @@ void draw_level2_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, 
     gte_stsxy2(&tri_2EC->x1); 
 
     // Copy constant fields
-    quad_0367->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;    quad_0367->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
-    quad_3478->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;    quad_3478->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
-    quad_4589->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;    quad_4589->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
-    quad_67AB->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;    quad_67AB->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
-    quad_78BC->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;    quad_78BC->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
-    quad_ABDE->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;    quad_ABDE->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
-    tri_519->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_519->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
-    tri_89C->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_89C->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
-    tri_BCE->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_BCE->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
-    tri_DE2->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_DE2->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
-    tri_043->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_043->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
-    tri_415->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_415->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
-    tri_C91->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_C91->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
-    tri_2EC->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_2EC->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
-    tri_2DA->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_2DA->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
-    tri_A60->clut = mesh->tex_tris[drawbuffer][poly_idx].clut;      tri_A60->tpage = mesh->tex_tris[drawbuffer][poly_idx].tpage; 
+    const uint16_t clut = mesh->tex_tris[0][poly_idx].clut & 0b111110000111111; // reset distance fade palette index
+    const uint16_t tpage = mesh->tex_tris[0][poly_idx].tpage;
+    quad_0367->clut = clut;    quad_0367->tpage = tpage; 
+    quad_3478->clut = clut;    quad_3478->tpage = tpage; 
+    quad_4589->clut = clut;    quad_4589->tpage = tpage; 
+    quad_67AB->clut = clut;    quad_67AB->tpage = tpage; 
+    quad_78BC->clut = clut;    quad_78BC->tpage = tpage; 
+    quad_ABDE->clut = clut;    quad_ABDE->tpage = tpage; 
+    tri_519->clut = clut;      tri_519->tpage = tpage; 
+    tri_89C->clut = clut;      tri_89C->tpage = tpage; 
+    tri_BCE->clut = clut;      tri_BCE->tpage = tpage; 
+    tri_DE2->clut = clut;      tri_DE2->tpage = tpage; 
+    tri_043->clut = clut;      tri_043->tpage = tpage; 
+    tri_415->clut = clut;      tri_415->tpage = tpage; 
+    tri_C91->clut = clut;      tri_C91->tpage = tpage; 
+    tri_2EC->clut = clut;      tri_2EC->tpage = tpage; 
+    tri_2DA->clut = clut;      tri_2DA->tpage = tpage; 
+    tri_A60->clut = clut;      tri_A60->tpage = tpage; 
 
     #undef vtx_r0
     #undef vtx_r1
@@ -1105,7 +1109,6 @@ static inline void draw_tex_triangle3d_fancy(const mesh_t* mesh, const size_t ve
     // // If close, subdivice once
     const int32_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub1_threshold) {
-        SET_DISTANCE_FADE(mesh->tex_quads[drawbuffer][poly_idx], 0);
         draw_level1_subdivided_triangle(mesh, vert_idx, poly_idx, avg_z);
         return;
     }
@@ -1203,7 +1206,6 @@ static inline void draw_tex_quad3d_fancy(const mesh_t* mesh, const size_t vert_i
     // // If close, subdivice once
     const int32_t sub1_threshold = TRI_THRESHOLD_MUL_SUB1 * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub1_threshold) {
-        SET_DISTANCE_FADE(mesh->tex_quads[drawbuffer][poly_idx], 0);
         draw_level1_subdivided_quad(mesh, vert_idx, poly_idx, avg_z);
         return;
     }
