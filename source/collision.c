@@ -430,59 +430,84 @@ vec2_t find_closest_point_on_triangle_2d(vec2_t v0, vec2_t v1, vec2_t v2, vec2_t
     return closest_point;
 }
 
-vec3_t find_closest_point_on_triangle_3d(vec3_t a, vec3_t b, vec3_t c, vec3_t p, scalar_t* v_out, scalar_t* w_out) {
-    PANIC_IF("u_out or w_out is null!", (!v_out) || (!w_out));
+// Assumes `p` lies on the triangle's plane
+vec3_t find_closest_point_on_triangle_3d(collision_triangle_3d_t* triangle, vec3_t p) {
+    // Calculate edge0 
+    const vec3_t v1_p = vec3_sub(p, triangle->v1);
+    const vec3_t v1_v2 = vec3_sub(triangle->v2, triangle->v1);
+    const vec3_t edge0 = vec3_cross(v1_v2, v1_p);
+    const scalar_t signed_distance_from_12 = vec3_dot(edge0, triangle->normal);
 
-    // Calculate vectors
-    const vec3_t ab = vec3_sub(b, a);
-    const vec3_t ac = vec3_sub(c, a);
+    // Calculate edge1
+    const vec3_t v2_p = vec3_sub(p, triangle->v2);
+    const vec3_t v2_v0 = vec3_sub(triangle->v0, triangle->v2);
+    const vec3_t edge1 = vec3_cross(v2_v0, v2_p);
+    const scalar_t signed_distance_from_20 = vec3_dot(edge1, triangle->normal);
+
+    // Calculate edge2
+    const vec3_t v0_p = vec3_sub(p, triangle->v0);
+    const vec3_t v0_v1 = vec3_sub(triangle->v1, triangle->v0);
+    const vec3_t edge2 = vec3_cross(v0_v1, v0_p);
+    const scalar_t signed_distance_from_01 = vec3_dot(edge2, triangle->normal);
+
+    // Point is inside triangle
+    if (signed_distance_from_12 >= 0 
+    &&  signed_distance_from_20 >= 0
+    &&  signed_distance_from_01 >= 0
+    ) {
+        return p;
+    }
 
     // A's dorito zone - closest point is A
-    const vec3_t ap = vec3_sub(p, a);
-    const scalar_t d1 = vec3_dot(ab, ap);
-    const scalar_t d2 = vec3_dot(ac, ap);
-    if (d1 <= 0 && d2 <= 0) return a;
-
+    if (signed_distance_from_12 >= 0 
+    &&  signed_distance_from_20 < 0
+    &&  signed_distance_from_01 < 0
+    ) {
+        return triangle->v0;
+    }
+    
     // B's dorito zone - closest point is B
-    const vec3_t bp = vec3_sub(p, b);
-    const scalar_t d3 = vec3_dot(ab, bp);
-    const scalar_t d4 = vec3_dot(ac, bp);
-    if (d3 > 0 && d4 <= d3) return b;
-
+    if (signed_distance_from_12 < 0 
+    &&  signed_distance_from_20 >= 0
+    &&  signed_distance_from_01 < 0
+    ) {
+        return triangle->v1;
+    }
+    
     // C's dorito zone - closest point is C
-    const vec3_t cp = vec3_sub(p, c);
-    const scalar_t d5 = vec3_dot(ab, cp);
-    const scalar_t d6 = vec3_dot(ac, cp);
-    if (d6 > 0 && d5 <= d6) return b;
-
-    // AB's chonko zone - closest point is on edge AB
-    const scalar_t vc = scalar_mul(d1, d4) - scalar_mul(d3, d2);
-    if (vc <= 0 && d1 >= 0 && d3 <= 0) {
-        const scalar_t v = scalar_div(d1, (d1 - d3));
-        return vec3_add(a, vec3_muls(ab, v));
+    if (signed_distance_from_12 < 0 
+    &&  signed_distance_from_20 < 0
+    &&  signed_distance_from_01 >= 0
+    ) {
+        return triangle->v2;
     }
 
-    // AC's chonko zone - closest point is on edge AC
-    const scalar_t vb = (scalar_mul(d5, d2) - scalar_mul(d1, d6));
-    if (vb <= 0 && d2 >= 0 && d6 <= 0) {
-        const scalar_t v = scalar_div(d2, (d2 - d6));
-        return vec3_add(a, vec3_muls(ac, v));
+    // AB's chonko zone - closest point is on AB
+    if (signed_distance_from_12 >= 0 
+    &&  signed_distance_from_20 >= 0
+    &&  signed_distance_from_01 < 0
+    ) {
+        const scalar_t t = get_progress_of_p_on_ab_3d(triangle->v0, triangle->v1, p);
+        return vec3_add(triangle->v0, vec3_muls(v0_v1, t));
     }
 
-    // BC's chonko zone - closest point is on edge BC
-    const scalar_t va = (scalar_mul(d3, d6) - scalar_mul(d5, d4));
-    if (va <= 0 && (d4 - d3) >= 0 && (d5 - d6) >= 0) {
-        const scalar_t v = scalar_div((d4 - d3), ((d4 - d3) + (d5 - d6)));
-        return vec3_add(b, vec3_muls(vec3_sub(c, b), v));
+    // BC's chonko zone - closest point is on BC
+    if (signed_distance_from_12 < 0 
+    &&  signed_distance_from_20 >= 0
+    &&  signed_distance_from_01 >= 0
+    ) {
+        const scalar_t t = get_progress_of_p_on_ab_3d(triangle->v1, triangle->v2, p);
+        return vec3_add(triangle->v1, vec3_muls(v1_v2, t));
     }
 
-    // Otherwise the point is inside the triangle
-    const scalar_t va_vb_vc = va + vb + vc;
-    const scalar_t v = scalar_div(vb, va_vb_vc);
-    const scalar_t w = scalar_div(vc, va_vb_vc);
-    if (v_out) *v_out = v;
-    if (w_out) *w_out = w;
-    return vec3_add(vec3_add(a, vec3_muls(ab, v)), vec3_muls(ac, w));
+    // CA's chonko zone - closest point is on CA. There is no other logical combination so if we get here it has to be this
+    /*if (signed_distance_from_12 >= 0 
+    &&  signed_distance_from_20 < 0
+    &&  signed_distance_from_01 >= 0
+    ) */ {
+        const scalar_t t = get_progress_of_p_on_ab_3d(triangle->v2, triangle->v0, p);
+        return vec3_add(triangle->v2, vec3_muls(v2_v0, t));
+    }
 }
 
 int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vertical_cylinder_t vertical_cylinder, rayhit_t* hit) {
