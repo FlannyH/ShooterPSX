@@ -703,6 +703,96 @@ int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere
     return 0;
 }
 
+int capsule_triangle_intersect(collision_triangle_3d_t* triangle, capsule_t capsule, rayhit_t* hit) {
+    // Get end points A and B by reducing each endpoint by the capsule radius
+    const vec3_t capsule_ray_dir = vec3_normalize(vec3_sub(capsule.top, capsule.bottom));
+    const vec3_t capsule_a = vec3_add(capsule.bottom, vec3_muls(capsule_ray_dir, capsule.radius));
+    const vec3_t capsule_b = vec3_sub(capsule.top, vec3_muls(capsule_ray_dir, capsule.radius));
+    const vec3_t a_to_v0 = vec3_sub(triangle->v0, capsule_a);
+    const scalar_t distance_from_a_to_triangle_plane = vec3_dot(triangle->normal, a_to_v0);
+    const scalar_t capsule_radius_squared = scalar_mul(capsule.radius, capsule.radius); // todo: maybe cache the squared radius?
+
+    // If the capsule and triangle are (near-)parallel, use a specific different intersection method
+    if (vec3_dot(triangle->normal, capsule_ray_dir) < 16) {
+        // Both `capsule_a` and `capsule_b` should be very similar, if not the same distance from the triangle plane,
+        // so just pick `capsule_a` and get its distance to the triangle plane. If it's more than the capsule radius,
+        // theres no collision.
+        // Since they're parallel, it's safe to assume the capsule is sliced in such a way that the radius in the 
+        // capsule slice is predictable
+        const scalar_t distance_squared = scalar_mul(distance_from_a_to_triangle_plane, distance_from_a_to_triangle_plane);
+        const scalar_t projected_capsule_radius = scalar_sqrt(capsule_radius_squared - distance_squared);
+
+        // For each triangle edge
+        const vec3_t edges[6] = {
+            triangle->v0, triangle->v1,
+            triangle->v1, triangle->v2,
+            triangle->v2, triangle->v0,
+        };
+        for (int i = 0; i < 6; i += 2) {
+            // Check for A
+            const vec3_t projected_a = closest_point_on_line_segment(edges[i + 0], edges[1 + 1], capsule_a);
+            const vec3_t projected_back_a = closest_point_on_line_segment(capsule_a, capsule_b, projected_a);
+            const scalar_t projected_distance_squared = vec3_magnitude_squared(vec3_sub(projected_a, projected_back_a));
+
+            if (projected_distance_squared < projected_capsule_radius) {
+                hit->distance = scalar_sqrt(projected_distance_squared);
+                hit->distance_along_normal = hit->distance;
+                hit->normal = triangle->normal;
+                hit->position = projected_a;
+                hit->type = RAY_HIT_TYPE_TRIANGLE;
+                hit->tri.triangle = triangle;
+                return 1;
+            }
+
+            // Check for B
+            const vec3_t projected_b = closest_point_on_line_segment(edges[i + 0], edges[1 + 1], capsule_b);
+            const vec3_t projected_back_b = closest_point_on_line_segment(capsule_a, capsule_b, projected_b);
+            const scalar_t projected_distance_squared = vec3_magnitude_squared(vec3_sub(projected_b, projected_back_b));
+
+            if (projected_distance_squared < projected_capsule_radius) {
+                hit->distance = scalar_sqrt(projected_distance_squared);
+                hit->distance_along_normal = hit->distance;
+                hit->normal = triangle->normal;
+                hit->position = projected_b;
+                hit->type = RAY_HIT_TYPE_TRIANGLE;
+                hit->tri.triangle = triangle;
+                return 1;
+            }
+        }
+        return 0;
+    }
+    else {
+        // Cast ray on the line from the capsule bottom to top, starting from `capsule_a`, and find hit position
+        const scalar_t ray_dir_dot_triangle_normal = vec3_dot(triangle->normal, capsule_ray_dir);
+        const scalar_t ray_distance = scalar_div(distance_from_a_to_triangle_plane, ray_dir_dot_triangle_normal);
+        const vec3_t hit_position = vec3_add(capsule_a, vec3_muls(capsule_ray_dir, ray_distance));
+        
+        // Find point on triangle closest to the hit position
+        const vec3_t closest_pos_on_triangle = find_closest_point_on_triangle_3d(triangle->v0, triangle->v1, triangle->v2, hit_position, NULL, NULL);
+        
+        // Find point on capsule line segment that's closest to `closest_pos_on_triangle`, and get the distance between the two
+        const vec3_t sphere_center = closest_point_on_line_segment(capsule_a, capsule_b, closest_pos_on_triangle);
+        const scalar_t distance_from_sphere_to_triangle_squared = vec3_magnitude_squared(vec3_sub(sphere_center, closest_pos_on_triangle));
+
+        // If the distance is bigger than the capsule radius, there's no collision
+        if (distance_from_sphere_to_triangle_squared > capsule_radius_squared) {
+            return 0;
+        }
+
+        // Otherwise there is - store the hit info
+        hit->distance = scalar_sqrt(distance_from_sphere_to_triangle_squared);
+        hit->distance_along_normal = hit->distance;
+        hit->normal = triangle->normal;
+        hit->position = closest_pos_on_triangle;
+        hit->type = RAY_HIT_TYPE_TRIANGLE;
+        hit->tri.triangle = triangle;
+        return 1;
+    }
+
+    // We should never get here
+    return 0;
+}
+
 level_collision_t bvh_from_file(const char* path, int on_stack, stack_t stack) {
     // Load file
     uint32_t* data = NULL;

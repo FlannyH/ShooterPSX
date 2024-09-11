@@ -35,6 +35,12 @@ typedef struct {
     int is_wall_check;
 } vertical_cylinder_t;
 
+typedef struct {
+    vec3_t bottom;
+    vec3_t top;
+    scalar_t radius;
+} capsule_t;
+
 typedef enum {
     axis_x,
     axis_y,
