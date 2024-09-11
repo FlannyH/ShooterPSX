@@ -809,13 +809,14 @@ int capsule_triangle_intersect(collision_triangle_3d_t* triangle, capsule_t caps
     const scalar_t capsule_radius_squared = scalar_mul(capsule.radius, capsule.radius); // todo: maybe cache the squared radius?
 
     // If the capsule and triangle are (near-)parallel, use a specific different intersection method
-    if (vec3_dot(triangle->normal, capsule_ray_dir) < 16) {
+    if (abs(vec3_dot(triangle->normal, capsule_ray_dir)) < 16) {
         // Both `capsule_a` and `capsule_b` should be very similar, if not the same distance from the triangle plane,
         // so just pick `capsule_a` and get its distance to the triangle plane. If it's more than the capsule radius,
         // theres no collision.
         // Since they're parallel, it's safe to assume the capsule is sliced in such a way that the radius in the 
         // capsule slice is predictable
         const scalar_t distance_squared = scalar_mul(distance_from_a_to_triangle_plane, distance_from_a_to_triangle_plane);
+        if (distance_squared >= capsule_radius_squared) return 0;
         const scalar_t projected_capsule_radius = scalar_sqrt(capsule_radius_squared - distance_squared);
 
         // For each triangle edge
@@ -828,10 +829,10 @@ int capsule_triangle_intersect(collision_triangle_3d_t* triangle, capsule_t caps
             // Check for A
             const vec3_t projected_a = closest_point_on_line_segment(edges[i + 0], edges[1 + 1], capsule_a);
             const vec3_t projected_back_a = closest_point_on_line_segment(capsule_a, capsule_b, projected_a);
-            const scalar_t projected_distance_squared = vec3_magnitude_squared(vec3_sub(projected_a, projected_back_a));
+            const scalar_t projected_distance_a_squared = vec3_magnitude_squared(vec3_sub(projected_a, projected_back_a));
 
-            if (projected_distance_squared < projected_capsule_radius) {
-                hit->distance = scalar_sqrt(projected_distance_squared);
+            if (projected_distance_a_squared < projected_capsule_radius) {
+                hit->distance = scalar_sqrt(projected_distance_a_squared);
                 hit->distance_along_normal = hit->distance;
                 hit->normal = triangle->normal;
                 hit->position = projected_a;
@@ -843,10 +844,10 @@ int capsule_triangle_intersect(collision_triangle_3d_t* triangle, capsule_t caps
             // Check for B
             const vec3_t projected_b = closest_point_on_line_segment(edges[i + 0], edges[1 + 1], capsule_b);
             const vec3_t projected_back_b = closest_point_on_line_segment(capsule_a, capsule_b, projected_b);
-            const scalar_t projected_distance_squared = vec3_magnitude_squared(vec3_sub(projected_b, projected_back_b));
+            const scalar_t projected_distance_b_squared = vec3_magnitude_squared(vec3_sub(projected_b, projected_back_b));
 
-            if (projected_distance_squared < projected_capsule_radius) {
-                hit->distance = scalar_sqrt(projected_distance_squared);
+            if (projected_distance_b_squared < projected_capsule_radius) {
+                hit->distance = scalar_sqrt(projected_distance_b_squared);
                 hit->distance_along_normal = hit->distance;
                 hit->normal = triangle->normal;
                 hit->position = projected_b;
@@ -864,7 +865,7 @@ int capsule_triangle_intersect(collision_triangle_3d_t* triangle, capsule_t caps
         const vec3_t hit_position = vec3_add(capsule_a, vec3_muls(capsule_ray_dir, ray_distance));
         
         // Find point on triangle closest to the hit position
-        const vec3_t closest_pos_on_triangle = find_closest_point_on_triangle_3d(triangle->v0, triangle->v1, triangle->v2, hit_position, NULL, NULL);
+        const vec3_t closest_pos_on_triangle = find_closest_point_on_triangle_3d(triangle, hit_position);
         
         // Find point on capsule line segment that's closest to `closest_pos_on_triangle`, and get the distance between the two
         const vec3_t sphere_center = closest_point_on_line_segment(capsule_a, capsule_b, closest_pos_on_triangle);
