@@ -77,6 +77,34 @@ void handle_node_intersection_vertical_cylinder(level_collision_t* self, const b
     }
 } 
 
+void handle_node_intersection_capsule(level_collision_t* self, const bvh_node_t* current_node, const capsule_t capsule, rayhit_t* hit, const int rec_depth) {
+    // Intersect current node
+    if (capsule_aabb_intersect(&current_node->bounds, capsule)) {
+        if (current_node->primitive_count != 0) {
+            // Intersect all triangles attached to it
+            rayhit_t sub_hit = { 0 };
+            sub_hit.distance = 0;
+            for (int i = current_node->left_first; i < current_node->left_first + current_node->primitive_count; i++) {
+                // If hit
+                if (capsule_triangle_intersect(&self->primitives[self->indices[i]], capsule, &sub_hit)) {
+                    // If lowest distance
+                    if (sub_hit.distance < hit->distance && sub_hit.distance >= 0) {
+                        // Copy the hit info into the output hit for the BVH traversal
+                        memcpy(hit, &sub_hit, sizeof(rayhit_t));
+                        hit->type = RAY_HIT_TYPE_TRIANGLE;
+                        hit->tri.triangle = &self->primitives[self->indices[i]];
+                    }
+                }
+            }
+            return;
+        }
+
+        //Otherwise, intersect child nodes
+        handle_node_intersection_capsule(self, &self->nodes[current_node->left_first + 0], capsule, hit, rec_depth + 1);
+        handle_node_intersection_capsule(self, &self->nodes[current_node->left_first + 1], capsule, hit, rec_depth + 1);
+    }
+} 
+
 void bvh_intersect_ray(level_collision_t* self, ray_t ray, rayhit_t* hit) {
     hit->distance = INT32_MAX;
     if (self == NULL) return;
@@ -89,6 +117,13 @@ void bvh_intersect_vertical_cylinder(level_collision_t* bvh, vertical_cylinder_t
     if (bvh == NULL) return;
     if (bvh->root == NULL) return;
     handle_node_intersection_vertical_cylinder(bvh, bvh->root, cyl, hit, 0);
+}
+
+void bvh_intersect_capsule(level_collision_t* bvh, capsule_t capsule, rayhit_t* hit) {
+    hit->distance = INT32_MAX;
+    if (bvh == NULL) return;
+    if (bvh->root == NULL) return;
+    handle_node_intersection_capsule(bvh, bvh->root, capsule, hit, 0);
 }
 
 void debug_draw(const level_collision_t* self, const bvh_node_t* node, const int min_depth, const int max_depth, const int curr_depth, const pixel32_t color) {
@@ -701,6 +736,42 @@ int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere
     }
 
     return 0;
+}
+
+int capsule_aabb_intersect(const aabb_t* aabb, capsule_t capsule) {
+    // Approximation, but should be fast enough
+    const aabb_t expanded_aabb = (aabb_t) {
+        .min = vec3_sub(aabb->min, vec3_from_scalar(capsule.radius)),
+        .max = vec3_add(aabb->max, vec3_from_scalar(capsule.radius)),
+    };
+    const vec3_t capsule_ray_dir = vec3_normalize(vec3_sub(capsule.top, capsule.bottom));
+    const vec3_t capsule_a = vec3_add(capsule.bottom, vec3_muls(capsule_ray_dir, capsule.radius));
+    const vec3_t capsule_b = vec3_sub(capsule.top, vec3_muls(capsule_ray_dir, capsule.radius));
+    const ray_t ray = {
+        .length = INT32_MAX,
+        .position = capsule_a,
+        .direction = capsule_ray_dir,
+        .inv_direction = vec3_div((vec3_t){ONE, ONE, ONE}, capsule_ray_dir)
+    };
+    return ray_aabb_intersect(&expanded_aabb, ray);
+}
+
+int capsule_aabb_intersect_fancy(const aabb_t* aabb, capsule_t capsule, rayhit_t* hit) {
+    // Approximation, but should be fast enough
+    const aabb_t expanded_aabb = (aabb_t) {
+        .min = vec3_sub(aabb->min, vec3_from_scalar(capsule.radius)),
+        .max = vec3_add(aabb->max, vec3_from_scalar(capsule.radius)),
+    };
+    const vec3_t capsule_ray_dir = vec3_normalize(vec3_sub(capsule.top, capsule.bottom));
+    const vec3_t capsule_a = vec3_add(capsule.bottom, vec3_muls(capsule_ray_dir, capsule.radius));
+    const vec3_t capsule_b = vec3_sub(capsule.top, vec3_muls(capsule_ray_dir, capsule.radius));
+    const ray_t ray = {
+        .length = INT32_MAX,
+        .position = capsule_a,
+        .direction = capsule_ray_dir,
+        .inv_direction = vec3_div((vec3_t){ONE, ONE, ONE}, capsule_ray_dir)
+    };
+    return ray_aabb_intersect_fancy(&expanded_aabb, ray, hit);
 }
 
 int capsule_triangle_intersect(collision_triangle_3d_t* triangle, capsule_t capsule, rayhit_t* hit) {
