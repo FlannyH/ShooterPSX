@@ -877,10 +877,10 @@ int capsule_triangle_intersect(collision_triangle_3d_t* triangle, capsule_t caps
         }
 
         // Otherwise there is - store the hit info
-        hit->distance = scalar_sqrt(distance_from_sphere_to_triangle_squared);
-        hit->distance_along_normal = hit->distance;
-        hit->normal = triangle->normal;
         hit->position = closest_pos_on_triangle;
+        hit->normal = vec3_sub(sphere_center, hit->position);
+        hit->distance = scalar_sqrt(vec3_magnitude_squared(hit->normal));
+        hit->normal = vec3_divs(hit->normal, hit->distance);
         hit->type = RAY_HIT_TYPE_TRIANGLE;
         hit->tri.triangle = triangle;
         return 1;
