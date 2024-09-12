@@ -641,9 +641,11 @@ void collision_clear_stats(void) {
     n_vertical_cylinder_triangle_intersects = 0;
 }
 
-vec3_t closest_point_on_line_segment(vec3_t a, vec3_t b, vec3_t point) {
-    vec3_t ab = vec3_sub(a, b);
-    scalar_t t = scalar_min(scalar_max(scalar_div(vec3_dot(vec3_sub(point, a), ab), vec3_dot(ab, ab)), 0), 1);
+vec3_t closest_point_on_line_segment(const vec3_t a, const vec3_t b, const vec3_t point) {
+    const vec3_t ab = vec3_sub(b, a);
+    const vec3_t ap = vec3_sub(point, a);
+    const scalar_t ap_projected_onto_ab = scalar_div(vec3_dot(ab, ap), vec3_dot(ab, ab));
+    const scalar_t t = scalar_clamp(ap_projected_onto_ab, 0, ONE);
     return vec3_add(a, vec3_muls(ab, t));
 }
 
