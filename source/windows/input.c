@@ -153,7 +153,7 @@ void input_update(void) {
     //button_curr[0] |= (PAD_R1)*glfwGetKey(window, GLFW_KEY_)
     button_curr[0] |= (PAD_L2)*glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
     button_curr[0] |= (PAD_R2)*glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
-    //button_curr[0] |= (PAD_TRIANGLE)* glfwGetKey(window, GLFW_KEY_)   
+    button_curr[0] |= (PAD_TRIANGLE)* glfwGetKey(window, GLFW_KEY_LEFT_CONTROL);
     button_curr[0] |= (PAD_CIRCLE)*glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL);
     button_curr[0] |= (PAD_CROSS)*glfwGetKey(window, GLFW_KEY_SPACE);
     button_curr[0] |= (PAD_SQUARE)*glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
