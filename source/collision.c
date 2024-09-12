@@ -842,7 +842,7 @@ int capsule_triangle_intersect(collision_triangle_3d_t* triangle, capsule_t caps
         };
         for (int i = 0; i < 6; i += 2) {
             // Check for A
-            const vec3_t projected_a = closest_point_on_line_segment(edges[i + 0], edges[1 + 1], capsule_a);
+            const vec3_t projected_a = find_closest_point_on_triangle_3d(triangle, capsule_a);
             const vec3_t projected_back_a = closest_point_on_line_segment(capsule_a, capsule_b, projected_a);
             const scalar_t projected_distance_a_squared = vec3_magnitude_squared(vec3_sub(projected_a, projected_back_a));
 
@@ -857,7 +857,7 @@ int capsule_triangle_intersect(collision_triangle_3d_t* triangle, capsule_t caps
             }
 
             // Check for B
-            const vec3_t projected_b = closest_point_on_line_segment(edges[i + 0], edges[1 + 1], capsule_b);
+            const vec3_t projected_b = find_closest_point_on_triangle_3d(triangle, capsule_b);
             const vec3_t projected_back_b = closest_point_on_line_segment(capsule_a, capsule_b, projected_b);
             const scalar_t projected_distance_b_squared = vec3_magnitude_squared(vec3_sub(projected_b, projected_back_b));
 
