@@ -430,6 +430,19 @@ vec2_t find_closest_point_on_triangle_2d(vec2_t v0, vec2_t v1, vec2_t v2, vec2_t
     return closest_point;
 }
 
+scalar_t get_progress_of_p_on_ab_3d(vec3_t a, vec3_t b, vec3_t p) {
+    // Calculate progress along the edge
+    const vec3_t ab = vec3_sub(b, a);
+    const vec3_t ap = vec3_sub(p, a);
+    const scalar_t ap_dot_ab = vec3_dot(ap, ab);
+    const scalar_t length_ab = vec3_magnitude_squared(ab);
+    scalar_t progress_along_edge = scalar_div(ap_dot_ab, length_ab);
+
+    // Clamp it between 0.0 and 1.0
+    progress_along_edge = scalar_clamp(progress_along_edge, 0, 4096);
+    return progress_along_edge;
+}
+
 // Assumes `p` lies on the triangle's plane
 vec3_t find_closest_point_on_triangle_3d(collision_triangle_3d_t* triangle, vec3_t p) {
     // Calculate edge0 
