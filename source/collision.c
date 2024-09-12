@@ -834,42 +834,34 @@ int capsule_triangle_intersect(collision_triangle_3d_t* triangle, capsule_t caps
         if (distance_squared >= capsule_radius_squared) return 0;
         const scalar_t projected_capsule_radius = scalar_sqrt(capsule_radius_squared - distance_squared);
 
-        // For each triangle edge
-        const vec3_t edges[6] = {
-            triangle->v0, triangle->v1,
-            triangle->v1, triangle->v2,
-            triangle->v2, triangle->v0,
-        };
-        for (int i = 0; i < 6; i += 2) {
-            // Check for A
-            const vec3_t projected_a = find_closest_point_on_triangle_3d(triangle, capsule_a);
-            const vec3_t projected_back_a = closest_point_on_line_segment(capsule_a, capsule_b, projected_a);
-            const scalar_t projected_distance_a_squared = vec3_magnitude_squared(vec3_sub(projected_a, projected_back_a));
+        // Check for A
+        const vec3_t projected_a = find_closest_point_on_triangle_3d(triangle, capsule_a);
+        const vec3_t projected_back_a = closest_point_on_line_segment(capsule_a, capsule_b, projected_a);
+        const scalar_t projected_distance_a_squared = vec3_magnitude_squared(vec3_sub(projected_a, projected_back_a));
 
-            if (projected_distance_a_squared < projected_capsule_radius) {
-                hit->distance = scalar_sqrt(projected_distance_a_squared);
-                hit->distance_along_normal = hit->distance;
-                hit->normal = triangle->normal;
-                hit->position = projected_a;
-                hit->type = RAY_HIT_TYPE_TRIANGLE;
-                hit->tri.triangle = triangle;
-                return 1;
-            }
+        if (projected_distance_a_squared < projected_capsule_radius) {
+            hit->distance = scalar_sqrt(projected_distance_a_squared);
+            hit->distance_along_normal = hit->distance;
+            hit->normal = triangle->normal;
+            hit->position = projected_a;
+            hit->type = RAY_HIT_TYPE_TRIANGLE;
+            hit->tri.triangle = triangle;
+            return 1;
+        }
 
-            // Check for B
-            const vec3_t projected_b = find_closest_point_on_triangle_3d(triangle, capsule_b);
-            const vec3_t projected_back_b = closest_point_on_line_segment(capsule_a, capsule_b, projected_b);
-            const scalar_t projected_distance_b_squared = vec3_magnitude_squared(vec3_sub(projected_b, projected_back_b));
+        // Check for B
+        const vec3_t projected_b = find_closest_point_on_triangle_3d(triangle, capsule_b);
+        const vec3_t projected_back_b = closest_point_on_line_segment(capsule_a, capsule_b, projected_b);
+        const scalar_t projected_distance_b_squared = vec3_magnitude_squared(vec3_sub(projected_b, projected_back_b));
 
-            if (projected_distance_b_squared < projected_capsule_radius) {
-                hit->distance = scalar_sqrt(projected_distance_b_squared);
-                hit->distance_along_normal = hit->distance;
-                hit->normal = triangle->normal;
-                hit->position = projected_b;
-                hit->type = RAY_HIT_TYPE_TRIANGLE;
-                hit->tri.triangle = triangle;
-                return 1;
-            }
+        if (projected_distance_b_squared < projected_capsule_radius) {
+            hit->distance = scalar_sqrt(projected_distance_b_squared);
+            hit->distance_along_normal = hit->distance;
+            hit->normal = triangle->normal;
+            hit->position = projected_b;
+            hit->type = RAY_HIT_TYPE_TRIANGLE;
+            hit->tri.triangle = triangle;
+            return 1;
         }
         return 0;
     }
