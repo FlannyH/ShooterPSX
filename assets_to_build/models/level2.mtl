@@ -1,5 +1,35 @@
-# Blender 4.2.0 MTL File: 'level2.blend'
+# Blender 4.2.1 LTS MTL File: 'level2.blend'
 # www.blender.org
+
+newmtl elevator_wall
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd level_tex/elevator_wall.png
+
+newmtl floor
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd level_tex/floor.png
+
+newmtl techflat
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd level_tex/techflat1_blk1.png
 
 newmtl test
 Ns 250.000000
@@ -10,3 +40,43 @@ Ni 1.500000
 d 1.000000
 illum 2
 map_Kd level_tex/test.png
+
+newmtl tile2
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd level_tex/tile2.png
+
+newmtl tile3
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd level_tex/tile3.png
+
+newmtl wall
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd level_tex/wall.png
+
+newmtl yellow_light
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd level_tex/yellow_light.png
