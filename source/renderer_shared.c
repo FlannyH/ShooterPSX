@@ -71,7 +71,7 @@ void renderer_draw_model_shaded(const model_t* model, const transform_t* model_t
     if (vislist == NULL || n_sections == 0) {
         for (size_t i = 0; i < model->n_meshes; ++i) {
             //renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
-            renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0, tex_level_start);
+            renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0, 0, tex_level_start);
         }
     }
     else {
@@ -88,10 +88,10 @@ void renderer_draw_model_shaded(const model_t* model, const transform_t* model_t
 
         // Render only the meshes that are visible
         for (size_t i = 0; i < model->n_meshes; ++i) {
-            if ((i < 32) && (combined.sections_0_31 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0, tex_level_start);
-            else if ((i >= 32) && (i < 64) && (combined.sections_32_63 & (1 << (i - 32)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0, tex_level_start);
-            else if ((i >= 64) && (i < 96) && (combined.sections_64_95 & (1 << (i - 64)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0, tex_level_start);
-            else if ((i >= 96) && (i < 128) && (combined.sections_96_127 & (1 << (i - 96)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0, tex_level_start);
+            if ((i < 32) && (combined.sections_0_31 & (1 << i))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0, 0, tex_level_start);
+            else if ((i >= 32) && (i < 64) && (combined.sections_32_63 & (1 << (i - 32)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0, 0, tex_level_start);
+            else if ((i >= 64) && (i < 96) && (combined.sections_64_95 & (1 << (i - 64)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0, 0, tex_level_start);
+            else if ((i >= 96) && (i < 128) && (combined.sections_96_127 & (1 << (i - 96)))) renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0, 0, tex_level_start);
         }
     }
 

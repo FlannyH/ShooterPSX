@@ -298,7 +298,7 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 	if (chaser->entity_header.mesh == NULL) {
 		chaser->entity_header.mesh = model_find_mesh(entity_models, "19_enemy_chaser_idle");
 	}
-	renderer_draw_mesh_shaded(chaser->entity_header.mesh, &render_transform, 0, tex_entity_start);
+	renderer_draw_mesh_shaded(chaser->entity_header.mesh, &render_transform, 0, 1, tex_entity_start);
 }
 
 void entity_chaser_on_hit(int slot, int hitbox_index) {
