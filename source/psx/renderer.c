@@ -175,7 +175,7 @@ void renderer_end_frame(void) {
     drawn_first_frame = 1;
 }
 
-void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform, int local, int tex_id_offset) {
+void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform, int local, int facing_camera, int tex_id_offset) {
     ++n_meshes_total;
     if (!mesh) {
         printf("renderer_draw_mesh_shaded: mesh was null!\n");
