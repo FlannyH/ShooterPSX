@@ -5,6 +5,7 @@
 #include <gl2d.h>
 #include <nds.h>
 
+vec3_t camera_pos;
 vec3_t camera_dir;
 int tex_level_start = 0;
 int tex_entity_start = 0;
@@ -67,6 +68,7 @@ void renderer_begin_frame(const transform_t* camera_transform) {
     glRotateYi(angle_to_16(camera_transform->rotation.y));
     glRotateZi(angle_to_16(camera_transform->rotation.z));
     glTranslatef32(-camera_transform->position.x >> 12, -camera_transform->position.y >> 12, -camera_transform->position.z >> 12);
+    memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
     
     n_rendered_triangles = 0;
     n_rendered_quads = 0;
@@ -87,16 +89,48 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_tran
         glLoadIdentity();
         glTranslatef32(model_transform->position.x, -model_transform->position.y, -model_transform->position.z);
         glScalef32(-model_transform->scale.x, -model_transform->scale.y, -model_transform->scale.z);
-        glRotateXi(angle_to_16(model_transform->rotation.x));
-        glRotateYi(angle_to_16(-model_transform->rotation.y));
-        glRotateZi(angle_to_16(model_transform->rotation.z));
+        if (facing_camera) {
+            // todo: verify that this is correct, if used at all
+            const vec3_t up = vec3_from_scalars(0, ONE, 0);
+            const vec3_t forward = vec3_normalize(vec3_neg(model_transform->position)); // When local, the camera is at (0, 0, 0), so the vector from the mesh to the camera is the negative of the mesh translation
+            const vec3_t right = vec3_normalize(vec3_cross(up, forward));
+            const m3x3 lookat_matrix = (m3x3){
+                .m = {
+                    right.x,    right.y,    right.z,
+                    up.x,       up.y,       up.z,
+                    forward.x,  forward.y,  forward.z,
+                }
+            };
+            glMultMatrix3x3(&lookat_matrix);
+        }
+        else {
+            glRotateXi(angle_to_16(model_transform->rotation.x));
+            glRotateYi(angle_to_16(-model_transform->rotation.y));
+            glRotateZi(angle_to_16(model_transform->rotation.z));
+        }
     }
     else {
         glTranslatef32(model_transform->position.x, model_transform->position.y, model_transform->position.z);
         glScalef32(model_transform->scale.x, model_transform->scale.y, model_transform->scale.z);
-        glRotateZi(angle_to_16(model_transform->rotation.z));
-        glRotateYi(angle_to_16(model_transform->rotation.y));
-        glRotateXi(angle_to_16(model_transform->rotation.x));
+
+        if (facing_camera) {
+            const vec3_t up = vec3_from_scalars(0, ONE, 0);
+            const vec3_t forward = vec3_normalize(vec3_sub(vec3_muls(camera_pos, 192), vec3_muls(model_transform->position, 192*ONE))); // 192 to add some more precision when very close to the player
+            const vec3_t right = vec3_normalize(vec3_cross(up, forward));
+            const m3x3 lookat_matrix = (m3x3){
+                .m = {
+                    right.x,    right.y,    right.z,
+                    up.x,       up.y,       up.z,
+                    forward.x,  forward.y,  forward.z,
+                }
+            };
+            glMultMatrix3x3(&lookat_matrix);
+        }
+        else {
+            glRotateZi(angle_to_16(model_transform->rotation.z));
+            glRotateYi(angle_to_16(model_transform->rotation.y));
+            glRotateXi(angle_to_16(model_transform->rotation.x));
+        }
     }
 
     // todo - display lists
@@ -243,7 +277,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     (void)v1;
     (void)color;
     (void)model_transform;
-    TODO()
+    TODO_SOFT()
 }
 
 void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index) {
