@@ -468,9 +468,28 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
     };
 	glm_translate(model_matrix, position);
     glm_scale(model_matrix, scale);
-	glm_rotate_x(model_matrix, (float)model_transform->rotation.x * 2 * PI / 131072.0f, model_matrix);
-	glm_rotate_y(model_matrix, (float)model_transform->rotation.y * 2 * PI / 131072.0f, model_matrix);
-	glm_rotate_z(model_matrix, (float)model_transform->rotation.z * 2 * PI / 131072.0f, model_matrix);
+	if (facing_camera) {
+		const vec3 camera_pos_float = { 
+			(float)camera_pos.x / 4096.f,
+			(float)camera_pos.y / 4096.f,
+			(float)camera_pos.z / 4096.f,
+		};
+		vec3 up = {  0.0f, 1.0f, 0.0f };
+		vec3 forward;
+		vec3 right;
+		glm_vec3_sub(camera_pos_float, position, forward);
+		glm_vec3_normalize(forward);
+		glm_vec3_cross(up, forward, right);
+		glm_vec3_normalize(right);
+		model_matrix[0][0] = right[0]; 		model_matrix[0][1] = right[1];  	model_matrix[0][2] = right[2];
+		model_matrix[1][0] = up[0]; 		model_matrix[1][1] = up[1];     	model_matrix[1][2] = up[2];
+		model_matrix[2][0] = forward[0]; 	model_matrix[2][1] = forward[1];	model_matrix[2][2] = forward[2];
+	}
+	else {
+		glm_rotate_x(model_matrix, (float)model_transform->rotation.x * 2 * PI / 131072.0f, model_matrix);
+		glm_rotate_y(model_matrix, (float)model_transform->rotation.y * 2 * PI / 131072.0f, model_matrix);
+		glm_rotate_z(model_matrix, (float)model_transform->rotation.z * 2 * PI / 131072.0f, model_matrix);
+	}
 
 	// Bind shader
 	glUseProgram(shader);
