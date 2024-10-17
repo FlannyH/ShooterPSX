@@ -469,7 +469,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 	glm_translate(model_matrix, position);
     glm_scale(model_matrix, scale);
 	if (facing_camera) {
-		const vec3 camera_pos_float = { 
+		vec3 camera_pos_float = { 
 			(float)camera_pos.x / 4096.f,
 			(float)camera_pos.y / 4096.f,
 			(float)camera_pos.z / 4096.f,

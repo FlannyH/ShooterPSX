@@ -151,6 +151,9 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
 }
 
 model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stack) {
+    (void)path;
+    (void)on_stack;
+    (void)stack;
     return NULL; // todo
 
     // // Read the file

@@ -174,7 +174,7 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
             .radius_squared = player_radius_squared,
             .is_wall_check = 1,
         };
-        rayhit_t hit;
+        rayhit_t hit = {};
 #ifndef _DEBUG_CAMERA
         bvh_intersect_vertical_cylinder(level_bvh, cyl, &hit);
         for (size_t i = 0; i < entity_n_active_aabb; ++i) {
@@ -185,6 +185,7 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
             if (curr_hit.distance < hit.distance) memcpy(&hit, &curr_hit, sizeof(rayhit_t));
         }
 #else
+        (void)level_bvh;
         hit.distance = INT32_MAX;
 #endif
 
@@ -231,6 +232,7 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
     scalar_t speed_1d = vec2_magnitude(vel_2d);
     self->transform.position.x = -self->position.x * (4096 / COL_SCALE);
 #ifdef _DEBUG_CAMERA
+    (void)time_counter;
     self->transform.position.y = -self->position.y * (4096 / COL_SCALE);
 #else
     self->transform.position.y = -self->position.y * (4096 / COL_SCALE) + isin(time_counter * 12) * speed_1d / 64;

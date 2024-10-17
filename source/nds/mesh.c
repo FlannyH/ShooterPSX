@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_start) {
+    (void)tex_id_start;
     // Read the file
     uint32_t* file_data;
     size_t size;
