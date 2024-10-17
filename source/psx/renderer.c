@@ -185,10 +185,19 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_tran
 
     // Set rotation and translation matrix
     MATRIX model_matrix;
-    HiRotMatrix((VECTOR*)&model_transform->rotation, &model_matrix); // VECTOR and vec3_t are identical bitwise
+    if (facing_camera)  {
+        const vec3_t up = vec3_from_scalars(0, ONE, 0);
+        const vec3_t forward = vec3_normalize(vec3_sub(vec3_muls(camera_pos, 192), vec3_muls(model_transform->position, 192*ONE))); // 192 to add some more precision when very close to the player
+        const vec3_t right = vec3_normalize(vec3_cross(up, forward));
+        model_matrix.m[0][0] = right.x;     model_matrix.m[1][0] = right.y;     model_matrix.m[2][0] = right.z;
+        model_matrix.m[0][1] = up.x;        model_matrix.m[1][1] = up.y;        model_matrix.m[2][1] = up.z;
+        model_matrix.m[0][2] = forward.x;   model_matrix.m[1][2] = forward.y;   model_matrix.m[2][2] = forward.z;
+    }
+    else HiRotMatrix((VECTOR*)&model_transform->rotation, &model_matrix); // VECTOR and vec3_t are identical bitwise
     TransMatrix(&model_matrix, (VECTOR*)&model_transform->position); 
-    if (local) CompMatrixLV(&aspect_matrix, &model_matrix, &model_matrix);
-    else       CompMatrixLV(&view_matrix, &model_matrix, &model_matrix);
+
+    if (local)  CompMatrixLV(&aspect_matrix, &model_matrix, &model_matrix);
+    else        CompMatrixLV(&view_matrix, &model_matrix, &model_matrix);
 
     // Send it to the GTE
 	PushMatrix();
