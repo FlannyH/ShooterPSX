@@ -208,6 +208,14 @@ void inspect_entity(size_t entity_id) {
     if (ImGui::Button("Delete")) {
         entity_kill(entity_id);
     }
+
+    // Render its registered bounding boxes
+    for (size_t i = 0; i < entity_n_active_aabb; ++i) {
+        const entity_collision_box_t box = entity_aabb_queue[i];
+        if (box.entity_index != entity_id) continue;
+        const pixel32_t color = (box.is_solid) ? (red) : ((box.is_trigger) ? green : blue);
+        renderer_debug_draw_aabb(&box.aabb, color, &id_transform);
+    }
 }
 
 #define PI 3.14159265358979f
