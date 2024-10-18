@@ -15,6 +15,7 @@
 #include "../entities/chaser.h"
 #include "../entities/crate.h"
 #include "../entities/door.h"
+#include "../entities/platform.h"
 #include "../renderer.h"
 #include "../input.h"
 #include "../file.h"
@@ -84,6 +85,8 @@ extern "C" {
     extern int h;
     extern GLuint fb_texture;
     extern GLuint fbo;
+    extern entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
+    extern size_t entity_n_active_aabb;
 }
 
 float scalar_to_float(scalar_t a) {
@@ -102,6 +105,14 @@ void inspect_vec3(vec3_t* vec, const char* label) {
 
     if (ImGui::DragFloat3(label, vec_float)) {
         *vec = vec3_from_floats(vec_float[0], vec_float[1], vec_float[2]); 
+    }
+}
+
+void inspect_scalar(scalar_t* scalar, const char* label) {
+    float scalar_float = scalar_to_float(*scalar);
+
+    if (ImGui::DragFloat(label, &scalar_float)) {
+        *scalar = scalar_from_float(scalar_float); 
     }
 }
 
@@ -146,7 +157,7 @@ void inspect_entity(size_t entity_id) {
             if (ImGui::Checkbox("Rotated", &is_rotated)) { door->is_rotated = (int)is_rotated; door->state_changed = 1; }
         }
         
-        if (entity_type == ENTITY_PICKUP) {
+        else if (entity_type == ENTITY_PICKUP) {
             entity_pickup_t* pickup = (entity_pickup_t*)entity_data;
             const size_t old_type = (size_t)pickup->type;
             const size_t new_type = inspect_enum((size_t)pickup->type, pickup_names, "Pickup type");
@@ -156,9 +167,40 @@ void inspect_entity(size_t entity_id) {
             }
         }
         
-        if (entity_type == ENTITY_CRATE) {
+        else if (entity_type == ENTITY_CRATE) {
             entity_crate_t* crate = (entity_crate_t*)entity_data;
             crate->pickup_to_spawn = inspect_enum((size_t)crate->pickup_to_spawn, pickup_names, "Pickup type to spawn");
+        }
+
+        else if (entity_type == ENTITY_PLATFORM) {
+            entity_platform_t* platform = (entity_platform_t*)entity_data;
+            inspect_vec3(&platform->position_start, "Start position");
+            inspect_vec3(&platform->position_end, "End position");
+            inspect_scalar(&platform->velocity, "Velocty");
+            ImGui::DragInt("Current timer value (ms)", &platform->curr_timer_value);
+            ImGui::DragInt("Auto start to end timer (ms)", &platform->auto_start_timer);
+            ImGui::DragInt("Auto end to start timer (ms)", &platform->auto_return_timer);
+            ImGui::DragInt("Signal ID", &platform->signal_id);
+            bool listen_to_signal = (bool)platform->listen_to_signal;
+            bool target_is_end = (bool)platform->target_is_end;
+            bool auto_start = (bool)platform->auto_start;
+            bool auto_return = (bool)platform->auto_return;
+            if (ImGui::Checkbox("Move on collision", &listen_to_signal)) { platform->listen_to_signal = (int)listen_to_signal; }
+            if (ImGui::Checkbox("Target is end position", &target_is_end)) { platform->target_is_end = (int)target_is_end; }
+            if (ImGui::Checkbox("Start automatically", &auto_start)) { platform->auto_start = (int)auto_start; }
+            if (ImGui::Checkbox("Return automatically", &auto_return)) { platform->auto_return = (int)auto_return; }
+
+            aabb_t start_pos_debug = (aabb_t) {
+                .min = vec3_sub(platform->position_start, vec3_from_scalar(ONE / 2)),
+                .max = vec3_add(platform->position_start, vec3_from_scalar(ONE / 2)),
+            };
+            aabb_t end_pos_debug = (aabb_t) {
+                .min = vec3_sub(platform->position_end, vec3_from_scalar(ONE / 2)),
+                .max = vec3_add(platform->position_end, vec3_from_scalar(ONE / 2)),
+            };
+            renderer_debug_draw_aabb(&start_pos_debug, red, &id_transform);
+            renderer_debug_draw_aabb(&end_pos_debug, green, &id_transform);
+            renderer_debug_draw_line(platform->position_start, platform->position_end, blue, &id_transform);
         }
         ImGui::TreePop();
     }
@@ -514,6 +556,12 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 case ENTITY_CHASER:
                     entity = (entity_header_t*)entity_chaser_new();
                     entity->position = spawn_pos;
+                    break;
+                case ENTITY_PLATFORM:
+                    entity = (entity_header_t*)entity_platform_new();
+                    entity->position = spawn_pos;
+                    ((entity_platform_t*)entity)->position_start = spawn_pos;
+                    ((entity_platform_t*)entity)->position_end = vec3_add(spawn_pos, vec3_from_scalars(0, ONE * 16, 0));
                     break;
             }
         }
