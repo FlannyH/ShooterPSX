@@ -54,6 +54,9 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 #ifdef _LEVEL_EDITOR
 	drawing_entity_id = slot;
 #endif
+	if (crate->entity_header.mesh == NULL) {
+		crate->entity_header.mesh = model_find_mesh(entity_models, "28_crate");
+	}
 	renderer_draw_mesh_shaded(crate->entity_header.mesh, &render_transform, 0, 0, tex_entity_start);
 }
 
