@@ -314,7 +314,7 @@ int vertical_cylinder_aabb_intersect_fancy(const aabb_t* aabb, const vertical_cy
 
     // Check the Y axis first. If this does not overlap, there can not be a collision.
     if ((vertical_cylinder.bottom.y + vertical_cylinder.height) < aabb->min.y) return 0; // If top of cylinder is below the AABB, no intersect
-    if (vertical_cylinder.bottom.y < aabb->max.y) return 0; // If bottom of cylinder is above the AABB, no intersect
+    if (vertical_cylinder.bottom.y >= aabb->max.y) return 0; // If bottom of cylinder is above the AABB, no intersect
 
     // The rest can now be done in 2D. Z becomes Y. Find the closest position on the AABB to the cylinder. 
     const vec2_t cylinder_center_pos = (vec2_t){vertical_cylinder.bottom.x, vertical_cylinder.bottom.z};
@@ -329,9 +329,26 @@ int vertical_cylinder_aabb_intersect_fancy(const aabb_t* aabb, const vertical_cy
         const vec2_t aabb_to_cylinder = vec2_sub(cylinder_center_pos, closest_pos_on_aabb);
         const scalar_t distance = vec2_magnitude(aabb_to_cylinder);
         const vec2_t normal = vec2_divs(aabb_to_cylinder, distance);
-        hit->distance = vec2_magnitude(aabb_to_cylinder);
-        hit->normal = (vec3_t){normal.x, 0, normal.y};
-        hit->position = (vec3_t){closest_pos_on_aabb.x, vertical_cylinder.bottom.y, closest_pos_on_aabb.y};
+        if (vertical_cylinder.is_wall_check) {
+            hit->normal = (vec3_t){normal.x, 0, normal.y};
+            hit->position = (vec3_t){closest_pos_on_aabb.x, vertical_cylinder.bottom.y, closest_pos_on_aabb.y};
+            hit->distance = vec2_magnitude(aabb_to_cylinder);
+            return 1;
+        }
+
+        const scalar_t vertical_cylinder_center_y = (vertical_cylinder.bottom.y + vertical_cylinder.height / 2);
+        const scalar_t aabb_center_y = (aabb->min.y + aabb->max.y / 2);
+        scalar_debug(hit->distance);
+        if ((vertical_cylinder.bottom.y + vertical_cylinder.height / 2) > (aabb->min.y + aabb->max.y / 2)) {
+            hit->normal = (vec3_t){0, 4096, 0};
+            hit->distance = vertical_cylinder.bottom.y - aabb->max.y;
+            hit->position = (vec3_t){closest_pos_on_aabb.x, aabb->max.y, closest_pos_on_aabb.y};
+        }
+        else {
+            hit->normal = (vec3_t){0, -4096, 0};
+            hit->distance = aabb->min.y - (vertical_cylinder.bottom.y + vertical_cylinder.height);
+            hit->position = (vec3_t){closest_pos_on_aabb.x, aabb->min.y, closest_pos_on_aabb.y};
+        }
         return 1;
     }
     return 0;

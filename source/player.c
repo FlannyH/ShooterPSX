@@ -26,14 +26,14 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
         .bottom = vec3_sub(self->position, vec3_from_int32s(0, distance_to_check, 0)),
         .height = distance_to_check + step_height,
         .radius = player_radius,
-        .radius_squared = player_radius_squared
+        .radius_squared = player_radius_squared,
+        .is_wall_check = 0,
     };
     bvh_intersect_vertical_cylinder(level_bvh, player, &hit);
     for (size_t i = 0; i < entity_n_active_aabb; ++i) {
         rayhit_t curr_hit;
         if (!entity_aabb_queue[i].is_solid) continue;
         if (!vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, player, &curr_hit)) continue;
-        curr_hit.normal = (vec3_t){0, ONE, 0};
         if (curr_hit.distance < hit.distance) memcpy(&hit, &curr_hit, sizeof(rayhit_t));
     }
 
