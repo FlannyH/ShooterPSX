@@ -29,6 +29,28 @@ void entity_platform_update(int slot, player_t* player, int dt) {
 	vec3_t platform_pos = platform->entity_header.position;
 	vec3_t player_pos = vec3_sub(player->position, (vec3_t){0, 200 * COL_SCALE, 0});
 
+	// Movement
+	const vec3_t target_position = (platform->target_is_end) ? (platform->position_end) : (platform->position_start); // where do we want to go?
+	vec3_t direction = vec3_sub(target_position, platform->entity_header.position); // what direction is that in?
+	const scalar_t target_distance = scalar_sqrt(vec3_magnitude_squared(direction)); // how far away from the target are we?
+
+	// If we're not there yet, keep moving
+	if (target_distance > platform->velocity * dt) {
+		direction = vec3_divs(direction, target_distance);
+		platform->entity_header.position = vec3_add(platform->entity_header.position, vec3_muls(direction, platform->velocity * dt));
+		platform->curr_timer_value = (platform->target_is_end) ? (platform->auto_return_timer) : (platform->auto_start_timer);
+	}
+	// When we get there, snap to the target position and start the return timer if that's enabled
+	else {
+		platform->entity_header.position = target_position;
+		// Handle auto move timer
+		if (platform->curr_timer_value > 0) platform->curr_timer_value -= dt;
+		if (platform->curr_timer_value <= 0) {
+			if (platform->target_is_end == 0 && platform->auto_start == 1) platform->target_is_end = 1;
+			else if (platform->target_is_end == 1 && platform->auto_return == 1) platform->target_is_end = 0;
+		}
+	}
+
 	// Make this platform solid based on the mesh bounding box
 	if (platform->entity_header.mesh == NULL) {
 		platform->entity_header.mesh = model_find_mesh(entity_models, "29_platform_test_horizontal");
