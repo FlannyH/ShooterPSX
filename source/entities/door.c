@@ -102,8 +102,8 @@ void entity_door_update(int slot, player_t* player, int dt) {
 		bounds.min.x *= COL_SCALE; bounds.min.y *= COL_SCALE; bounds.min.z *= COL_SCALE; 
 		bounds.max.x *= COL_SCALE; bounds.max.y *= COL_SCALE; bounds.max.z *= COL_SCALE; 
 		const aabb_t collision_box = {
-			.min = vec3_sub(door_pos, bounds.min),
-			.max = vec3_sub(door_pos, bounds.max)
+			.min = vec3_sub(door_pos, bounds.max),
+			.max = vec3_sub(door_pos, bounds.min)
 		};
 		const entity_collision_box_t box = {
 			.aabb = collision_box,

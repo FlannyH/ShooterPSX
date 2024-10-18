@@ -157,26 +157,26 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 
 	// Register hitboxes
 	aabb_t bounds_body = (aabb_t){
-		.min = (vec3_t){
-			chaser_pos.x - (-69 * COL_SCALE), 
-			chaser_pos.y - (-230 * COL_SCALE), 
-			chaser_pos.z - (-69 * COL_SCALE )},
-		.max = (vec3_t){ 
+		.min = (vec3_t){ 
 			chaser_pos.x - (69 * COL_SCALE), 
 			chaser_pos.y - (0 * COL_SCALE), 
 			chaser_pos.z - (69 * COL_SCALE)
 		},
+		.max = (vec3_t){
+			chaser_pos.x - (-69 * COL_SCALE), 
+			chaser_pos.y - (-230 * COL_SCALE), 
+			chaser_pos.z - (-69 * COL_SCALE )},
 	};
 	aabb_t bounds_head = (aabb_t){
-		.min = (vec3_t){
-			chaser_pos.x - (-35 * COL_SCALE), 
-			chaser_pos.y - (-340 * COL_SCALE), 
-			chaser_pos.z - (-35 * COL_SCALE )},
-		.max = (vec3_t){ 
+		.min = (vec3_t){ 
 			chaser_pos.x - (25 * COL_SCALE), 
 			chaser_pos.y - (-230 * COL_SCALE), 
 			chaser_pos.z - (35 * COL_SCALE)
 		},
+		.max = (vec3_t){
+			chaser_pos.x - (-35 * COL_SCALE), 
+			chaser_pos.y - (-340 * COL_SCALE), 
+			chaser_pos.z - (-35 * COL_SCALE )},
 	};
 	entity_collision_box_t box_body = {
 		.aabb = bounds_body,
