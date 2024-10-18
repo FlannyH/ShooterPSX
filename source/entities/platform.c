@@ -58,14 +58,14 @@ void entity_platform_update(int slot, player_t* player, int dt) {
 
 	const aabb_t mesh_bounds_translated = {
 		.min = {
-			platform_pos.x - (platform->entity_header.mesh->bounds.min.x * COL_SCALE),
-			platform_pos.y - (platform->entity_header.mesh->bounds.min.y * COL_SCALE),
-			platform_pos.z - (platform->entity_header.mesh->bounds.min.z * COL_SCALE),
-		},
-		.max = {
 			platform_pos.x - (platform->entity_header.mesh->bounds.max.x * COL_SCALE),
 			platform_pos.y - (platform->entity_header.mesh->bounds.max.y * COL_SCALE),
 			platform_pos.z - (platform->entity_header.mesh->bounds.max.z * COL_SCALE),
+		},
+		.max = {
+			platform_pos.x - (platform->entity_header.mesh->bounds.min.x * COL_SCALE),
+			platform_pos.y - (platform->entity_header.mesh->bounds.min.y * COL_SCALE),
+			platform_pos.z - (platform->entity_header.mesh->bounds.min.z * COL_SCALE),
 		},
 	};
 
