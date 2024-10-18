@@ -18,7 +18,8 @@ typedef enum {
 	ENTITY_DOOR,
 	ENTITY_PICKUP,
 	ENTITY_CRATE,
-	ENTITY_CHASER
+	ENTITY_CHASER,
+	ENTITY_PLATFORM,
 } entity_type_t; // typically represented by a uint8_t
 
 typedef enum {
@@ -51,6 +52,7 @@ typedef enum {
 	ENTITY_MESH_CHASER_BOTTOM2,
 	ENTITY_MESH_CHASER_GUN,
 	ENTITY_MESH_CRATE,
+	ENTITY_MESH_PLATFORM_TEST_HORIZONTAL,
 	N_ENTITY_MESH_IDS,
 } entity_mesh_id_t;
 

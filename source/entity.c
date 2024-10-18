@@ -6,6 +6,7 @@
 #include "entities/chaser.h"
 #include "entities/crate.h"
 #include "entities/door.h"
+#include "entities/platform.h"
 #include "mesh.h"
 #include "main.h"
 extern state_vars_t state;
@@ -30,6 +31,7 @@ void entity_update_all(player_t* player, int dt) {
 			case ENTITY_PICKUP: entity_pickup_update(i, player, dt); break;
 			case ENTITY_CRATE: entity_crate_update(i, player, dt); break;
 			case ENTITY_CHASER: entity_chaser_update(i, player, dt); break;
+			case ENTITY_PLATFORM: entity_platform_update(i, player, dt); break;
 		}
 	}
 }
@@ -53,6 +55,7 @@ typedef struct {
 		entity_pickup_t pickup;
 		entity_crate_t crate;
 		entity_chaser_t chaser;
+		entity_platform_t platform;
 	};
 } entity_union;
 
@@ -129,6 +132,7 @@ const char* entity_names[] = {
 	"ENTITY_PICKUP",
 	"ENTITY_CRATE",
 	"ENTITY_CHASER",
+	"ENTITY_PLATFORM",
 	NULL
 };
 
