@@ -55,8 +55,22 @@ void entity_platform_update(int slot, player_t* player, int dt) {
 	if (platform->entity_header.mesh == NULL) {
 		platform->entity_header.mesh = model_find_mesh(entity_models, "29_platform_test_horizontal");
 	}
-	entity_collision_box_t box = {
-		.aabb = platform->entity_header.mesh->bounds,
+
+	const aabb_t mesh_bounds_translated = {
+		.min = {
+			platform_pos.x - (platform->entity_header.mesh->bounds.min.x * COL_SCALE),
+			platform_pos.y - (platform->entity_header.mesh->bounds.min.y * COL_SCALE),
+			platform_pos.z - (platform->entity_header.mesh->bounds.min.z * COL_SCALE),
+		},
+		.max = {
+			platform_pos.x - (platform->entity_header.mesh->bounds.max.x * COL_SCALE),
+			platform_pos.y - (platform->entity_header.mesh->bounds.max.y * COL_SCALE),
+			platform_pos.z - (platform->entity_header.mesh->bounds.max.z * COL_SCALE),
+		},
+	};
+
+	const entity_collision_box_t box = {
+		.aabb = mesh_bounds_translated,
 		.box_index = 0,
 		.entity_index = slot,
 		.is_solid = 1,
