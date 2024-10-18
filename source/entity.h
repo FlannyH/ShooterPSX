@@ -71,10 +71,6 @@ typedef struct {
 } entity_header_serialized_t;
 
 typedef struct {
-	uint8_t type;
-} entity_slot_t;
-
-typedef struct {
 	aabb_t aabb; 
 	uint8_t entity_index; // which entity this one belongs to, so a signal can be sent to the entity when this box is hit
 	uint8_t box_index; // can be used to differentiate between different hitboxes, like body shot and headshot for enemies
