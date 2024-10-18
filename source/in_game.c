@@ -1,5 +1,6 @@
 #include "main.h"
 
+#include "entities/platform.h"
 #include "entities/pickup.h"
 #include "entities/chaser.h"
 #include "entities/crate.h"
@@ -292,6 +293,7 @@ void state_update_in_game(int dt) {
 					case ENTITY_PICKUP: entity_pickup_on_hit(hit.entity_hitbox.entity_index, hit.entity_hitbox.box_index); break;
 					case ENTITY_CRATE: entity_crate_on_hit(hit.entity_hitbox.entity_index, hit.entity_hitbox.box_index); break;
 					case ENTITY_CHASER: entity_chaser_on_hit(hit.entity_hitbox.entity_index, hit.entity_hitbox.box_index); break;
+					case ENTITY_PLATFORM: entity_platform_on_hit(hit.entity_hitbox.entity_index, hit.entity_hitbox.box_index); break;
 				}
 			}
 
