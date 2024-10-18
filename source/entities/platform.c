@@ -55,6 +55,15 @@ void entity_platform_update(int slot, player_t* player, int dt) {
 	if (platform->entity_header.mesh == NULL) {
 		platform->entity_header.mesh = model_find_mesh(entity_models, "29_platform_test_horizontal");
 	}
+	entity_collision_box_t box = {
+		.aabb = platform->entity_header.mesh->bounds,
+		.box_index = 0,
+		.entity_index = slot,
+		.is_solid = 1,
+		.is_trigger = 0,
+	};
+	entity_register_collision_box(&box);
+
 	// Render
 	transform_t render_transform;
 	render_transform.position.x = -platform_pos.x / COL_SCALE;
