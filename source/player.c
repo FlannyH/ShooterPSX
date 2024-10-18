@@ -225,7 +225,9 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
 #endif
     handle_stick_input(self, dt_ms);
     handle_drag(self, dt_ms);
+#ifndef _DEBUG_CAMERA
     handle_jump(self);
+#endif
     handle_movement(self, level_bvh, dt_ms);
     
     vec2_t vel_2d = {self->velocity.x, self->velocity.z};
