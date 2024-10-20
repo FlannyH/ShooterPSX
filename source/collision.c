@@ -329,6 +329,7 @@ int vertical_cylinder_aabb_intersect_fancy(const aabb_t* aabb, const vertical_cy
         const vec2_t aabb_to_cylinder = vec2_sub(cylinder_center_pos, closest_pos_on_aabb);
         const scalar_t distance = vec2_magnitude(aabb_to_cylinder);
         const vec2_t normal = vec2_divs(aabb_to_cylinder, distance);
+
         if (vertical_cylinder.is_wall_check) {
             hit->normal = (vec3_t){normal.x, 0, normal.y};
             hit->position = (vec3_t){closest_pos_on_aabb.x, vertical_cylinder.bottom.y, closest_pos_on_aabb.y};
@@ -338,7 +339,6 @@ int vertical_cylinder_aabb_intersect_fancy(const aabb_t* aabb, const vertical_cy
 
         const scalar_t vertical_cylinder_center_y = (vertical_cylinder.bottom.y + vertical_cylinder.height / 2);
         const scalar_t aabb_center_y = (aabb->min.y + aabb->max.y / 2);
-        scalar_debug(hit->distance);
         if ((vertical_cylinder.bottom.y + vertical_cylinder.height / 2) > (aabb->min.y + aabb->max.y / 2)) {
             hit->normal = (vec3_t){0, 4096, 0};
             hit->distance = vertical_cylinder.bottom.y - aabb->max.y;
