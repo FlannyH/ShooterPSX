@@ -86,7 +86,8 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
 
     // Check the Y distance from the ground to the player's feet
     const scalar_t distance = self->position.y - eye_height - hit.position.y;
-    if (distance <= (-self->velocity.y * dt_ms)) {
+    scalar_debug(distance);
+    if (distance <= (-self->velocity.y * dt_ms) && distance > -step_height) {
         // Set speed to 0
         if (self->velocity.y < 0)
             self->velocity.y = 0;
@@ -208,7 +209,6 @@ void handle_jump(player_t* self) {
 
 void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_ms) {
     // Move the player, ask questions later
-    printf("velocity: "); vec3_debug(self->velocity);
     self->position.x += self->velocity.x * dt_ms;
     self->position.z += self->velocity.z * dt_ms;
 
