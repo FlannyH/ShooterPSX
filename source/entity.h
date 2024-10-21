@@ -75,9 +75,9 @@ typedef struct {
 	aabb_t aabb; 
 	uint8_t entity_index; // which entity this one belongs to, so a signal can be sent to the entity when this box is hit
 	uint8_t box_index; // can be used to differentiate between different hitboxes, like body shot and headshot for enemies
-	int is_solid : 1; // can the player move through it or not?
-	int is_trigger : 1; // does it trigger any events? (e.g. text, moving geometry)
-	int not_move_player_along : 1; // if the player is standing on this box, should they be moved along with the entity this collision box belongs to?
+	unsigned int is_solid : 1; // can the player move through it or not?
+	unsigned int is_trigger : 1; // does it trigger any events? (e.g. text, moving geometry)
+	unsigned int not_move_player_along : 1; // if the player is standing on this box, should they be moved along with the entity this collision box belongs to?
 } entity_collision_box_t;
 
 extern const char* entity_names[];
