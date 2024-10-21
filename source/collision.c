@@ -288,6 +288,10 @@ int vertical_cylinder_aabb_intersect(const aabb_t* aabb, const vertical_cylinder
 
     n_vertical_cylinder_aabb_intersects++;
 
+    // Check the Y axis first. If this does not overlap, there can not be a collision.
+    if ((vertical_cylinder.bottom.y + vertical_cylinder.height) < aabb->min.y) return 0; // If top of cylinder is below the AABB, no intersect
+    if (vertical_cylinder.bottom.y >= aabb->max.y) return 0; // If bottom of cylinder is above the AABB, no intersect
+    
     // The rest can be done in 2D
     // Create a new AABB that's extended by the cylinder's radius. This is an approximation, but we use AABB's for BVH traversal only so it's fine
     const scalar_t min_x = aabb->min.x - vertical_cylinder.radius;
