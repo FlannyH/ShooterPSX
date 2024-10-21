@@ -22,9 +22,9 @@ typedef struct {
     uint8_t health;
     uint8_t armor;
     uint8_t ammo;
-    int has_key_blue : 1;
-    int has_key_yellow : 1;
-    int has_gun : 1;
+    unsigned int has_key_blue : 1;
+    unsigned int has_key_yellow : 1;
+    unsigned int has_gun : 1;
 } player_t;
 
 const static int32_t eye_height = 200 * COL_SCALE;
