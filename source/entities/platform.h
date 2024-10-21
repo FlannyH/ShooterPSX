@@ -19,6 +19,7 @@ typedef struct {
     unsigned int target_is_end : 1;
     unsigned int auto_start : 1;
     unsigned int auto_return : 1;
+    unsigned int move_on_player_collision : 1;
 } entity_platform_t;
 
 entity_platform_t* entity_platform_new(void);
