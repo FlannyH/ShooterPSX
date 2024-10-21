@@ -15,9 +15,36 @@ static scalar_t player_radius_squared = 0;
 int32_t is_grounded = 0;
 int n_sections;
 int sections[N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE];
+int ground_entity_id_prev = -1; // -1 = no entity
+int ground_entity_id_curr = -1; // -1 = no entity
+transform_t ground_entity_prev = {};
+transform_t ground_entity_curr = {};
 
 void check_ground_collision(player_t* self, level_collision_t* level_bvh, const int dt_ms) {
     WARN_IF("player radius squared was not computed, and is equal to 0", player_radius_squared == 0);
+
+    if (ground_entity_id_curr != -1) {
+        const entity_header_t* entity = (entity_header_t*)(&entity_pool[ground_entity_id_curr * entity_pool_stride]);
+        ground_entity_prev = ground_entity_curr;
+        ground_entity_curr = (transform_t){
+            .position = entity->position,
+            .rotation = entity->rotation,
+            .scale = entity->scale,
+        };
+    }
+
+    // If we're on a platform this frame, move the player along with it    
+    if (ground_entity_id_prev == ground_entity_id_curr && ground_entity_id_curr != -1) {
+        self->position = vec3_add(self->position, vec3_sub(ground_entity_curr.position, ground_entity_prev.position));
+        self->rotation = vec3_add(self->rotation, vec3_sub(ground_entity_curr.rotation, ground_entity_prev.rotation));
+    }
+    // If we left the platform this frame, add momentum to the player
+    else if (ground_entity_id_prev != -1 && ground_entity_id_curr == -1) {
+        self->velocity = vec3_add(self->velocity, vec3_divs(vec3_sub(ground_entity_curr.position, ground_entity_prev.position), ONE * dt_ms));
+    }
+
+    ground_entity_id_prev = ground_entity_id_curr;
+    ground_entity_id_curr = -1;
 
     // Cast a cylinder from the player's feet + step height, down to the ground
     int32_t distance_to_check = 120000;
@@ -30,16 +57,25 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
         .is_wall_check = 0,
     };
     bvh_intersect_vertical_cylinder(level_bvh, player, &hit);
+
     for (size_t i = 0; i < entity_n_active_aabb; ++i) {
         rayhit_t curr_hit;
         if (!entity_aabb_queue[i].is_solid) continue;
         if (!vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, player, &curr_hit)) continue;
         if (curr_hit.distance < hit.distance) memcpy(&hit, &curr_hit, sizeof(rayhit_t));
+        hit.type = RAY_HIT_TYPE_ENTITY_HITBOX;
+        hit.entity_hitbox.entity_index = entity_aabb_queue[i].entity_index;
+        hit.entity_hitbox.box_index = entity_aabb_queue[i].box_index;
     }
 
     // If nothing was hit, there is no ground below the player. Ignore the rest of this function
     if (hit.distance == INT32_MAX)
         return;
+
+    // If the player is standing on an entity, move the player along with the entity
+    if (hit.type == RAY_HIT_TYPE_ENTITY_HITBOX) {
+        ground_entity_id_curr = hit.entity_hitbox.entity_index;
+    }
 
     // Check the Y distance from the ground to the player's feet
     const scalar_t distance = self->position.y - eye_height - hit.position.y;
