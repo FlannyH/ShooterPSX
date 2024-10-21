@@ -28,7 +28,7 @@ typedef struct {
 } player_t;
 
 const static int32_t eye_height = 200 * COL_SCALE;
-const static int32_t player_radius = 130 * COL_SCALE;
+const static int32_t player_radius = 100 * COL_SCALE;
 const static int32_t step_height = 100 * COL_SCALE;
 const static int32_t terminal_velocity_down = -12400 / 8;
 const static int32_t terminal_velocity_up = 40000 / 8;
