@@ -185,10 +185,12 @@ void inspect_entity(size_t entity_id) {
             bool target_is_end = (bool)platform->target_is_end;
             bool auto_start = (bool)platform->auto_start;
             bool auto_return = (bool)platform->auto_return;
-            if (ImGui::Checkbox("Move on collision", &listen_to_signal)) { platform->listen_to_signal = (int)listen_to_signal; }
+            bool move_on_player_collision = (bool)platform->move_on_player_collision;
+            if (ImGui::Checkbox("Listen to signal", &listen_to_signal)) { platform->listen_to_signal = (int)listen_to_signal; }
             if (ImGui::Checkbox("Target is end position", &target_is_end)) { platform->target_is_end = (int)target_is_end; }
             if (ImGui::Checkbox("Start automatically", &auto_start)) { platform->auto_start = (int)auto_start; }
             if (ImGui::Checkbox("Return automatically", &auto_return)) { platform->auto_return = (int)auto_return; }
+            if (ImGui::Checkbox("Move on player collision", &move_on_player_collision)) { platform->move_on_player_collision = (int)move_on_player_collision; }
 
             aabb_t start_pos_debug = (aabb_t) {
                 .min = vec3_sub(platform->position_start, vec3_from_scalar(ONE / 2)),
