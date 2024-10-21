@@ -173,7 +173,7 @@ void handle_drag(player_t* self, const int dt_ms) {
 
     // Clamp magnitude
     const scalar_t curr_drag = (is_grounded) ? (walking_drag * dt_ms) : ((walking_drag * dt_ms) / jump_drag_divider);
-    if (is_grounded && velocity_scalar > walking_max_speed) {
+    if (velocity_scalar > walking_max_speed) {
         velocity_scalar = walking_max_speed - curr_drag;
     }
     // Apply drag
