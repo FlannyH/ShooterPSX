@@ -76,6 +76,7 @@ typedef struct {
 	uint8_t box_index; // can be used to differentiate between different hitboxes, like body shot and headshot for enemies
 	int is_solid : 1; // can the player move through it or not?
 	int is_trigger : 1; // does it trigger any events? (e.g. text, moving geometry)
+	int not_move_player_along : 1; // if the player is standing on this box, should they be moved along with the entity this collision box belongs to?
 } entity_collision_box_t;
 
 extern const char* entity_names[];
