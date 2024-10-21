@@ -66,6 +66,7 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
         hit.type = RAY_HIT_TYPE_ENTITY_HITBOX;
         hit.entity_hitbox.entity_index = entity_aabb_queue[i].entity_index;
         hit.entity_hitbox.box_index = entity_aabb_queue[i].box_index;
+        hit.entity_hitbox.not_move_player_along = entity_aabb_queue[i].not_move_player_along;
     }
 
     // If nothing was hit, there is no ground below the player. Ignore the rest of this function
@@ -74,7 +75,7 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
         return;
 
     // If the player is standing on an entity, move the player along with the entity
-    if (hit.type == RAY_HIT_TYPE_ENTITY_HITBOX) {
+    if (hit.type == RAY_HIT_TYPE_ENTITY_HITBOX && !hit.entity_hitbox.not_move_player_along) {
         ground_entity_id_curr = hit.entity_hitbox.entity_index;
     }
 

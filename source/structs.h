@@ -168,6 +168,7 @@ typedef struct {
         struct {
             uint8_t entity_index;
             uint8_t box_index;
+            uint8_t not_move_player_along : 1;
         } entity_hitbox;
     };
 } rayhit_t;
