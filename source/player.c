@@ -86,7 +86,7 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
 
     // Check the Y distance from the ground to the player's feet
     const scalar_t distance = self->position.y - eye_height - hit.position.y;
-    if (distance <= (-self->velocity.y * dt_ms) && distance > -step_height) {
+    if (distance <= (-self->velocity.y * dt_ms)) {
         // Set speed to 0
         if (self->velocity.y < 0)
             self->velocity.y = 0;
