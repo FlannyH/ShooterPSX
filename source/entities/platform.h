@@ -24,6 +24,7 @@ typedef struct {
 entity_platform_t* entity_platform_new(void);
 void entity_platform_update(int slot, player_t* player, int dt);
 void entity_platform_on_hit(int slot, int hitbox_index);
+void entity_platform_player_enter(int slot, player_t* player);
 
 #ifdef __cplusplus
 }

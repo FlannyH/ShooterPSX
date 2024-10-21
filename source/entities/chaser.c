@@ -312,3 +312,5 @@ void entity_chaser_on_hit(int slot, int hitbox_index) {
 		printf("hit enemy head\n");
 	}
 }
+
+void entity_chaser_player_enter(int slot, player_t *player) {}

@@ -20,6 +20,7 @@ typedef struct {
 entity_door_t* entity_door_new(void);
 void entity_door_update(int slot, player_t* player, int dt);
 void entity_door_on_hit(int slot, int hitbox_index);
+void entity_door_player_enter(int slot, player_t* player);
 
 #ifdef __cplusplus
 }

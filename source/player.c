@@ -33,12 +33,17 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
         };
     }
 
-    // If we're on a platform this frame, move the player along with it    
+    // If we entered the entity this frame, notify the entity
+    if (ground_entity_id_prev == -1 && ground_entity_id_curr != -1) {
+        entity_send_player_enter(ground_entity_id_curr, self);
+    }
+
+    // If we're on an entity this frame, move the player along with it    
     if (ground_entity_id_prev == ground_entity_id_curr && ground_entity_id_curr != -1) {
         self->position = vec3_add(self->position, vec3_sub(ground_entity_curr.position, ground_entity_prev.position));
         self->rotation = vec3_add(self->rotation, vec3_sub(ground_entity_curr.rotation, ground_entity_prev.rotation));
     }
-    // If we left the platform this frame, add momentum to the player
+    // If we left the entity this frame, add momentum to the player
     else if (ground_entity_id_prev != -1 && ground_entity_id_curr == -1) {
         self->velocity = vec3_add(self->velocity, vec3_divs(vec3_sub(ground_entity_curr.position, ground_entity_prev.position), ONE * dt_ms));
     }

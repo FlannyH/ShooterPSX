@@ -99,3 +99,5 @@ void entity_platform_on_hit(int slot, int hitbox_index) {
 	(void)slot;
 	(void)hitbox_index;
 }
+
+void entity_platform_player_enter(int slot, player_t *player) {}

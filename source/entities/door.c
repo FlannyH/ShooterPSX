@@ -140,3 +140,5 @@ void entity_door_on_hit(int slot, int hitbox_index) {
 	(void)slot;
 	(void)hitbox_index;
 }
+
+void entity_door_player_enter(int slot, player_t *player) {}
