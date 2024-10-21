@@ -58,6 +58,7 @@ typedef struct {
 		entity_crate_t crate;
 		entity_chaser_t chaser;
 		entity_platform_t platform;
+		entity_trigger_t trigger;
 	};
 } entity_union;
 
