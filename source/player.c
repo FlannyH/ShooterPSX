@@ -65,8 +65,15 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
 
     for (size_t i = 0; i < entity_n_active_aabb; ++i) {
         rayhit_t curr_hit;
+        if (!entity_aabb_queue[i].is_solid && !entity_aabb_queue[i].is_trigger) continue;
+
+        int intersect = vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, player, &curr_hit);
+        if (intersect && entity_aabb_queue[i].is_trigger) {
+            entity_send_player_enter(entity_aabb_queue[i].entity_index, self);
+        }
         if (!entity_aabb_queue[i].is_solid) continue;
         if (!vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, player, &curr_hit)) continue;
+        if (!intersect) continue;
         if (curr_hit.distance < hit.distance) memcpy(&hit, &curr_hit, sizeof(rayhit_t));
         hit.type = RAY_HIT_TYPE_ENTITY_HITBOX;
         hit.entity_hitbox.entity_index = entity_aabb_queue[i].entity_index;
@@ -226,8 +233,14 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
         for (size_t i = 0; i < entity_n_active_aabb; ++i) {
             rayhit_t curr_hit;
             curr_hit.distance = INT32_MAX;
+            if (!entity_aabb_queue[i].is_solid && !entity_aabb_queue[i].is_trigger) continue;
+
+            int intersect = vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, cyl, &curr_hit);
+            if (intersect && entity_aabb_queue[i].is_trigger) {
+                entity_send_player_enter(entity_aabb_queue[i].entity_index, self);
+            }
             if (!entity_aabb_queue[i].is_solid) continue;
-            if (!vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, cyl, &curr_hit)) continue;
+            if (!intersect) continue;
             if (curr_hit.distance < hit.distance) memcpy(&hit, &curr_hit, sizeof(rayhit_t));
         }
 #else
