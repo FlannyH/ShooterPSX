@@ -2,11 +2,12 @@
 
 #include <string.h>
 
+#include "entities/platform.h"
+#include "entities/trigger.h"
 #include "entities/pickup.h"
 #include "entities/chaser.h"
 #include "entities/crate.h"
 #include "entities/door.h"
-#include "entities/platform.h"
 #include "mesh.h"
 #include "main.h"
 extern state_vars_t state;
@@ -32,6 +33,7 @@ void entity_update_all(player_t* player, int dt) {
 			case ENTITY_CRATE: entity_crate_update(i, player, dt); break;
 			case ENTITY_CHASER: entity_chaser_update(i, player, dt); break;
 			case ENTITY_PLATFORM: entity_platform_update(i, player, dt); break;
+			case ENTITY_TRIGGER: entity_trigger_update(i, player, dt); break;
 		}
 	}
 }
@@ -134,6 +136,7 @@ void entity_send_player_enter(int slot, player_t* player) {
 		case ENTITY_CRATE: entity_crate_player_enter(slot, player); break;
 		case ENTITY_CHASER: entity_chaser_player_enter(slot, player); break;
 		case ENTITY_PLATFORM: entity_platform_player_enter(slot, player); break;
+		case ENTITY_TRIGGER: entity_trigger_player_enter(slot, player); break;
 	}
 }
 
@@ -144,6 +147,7 @@ const char* entity_names[] = {
 	"ENTITY_CRATE",
 	"ENTITY_CHASER",
 	"ENTITY_PLATFORM",
+	"ENTITY_TRIGGER",
 	NULL
 };
 

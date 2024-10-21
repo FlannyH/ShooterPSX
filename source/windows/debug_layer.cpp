@@ -11,11 +11,12 @@
 #include <ImGuizmo.h>
 #include <imfilebrowser.h>
 #include <format>
+#include "../entities/platform.h"
+#include "../entities/trigger.h"
 #include "../entities/pickup.h"
 #include "../entities/chaser.h"
 #include "../entities/crate.h"
 #include "../entities/door.h"
-#include "../entities/platform.h"
 #include "../renderer.h"
 #include "../input.h"
 #include "../file.h"
@@ -204,6 +205,11 @@ void inspect_entity(size_t entity_id) {
             renderer_debug_draw_aabb(&end_pos_debug, green, &id_transform);
             renderer_debug_draw_line(platform->position_start, platform->position_end, blue, &id_transform);
         }
+
+        else if (entity_type == ENTITY_TRIGGER) {
+
+        }
+
         ImGui::TreePop();
     }
 
@@ -572,6 +578,10 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                     entity->position = spawn_pos;
                     ((entity_platform_t*)entity)->position_start = spawn_pos;
                     ((entity_platform_t*)entity)->position_end = vec3_add(spawn_pos, vec3_from_scalars(0, ONE * 16, 0));
+                    break;
+                case ENTITY_TRIGGER:
+                    entity = (entity_header_t*)entity_trigger_new();
+                    entity->position = spawn_pos;
                     break;
             }
         }

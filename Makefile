@@ -77,7 +77,8 @@ CODE_ENGINE_SHARED_C = camera.c \
 				  	   entities/crate.c \
 				  	   entities/door.c \
 				  	   entities/pickup.c \
-				  	   entities/platform.c 
+				  	   entities/platform.c \
+				  	   entities/trigger.c 
 
 # Source files specific to PSX
 CODE_ENGINE_PSX_C = psx/file.c \
