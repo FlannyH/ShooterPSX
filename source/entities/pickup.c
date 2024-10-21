@@ -80,7 +80,7 @@ void entity_pickup_on_hit(int slot, int hitbox_index) {
     (void)hitbox_index;
 }
 
-void entity_pickup_player_enter(int slot, player_t *player) {}
+void entity_pickup_player_intersect(int slot, player_t *player) {}
 
 #ifdef _LEVEL_EDITOR 
 const char* pickup_names[] = {

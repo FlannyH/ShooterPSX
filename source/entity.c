@@ -128,7 +128,7 @@ void entity_kill(int slot) {
 	entity_types[slot] = ENTITY_NONE;
 }
 
-void entity_send_player_enter(int slot, player_t* player) {
+void entity_send_player_intersect(int slot, player_t* player) {
 	switch (entity_types[slot]) {
 		case ENTITY_NONE: break;
 		case ENTITY_DOOR: entity_door_player_enter(slot, player); break;

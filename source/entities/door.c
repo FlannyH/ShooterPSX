@@ -141,4 +141,4 @@ void entity_door_on_hit(int slot, int hitbox_index) {
 	(void)hitbox_index;
 }
 
-void entity_door_player_enter(int slot, player_t *player) {}
+void entity_door_player_intersect(int slot, player_t *player) {}

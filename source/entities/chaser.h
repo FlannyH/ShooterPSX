@@ -29,7 +29,7 @@ typedef struct {
 entity_chaser_t* entity_chaser_new(void);
 void entity_chaser_update(int slot, player_t* player, int dt);
 void entity_chaser_on_hit(int slot, int hitbox_index);
-void entity_chaser_player_enter(int slot, player_t* player);
+void entity_chaser_player_intersect(int slot, player_t* player);
 
 const static int32_t chaser_acceleration = 600;
 const static int32_t chaser_max_speed = 70000;
