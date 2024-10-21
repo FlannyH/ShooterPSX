@@ -31,6 +31,6 @@ void entity_trigger_update(int slot, player_t *player, int dt) {
 void entity_trigger_on_hit(int slot, int hitbox_index) {
 }
 
-void entity_trigger_player_enter(int slot, player_t *player) {
+void entity_trigger_player_intersect(int slot, player_t *player) {
     printf("trigger %i entered\n", slot);
 }
