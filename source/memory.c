@@ -69,7 +69,7 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 	uint32_t* base = NULL;
 	size_t* cursor;
 
-#ifdef _DEBUG
+#ifdef _DEBUG_VERBOSE
 	printf("stack %s (id %i) has %i bytes available and we need %i bytes... ", stack_names[stack], stack, mem_stack_get_size(stack) - mem_stack_get_occupied(stack), size);
 #endif
 	
@@ -99,7 +99,7 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 			return NULL;
 	}
 
-#ifdef _DEBUG
+#ifdef _DEBUG_VERBOSE
 	// Make sure there is enough space
 	if (size > mem_stack_get_free(stack)) {
 		printf("turns out we don't have that.\n");
