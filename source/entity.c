@@ -126,6 +126,17 @@ void entity_kill(int slot) {
 	entity_types[slot] = ENTITY_NONE;
 }
 
+void entity_send_player_enter(int slot, player_t* player) {
+	switch (entity_types[slot]) {
+		case ENTITY_NONE: break;
+		case ENTITY_DOOR: entity_door_player_enter(slot, player); break;
+		case ENTITY_PICKUP: entity_pickup_player_enter(slot, player); break;
+		case ENTITY_CRATE: entity_crate_player_enter(slot, player); break;
+		case ENTITY_CHASER: entity_chaser_player_enter(slot, player); break;
+		case ENTITY_PLATFORM: entity_platform_player_enter(slot, player); break;
+	}
+}
+
 const char* entity_names[] = {
 	"ENTITY_NONE",
 	"ENTITY_DOOR",

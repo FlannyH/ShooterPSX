@@ -93,6 +93,7 @@ void entity_defragment(void);
 void entity_sanitize(void);
 void entity_update_all(player_t* player, int dt);
 void entity_kill(int slot);
+void entity_send_player_enter(int slot, player_t* player);
 
 #ifdef _DEBUG
 void entity_debug(void);
