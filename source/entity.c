@@ -19,6 +19,7 @@ size_t entity_pool_stride = 0;
 size_t entity_n_active_aabb;
 model_t* entity_models = NULL;
 int n_entity_textures = 0;
+int entity_signals[ENTITY_SIGNAL_COUNT];
 
 void entity_update_all(player_t* player, int dt) {
 	// Reset counters
@@ -85,6 +86,8 @@ void entity_init(void) {
 	// Load model collection
     entity_models = model_load("\\assets\\models\\entity.msh", 1, STACK_ENTITY, tex_entity_start, 0);
 	mem_stack_release(STACK_TEMP);
+
+	memset(entity_signals, 0, sizeof(entity_signals));
 }
 
 void entity_register_collision_box(const entity_collision_box_t* box) {
