@@ -143,7 +143,7 @@ void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const
         font_src_height = 9;
         font_dst_width = 14;
         font_dst_height = 18;
-        chars_per_row = 16;
+        chars_per_row = 36;
     }
 
     if (centered) {
