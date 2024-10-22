@@ -11,6 +11,10 @@ typedef enum {
     ENTITY_TRIGGER_TYPE_TEXT,
 } entity_trigger_type_t;
 
+#ifdef _LEVEL_EDITOR
+extern const char* entity_trigger_type_names[];
+#endif
+
 typedef struct {
     entity_header_t entity_header;
     uint8_t trigger_type;

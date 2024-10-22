@@ -46,3 +46,11 @@ void entity_trigger_player_intersect(int slot, player_t *player) {
     entity_trigger_t* trigger = (entity_trigger_t*)&entity_pool[slot * entity_pool_stride];
     trigger->intersecting_curr = 1;
 }
+
+#ifdef _LEVEL_EDITOR 
+const char* entity_trigger_type_names[] = {
+    "ENTITY_TRIGGER_TYPE_NONE",
+    "ENTITY_TRIGGER_TYPE_TEXT",
+    NULL
+};
+#endif
