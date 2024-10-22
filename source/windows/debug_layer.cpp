@@ -208,9 +208,14 @@ void inspect_entity(size_t entity_id) {
 
         else if (entity_type == ENTITY_TRIGGER) {
             entity_trigger_t* trigger = (entity_trigger_t*)entity_data;
-            trigger->trigger_type = (uint8_t)inspect_enum((int)trigger->trigger_type, entity_trigger_type_names, "Trigger type");
             bool destroy_on_player_intersect = (bool)trigger->destroy_on_player_intersect;
             if (ImGui::Checkbox("Destroy on player intersect", &destroy_on_player_intersect)) { trigger->destroy_on_player_intersect = (int)destroy_on_player_intersect; }
+
+            trigger->trigger_type = (uint8_t)inspect_enum((int)trigger->trigger_type, entity_trigger_type_names, "Trigger type");
+            if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TEXT) {
+                ImGui::DragInt("Text entry ID", &trigger->data_text.id);
+                ImGui::DragInt("Display time", &trigger->data_text.total_display_time_ms);
+            }
         }
 
         ImGui::TreePop();
