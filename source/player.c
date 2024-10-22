@@ -35,7 +35,7 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
 
     // If we entered the entity this frame, notify the entity
     if (ground_entity_id_prev == -1 && ground_entity_id_curr != -1) {
-        entity_send_player_enter(ground_entity_id_curr, self);
+        entity_send_player_intersect(ground_entity_id_curr, self);
     }
 
     // If we're on an entity this frame, move the player along with it    
@@ -69,7 +69,7 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
 
         int intersect = vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, player, &curr_hit);
         if (intersect && entity_aabb_queue[i].is_trigger) {
-            entity_send_player_enter(entity_aabb_queue[i].entity_index, self);
+            entity_send_player_intersect(entity_aabb_queue[i].entity_index, self);
         }
         if (!entity_aabb_queue[i].is_solid) continue;
         if (!vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, player, &curr_hit)) continue;
@@ -237,7 +237,7 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
 
             int intersect = vertical_cylinder_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, cyl, &curr_hit);
             if (intersect && entity_aabb_queue[i].is_trigger) {
-                entity_send_player_enter(entity_aabb_queue[i].entity_index, self);
+                entity_send_player_intersect(entity_aabb_queue[i].entity_index, self);
             }
             if (!entity_aabb_queue[i].is_solid) continue;
             if (!intersect) continue;
