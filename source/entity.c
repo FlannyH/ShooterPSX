@@ -132,12 +132,12 @@ void entity_kill(int slot) {
 void entity_send_player_intersect(int slot, player_t* player) {
 	switch (entity_types[slot]) {
 		case ENTITY_NONE: break;
-		case ENTITY_DOOR: entity_door_player_enter(slot, player); break;
-		case ENTITY_PICKUP: entity_pickup_player_enter(slot, player); break;
-		case ENTITY_CRATE: entity_crate_player_enter(slot, player); break;
-		case ENTITY_CHASER: entity_chaser_player_enter(slot, player); break;
-		case ENTITY_PLATFORM: entity_platform_player_enter(slot, player); break;
-		case ENTITY_TRIGGER: entity_trigger_player_enter(slot, player); break;
+		case ENTITY_DOOR: entity_door_player_intersect(slot, player); break;
+		case ENTITY_PICKUP: entity_pickup_player_intersect(slot, player); break;
+		case ENTITY_CRATE: entity_crate_player_intersect(slot, player); break;
+		case ENTITY_CHASER: entity_chaser_player_intersect(slot, player); break;
+		case ENTITY_PLATFORM: entity_platform_player_intersect(slot, player); break;
+		case ENTITY_TRIGGER: entity_trigger_player_intersect(slot, player); break;
 	}
 }
 
