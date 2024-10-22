@@ -104,24 +104,24 @@ typedef struct {
 
 #define MAGIC_FMSH 0x48534D46
 typedef struct {
-    uint32_t file_magic;        // File identifier magic, always "FMSH"
-    uint32_t n_submeshes;       // Number of submeshes in this model.
-    uint32_t offset_mesh_desc;  // Offset into the binary section to the start of the array of MeshDesc structs.
-    uint32_t offset_vertex_data;// Offset into the binary section to the start of the raw VertexPSX data.
-    uint32_t offset_mesh_names; // Offset into the binary section to the start of the mesh names
+    uint32_t file_magic;         // File identifier magic, always "FMSH"
+    uint32_t n_submeshes;        // Number of submeshes in this model.
+    uint32_t offset_mesh_desc;   // Offset into the binary section to the start of the array of MeshDesc structs.
+    uint32_t offset_vertex_data; // Offset into the binary section to the start of the raw VertexPSX data.
+    uint32_t offset_mesh_names;  // Offset into the binary section to the start of the mesh names
 } model_header_t;
 
 typedef struct {
-    uint16_t vertex_start;  // First vertex index for this model.
-    uint16_t n_triangles;    // Number of vertices for this model.
-    uint16_t n_quads;    // Number of vertices for this model.
-    int16_t x_min;          // Axis aligned bounding box minimum X.
-    int16_t x_max;          // Axis aligned bounding box maximum X.
-    int16_t y_min;          // Axis aligned bounding box minimum Y.
-    int16_t y_max;          // Axis aligned bounding box maximum Y.
-    int16_t z_min;          // Axis aligned bounding box minimum Z.
-    int16_t z_max;          // Axis aligned bounding box maximum Z.
-    int16_t _pad;          // Axis aligned bounding box maximum Z.
+    uint16_t vertex_start; // First vertex index for this model.
+    uint16_t n_triangles;  // Number of vertices for this model.
+    uint16_t n_quads;      // Number of vertices for this model.
+    int16_t x_min;         // Axis aligned bounding box minimum X.
+    int16_t x_max;         // Axis aligned bounding box maximum X.
+    int16_t y_min;         // Axis aligned bounding box minimum Y.
+    int16_t y_max;         // Axis aligned bounding box maximum Y.
+    int16_t z_min;         // Axis aligned bounding box minimum Z.
+    int16_t z_max;         // Axis aligned bounding box maximum Z.
+    int16_t _pad;          // (align to 4 bytes)
 } mesh_desc_t;
 
 typedef struct {
@@ -176,14 +176,14 @@ typedef struct {
 
 #define MAGIC_FCOL 0x4C4F4346
 typedef struct {
-    uint32_t file_magic; // File magic: "FCOL"
-    uint32_t n_verts; // The number of vertices in this collision mesh 
-    uint32_t n_nodes; // The number of nodes in the collision mesh's BVH 
+    uint32_t file_magic;           // File magic: "FCOL"
+    uint32_t n_verts;              // The number of vertices in this collision mesh 
+    uint32_t n_nodes;              // The number of nodes in the collision mesh's BVH 
     uint32_t triangle_data_offset; // Offset to raw triangle data 
-    uint32_t terrain_id_offset; // Offset to array of 8 bit terrain IDs for each triangle
-    uint32_t bvh_nodes_offset; // Offset to the precalculated BVH's node pool 
-    uint32_t bvh_indices_offset; // Offset to the precalculated BVH's index array 
-    uint32_t nav_graph_offset; // Offset to the precalculated navigation graph for the enemies 
+    uint32_t terrain_id_offset;    // Offset to array of 8 bit terrain IDs for each triangle
+    uint32_t bvh_nodes_offset;     // Offset to the precalculated BVH's node pool 
+    uint32_t bvh_indices_offset;   // Offset to the precalculated BVH's index array 
+    uint32_t nav_graph_offset;     // Offset to the precalculated navigation graph for the enemies 
 } collision_mesh_header_t;
 
 typedef struct {
@@ -203,7 +203,7 @@ typedef struct {
 typedef struct {
     vec3_t position; // Position (4096 is 1.0 meter)
     vec3_t rotation; // Angles in fixed-point format (131072 units = 360 degrees)
-    vec3_t scale; // Scale (4096 = 1.0)
+    vec3_t scale;    // Scale (4096 = 1.0)
 } transform_t;
 
 #endif // STRUCTS_H
