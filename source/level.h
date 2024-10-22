@@ -24,6 +24,8 @@ typedef struct {
     uint32_t entity_types_offset;   // Offset to entity_types data, which gets copied into `entity_types` directly
     uint32_t entity_pool_offset;    // Offset to entity_pool data, which gets copied into `entity_pool` directly
     uint32_t level_name_offset;     // Offset to string containing display name of the level as shown in game to the player
+    uint32_t text_offset;           // Offset to text data for entities
+    uint32_t n_text_entries;        // How many text entries there are
     svec3_t player_spawn_position;  // Where in the map the player spawns, in model space units
     vec3_t player_spawn_rotation;   // Player spawn rotation, 0x20000 = 360 degrees
     uint16_t n_entities;            // Number of predefined entities in this map
@@ -38,8 +40,10 @@ typedef struct {
     level_collision_t collision_bvh;
     svec3_t player_spawn_position;
     vec3_t player_spawn_rotation;
+    char** text_entries;
     // todo: add other fields as specified in FLVL documentation
 
+    int n_text_entries;
     int n_level_textures;
 } level_t;
 

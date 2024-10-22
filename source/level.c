@@ -48,6 +48,7 @@ level_t level_load(const char* level_path) {
     const char* path_graphics_lod = (const char*)((binary_section + level_header->path_model_lod_offset));
     const char* level_entity_pool = (const char*)((binary_section + level_header->entity_pool_offset));
     const char* level_entity_types = (const char*)((binary_section + level_header->entity_types_offset));
+    const char* text = (const char*)((binary_section + level_header->text_offset));
 
     // We gotta do some specific memory management if we want to fit as much into the temporary stack as we can
     size_t marker = mem_stack_get_marker(STACK_TEMP);
@@ -104,6 +105,21 @@ level_t level_load(const char* level_path) {
     entity_sanitize();
 
     memcpy(entity_types, level_entity_types, level_header->n_entities);
+
+    // Load text data
+    if (level_header->entity_types_offset) {
+        level.n_text_entries = level_header->n_text_entries;
+        level.text_entries = mem_stack_alloc(level.n_text_entries * sizeof(char**), STACK_LEVEL);
+
+        for (int i = 0; i < level_header->n_text_entries; ++i) {
+            const uint8_t n_chars = *(uint8_t*)(text++);
+            level.text_entries[i] = mem_stack_alloc(n_chars + 1, STACK_LEVEL);
+            level.text_entries[i][n_chars] = 0;
+            for (int j = 0; j < n_chars; ++j) {
+                level.text_entries[i][j] = *text++;
+            }
+        }
+    }
 
     // Start new music
     music_stop();
