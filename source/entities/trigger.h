@@ -21,6 +21,7 @@ typedef struct {
     uint8_t destroy_on_player_intersect : 1;
     uint8_t intersecting_curr : 1;
     uint8_t intersecting_prev : 1;
+    uint8_t is_busy : 1;
     union {
         struct {
             pixel32_t color;
