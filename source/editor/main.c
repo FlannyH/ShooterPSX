@@ -20,6 +20,7 @@ int main(void) {
     input_set_stick_deadzone(36);
     
     level_t level = (level_t){0}; // start with empty level
+    memset(&level, 0, sizeof(level));
     player_t player = (player_t){0};
     player.position.x = 11705653 / 2;
    	player.position.y = 11413985 / 2;
