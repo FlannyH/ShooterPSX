@@ -8,6 +8,7 @@ entity_trigger_t* entity_trigger_new(void) {
     entity->destroy_on_player_intersect = 1;
     entity->intersecting_curr = 0;
     entity->intersecting_prev = 0;
+    entity->trigger_type = ENTITY_TRIGGER_TYPE_NONE;
 }
 
 void entity_trigger_update(int slot, player_t *player, int dt) {
