@@ -67,6 +67,16 @@ void entity_trigger_update(int slot, player_t *player, int dt) {
         return;
     }
 
+    if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_SIGNAL) {
+        entity_signals[trigger->signal.id] = trigger->signal.value_to_send;
+        if (trigger->destroy_on_player_intersect) {
+            entity_kill(slot);
+        }
+        else {
+            trigger->is_busy = 0;
+        }
+    }
+
     // Return to not busy by default
     trigger->is_busy = 0;
 }
