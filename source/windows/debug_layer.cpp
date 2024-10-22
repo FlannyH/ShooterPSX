@@ -739,6 +739,17 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         }
     }
     ImGui::End();
+
+    // Text editor window
+    ImGui::Begin("Text editor", NULL, ImGuiWindowFlags_None);
+    {
+        for (int i = 0; i < curr_level->n_text_entries; ++i) {
+            if (ImGui::TreeNode(std::format("{}", i).c_str())) {
+                ImGui::TreePop();
+            }
+        }   
+    }
+    ImGui::End();
 }
 
 #endif
