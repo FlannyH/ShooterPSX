@@ -3,7 +3,7 @@
 | Type    | Name                      | Description                                                                               |
 | ------- | ------------------------- | ----------------------------------------------------------------------------------------- |
 | char[4] | file_magic                | File magic: "FSBK"                                                                        |
-| u32     | n_samples                 | Number of samples and regions (every region is linked to a unique sample)                                                                         |
+| u32     | n_samples                 | Number of samples and regions (every region is linked to a unique sample)                 |
 | u32     | offset_instrument_descs   | Offset (bytes) to instrument description table, relative to the end of the header         |
 | u32     | offset_instrument_regions | Offset (bytes) to instrument region table, relative to the end of the header              |
 | u32     | offset_sample_data        | Offset (bytes) to raw SPU-ADPCM data chunk. This will be uploaded straight to the SPU-RAM |
@@ -25,3 +25,4 @@
 | u32  | sample_rate       | Sample rate (Hz) at MIDI key 60 (C5)                                              |
 | u16  | reg_adsr1         | Raw data to be written to SPU_CH_ADSR1 when enabling a note                       |
 | u16  | reg_adsr2         | Raw data to be written to SPU_CH_ADSR2 when enabling a note                       |
+| u16  | panning           | Panning for this region, 0 = left, 127 = middle, 254 = right                      |
