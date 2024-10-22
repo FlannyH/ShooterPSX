@@ -12,6 +12,7 @@ extern "C" {
 
 #define ENTITY_NOT_SECTION_BOUND 255
 #define ENTITY_LIST_LENGTH 256
+#define ENTITY_SIGNAL_COUNT 64
 
 typedef enum {
 	ENTITY_NONE,
@@ -87,6 +88,7 @@ extern uint8_t* entity_pool;
 extern size_t entity_pool_stride;
 extern entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
 extern size_t entity_n_active_aabb;
+extern int entity_signals[ENTITY_SIGNAL_COUNT];
 void entity_init(void);
 int entity_alloc(uint8_t entity_type);
 void entity_register_collision_box(const entity_collision_box_t* box); // (*box) gets copied, can safely be freed after calling this function
