@@ -6,8 +6,14 @@
 extern "C" {
 #endif
 
+typedef enum {
+    ENTITY_TRIGGER_TYPE_NONE,
+    ENTITY_TRIGGER_TYPE_TEXT,
+} entity_trigger_type_t;
+
 typedef struct {
     entity_header_t entity_header;
+    uint8_t trigger_type;
     uint8_t destroy_on_player_intersect : 1;
     uint8_t intersecting_curr : 1;
     uint8_t intersecting_prev : 1;
