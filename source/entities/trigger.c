@@ -5,6 +5,9 @@ entity_trigger_t* entity_trigger_new(void) {
     entity->entity_header.position = (vec3_t){0, 0, 0};
     entity->entity_header.rotation = (vec3_t){0, 0, 0};
     entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
+    entity->destroy_on_player_intersect = 1;
+    entity->intersecting_curr = 0;
+    entity->intersecting_prev = 0;
 }
 
 void entity_trigger_update(int slot, player_t *player, int dt) {
@@ -26,11 +29,19 @@ void entity_trigger_update(int slot, player_t *player, int dt) {
         .is_trigger = 1,
     };
     entity_register_collision_box(&box);
+
+    if (trigger->intersecting_curr && !trigger->intersecting_prev) {
+        printf("trigger %i entered\n", slot);
+    }
+
+    trigger->intersecting_prev = trigger->intersecting_curr;
+    trigger->intersecting_curr = 0;
 }
 
 void entity_trigger_on_hit(int slot, int hitbox_index) {
 }
 
 void entity_trigger_player_intersect(int slot, player_t *player) {
-    printf("trigger %i entered\n", slot);
+    entity_trigger_t* trigger = (entity_trigger_t*)&entity_pool[slot * entity_pool_stride];
+    trigger->intersecting_curr = 1;
 }
