@@ -116,7 +116,7 @@ level_t level_load(const char* level_path) {
         level.text_entries = mem_stack_alloc(level.n_text_entries * sizeof(char**), STACK_LEVEL);
 #endif
 
-        for (int i = 0; i < level_header->n_text_entries; ++i) {
+        for (int i = 0; i < (int)level_header->n_text_entries; ++i) {
             const uint8_t n_chars = *(uint8_t*)(text++);
 #ifdef _LEVEL_EDITOR
             level.text_entries[i] = malloc(255);

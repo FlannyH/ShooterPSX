@@ -67,4 +67,7 @@ void entity_crate_on_hit(int slot, int hitbox_index) {
 	entity_types[slot] = (uint8_t)ENTITY_PICKUP; // pickup struct is practically identical to crate struct so this works :D
 }
 
-void entity_crate_player_intersect(int slot, player_t *player) {}
+void entity_crate_player_intersect(int slot, player_t *player) {
+	(void)slot;
+	(void)player;
+}

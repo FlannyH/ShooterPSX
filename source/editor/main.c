@@ -7,6 +7,8 @@
 #include "../windows/psx.h"
 #include "../main.h"
 
+#include <string.h>
+
 int widescreen = 0;
 state_t current_state = STATE_NONE;
 state_t prev_state = STATE_NONE;

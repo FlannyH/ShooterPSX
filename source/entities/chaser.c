@@ -313,4 +313,7 @@ void entity_chaser_on_hit(int slot, int hitbox_index) {
 	}
 }
 
-void entity_chaser_player_intersect(int slot, player_t *player) {}
+void entity_chaser_player_intersect(int slot, player_t *player) {
+	(void)slot;
+	(void)player;
+}
