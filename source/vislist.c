@@ -3,9 +3,9 @@
 
 #define MAGIC_FVIS 0x53495646
 typedef struct {
-    uint32_t file_magic; // File magic: "FVIS"
-    uint32_t offset_vis_bvh; // The number of sections in this vislist header
-    uint32_t offset_vis_lists; // The number of sections in this vislist header
+    uint32_t file_magic;       // File magic: "FVIS"
+    uint32_t offset_vis_bvh;   // Offset into the binary section to the start of the serialized BVH
+    uint32_t offset_vis_lists; // Offset into the binary section to the start of the visibility bitfield array
 } vislist_header_t;
 
 vislist_t vislist_load(const char* path, int on_stack, stack_t stack) {
