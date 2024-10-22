@@ -392,6 +392,19 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 write_data_and_get_offset(entity_data_serialized, entity_data, size);
             }
 
+            // Serialize text
+            std::vector<uint8_t> text_data_serialized;
+            for (int i = 0; i < curr_level->n_text_entries; ++i) {
+                int n_chars = 0;
+                while (curr_level->text_entries[i][n_chars] != 0 && curr_level->text_entries[i][n_chars] != 127) {
+                    ++n_chars;
+                }
+                text_data_serialized.push_back((uint8_t)n_chars);
+                for (int j = 0; j < n_chars; ++j) {
+                    text_data_serialized.push_back(*(uint8_t*)&curr_level->text_entries[i][j]);
+                }
+            }
+
             level_header_t header = {
                 .file_magic = MAGIC_FLVL,
                 .path_music_offset = (uint32_t)write_text_and_get_offset(binary_section, path_music),
@@ -404,6 +417,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_types, (n_entities + 3) & ~0x03), // 4-byte padding
                 .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_data_serialized.data(), entity_data_serialized.size() * sizeof(entity_data_serialized[0])),
                 .level_name_offset = (uint32_t)write_text_and_get_offset(binary_section, level_name),
+                .text_offset = (uint32_t)write_data_and_get_offset(binary_section, text_data_serialized.data(), text_data_serialized.size()),
+                .n_text_entries = curr_level->n_text_entries,
                 .player_spawn_position = svec3_from_vec3(player_spawn_position),
                 .player_spawn_rotation = player_spawn_rotation,
                 .n_entities = (uint16_t)n_entities,
