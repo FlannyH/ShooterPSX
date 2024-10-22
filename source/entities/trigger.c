@@ -83,6 +83,7 @@ void entity_trigger_player_intersect(int slot, player_t* player) {
 const char* entity_trigger_type_names[] = {
     "ENTITY_TRIGGER_TYPE_NONE",
     "ENTITY_TRIGGER_TYPE_TEXT",
+    "ENTITY_TRIGGER_TYPE_SIGNAL",
     NULL
 };
 #endif
