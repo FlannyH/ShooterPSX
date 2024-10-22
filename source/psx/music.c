@@ -27,7 +27,6 @@ uint8_t* sequence_pointer = NULL;
 uint8_t* loop_start = NULL;
 uint8_t music_playing = 0;
 int16_t wait_timer = 0;
-uint16_t tempo = 0; // Tempo in BPM, in @9.3 fixed point. Values go from 0.0 to 511.875
 
 void music_load_soundbank(const char* path) {
 	// Load the SBK file
