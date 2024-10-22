@@ -21,6 +21,14 @@ typedef struct {
     uint8_t destroy_on_player_intersect : 1;
     uint8_t intersecting_curr : 1;
     uint8_t intersecting_prev : 1;
+    union {
+        struct {
+            pixel32_t color;
+            int id; // Which level text entry to use for this
+            int total_display_time_ms;
+            int curr_display_time_ms;
+        } data_text;
+    };
 } entity_trigger_t;
 
 entity_trigger_t* entity_trigger_new(void);
