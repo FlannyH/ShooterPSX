@@ -1,13 +1,13 @@
 #include "main.h"
 
-#include <string.h>
-
 #include "renderer.h"
 #include "memory.h"
 #include "input.h"
 #include "music.h"
 #include "text.h"
 #include "ui.h"
+
+#include <string.h>
 
 #ifdef _PSX
 #include <psxcd.h>

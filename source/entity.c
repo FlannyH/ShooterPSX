@@ -1,7 +1,5 @@
 #include "entity.h"
 
-#include <string.h>
-
 #include "entities/platform.h"
 #include "entities/trigger.h"
 #include "entities/pickup.h"
@@ -10,6 +8,8 @@
 #include "entities/door.h"
 #include "mesh.h"
 #include "main.h"
+
+#include <string.h>
 extern state_vars_t state;
 
 entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];

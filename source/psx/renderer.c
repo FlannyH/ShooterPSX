@@ -1,11 +1,11 @@
 #include "renderer.h"
-#include <psxgte.h>
-#include <psxgpu.h>
-
-#include <string.h>
 
 #include "particles.h"
 #include "lut.h"
+
+#include <string.h>
+#include <psxgte.h>
+#include <psxgpu.h>
 
 #define TRI_THRESHOLD_MUL_SUB2_30 4
 #define TRI_THRESHOLD_MUL_SUB1_30 9

@@ -1,4 +1,5 @@
 #include "input.h"
+
 #include "nds/psx.h"
 
 #include <nds/arm9/input.h>

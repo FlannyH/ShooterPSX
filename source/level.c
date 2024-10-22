@@ -1,12 +1,12 @@
 #include "level.h"
 
-#include <entity.h>
-#include <string.h>
-
 #include "renderer.h"
 #include "texture.h"
 #include "music.h"
 #include "file.h"
+
+#include <entity.h>
+#include <string.h>
 
 extern uint8_t entity_types[ENTITY_LIST_LENGTH];
 extern uint8_t* entity_pool;

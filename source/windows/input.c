@@ -1,9 +1,9 @@
 #include "input.h"
 
+#include "windows/psx.h"
+
 #include <GLFW/glfw3.h>
 #include <stdio.h>
-
-#include "windows/psx.h"
 
 extern GLFWwindow* window;
 int8_t left_stick_x[2] = { 0, 0 };

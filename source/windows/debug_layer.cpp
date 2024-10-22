@@ -1,16 +1,13 @@
 #include "debug_layer.h"
 
+#include "../entity.h"
+#include "imgui.h"
+
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_glfw.h>
 #include <GL/gl3w.h>
 
-#include "../entity.h"
-#include "imgui.h"
-
 #ifdef _LEVEL_EDITOR
-#include <ImGuizmo.h>
-#include <imfilebrowser.h>
-#include <format>
 #include "../entities/platform.h"
 #include "../entities/trigger.h"
 #include "../entities/pickup.h"
@@ -20,6 +17,10 @@
 #include "../renderer.h"
 #include "../input.h"
 #include "../file.h"
+
+#include <ImGuizmo.h>
+#include <imfilebrowser.h>
+#include <format>
 #endif
 
 static double dt_smooth = 0.0f;

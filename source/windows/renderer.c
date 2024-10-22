@@ -1,14 +1,15 @@
 #include "renderer.h"
 
 #include <GL/gl3w.h>
+
 #include <GLFW/glfw3.h>
 #include <cglm/affine.h>
 #include <cglm/types.h>
 #include <cglm/vec3.h>
 #include <cglm/cam.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
 #include <time.h>
 
 #include "debug_layer.h"

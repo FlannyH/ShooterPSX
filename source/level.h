@@ -4,11 +4,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <stdint.h>
-
 #include "structs.h"
 #include "vislist.h"
 #include "vec3.h"
+
+#include <stdint.h>
 
 // Level file header
 #define MAGIC_FLVL 0x4C564C46

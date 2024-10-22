@@ -1,10 +1,10 @@
 #ifndef FIXED_POINT_H
 #define FIXED_POINT_H
 
+#include "common.h"
+
 #include <stdint.h>
 #include <stdio.h>
-
-#include "common.h"
 
 typedef int32_t fixed20_12_t;
 typedef fixed20_12_t scalar_t;

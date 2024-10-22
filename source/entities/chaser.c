@@ -2,6 +2,7 @@
 
 #include "../random.h"
 #include "../main.h"
+
 extern state_vars_t state;
 #define CHASER_BEHAVIOUR_PERIOD 16
 #define CHASER_REACTION_TIME_MIN 200 // in milliseconds

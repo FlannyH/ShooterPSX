@@ -1,8 +1,8 @@
 #ifndef MESH_H
 #define MESH_H
-#include <stdint.h>
-
 #include "collision.h"
+
+#include <stdint.h>
 
 model_t *model_load(const char *path, int on_stack, stack_t stack, int tex_id_start);
 model_t *model_load_collision_debug(const char *path, int on_stack, stack_t stack);

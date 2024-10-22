@@ -1,14 +1,14 @@
 #include "music.h"
 
+#include "fixed_point.h"
+#include "memory.h"
+#include "file.h"
+#include "vec2.h"
+#include "lut.h"
+
 #include <stdio.h>
 #include <psxspu.h>
 #include <string.h>
-
-#include "lut.h"
-#include "vec2.h"
-#include "file.h"
-#include "memory.h"
-#include "fixed_point.h"
 
 // Channels
 #define N_SPU_CHANNELS 24

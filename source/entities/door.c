@@ -1,6 +1,7 @@
 #include "door.h"
-#include "../vec3.h"
+
 #include "../renderer.h"
+#include "../vec3.h"
 
 entity_door_t* entity_door_new(void) {
 	// Allocate memory for the entity
