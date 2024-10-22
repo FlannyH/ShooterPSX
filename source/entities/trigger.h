@@ -8,6 +8,9 @@ extern "C" {
 
 typedef struct {
     entity_header_t entity_header;
+    uint8_t destroy_on_player_intersect : 1;
+    uint8_t intersecting_curr : 1;
+    uint8_t intersecting_prev : 1;
 } entity_trigger_t;
 
 entity_trigger_t* entity_trigger_new(void);
