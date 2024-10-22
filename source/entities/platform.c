@@ -100,7 +100,9 @@ void entity_platform_on_hit(int slot, int hitbox_index) {
 	(void)hitbox_index;
 }
 
-void entity_platform_player_intersect(int slot, player_t *player) {
+void entity_platform_player_intersect(int slot, player_t* player) {
+	(void)player;
+
 	entity_platform_t* platform = (entity_platform_t*)&entity_pool[slot * entity_pool_stride];
 	if (platform->move_on_player_collision && platform->curr_timer_value <= 0) {
 		platform->target_is_end = !platform->target_is_end;

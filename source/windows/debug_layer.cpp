@@ -418,7 +418,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_data_serialized.data(), entity_data_serialized.size() * sizeof(entity_data_serialized[0])),
                 .level_name_offset = (uint32_t)write_text_and_get_offset(binary_section, level_name),
                 .text_offset = (uint32_t)write_data_and_get_offset(binary_section, text_data_serialized.data(), text_data_serialized.size()),
-                .n_text_entries = curr_level->n_text_entries,
+                .n_text_entries = (uint32_t)curr_level->n_text_entries,
                 .player_spawn_position = svec3_from_vec3(player_spawn_position),
                 .player_spawn_rotation = player_spawn_rotation,
                 .n_entities = (uint16_t)n_entities,

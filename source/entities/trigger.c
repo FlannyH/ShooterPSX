@@ -13,6 +13,7 @@ entity_trigger_t* entity_trigger_new(void) {
     entity->intersecting_prev = 0;
     entity->is_busy = 0;
     entity->trigger_type = ENTITY_TRIGGER_TYPE_NONE;
+    return entity;
 }
 
 void entity_trigger_update(int slot, player_t *player, int dt) {
@@ -66,9 +67,13 @@ void entity_trigger_update(int slot, player_t *player, int dt) {
 }
 
 void entity_trigger_on_hit(int slot, int hitbox_index) {
+    (void)slot;
+    (void)hitbox_index;
 }
 
-void entity_trigger_player_intersect(int slot, player_t *player) {
+void entity_trigger_player_intersect(int slot, player_t* player) {
+    (void)player;
+
     entity_trigger_t* trigger = (entity_trigger_t*)&entity_pool[slot * entity_pool_stride];
     trigger->intersecting_curr = 1;
 }
