@@ -213,8 +213,18 @@ void inspect_entity(size_t entity_id) {
 
             trigger->trigger_type = (uint8_t)inspect_enum((int)trigger->trigger_type, entity_trigger_type_names, "Trigger type");
             if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TEXT) {
-                ImGui::DragInt("Text entry ID", &trigger->data_text.id);
-                ImGui::DragInt("Display time", &trigger->data_text.total_display_time_ms);
+                float rgb[3] = {
+                    (float)trigger->data_text.color.r / 255.f, 
+                    (float)trigger->data_text.color.g / 255.f, 
+                    (float)trigger->data_text.color.b / 255.f,
+                };
+                if (ImGui::ColorEdit3("Text color", rgb)) {
+                    trigger->data_text.color.r = (uint8_t)(rgb[0] * 255.f);
+                    trigger->data_text.color.g = (uint8_t)(rgb[1] * 255.f);
+                    trigger->data_text.color.b = (uint8_t)(rgb[2] * 255.f);
+                }
+                ImGui::InputInt("Text entry ID", &trigger->data_text.id, 1, 5);
+                ImGui::InputInt("Display time", &trigger->data_text.total_display_time_ms, 1, 100);
             }
         }
 
