@@ -15,6 +15,8 @@ entity_door_t* entity_door_new(void) {
 	entity->is_locked = 0;
 	entity->is_big_door = 0;
 	entity->is_rotated = 0;
+	entity->open_by_signal = 0;
+	entity->signal_id = 0;
 	entity->open_offset = (vec3_t){0, 64 * ONE, 0};
 	entity->entity_header.mesh = NULL;
 

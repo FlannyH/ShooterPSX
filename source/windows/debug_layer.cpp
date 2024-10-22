@@ -151,12 +151,15 @@ void inspect_entity(size_t entity_id) {
         if (entity_type == ENTITY_DOOR) {
             entity_door_t* door = (entity_door_t*)entity_data;
             inspect_vec3(&door->open_offset, "Open offset");
+            ImGui::InputInt("Signal ID", &door->signal_id, 0, ENTITY_SIGNAL_COUNT);
             bool is_locked = (bool)door->is_locked;
             bool is_big_door = (bool)door->is_big_door;
             bool is_rotated = (bool)door->is_rotated;
+            bool open_by_signal = (bool)door->open_by_signal;
             if (ImGui::Checkbox("Locked", &is_locked)) { door->is_locked = (int)is_locked; door->state_changed = 1; }
             if (ImGui::Checkbox("Big door", &is_big_door)) { door->is_big_door = (int)is_big_door; door->state_changed = 1; }
             if (ImGui::Checkbox("Rotated", &is_rotated)) { door->is_rotated = (int)is_rotated; door->state_changed = 1; }
+            if (ImGui::Checkbox("Open by signal", &open_by_signal)) { door->open_by_signal = (int)open_by_signal; door->state_changed = 1; }
         }
         
         else if (entity_type == ENTITY_PICKUP) {

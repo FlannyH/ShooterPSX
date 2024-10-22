@@ -10,11 +10,13 @@ typedef struct {
 	entity_header_t entity_header;
 	vec3_t open_offset;
 	scalar_t curr_interpolation_value;
+	int signal_id;
 	unsigned int is_open : 1;
 	unsigned int is_locked : 1;
 	unsigned int is_big_door : 1;
 	unsigned int is_rotated : 1;
 	unsigned int state_changed : 1;
+	unsigned int open_by_signal : 1;
 } entity_door_t;
 
 entity_door_t* entity_door_new(void);
