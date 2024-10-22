@@ -639,6 +639,43 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     }
     ImGui::End();
 
+    // Text editor window
+    ImGui::Begin("Text editor", NULL, ImGuiWindowFlags_None);
+    {
+        if (ImGui::Button("Add")) {
+            bool found = false;
+            for (int i = 0; i < curr_level->n_text_entries; ++i) {
+                if (curr_level->text_entries[i][0] == 127) {
+                    curr_level->text_entries[i][0] = 0;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                curr_level->text_entries = (char**)realloc(curr_level->text_entries, (curr_level->n_text_entries + 1) * sizeof(char**));
+                curr_level->text_entries[curr_level->n_text_entries] = (char*)malloc(255);
+                curr_level->text_entries[curr_level->n_text_entries][0] = 0;
+                ++curr_level->n_text_entries;
+            }
+        }
+
+        for (int i = 0; i < curr_level->n_text_entries; ++i) {
+            if (curr_level->text_entries[i][0] == 127) continue;
+
+            if (ImGui::TreeNode(std::format("{}", i).c_str())) {
+                ImGui::PushID(i);
+                ImGui::InputTextMultiline("", curr_level->text_entries[i], 255);
+                if (ImGui::Button("Delete")) { 
+                    curr_level->text_entries[i][0] = 127;
+                }
+                ImGui::PopID();
+                ImGui::TreePop();
+            }
+        }   
+    }
+    ImGui::End();
+
     // Viewport with gizmos
     int flags = ImGuizmo::IsOver() || ImGuizmo::IsUsingAny() ? ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove : 0;
     ImGui::Begin("Viewport", NULL, flags);
@@ -747,43 +784,6 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         else {
             *mouse_over_viewport = 0;
         }
-    }
-    ImGui::End();
-
-    // Text editor window
-    ImGui::Begin("Text editor", NULL, ImGuiWindowFlags_None);
-    {
-        if (ImGui::Button("Add")) {
-            bool found = false;
-            for (int i = 0; i < curr_level->n_text_entries; ++i) {
-                if (curr_level->text_entries[i][0] == 127) {
-                    curr_level->text_entries[i][0] = 0;
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found) {
-                curr_level->text_entries = (char**)realloc(curr_level->text_entries, (curr_level->n_text_entries + 1) * sizeof(char**));
-                curr_level->text_entries[curr_level->n_text_entries] = (char*)malloc(255);
-                curr_level->text_entries[curr_level->n_text_entries][0] = 0;
-                ++curr_level->n_text_entries;
-            }
-        }
-
-        for (int i = 0; i < curr_level->n_text_entries; ++i) {
-            if (curr_level->text_entries[i][0] == 127) continue;
-
-            if (ImGui::TreeNode(std::format("{}", i).c_str())) {
-                ImGui::PushID(i);
-                ImGui::InputTextMultiline("", curr_level->text_entries[i], 255);
-                if (ImGui::Button("Delete")) { 
-                    curr_level->text_entries[i][0] = 127;
-                }
-                ImGui::PopID();
-                ImGui::TreePop();
-            }
-        }   
     }
     ImGui::End();
 }
