@@ -14,17 +14,27 @@
 | u32 | entity_types_offset | Offset to the u8 array of entity types  |
 | u32 | entity_pool_offset | Offset to the entity pool, which contains all the entity data, ready to be copied into RAM as is | 
 | u32 | level_name_offset     | Offset to string containing display name of the level as shown in game to the player         |
+| u32 | text_offset     | Offset to text data for entities.         |
+| u32 | n_text_entries     | How many text entries there are.         |
 | i16[3] | player_spawn_position       | Where in the map the player spawns, in model space units                                     |
 | i32[3] | player_spawn_rotation       | Player spawn rotation, 0x20000 = 360 degrees                                   |
 | u16 | n_entities            | Number of predefined entities in this map                                                    |
 
 All offsets are relative to the start of the binary section, which is located right after the header.
 
-## Entity list entry
+## Entity list
+
+Entity data is stored in 2 arrays: an entity type array, and an entity data array. Entity data is stored as a serialized header, followed by its corresponding entity data, `n_entities` times.
+
+### Entity type array entry
 | Type   | Name     | Description                                                       |
 | ------ | -------- | ----------------------------------------------------------------- |
-| u16    | type     | Type of entity. Determines the size of the struct that follows it |
+| u8     | type     | Type of entity as defined in entity.h `entity_type_t`             |
+
+### Serialized entity header array entry
+| Type   | Name     | Description                                                       |
+| ------ | -------- | ----------------------------------------------------------------- |
 | i16[3] | position | Spawn position of the entity, in model space                      |
 | i32[3] | rotation | Spawn rotation of the entity, 0x20000 = 360 degrees               |
-
+| i32[3] | scale    | Spawn scale of the entity, 4096 = 1.0                             |
 After this entry header, the raw entity data after the header as defined in `/source/entities/*.h` follows. Each entity is aligned to a grid where each grid cell is the size of the biggest entity struct

@@ -108,7 +108,7 @@ level_t level_load(const char* level_path) {
 
     // Load text data
     level.n_text_entries = 0;
-    if (level_header->entity_types_offset) {
+    if (level_header->text_offset && level_header->n_text_entries > 0) {
         level.n_text_entries = level_header->n_text_entries;
 #ifdef _LEVEL_EDITOR
         level.text_entries = malloc(level.n_text_entries * sizeof(char**));
