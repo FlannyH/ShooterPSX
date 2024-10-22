@@ -109,11 +109,19 @@ level_t level_load(const char* level_path) {
     // Load text data
     if (level_header->entity_types_offset) {
         level.n_text_entries = level_header->n_text_entries;
+#ifdef _LEVEL_EDITOR
+        level.text_entries = malloc(level.n_text_entries * sizeof(char**));
+#else
         level.text_entries = mem_stack_alloc(level.n_text_entries * sizeof(char**), STACK_LEVEL);
+#endif
 
         for (int i = 0; i < level_header->n_text_entries; ++i) {
             const uint8_t n_chars = *(uint8_t*)(text++);
+#ifdef _LEVEL_EDITOR
+            level.text_entries[i] = malloc(255);
+#else
             level.text_entries[i] = mem_stack_alloc(n_chars + 1, STACK_LEVEL);
+#endif
             level.text_entries[i][n_chars] = 0;
             for (int j = 0; j < n_chars; ++j) {
                 level.text_entries[i][j] = *text++;
