@@ -53,12 +53,16 @@ void entity_trigger_update(int slot, player_t *player, int dt) {
 
     if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TEXT) {
         trigger->data_text.curr_display_time_ms -= dt;
-        if (trigger->data_text.curr_display_time_ms <= 0) {
+        if (trigger->data_text.curr_display_time_ms > 0) {
+            const char* text = state.in_game.level.text_entries[trigger->data_text.id];
+            renderer_draw_text((vec2_t){256 * ONE, 176 * ONE}, text, 2, 1, trigger->data_text.color);
+        }
+        else if (trigger->destroy_on_player_intersect) {
             entity_kill(slot);
         }
-
-        const char* text = state.in_game.level.text_entries[trigger->data_text.id];
-        renderer_draw_text((vec2_t){256 * ONE, 176 * ONE}, text, 2, 1, trigger->data_text.color);
+        else {
+            trigger->is_busy = 0;
+        }
 
         return;
     }
