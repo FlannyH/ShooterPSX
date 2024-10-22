@@ -1,11 +1,12 @@
-#include "../renderer.h"
-#include "../input.h"
-#include "../player.h"
-#include "../entity.h"
-#include "../level.h"
+#include "../main.h"
+
 #include "../windows/debug_layer.h"
 #include "../windows/psx.h"
-#include "../main.h"
+#include "../renderer.h"
+#include "../entity.h"
+#include "../player.h"
+#include "../input.h"
+#include "../level.h"
 
 #include <string.h>
 

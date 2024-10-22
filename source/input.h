@@ -3,10 +3,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include "fixed_point.h"
+
 #include <stdint.h>
 #include <stddef.h>
-
-#include "fixed_point.h"
 
 void input_init(void);
 void input_update(void);

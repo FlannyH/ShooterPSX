@@ -1,10 +1,11 @@
 #ifndef COLLISION_H
 #define COLLISION_H
-#include <stdint.h>
 
 #include "fixed_point.h"
 #include "structs.h"
 #include "texture.h"
+
+#include <stdint.h>
 
 #define COL_SCALE 512 // 4096 = 1.0, 512 = 0.125. Need lower scale for less overflows
 

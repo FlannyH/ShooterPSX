@@ -1,12 +1,12 @@
-#include "../memory.h"
-#include "../renderer.h"
 #include "../mesh.h"
+
+#include "../renderer.h"
+#include "../memory.h"
 #include "../file.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
-#include "mesh.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 extern pixel32_t textures_avg_colors[];
 extern RECT textures[];

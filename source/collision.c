@@ -1,15 +1,15 @@
 #include "collision.h"
 
-#include <stdlib.h>
-#include <string.h>
-
+#include "fixed_point.h"
 #include "renderer.h"
 #include "memory.h"
 #include "file.h"
 #include "mesh.h"
 #include "vec3.h"
 #include "vec2.h"
-#include "fixed_point.h"
+
+#include <stdlib.h>
+#include <string.h>
 
 int n_ray_aabb_intersects = 0;
 int n_ray_triangle_intersects = 0;

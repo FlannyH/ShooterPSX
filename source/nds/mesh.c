@@ -1,5 +1,6 @@
-#include "memory.h"
 #include "mesh.h"
+
+#include "memory.h"
 #include "file.h"
 
 #include <stdio.h>

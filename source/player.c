@@ -7,6 +7,7 @@
 #include "input.h"
 #include "entity.h"
 #include "common.h"
+
 #include <string.h>
 
 transform_t t_level = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };

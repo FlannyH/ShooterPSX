@@ -1,4 +1,5 @@
 #include "crate.h"
+
 #include "pickup.h"
 
 entity_crate_t* entity_crate_new(void) {

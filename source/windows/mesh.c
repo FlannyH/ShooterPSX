@@ -2,8 +2,8 @@
 #include "mesh.h"
 #include "file.h"
 
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_start) {
     (void)tex_id_start;

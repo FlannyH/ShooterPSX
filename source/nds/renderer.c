@@ -1,4 +1,5 @@
 #include "renderer.h"
+
 #include "structs.h"
 #include "vec2.h"
 
