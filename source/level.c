@@ -107,6 +107,7 @@ level_t level_load(const char* level_path) {
     memcpy(entity_types, level_entity_types, level_header->n_entities);
 
     // Load text data
+    level.n_text_entries = 0;
     if (level_header->entity_types_offset) {
         level.n_text_entries = level_header->n_text_entries;
 #ifdef _LEVEL_EDITOR
