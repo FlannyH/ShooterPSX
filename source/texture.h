@@ -38,11 +38,11 @@ typedef struct {
 
 // TextureCellDesc
 typedef struct {
-    uint8_t sector_offset_texture;     // Offset into raw texture data section.
-    uint8_t palette_index;             // Palette index.
-    uint8_t texture_width;             // Texture width in pixels.
-    uint8_t texture_height;            // Texture height in pixels.
-    pixel32_t avg_color;
+    uint8_t sector_offset_texture; // Offset (in bytes*2048) into raw texture data section.
+    uint8_t palette_index;         // Palette index.
+    uint8_t texture_width;         // Texture width in pixels.
+    uint8_t texture_height;        // Texture height in pixels.
+    pixel32_t avg_color;           // Average value of every pixel
 } texture_cell_desc_t;
 
 typedef struct {
