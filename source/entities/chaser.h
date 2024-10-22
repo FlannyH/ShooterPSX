@@ -38,5 +38,4 @@ const static int32_t chaser_drag = 100;
 #ifdef __cplusplus
 }
 #endif
-
 #endif

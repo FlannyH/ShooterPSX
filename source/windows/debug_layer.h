@@ -21,5 +21,4 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 #ifdef __cplusplus
 }
 #endif
-
 #endif

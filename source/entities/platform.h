@@ -30,5 +30,4 @@ void entity_platform_player_intersect(int slot, player_t* player);
 #ifdef __cplusplus
 }
 #endif
-
 #endif
