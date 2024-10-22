@@ -90,6 +90,12 @@ void entity_door_update(int slot, player_t* player, int dt) {
 		}
 	}
 
+	// Handle unlocking by signal
+	if (door->is_locked && door->open_by_signal && entity_signals[door->signal_id] > 0) {
+			door->is_locked = 0;
+			door->state_changed = 1;
+	}
+
 	door->is_open = player_close_enough && !door->is_locked;
 
 	// todo: implement delta time
