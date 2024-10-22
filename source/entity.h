@@ -106,5 +106,4 @@ extern int n_entity_textures;
 #ifdef __cplusplus
 }
 #endif
-
 #endif
