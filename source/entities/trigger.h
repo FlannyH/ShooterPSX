@@ -9,6 +9,7 @@ extern "C" {
 typedef enum {
     ENTITY_TRIGGER_TYPE_NONE,
     ENTITY_TRIGGER_TYPE_TEXT,
+    ENTITY_TRIGGER_TYPE_SIGNAL,
 } entity_trigger_type_t;
 
 #ifdef _LEVEL_EDITOR
@@ -29,6 +30,10 @@ typedef struct {
             int total_display_time_ms;
             int curr_display_time_ms;
         } data_text;
+        struct {
+            int id;
+            int value_to_send;
+        } signal;
     };
 } entity_trigger_t;
 
