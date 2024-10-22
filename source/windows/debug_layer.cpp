@@ -522,7 +522,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             }
 
             // Load graphics and collision data
-            curr_level->graphics = model_load(path_model, 1, STACK_LEVEL, tex_level_start);
+            curr_level->graphics = model_load(path_model, 1, STACK_LEVEL, tex_level_start, 1);
             curr_level->collision_mesh_debug = model_load_collision_debug(path_collision, 0, (stack_t)0);
             curr_level->collision_mesh = model_load_collision(path_collision, 1, STACK_LEVEL);
             curr_level->transform = { {0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096} };

@@ -77,7 +77,7 @@ level_t level_load(const char* level_path) {
         .player_spawn_rotation = level_header->player_spawn_rotation,
     };
     mem_stack_reset_to_marker(STACK_TEMP, marker);
-    level.graphics = model_load(path_graphics, 1, STACK_LEVEL, tex_level_start);
+    level.graphics = model_load(path_graphics, 1, STACK_LEVEL, tex_level_start, 1);
     mem_stack_reset_to_marker(STACK_TEMP, marker);
 
     // Load entities

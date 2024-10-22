@@ -90,6 +90,7 @@ typedef struct {
     aligned_position_t* vtx_pos_and_size;
     aabb_t bounds;
     char* name;
+    int optimized_for_single_render_per_frame;
 } mesh_t;
 #else
 typedef struct {

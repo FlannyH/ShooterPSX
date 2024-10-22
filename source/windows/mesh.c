@@ -5,8 +5,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_start) {
+model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_start, int optimize_for_single_render_per_frame) {
     (void)tex_id_start;
+    (void)optimize_for_single_render_per_frame;
+    
     // Read the file
     uint32_t* file_data;
     size_t size;

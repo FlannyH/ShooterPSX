@@ -5,8 +5,8 @@
 
 // Vertically the primitive's CLUT to 16 pixels, and then add the fade level to the Y coordinate
 #define SET_DISTANCE_FADE(primitive, fade_level) \
-    primitive.clut &= 0b111110000111111; \
-    primitive.clut |= fade_level << 6;
+    (primitive)->clut &= 0b111110000111111; \
+    (primitive)->clut |= fade_level << 6;
 
 #define gte_stsz01( r0, r1 ) __asm__ volatile ( \
 	"swc2	$17, 0( %0 );"	\
@@ -515,9 +515,16 @@ void draw_level1_subdivided_quad(const mesh_t* mesh, const size_t vert_idx, cons
     POLY_GT3* tri_205 = (POLY_GT3*)next_primitive;    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
 
     // Copy position for 0, was stored earlier in `draw_tex_quad3d_fancy()`
-    COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &quad_0458->x0); // XY 0
-    COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &tri_014->x0);
-    COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &tri_205->x1);
+    if (store_to_precomp_prims) {
+        COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &quad_0458->x0); // XY 0
+        COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &tri_014->x0);
+        COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &tri_205->x1);
+    }
+    else {
+        COPY_POS(&sxy_storage, &quad_0458->x0); // XY 0
+        COPY_POS(&sxy_storage, &tri_014->x0);
+        COPY_POS(&sxy_storage, &tri_205->x1);
+    }
 
     // GTE still holds positions 123 - store them
     gte_stsxy0(&quad_4186->x1); // XY 1
@@ -665,9 +672,16 @@ void draw_level2_subdivided_quad(const mesh_t* mesh, const size_t vert_idx, cons
     POLY_GT3* tri_70F = (POLY_GT3*)next_primitive;    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
 
     // Copy the first position from what we did before calling this function
-    COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &quad_08FK->x0);
-    COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &tri_048->x0);
-    COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &tri_70F->x1);
+    if (store_to_precomp_prims) {
+        COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &quad_08FK->x0);
+        COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &tri_048->x0);
+        COPY_POS(&mesh->tex_quads[drawbuffer][poly_idx].x0, &tri_70F->x1);
+    }
+    else {
+        COPY_POS(&sxy_storage, &quad_08FK->x0);
+        COPY_POS(&sxy_storage, &tri_048->x0);
+        COPY_POS(&sxy_storage, &tri_70F->x1);
+    }
     COPY_COLOR(&mesh->tex_quads[0][poly_idx].r0, &quad_08FK->r0);
     COPY_COLOR(&mesh->tex_quads[0][poly_idx].r0, &tri_048->r0);
     COPY_COLOR(&mesh->tex_quads[0][poly_idx].r0, &tri_70F->r1);
@@ -1121,7 +1135,7 @@ static inline void draw_tex_triangle3d_fancy(const mesh_t* mesh, const size_t ve
 
     // Store data into primitive struct
     gte_stsxy3_gt3(&mesh->tex_tris[drawbuffer][poly_idx]);
-    SET_DISTANCE_FADE(mesh->tex_tris[drawbuffer][poly_idx], clut_fade);
+    SET_DISTANCE_FADE(&mesh->tex_tris[drawbuffer][poly_idx], clut_fade);
     addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, &mesh->tex_tris[drawbuffer][poly_idx]);
     return;
 }
@@ -1217,7 +1231,173 @@ static inline void draw_tex_quad3d_fancy(const mesh_t* mesh, const size_t vert_i
     else if (clut_fade < 0) clut_fade = 0;
 
     // Store final bit of data into primitive struct
-    SET_DISTANCE_FADE(mesh->tex_quads[drawbuffer][poly_idx], clut_fade);
+    SET_DISTANCE_FADE(&mesh->tex_quads[drawbuffer][poly_idx], clut_fade);
     addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, &mesh->tex_quads[drawbuffer][poly_idx]);
+    return;
+}
+
+// Transform and add to queue a textured, shaded triangle, with automatic subdivision based on size, fading to solid color in the distance.
+static inline void draw_tex_triangle3d_fancy_no_precomp(const mesh_t* mesh, const size_t vert_idx, const size_t poly_idx) {
+    // If this is an occluder, don't render it
+    if (mesh->vtx_pos_and_size[vert_idx + 0].tex_id == 254) return;
+    
+    // Transform the 3 vertices
+    gte_ldv3(
+        &mesh->vtx_pos_and_size[vert_idx + 0].x,
+        &mesh->vtx_pos_and_size[vert_idx + 1].x,
+        &mesh->vtx_pos_and_size[vert_idx + 2].x
+    );
+    gte_rtpt();
+
+    // Backface culling
+    int p;
+    gte_nclip();
+    gte_stopz(&p);
+    if (p <= 0) return;
+
+    // Get depth
+    gte_avsz3();
+    int avg_z;
+    gte_stotz(&avg_z);
+
+    // Depth culling
+    if ((avg_z + curr_ot_bias) >= ORD_TBL_LENGTH || (avg_z <= 0)) return;
+    
+    // If very close, subdivide twice
+    const int32_t sub2_threshold = ((vsync_enable == 2) ? TRI_THRESHOLD_MUL_SUB2_30 : TRI_THRESHOLD_MUL_SUB2_60) * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
+    if (avg_z < sub2_threshold) {
+        draw_level2_subdivided_triangle(mesh, vert_idx, poly_idx, avg_z);
+        return;
+    }
+
+    // // If close, subdivice once
+    const int32_t sub1_threshold = ((vsync_enable == 2) ? TRI_THRESHOLD_MUL_SUB1_30 : TRI_THRESHOLD_MUL_SUB1_60) * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
+    if (avg_z < sub1_threshold) {
+        draw_level1_subdivided_triangle(mesh, vert_idx, poly_idx, avg_z);
+        return;
+    }
+
+    // If quad is far away, render textured, fading into single color when further away
+    // Calculate CLUT fade
+    int16_t clut_fade = ((N_CLUT_FADES-1) * (avg_z - TRI_THRESHOLD_FADE_START)) / (TRI_THRESHOLD_FADE_END - TRI_THRESHOLD_FADE_START);
+    if (clut_fade > (N_CLUT_FADES-1)) clut_fade = (N_CLUT_FADES-1);
+    else if (clut_fade < 0) clut_fade = 0;
+
+    // Store data into primitive struct
+    POLY_GT3* tri = (POLY_GT3*)next_primitive;      
+    next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
+    setPolyGT3(tri);
+    gte_stsxy3_gt3(tri);
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r0, &tri->r0);
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r1, &tri->r1);
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r2, &tri->r2);
+    tri->clut = mesh->tex_quads[0][poly_idx].clut;
+    tri->tpage = mesh->tex_quads[0][poly_idx].tpage;
+    SET_DISTANCE_FADE(tri, clut_fade);
+    addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, tri);
+    return;
+}
+
+// Transform and add to queue a textured, shaded quad, with automatic subdivision based on size, fading to solid color in the distance.
+static inline void draw_tex_quad3d_fancy_no_precomp(const mesh_t* mesh, const size_t vert_idx, const size_t poly_idx) {
+    // If this is an occluder, don't render it
+    if (mesh->vtx_pos_and_size[vert_idx + 0].tex_id == 254) return;
+
+    // Transform the first 3 vertices
+    gte_ldv3(
+        &mesh->vtx_pos_and_size[vert_idx + 0].x,
+        &mesh->vtx_pos_and_size[vert_idx + 1].x,
+        &mesh->vtx_pos_and_size[vert_idx + 2].x
+    );
+    gte_rtpt();
+
+    // Backface culling
+    int p;
+    gte_nclip();
+    gte_stopz(&p);
+    if (p <= 0) return;
+
+    // Store the first vertex, as it will be pushed out by the RTPS call down a couple lines
+    POLY_GT4* poly = (POLY_GT4*)next_primitive;      
+    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
+    gte_stsxy0(&sxy_storage);
+    gte_stsxy0(&poly->x0);
+
+    // Transform the last vertex
+    gte_ldv0(&mesh->vtx_pos_and_size[vert_idx + 3].x);
+    gte_rtps();
+
+    // Get depth
+    gte_avsz4();
+    int avg_z;
+    gte_stotz(&avg_z);
+
+    // Depth culling
+    if ((avg_z + curr_ot_bias) >= ORD_TBL_LENGTH || (avg_z <= 0)) return;
+
+    // Store the other 3 vertices
+    gte_stsxy0(&poly->x1);
+    gte_stsxy1(&poly->x2);
+    gte_stsxy2(&poly->x3);
+
+    // Cull if off screen - subdivision is expensive
+    int n_left = 1;
+    int n_right = 1;
+    int n_up = 1;
+    int n_down = 1;
+
+    if (poly->x0 < 0)            n_left <<= 1;   
+    if (poly->y0 < 0)            n_up <<= 1;
+    if (poly->x0 > res_x)        n_right <<= 1;  
+    if (poly->y0 > curr_res_y)   n_down <<= 1;
+    if (poly->x1 < 0)            n_left <<= 1;   
+    if (poly->y1 < 0)            n_up <<= 1;
+    if (poly->x1 > res_x)        n_right <<= 1;  
+    if (poly->y1 > curr_res_y)   n_down <<= 1;
+    if (poly->x2 < 0)            n_left <<= 1;   
+    if (poly->y2 < 0)            n_up <<= 1;
+    if (poly->x2 > res_x)        n_right <<= 1;  
+    if (poly->y2 > curr_res_y)   n_down <<= 1;
+    if (poly->x3 < 0)            n_left <<= 1;   
+    if (poly->y3 < 0)            n_up <<= 1;
+    if (poly->x3 > res_x)        n_right <<= 1;  
+    if (poly->y3 > curr_res_y)   n_down <<= 1;
+
+    // If all vertices are off to one side of the screen, one of the values will be shifted left 4x.
+    // When OR-ing the bits together, the result will be %0001????.
+    // Shifting that value to the right 4x drops off the irrelevant ???? bits, returning 1 if all vertices are to one side, and 0 if not
+    const int off_to_one_side = (n_left | n_right | n_up | n_down) >> 4;
+    if (off_to_one_side) return;
+
+    // If very close, subdivide twice
+    const int32_t sub2_threshold = ((vsync_enable == 2) ? TRI_THRESHOLD_MUL_SUB2_30 : TRI_THRESHOLD_MUL_SUB2_60) * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
+    if (avg_z < sub2_threshold) {
+        draw_level2_subdivided_quad(mesh, vert_idx, poly_idx, avg_z);
+        return;
+    }
+
+    // // If close, subdivice once
+    const int32_t sub1_threshold = ((vsync_enable == 2) ? TRI_THRESHOLD_MUL_SUB1_30 : TRI_THRESHOLD_MUL_SUB1_60) * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
+    if (avg_z < sub1_threshold) {
+        draw_level1_subdivided_quad(mesh, vert_idx, poly_idx, avg_z);
+        return;
+    }
+
+    // If quad is far away, render textured, fading into single color when further away
+    // Calculate CLUT fade
+    int16_t clut_fade = ((N_CLUT_FADES-1) * (avg_z - TRI_THRESHOLD_FADE_START)) / (TRI_THRESHOLD_FADE_END - TRI_THRESHOLD_FADE_START);
+    if (clut_fade > (N_CLUT_FADES-1)) clut_fade = (N_CLUT_FADES-1);
+    else if (clut_fade < 0) clut_fade = 0;
+
+    // Store final bit of data into primitive struct
+    setPolyGT4(poly);
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r0, &poly->r0);
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r1, &poly->r1);
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r2, &poly->r2);
+    copy_rgb_uv(&mesh->tex_quads[0][poly_idx].r3, &poly->r3);
+    poly->clut = mesh->tex_quads[0][poly_idx].clut;
+    poly->tpage = mesh->tex_quads[0][poly_idx].tpage;
+    SET_DISTANCE_FADE(poly, clut_fade);
+    addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, poly);
     return;
 }

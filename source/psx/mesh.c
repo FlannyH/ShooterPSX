@@ -17,7 +17,7 @@ void precompute_untex_triangle(POLY_G3* prim, const vertex_3d_t* vertices, const
 void precompute_tex_quad(POLY_GT4* prim, const vertex_3d_t* vertices, const int tex_id_start);
 void precompute_untex_quad(POLY_G4* prim, const vertex_3d_t* vertices, const int tex_id_start);
 
-model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_start) {
+model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_start, int optimize_for_single_render_per_frame) {
     // Read the file and store it in the temporary stack
     uint32_t* file_data;
     size_t size;
@@ -86,6 +86,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
         model->meshes[mesh_id].bounds.min.z = mesh_descriptions[mesh_id].z_min;
         model->meshes[mesh_id].bounds.max.z = mesh_descriptions[mesh_id].z_max;
         model->meshes[mesh_id].name = string;
+        model->meshes[mesh_id].optimized_for_single_render_per_frame = optimize_for_single_render_per_frame;
 
         // Pre-allocate the GPU primitive buffers - let's hope this fits!
         const size_t n_tris = model->meshes[mesh_id].n_triangles;

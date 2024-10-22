@@ -83,7 +83,7 @@ void entity_init(void) {
 	mem_stack_release(STACK_TEMP);
 
 	// Load model collection
-    entity_models = model_load("\\assets\\models\\entity.msh", 1, STACK_ENTITY, tex_entity_start);
+    entity_models = model_load("\\assets\\models\\entity.msh", 1, STACK_ENTITY, tex_entity_start, 0);
 	mem_stack_release(STACK_TEMP);
 }
 

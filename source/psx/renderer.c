@@ -56,6 +56,8 @@ int tex_level_start = 0;
 int tex_entity_start = 0;
 int tex_weapon_start = 0;
 int tex_alloc_cursor = 0;
+int store_to_precomp_prims = 0;
+uint32_t sxy_storage = 0;
 
 // Textures
 pixel32_t textures_avg_colors[256];
@@ -211,13 +213,27 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_tran
 
     // Loop over each triangle
     size_t vert_idx = 0;
-    for (size_t i = 0; i < mesh->n_triangles; ++i) {
-        draw_tex_triangle3d_fancy(mesh, vert_idx, i);
-        vert_idx += 3;
+    if (mesh->optimized_for_single_render_per_frame) {
+        store_to_precomp_prims = 1;
+        for (size_t i = 0; i < mesh->n_triangles; ++i) {
+            draw_tex_triangle3d_fancy(mesh, vert_idx, i);
+            vert_idx += 3;
+        }
+        for (size_t i = 0; i < mesh->n_quads; ++i) {
+            draw_tex_quad3d_fancy(mesh, vert_idx, i);
+            vert_idx += 4;
+        }
     }
-    for (size_t i = 0; i < mesh->n_quads; ++i) {
-        draw_tex_quad3d_fancy(mesh, vert_idx, i);
-        vert_idx += 4;
+    else {
+        store_to_precomp_prims = 0;
+        for (size_t i = 0; i < mesh->n_triangles; ++i) {
+            draw_tex_triangle3d_fancy_no_precomp(mesh, vert_idx, i);
+            vert_idx += 3;
+        }
+        for (size_t i = 0; i < mesh->n_quads; ++i) {
+            draw_tex_quad3d_fancy_no_precomp(mesh, vert_idx, i);
+            vert_idx += 4;
+        }
     }
 
 	PopMatrix();
