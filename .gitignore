@@ -9,3 +9,5 @@ license_data.dat
 .vscode/tasks.json
 *.blend1
 assets/
+assets_to_build/audio/samples/downsample.py
+/assets_to_build/audio/samples/sfx_hq
