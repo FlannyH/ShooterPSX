@@ -44,7 +44,7 @@ void state_update_pause_menu(int dt) {
 		music_stop();
 		mem_stack_release(STACK_MUSIC);
 		music_load_sequence("\\assets\\music\\sequence\\justice.dss");
-		audio_load_soundbank("\\assets\\music\\instr.sbk");
+		audio_load_soundbank("\\assets\\music\\instr.sbk", SOUNDBANK_TYPE_MUSIC);
 		music_play_sequence(0);
 	}
 

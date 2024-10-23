@@ -97,7 +97,7 @@ void state_update_debug_menu_music(int dt) {
 				music_stop();
 				mem_stack_release(STACK_TEMP);
 				mem_stack_release(STACK_MUSIC);
-				audio_load_soundbank("\\assets\\music\\instr.sbk");
+				audio_load_soundbank("\\assets\\music\\instr.sbk", SOUNDBANK_TYPE_MUSIC);
 				music_load_sequence(songs[state.debug_menu_music.button_selected]);
 				music_set_volume(255);
 				music_play_sequence(0);

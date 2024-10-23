@@ -11,8 +11,9 @@ void music_test_instr_region(int region) {
     TODO_SOFT()
 }
 
-void audio_load_soundbank(const char* path) {
+void audio_load_soundbank(const char* path, soundbank_type_t type) {
     (void)path;
+    (void)type;
     TODO_SOFT()
 }
 

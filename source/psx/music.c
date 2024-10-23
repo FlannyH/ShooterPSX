@@ -10,6 +10,11 @@
 #include <psxspu.h>
 #include <string.h>
 
+// Sample allocation
+#define SBK_MUSIC_SIZE (384 * KiB)
+#define SBK_MUSIC_OFFSET 0x01000
+#define SBK_SFX_OFFSET (SBK_MUSIC_OFFSET + SBK_MUSIC_SIZE)
+
 // Channels
 #define N_SPU_CHANNELS 24
 #define N_MIDI_CHANNELS 16
@@ -28,7 +33,7 @@ uint8_t* loop_start = NULL;
 uint8_t music_playing = 0;
 int16_t wait_timer = 0;
 
-void audio_load_soundbank(const char* path) {
+void audio_load_soundbank(const char* path, soundbank_type_t type) {
 	// Load the SBK file
 	uint32_t* data;
 	size_t size;
@@ -43,7 +48,8 @@ void audio_load_soundbank(const char* path) {
 
 	// First upload all the samples to audio RAM
 	uint32_t* sample_data = ((uint32_t*)(sbk_header+1)) + sbk_header->offset_sample_data / 4;
-	SpuSetTransferStartAddr(0x01000);
+	if (type == SOUNDBANK_TYPE_MUSIC) 	SpuSetTransferStartAddr(SBK_MUSIC_OFFSET);
+	if (type == SOUNDBANK_TYPE_SFX) 	SpuSetTransferStartAddr(SBK_SFX_OFFSET);
 	SpuWrite(sample_data, sbk_header->length_sample_data);
 
 	// Copy the instruments and regions to another part in memory
@@ -203,7 +209,7 @@ void audio_tick(int delta_time) {
 					
 					// Stage a note on event
 					staged_note_on_events[n_staged_note_on_events] = (spu_stage_on_t){
-						.voice_start = 0x01000 + regions[i].sample_start,
+						.voice_start = SBK_MUSIC_OFFSET + regions[i].sample_start,
 						.sample_rate = sample_rate / 44100,
 						.adsr1 = regions[i].reg_adsr1,
 						.adsr2 = regions[i].reg_adsr2,
