@@ -98,19 +98,20 @@
 						<file name="UI.TXC"	type="data" source="assets/models/ui_tex/ui.txc" />
 					</dir>
 				</dir>
-				<dir name="MUSIC">
-					<dir name="SEQUENCE">
-						<file name="E1M1.DSS"	type="data" source="assets/music/sequence/e1m1.dss" />
-						<file name="JUSTICE.DSS"	type="data" source="assets/music/sequence/justice.dss" />
-						<file name="E3M3.DSS"	type="data" source="assets/music/sequence/e3m3.dss" />
-						<file name="BLACK.DSS"	type="data" source="assets/music/sequence/black.dss" />
-						<file name="PITCHTST.DSS"	type="data" source="assets/music/sequence/pitchtst.dss" />
-						<file name="LEVEL1.DSS"	type="data" source="assets/music/sequence/level1.dss" />
-						<file name="LEVEL2.DSS"	type="data" source="assets/music/sequence/level2.dss" />
-						<file name="LEVEL3.DSS"	type="data" source="assets/music/sequence/level3.dss" />
-						<file name="SUBNIVIS.DSS"	type="data" source="assets/music/sequence/subnivis.dss" />
+				<dir name="AUDIO">
+					<dir name="MUSIC">
+						<file name="E1M1.DSS"	type="data" source="assets/audio/music/e1m1.dss" />
+						<file name="JUSTICE.DSS"	type="data" source="assets/audio/music/justice.dss" />
+						<file name="E3M3.DSS"	type="data" source="assets/audio/music/e3m3.dss" />
+						<file name="BLACK.DSS"	type="data" source="assets/audio/music/black.dss" />
+						<file name="PITCHTST.DSS"	type="data" source="assets/audio/music/pitchtst.dss" />
+						<file name="LEVEL1.DSS"	type="data" source="assets/audio/music/level1.dss" />
+						<file name="LEVEL2.DSS"	type="data" source="assets/audio/music/level2.dss" />
+						<file name="LEVEL3.DSS"	type="data" source="assets/audio/music/level3.dss" />
+						<file name="SUBNIVIS.DSS"	type="data" source="assets/audio/music/subnivis.dss" />
 					</dir>
-					<file name="INSTR.SBK"	type="data" source="assets/music/instr.sbk" />
+					<file name="INSTR.SBK"	type="data" source="assets/audio/instr.sbk" />
+					<file name="SFX.SBK"	type="data" source="assets/audio/sfx.sbk" />
 				</dir>
             </dir>
 		</directory_tree>

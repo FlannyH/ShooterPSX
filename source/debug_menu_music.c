@@ -48,10 +48,10 @@ void state_update_debug_menu_music(int dt) {
 	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_debug_menu_music[0], 1, 1, white);
 
 	char* songs[] = {
-		"\\assets\\music\\sequence\\level1.dss",
-		"\\assets\\music\\sequence\\level2.dss",
-		"\\assets\\music\\sequence\\level3.dss",
-		"\\assets\\music\\sequence\\subnivis.dss",
+		"\\assets\\audio\\music\\level1.dss",
+		"\\assets\\audio\\music\\level2.dss",
+		"\\assets\\audio\\music\\level3.dss",
+		"\\assets\\audio\\music\\subnivis.dss",
 	};
 
 	// Draw settings text and box
@@ -97,7 +97,7 @@ void state_update_debug_menu_music(int dt) {
 				music_stop();
 				mem_stack_release(STACK_TEMP);
 				mem_stack_release(STACK_MUSIC);
-				audio_load_soundbank("\\assets\\music\\instr.sbk", SOUNDBANK_TYPE_MUSIC);
+				audio_load_soundbank("\\assets\\audio\\instr.sbk", SOUNDBANK_TYPE_MUSIC);
 				music_load_sequence(songs[state.debug_menu_music.button_selected]);
 				music_set_volume(255);
 				music_play_sequence(0);

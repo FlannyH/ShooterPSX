@@ -450,18 +450,19 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/GOURAUD.FSH \
 					  $(PATH_ASSETS)/models/ui_tex/menu2.txc \
 					  $(PATH_ASSETS)/models/ui_tex/menu_ds.txc \
 					  $(PATH_ASSETS)/models/ui_tex/ui.txc \
-					  $(PATH_ASSETS)/music/instr.sbk \
-					  $(PATH_ASSETS)/music/sequence/black.dss \
-					  $(PATH_ASSETS)/music/sequence/combust.dss \
-					  $(PATH_ASSETS)/music/sequence/e1m1.dss \
-					  $(PATH_ASSETS)/music/sequence/e3m3.dss \
-					  $(PATH_ASSETS)/music/sequence/energia.dss \
-					  $(PATH_ASSETS)/music/sequence/justice.dss \
-					  $(PATH_ASSETS)/music/sequence/level1.dss \
-					  $(PATH_ASSETS)/music/sequence/level2.dss \
-					  $(PATH_ASSETS)/music/sequence/level3.dss \
-					  $(PATH_ASSETS)/music/sequence/pitchtst.dss \
-					  $(PATH_ASSETS)/music/sequence/subnivis.dss
+					  $(PATH_ASSETS)/audio/instr.sbk \
+					  $(PATH_ASSETS)/audio/sfx.sbk \
+					  $(PATH_ASSETS)/audio/music/black.dss \
+					  $(PATH_ASSETS)/audio/music/combust.dss \
+					  $(PATH_ASSETS)/audio/music/e1m1.dss \
+					  $(PATH_ASSETS)/audio/music/e3m3.dss \
+					  $(PATH_ASSETS)/audio/music/energia.dss \
+					  $(PATH_ASSETS)/audio/music/justice.dss \
+					  $(PATH_ASSETS)/audio/music/level1.dss \
+					  $(PATH_ASSETS)/audio/music/level2.dss \
+					  $(PATH_ASSETS)/audio/music/level3.dss \
+					  $(PATH_ASSETS)/audio/music/pitchtst.dss \
+					  $(PATH_ASSETS)/audio/music/subnivis.dss
 
 # Shaders for Windows and Level Editor build
 $(PATH_ASSETS)/%.FSH: $(PATH_ASSETS_TO_BUILD)/%.FSH
@@ -508,13 +509,13 @@ $(PATH_ASSETS)/models/ui_tex/%.txc: $(PATH_ASSETS_TO_BUILD)/models/ui_tex/%.png
 	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $@
 
 # Soundbank
-$(PATH_ASSETS)/music/%.sbk: $(PATH_ASSETS_TO_BUILD)/music/%.csv
+$(PATH_ASSETS)/audio/%.sbk: $(PATH_ASSETS_TO_BUILD)/audio/%.csv
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/psx_soundfont_generator$(EXE_EXT) $< $@
 
 # Music sequences
-$(PATH_ASSETS)/music/sequence/%.dss: $(PATH_ASSETS_TO_BUILD)/music/sequence/%.mid
+$(PATH_ASSETS)/audio/music/%.dss: $(PATH_ASSETS_TO_BUILD)/audio/music/%.mid
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/midi2psx$(EXE_EXT) $< $@
