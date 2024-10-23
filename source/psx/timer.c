@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 static void timer2_handler(void) {
-    music_tick(1);
+    audio_tick(1);
 }
 
 

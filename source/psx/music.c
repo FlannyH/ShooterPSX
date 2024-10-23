@@ -28,7 +28,7 @@ uint8_t* loop_start = NULL;
 uint8_t music_playing = 0;
 int16_t wait_timer = 0;
 
-void music_load_soundbank(const char* path) {
+void audio_load_soundbank(const char* path) {
 	// Load the SBK file
 	uint32_t* data;
 	size_t size;
@@ -109,7 +109,7 @@ spu_stage_off_t staged_note_off_events[MAX_STAGED_NOTE_EVENTS] = {0};
 int n_staged_note_on_events = 0;
 int n_staged_note_off_events = 0;
 
-void music_tick(int delta_time) {
+void audio_tick(int delta_time) {
 	if (music_playing == 0) {
 		return;
 	}

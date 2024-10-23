@@ -81,12 +81,15 @@ typedef struct {
     int16_t pitch_wheel; // channel pitch, 10 = 1 cent
 } midi_channel_t;
 
+// Common
+void audio_tick(int delta_time);
+void audio_load_soundbank(const char* path);
+
+// Music
 void music_test_sound(void);
 void music_test_instr_region(int region);
-void music_load_soundbank(const char* path);
 void music_load_sequence(const char* path);
 void music_play_sequence(uint32_t section);
-void music_tick(int delta_time);
 void music_set_volume(int volume);
 void music_stop(void);
 

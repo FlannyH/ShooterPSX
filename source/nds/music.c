@@ -11,7 +11,7 @@ void music_test_instr_region(int region) {
     TODO_SOFT()
 }
 
-void music_load_soundbank(const char* path) {
+void audio_load_soundbank(const char* path) {
     (void)path;
     TODO_SOFT()
 }
@@ -26,7 +26,7 @@ void music_play_sequence(uint32_t section) {
     TODO_SOFT()
 }
 
-void music_tick(int delta_time) {
+void audio_tick(int delta_time) {
     (void)delta_time;
     TODO_SOFT()
 }

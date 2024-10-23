@@ -6,7 +6,7 @@ void music_test_instr_region(int region) {
     (void)region;
 }
 
-void music_load_soundbank(const char* path) {
+void audio_load_soundbank(const char* path) {
     (void)path;
 }
 
@@ -18,7 +18,7 @@ void music_play_sequence(uint32_t section) {
     (void)section;
 }
 
-void music_tick(int delta_time) {
+void audio_tick(int delta_time) {
     (void)delta_time;
 }
 
