@@ -34,7 +34,7 @@ typedef struct {
 } instrument_region_header_t;
 
 // Dynamic Song Sequence header
-#define MAGIC_FDSS 0x53444446
+#define MAGIC_FDSS 0x53534446
 typedef struct {
     uint32_t file_magic;           // File magic: "FDSS"
     uint32_t n_sections;           // Number of sections in the song
