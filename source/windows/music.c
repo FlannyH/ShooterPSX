@@ -10,6 +10,10 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
     (void)path;
 }
 
+void audio_play_sound(int instrument) {
+    (void)instrument;
+}
+
 void music_load_sequence(const char* path) {
     (void)path;
 }

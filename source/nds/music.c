@@ -17,6 +17,11 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
     TODO_SOFT()
 }
 
+void audio_play_sound(int instrument) {
+    (void)instrument;
+    TODO_SOFT()
+}
+
 void music_load_sequence(const char* path) {
     (void)path;
     TODO_SOFT()

@@ -89,6 +89,7 @@ typedef enum {
 // Common
 void audio_tick(int delta_time);
 void audio_load_soundbank(const char* path, soundbank_type_t type);
+void audio_play_sound(int instrument); // todo: pitch, location
 
 // Music
 void music_test_sound(void);
