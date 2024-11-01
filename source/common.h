@@ -7,6 +7,7 @@
 //#define PAL
 //#define _DEBUG_CAMERA
 //#define _DEBUG
+//#define _DEBUG_VERBOSE
 #endif
 
 // #define BENCHMARK_MODE
