@@ -47,6 +47,39 @@ ALWAYS_INLINE void scalar_debug(const scalar_t a) {
 #endif
 #include <stdlib.h>
 
+#ifdef _PSX
+ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
+    register fixed20_12_t temp, result;
+    __asm__ volatile (
+        // shift the bits into the right place
+        // ? = unknown
+        // s = sign bit
+        // o = high bits to discard
+        // . low bits to discard
+        // S = useful integer bits in high byte with sign
+        // H = useful integer bits in high byte
+        // h = useful integer bits in high byte but with incorrect sign
+        // L = useful integer bits in low byte
+        // f = fractional bits
+        "mult %2, %3             \n\t" // hi, low = a*b 
+
+        // --------------------------- // writes to r1 ----------------- | writes to r0 --------------------| 
+        "mfhi %0                 \n\t" // _                              |   r0 = temp = hi                 |
+        "srl  %1, %0, 31         \n\t" // r0[soooohHH] -> r1[       s]   |                                  |
+        "sll  %1, %1, 31         \n\t" // r1[       s] -> r1[s       ]   |                                  |
+        "andi %0, %0, 0x07FF     \n\t" // _                              |   r0[soooohHH] -> r0[     HHH]   |
+        "sll  %0, %0, 20         \n\t" // _                              |   r0[     HHH] -> r0[HHH     ]   |
+        "or   %1, %1, %0         \n\t" // r1[s       ] -> r1[SHH     ]   | -------------------------------- |
+        "mflo %0                 \n\t" // _                              |   r0 = temp = low                |
+        "srl  %0, %0, 12         \n\t" // _                              |   r0[LLrrr...] -> r0[   LLfff]   |
+        "or   %1, %1, %0         \n\t" // r1[SHH     ] -> r1[SHHLLfff]   |   _                              |
+        // --------------------------- // ------------------------------ | ---------------------------------| 
+        : "=&r"(temp), "=&r"(result)
+        : "r"(a), "r"(b)
+    );
+    return result;
+}
+#else
 ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
     int64_t result32 = ((int64_t)a * ((int64_t)b)) >> 12;
 
@@ -62,6 +95,7 @@ ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20
 
     return (fixed20_12_t)result32;
 }
+#endif
 
 ALWAYS_INLINE fixed20_12_t scalar_div(const fixed20_12_t a, const fixed20_12_t b) {
     int64_t result32 = (int64_t)a * 4096;
