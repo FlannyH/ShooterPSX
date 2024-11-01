@@ -48,8 +48,9 @@ ALWAYS_INLINE void scalar_debug(const scalar_t a) {
 #include <stdlib.h>
 
 ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
-    int64_t result32 = ((int64_t)(a >> 6) * ((int64_t)b >> 6));
+    int64_t result32 = ((int64_t)a * ((int64_t)b)) >> 12;
 
+#ifdef _DEBUG
     // overflow check
     if (result32 > INT32_MAX) {
         result32 = INT32_MAX;
@@ -57,6 +58,8 @@ ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20
     else if (result32 < -INT32_MAX) {
         result32 = -INT32_MAX;
     }
+#endif
+
     return (fixed20_12_t)result32;
 }
 
