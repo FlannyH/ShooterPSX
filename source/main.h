@@ -72,6 +72,7 @@ typedef struct {
 	struct {
 		int button_selected;
 		int button_pressed;
+		int sfx_id;
 	} debug_menu_music;
 	struct {
 		int button_selected;

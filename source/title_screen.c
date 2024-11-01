@@ -56,7 +56,8 @@ void state_enter_title_screen(void) {
 		mem_stack_release(STACK_TEMP);
 		state.title_screen.assets_in_memory = 1;
 		mem_stack_release(STACK_MUSIC);
-		audio_load_soundbank("\\assets\\audio\\instr.sbk", SOUNDBANK_TYPE_MUSIC);
+		audio_load_soundbank("\\assets\\audio\\instr.sbk", SOUNDBANK_TYPE_MUSIC); mem_stack_release(STACK_TEMP);
+		audio_load_soundbank("\\assets\\audio\\sfx.sbk", SOUNDBANK_TYPE_SFX); mem_stack_release(STACK_TEMP);
 		music_load_sequence("\\assets\\audio\\music\\level3.dss");
 		music_play_sequence(0);
 	}
