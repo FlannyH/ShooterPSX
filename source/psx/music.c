@@ -115,13 +115,20 @@ void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space
 			scalar_t s_channel_volume = (127) * (ONE / 256) * regions[i].volume_multiplier;
 			s_velocity = scalar_mul(s_velocity, s_channel_volume);
 
-			int panning = ((int)pan + (int)regions[i].panning) / 2;
-			PANIC_IF("note panning out of bounds!", panning < 0 || panning > 255);
+			PANIC_IF("note panning out of bounds!", pan < 0 || pan > 255);
+			PANIC_IF("region panning out of bounds!", regions[i].panning < 0 || regions[i].panning > 255);
 
-			vec2_t stereo_volume = {
-				scalar_mul((uint32_t)lut_panning[255 - panning], s_velocity),
-				scalar_mul((uint32_t)lut_panning[panning], s_velocity),
-			};
+			const vec2_t stereo_volume = vec2_mul(
+				(vec2_t){
+					scalar_mul((uint32_t)lut_panning[254 - pan], s_velocity),
+					scalar_mul((uint32_t)lut_panning[pan], s_velocity),
+				},
+				(vec2_t){
+					(uint32_t)lut_panning[254 - regions[i].panning],
+					(uint32_t)lut_panning[regions[i].panning] * (),
+				}
+			);
+			
 			
 			// Handle channel pitch
 			int coarse_min, coarse_max, fine;
@@ -289,16 +296,22 @@ void audio_tick(int delta_time) {
 					&& key <= regions[i].key_max) {
 						// Calculate sample rate and velocity
 						scalar_t s_velocity = ((scalar_t)velocity) * ONE;
-						scalar_t s_channel_volume = ((scalar_t)midi_chn->volume) * (ONE / 256) * regions[i].volume_multiplier;
+						scalar_t s_channel_volume = (127) * (ONE / 256) * regions[i].volume_multiplier;
 						s_velocity = scalar_mul(s_velocity, s_channel_volume);
 
-						int panning = ((int)midi_chn->panning + (int)regions[i].panning) / 2;
-						PANIC_IF("note panning out of bounds!", panning < 0 || panning > 255);
+						PANIC_IF("note panning out of bounds!", midi_chn->panning < 0 || midi_chn->panning > 255);
+						PANIC_IF("region panning out of bounds!", regions[i].panning < 0 || regions[i].panning > 255);
 
-						vec2_t stereo_volume = {
-							scalar_mul((uint32_t)lut_panning[255 - panning], s_velocity),
-							scalar_mul((uint32_t)lut_panning[panning], s_velocity),
-						};
+						const vec2_t stereo_volume = vec2_mul(
+							(vec2_t){
+								scalar_mul((uint32_t)lut_panning[254 - midi_chn->panning], s_velocity),
+								scalar_mul((uint32_t)lut_panning[midi_chn->panning], s_velocity),
+							},
+							(vec2_t){
+								(uint32_t)lut_panning[254 - regions[i].panning],
+								(uint32_t)lut_panning[regions[i].panning],
+							}
+						);
 
 						// Handle channel pitch
 						int coarse_min, coarse_max, fine;
@@ -467,11 +480,20 @@ void audio_tick(int delta_time) {
 			scalar_t s_channel_volume = ((scalar_t)midi_ch->volume) * (ONE / 256) * music_instrument_regions[spu_ch->region].volume_multiplier;
 			s_velocity = scalar_mul(s_velocity, s_channel_volume);
 
-			int panning = ((int)midi_ch->panning + (int)music_instrument_regions[spu_ch->region].panning) / 2;
-			vec2_t stereo_volume = {
-				scalar_mul((uint32_t)lut_panning[255 - panning], s_velocity),
-				scalar_mul((uint32_t)lut_panning[panning], s_velocity),
-			};
+			PANIC_IF("note panning out of bounds!", midi_ch->panning < 0 || midi_ch->panning > 255);
+			PANIC_IF("region panning out of bounds!", (music_instrument_regions[spu_ch->region].panning < 0) || (music_instrument_regions[spu_ch->region].panning > 255));
+
+			const vec2_t stereo_volume = vec2_mul(
+				(vec2_t){
+					scalar_mul((uint32_t)lut_panning[254 - midi_ch->panning], s_velocity),
+					scalar_mul((uint32_t)lut_panning[midi_ch->panning], s_velocity),
+				},
+				(vec2_t){
+					(uint32_t)lut_panning[254 - music_instrument_regions[spu_ch->region].panning],
+					(uint32_t)lut_panning[music_instrument_regions[spu_ch->region].panning],
+				}
+			);
+
 			SPU_CH_VOL_L(i) = stereo_volume.x >> 12;
 			SPU_CH_VOL_R(i) = stereo_volume.y >> 12;
 		}
