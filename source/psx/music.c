@@ -89,14 +89,29 @@ void audio_init(void) {
 	listener_pos = (vec3_t){0, 0, 0};
 }
 
-void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space, vec3_t position, scalar_t max_distance)
-{
+void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space, vec3_t position, scalar_t max_distance) {
     // todo: expose these to user
 	// todo: 3d origin for sound
 	const int key = 60;
-	const int pan = 127;
-	const int velocity = 127;
 	const int pitch_wheel = 0;
+	int velocity = 127;
+	int pan = 127;
+	int is_behind_listener = 0;
+
+	if (in_3d_space) {
+		const vec3_t right = { .x = ONE, .y = 0, .z = 0 };
+		const vec3_t relative_position = vec3_sub(position, listener_pos);
+
+		// Avoid div by 0 if listener and audio source are on the same exact position
+		if ((relative_position.x | relative_position.y | relative_position.z) != 0) {
+			const scalar_t distance_from_listener = vec3_magnitude_squared(relative_position);
+			velocity = 127 - (scalar_div(distance_from_listener * 127, scalar_mul(max_distance, max_distance)) / ONE); 
+
+			const vec3_t source = vec3_divs(relative_position, scalar_sqrt(distance_from_listener));
+			const scalar_t norm_pan = scalar_clamp(vec3_dot(source, right), -ONE, +ONE);
+			pan = 127 + (254 * norm_pan + ONE) / (ONE * 2);
+		}
+	}
 
 	// Find first instrument region that fits, and start playing the note
 	const uint16_t n_regions = sfx_instruments[instrument].n_regions;
