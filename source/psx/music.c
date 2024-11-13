@@ -42,6 +42,8 @@ uint8_t music_playing = 0;
 uint8_t audio_ticking = 0;
 int16_t wait_timer = 0;
 
+vec3_t listener_pos;
+
 void audio_load_soundbank(const char* path, soundbank_type_t type) {
 	// Load the SBK file
 	uint32_t* data;
@@ -82,7 +84,7 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
 	}
 }
 
-void audio_play_sound(int instrument) {
+void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space, vec3_t position, scalar_t max_distance) {
 	// todo: expose these to user
 	// todo: 3d origin for sound
 	const int key = 60;
