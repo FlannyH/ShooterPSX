@@ -86,6 +86,7 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
 
 void audio_init(void) {
 	SpuInit();
+	listener_pos = (vec3_t){0, 0, 0};
 }
 
 void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space, vec3_t position, scalar_t max_distance)
