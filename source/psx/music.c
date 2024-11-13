@@ -123,8 +123,6 @@ void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space
 	PANIC_IF("region id will go out of bounds!", (region_id_start >= n_sfx_instrument_regions) || ((region_id_start + n_regions) > n_sfx_instrument_regions));
 	const instrument_region_header_t* regions = &sfx_instrument_regions[region_id_start];
 
-	printf("n_regions: %i\n", n_regions);
-
 	for (size_t i = 0; i < n_regions; ++i) {
 		if (key >= regions[i].key_min 
 		&& key <= regions[i].key_max) {
@@ -162,9 +160,6 @@ void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space
 			}
 
 			// Calculate A and B for lerp
-			printf("key:        %i\n", key);
-			printf("coarse_min: %i\n", coarse_min);
-			printf("coarse_max: %i\n", coarse_max);
 			const uint32_t sample_rate_a = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + coarse_min]) >> 8;
 			const uint32_t sample_rate_b = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + coarse_max]) >> 8;
 			uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-fine)) + (sample_rate_b * (fine)))) >> 4;
@@ -184,25 +179,6 @@ void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space
 				.velocity = velocity
 			};
 			n_staged_note_on_events++;
-			printf("playing instrument %i\n", instrument);
-			printf("note on voice_start:  %i\n", staged_note_on_events[n_staged_note_on_events].voice_start);
-			printf("note on sample_rate:  %i\n", sample_rate);
-			printf("note on adsr1:        %i\n", staged_note_on_events[n_staged_note_on_events].adsr1);
-			printf("note on adsr2:        %i\n", staged_note_on_events[n_staged_note_on_events].adsr2);
-			printf("note on vol_l:        %i\n", staged_note_on_events[n_staged_note_on_events].vol_l);
-			printf("note on vol_r:        %i\n", staged_note_on_events[n_staged_note_on_events].vol_r);
-			printf("note on midi_channel: %i\n", staged_note_on_events[n_staged_note_on_events].midi_channel);
-			printf("note on key:          %i\n", staged_note_on_events[n_staged_note_on_events].key);
-			printf("note on region:       %i\n", staged_note_on_events[n_staged_note_on_events].region);
-			printf("note on velocity:     %i\n", staged_note_on_events[n_staged_note_on_events].velocity);
-			printf("key_min:              %i\n", regions[i].key_min);
-			printf("key_max:              %i\n", regions[i].key_max);
-			printf("volume_multiplier:    %i\n", regions[i].volume_multiplier);
-			printf("sample_start:         %i\n", regions[i].sample_start);
-			printf("sample_rate:          %i\n", regions[i].sample_rate);
-			printf("reg_adsr1:            %i\n", regions[i].reg_adsr1);
-			printf("reg_adsr2:            %i\n", regions[i].reg_adsr2);
-			printf("panning:              %i\n", regions[i].panning);
 		}
 	}
 };
