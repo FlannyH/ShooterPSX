@@ -11,6 +11,8 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
     (void)type;
 }
 
+void audio_init(void) {}
+
 void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space, vec3_t position, scalar_t max_distance) {
     (void)instrument;
     (void)pitch_multiplier;

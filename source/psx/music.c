@@ -84,8 +84,13 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
 	}
 }
 
-void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space, vec3_t position, scalar_t max_distance) {
-	// todo: expose these to user
+void audio_init(void) {
+	SpuInit();
+}
+
+void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space, vec3_t position, scalar_t max_distance)
+{
+    // todo: expose these to user
 	// todo: 3d origin for sound
 	const int key = 60;
 	const int pan = 127;

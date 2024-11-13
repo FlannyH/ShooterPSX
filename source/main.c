@@ -50,6 +50,7 @@ int main(void) {
 	// Init systems
 	renderer_init();
 	input_init();
+	audio_init();
 	init();
 	setup_timers();
 	// Init state variables
@@ -126,7 +127,6 @@ int main(void) {
 
 void init(void) {
 #ifdef _PSX
-	SpuInit();
 	CdInit();
 #endif
 #ifdef _NDS
