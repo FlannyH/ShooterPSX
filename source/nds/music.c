@@ -50,7 +50,8 @@ void music_stop(void) {
     TODO_SOFT()
 }
 
-void audio_update_listener(const vec3_t new_pos) {
-    (void)new_pos;
+void audio_update_listener(const vec3_t position, const vec3_t right) {
+    (void)position;
+    (void)right;
     TODO_SOFT()
 }

@@ -43,6 +43,8 @@ uint8_t audio_ticking = 0;
 int16_t wait_timer = 0;
 
 vec3_t listener_pos;
+vec3_t listener_forward;
+vec3_t listener_right;
 
 void audio_load_soundbank(const char* path, soundbank_type_t type) {
 	// Load the SBK file
@@ -87,6 +89,7 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
 void audio_init(void) {
 	SpuInit();
 	listener_pos = (vec3_t){0, 0, 0};
+	listener_right = (vec3_t){ONE, 0, 0};
 }
 
 void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space, vec3_t position, scalar_t max_distance) {
@@ -568,6 +571,7 @@ void music_stop(void) {
 }
 #pragma GCC diagnostic pop
 
-void audio_update_listener(const vec3_t new_pos) {
-    listener_pos = new_pos;
+void audio_update_listener(const vec3_t position, const vec3_t right) {
+	listener_pos = position;
+	listener_right = right;
 }
