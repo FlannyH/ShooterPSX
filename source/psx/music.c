@@ -99,20 +99,20 @@ void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space
 	const int pitch_wheel = 0;
 	int velocity = 127;
 	int pan = 127;
-	int is_behind_listener = 0;
 
 	if (in_3d_space) {
-		const vec3_t right = { .x = ONE, .y = 0, .z = 0 };
 		const vec3_t relative_position = vec3_sub(position, listener_pos);
 
 		// Avoid div by 0 if listener and audio source are on the same exact position
 		if ((relative_position.x | relative_position.y | relative_position.z) != 0) {
+			// Volume
 			const scalar_t distance_from_listener = vec3_magnitude_squared(relative_position);
 			velocity = 127 - (scalar_div(distance_from_listener * 127, scalar_mul(max_distance, max_distance)) / ONE); 
 
+			// Stereo panning
 			const vec3_t source = vec3_divs(relative_position, scalar_sqrt(distance_from_listener));
-			const scalar_t norm_pan = scalar_clamp(vec3_dot(source, right), -ONE, +ONE);
-			pan = 127 + (254 * norm_pan + ONE) / (ONE * 2);
+			const scalar_t norm_left_right = scalar_clamp(vec3_dot(source, listener_right), -ONE, +ONE);
+			pan = 127 + (254 * norm_left_right + ONE) / (ONE * 2);
 		}
 	}
 
@@ -143,7 +143,7 @@ void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space
 				},
 				(vec2_t){
 					(uint32_t)lut_panning[254 - regions[i].panning],
-					(uint32_t)lut_panning[regions[i].panning] * (),
+					(uint32_t)lut_panning[regions[i].panning],
 				}
 			);
 			
