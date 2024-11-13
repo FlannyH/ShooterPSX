@@ -137,6 +137,7 @@ void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space
 			const uint32_t sample_rate_a = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + coarse_min]) >> 8;
 			const uint32_t sample_rate_b = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + coarse_max]) >> 8;
 			uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-fine)) + (sample_rate_b * (fine)))) >> 4;
+			sample_rate = scalar_mul(sample_rate, pitch_multiplier);
 			
 			// Stage a note on event					
 			staged_note_on_events[n_staged_note_on_events] = (spu_stage_on_t){
