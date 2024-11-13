@@ -102,5 +102,6 @@ void music_set_volume(int volume);
 void music_stop(void);
 
 // Sound effects
+void audio_update_listener(const vec3_t new_pos);
 
 #endif

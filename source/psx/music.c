@@ -523,3 +523,7 @@ void music_stop(void) {
 	while (audio_ticking) {}
 }
 #pragma GCC diagnostic pop
+
+void audio_update_listener(const vec3_t new_pos) {
+    listener_pos = new_pos;
+}
