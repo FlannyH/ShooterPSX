@@ -17,7 +17,7 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
     TODO_SOFT()
 }
 
-void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space, vec3_t position) {
+void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space, vec3_t position, scalar_t max_distance) {
     (void)instrument;
     (void)in_3d_space;
     (void)position;
