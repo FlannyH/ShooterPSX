@@ -49,7 +49,7 @@ typedef struct {
 typedef struct {
     int16_t x, y, z; // 3D position
     uint8_t r, g, b; // 8-bit RGB color
-    uint8_t u, v, tex_id; // Texture Coordinates (and padding for alignment)
+    uint8_t u, v, tex_id; // Texture Coordinates
 } vertex_3d_t;
 
 typedef struct {
