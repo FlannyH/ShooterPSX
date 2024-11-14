@@ -8,7 +8,6 @@
 #include "renderer.h"
 #include "texture.h"
 #include "cheats.h"
-#include "camera.h"
 #include "player.h"
 #include "memory.h"
 #include "entity.h"

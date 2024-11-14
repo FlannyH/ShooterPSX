@@ -54,8 +54,7 @@ PATH_LIB_PSX = $(PSN00BSDK_LIBS)/release
 PATH_LIB_NDS = $(BLOCKSDS)/libs/libnds/lib
 
 # Source files shared by all targets
-CODE_ENGINE_SHARED_C = camera.c \
-			  	  	   collision.c \
+CODE_ENGINE_SHARED_C = collision.c \
 					   credits.c \
 					   debug_menu_main.c \
 					   debug_menu_music.c \

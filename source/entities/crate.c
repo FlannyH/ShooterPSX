@@ -10,7 +10,6 @@ entity_crate_t* entity_crate_new(void) {
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
 	entity->entity_header.mesh = model_find_mesh(entity_models, "28_crate");
     entity->pickup_to_spawn = PICKUP_TYPE_NONE;
-
 	return entity;
 }
 
@@ -22,7 +21,7 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 	(void)dt;
 	(void)player;
 	entity_crate_t* crate = (entity_crate_t*)&entity_pool[slot * entity_pool_stride];
-	vec3_t crate_pos = crate->entity_header.position;
+	const vec3_t crate_pos = crate->entity_header.position;
 
 	// Register collision
 	aabb_t bounds = entity_models->meshes[ENTITY_MESH_CRATE].bounds;
@@ -32,7 +31,7 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 		.min = vec3_sub(crate_pos, bounds.max),
 		.max = vec3_sub(crate_pos, bounds.min)
 	};
-	entity_collision_box_t box = {
+	const entity_collision_box_t box = {
 		.aabb = collision_box,
 		.box_index = 0,
 		.entity_index = slot,

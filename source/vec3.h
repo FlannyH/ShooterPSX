@@ -13,11 +13,11 @@ typedef struct {
 
 // Let's hope and cry that this will be compile-time evaluated
 ALWAYS_INLINE vec3_t vec3_from_floats(const float x, const float y, const float z) {
-    vec3_t result;
-    result.x = scalar_from_float(x);
-    result.y = scalar_from_float(y);
-    result.z = scalar_from_float(z);
-    return result;
+    return (vec3_t) {
+        scalar_from_float(x),
+        scalar_from_float(y),
+        scalar_from_float(z),
+    };
 }
 
 // Debug
@@ -31,116 +31,112 @@ ALWAYS_INLINE void vec3_debug(const vec3_t a) {
 }
 
 ALWAYS_INLINE vec3_t vec3_from_scalar(const scalar_t a) {
-    const vec3_t result = { a, a, a };
-    return result;
+    return (vec3_t){ a, a, a };
 }
 
 ALWAYS_INLINE vec3_t vec3_from_scalars(const scalar_t x, const scalar_t y, const scalar_t z) {
-    const vec3_t result = { x, y, z };
-    return result;
+    return (vec3_t){ x, y, z };
 }
 
 ALWAYS_INLINE vec3_t vec3_from_int32s(int32_t x, int32_t y, int32_t z) {
-    vec3_t result;
-    result.x = x;
-    result.y = y;
-    result.z = z;
-    return result;
+    return (vec3_t) {
+        x,
+        y,
+        z,
+    };
 }
 
 ALWAYS_INLINE vec3_t vec3_from_svec3(svec3_t vec) {
-    vec3_t result;
-    result.x = vec.x * ONE;
-    result.y = vec.y * ONE;
-    result.z = vec.z * ONE;
-    return result;
+    return (vec3_t) {
+        (scalar_t)vec.x * ONE,
+        (scalar_t)vec.y * ONE,
+        (scalar_t)vec.z * ONE,
+    };
 }
 
 ALWAYS_INLINE svec3_t svec3_from_vec3(vec3_t vec) {
-    svec3_t result;
-    result.x = vec.x / ONE;
-    result.y = vec.y / ONE;
-    result.z = vec.z / ONE;
-    return result;
+    return (svec3_t) {
+        (int16_t)(vec.x / ONE),
+        (int16_t)(vec.y / ONE),
+        (int16_t)(vec.z / ONE),
+    };
 }
 
 ALWAYS_INLINE vec3_t vec3_add(const vec3_t a, const vec3_t b) {
-    vec3_t result;
-    result.x = a.x + b.x;
-    result.y = a.y + b.y;
-    result.z = a.z + b.z;
-    return result;
+    return (vec3_t) {
+        a.x + b.x,
+        a.y + b.y,
+        a.z + b.z,
+    };
 }
 
 ALWAYS_INLINE vec3_t vec3_sub(const vec3_t a, const vec3_t b) {
-    vec3_t result;
-    result.x = a.x - b.x;
-    result.y = a.y - b.y;
-    result.z = a.z - b.z;
-    return result;
+    return (vec3_t) {
+        a.x - b.x,
+        a.y - b.y,
+        a.z - b.z,
+    };
 }
 
 ALWAYS_INLINE static vec3_t vec3_mul(const vec3_t a, const vec3_t b) {
-    vec3_t result;
-    result.x = scalar_mul(a.x, b.x);
-    result.y = scalar_mul(a.y, b.y);
-    result.z = scalar_mul(a.z, b.z);
-    return result;
+    return (vec3_t) {
+        scalar_mul(a.x, b.x),
+        scalar_mul(a.y, b.y),
+        scalar_mul(a.z, b.z),
+    };
 }
 
 ALWAYS_INLINE static vec3_t vec3_muls(const vec3_t a, const scalar_t b) {
-    vec3_t result;
-    result.x = scalar_mul(a.x, b);
-    result.y = scalar_mul(a.y, b);
-    result.z = scalar_mul(a.z, b);
-    return result;
+    return (vec3_t) {
+        scalar_mul(a.x, b),
+        scalar_mul(a.y, b),
+        scalar_mul(a.z, b),
+    };
 }
 
 ALWAYS_INLINE vec3_t vec3_div(const vec3_t a, const vec3_t b) {
-    vec3_t result;
-    result.x = scalar_div(a.x, b.x);
-    result.y = scalar_div(a.y, b.y);
-    result.z = scalar_div(a.z, b.z);
-    return result;
+    return (vec3_t) {
+        scalar_div(a.x, b.x),
+        scalar_div(a.y, b.y),
+        scalar_div(a.z, b.z),
+    };
 }
 
 ALWAYS_INLINE vec3_t vec3_divs(const vec3_t a, const scalar_t b) {
-    vec3_t result;
-    result.x = scalar_div(a.x, b);
-    result.y = scalar_div(a.y, b);
-    result.z = scalar_div(a.z, b);
-    return result;
+    return (vec3_t) {
+        scalar_div(a.x, b),
+        scalar_div(a.y, b),
+        scalar_div(a.z, b),
+    };
 }
 
 ALWAYS_INLINE static scalar_t vec3_dot(const vec3_t a, const vec3_t b) {
-    scalar_t result = 0;
-    result += scalar_mul(a.x, b.x);
-    result += scalar_mul(a.y, b.y);
-    result += scalar_mul(a.z, b.z);
-    return result;
+    return scalar_mul(a.x, b.x)
+    +      scalar_mul(a.y, b.y)
+    +      scalar_mul(a.z, b.z);
 }
 ALWAYS_INLINE static vec3_t vec3_scale(const vec3_t a, const scalar_t b) {
-    vec3_t result;
-    result.x = scalar_mul(a.x, b);
-    result.y = scalar_mul(a.y, b);
-    result.z = scalar_mul(a.z, b);
-    return result;
+    return (vec3_t) {
+        scalar_mul(a.x, b),
+        scalar_mul(a.y, b),
+        scalar_mul(a.z, b),
+    };
 }
 
 ALWAYS_INLINE vec3_t vec3_min(const vec3_t a, const vec3_t b) {
-    vec3_t result;
-    result.x = (a.x < b.x) ? a.x : b.x;
-    result.y = (a.y < b.y) ? a.y : b.y;
-    result.z = (a.z < b.z) ? a.z : b.z;
-    return result;
+    return (vec3_t) {
+        (a.x < b.x) ? a.x : b.x,
+        (a.y < b.y) ? a.y : b.y,
+        (a.z < b.z) ? a.z : b.z,
+    };
 }
 
 ALWAYS_INLINE vec3_t vec3_max(const vec3_t a, const vec3_t b) {
-    vec3_t result;
-    result.x = (a.x > b.x) ? a.x : b.x;
-    result.y = (a.y > b.y) ? a.y : b.y;
-    result.z = (a.z > b.z) ? a.z : b.z;
-    return result;
+    return (vec3_t) {
+        (a.x > b.x) ? a.x : b.x,
+        (a.y > b.y) ? a.y : b.y,
+        (a.z > b.z) ? a.z : b.z,
+    };
 }
 
 ALWAYS_INLINE static scalar_t vec3_magnitude_squared(const vec3_t a) {
@@ -166,34 +162,34 @@ ALWAYS_INLINE static vec3_t vec3_normalize(const vec3_t a) {
 }
 
 ALWAYS_INLINE static vec3_t vec3_cross(vec3_t a, vec3_t b) {
-    vec3_t result;
-    result.x = scalar_mul(a.y, b.z) - scalar_mul(a.z, b.y);
-    result.y = scalar_mul(a.z, b.x) - scalar_mul(a.x, b.z);
-    result.z = scalar_mul(a.x, b.y) - scalar_mul(a.y, b.x);
-    return result;
+    return (vec3_t) {
+        scalar_mul(a.y, b.z) - scalar_mul(a.z, b.y),
+        scalar_mul(a.z, b.x) - scalar_mul(a.x, b.z),
+        scalar_mul(a.x, b.y) - scalar_mul(a.y, b.x),
+    };
 }
 
 ALWAYS_INLINE vec3_t vec3_shift_right(vec3_t a, int amount) {
-    vec3_t result = a;
-    result.x >>= amount;
-    result.y >>= amount;
-    result.z >>= amount;
-    return result;
+    return (vec3_t) {
+        a.x >> amount,
+        a.y >> amount,
+        a.z >> amount,
+    };
 }
 
 ALWAYS_INLINE vec3_t vec3_shift_left(vec3_t a, int amount) {
-    vec3_t result = a;
-    result.x *= (1 << amount);
-    result.y *= (1 << amount);
-    result.z *= (1 << amount);
-    return result;
+    return (vec3_t) {
+        a.x << amount,
+        a.y << amount,
+        a.z << amount,
+    };
 }
 
 ALWAYS_INLINE vec3_t vec3_neg(vec3_t a) {
-    vec3_t result = a;
-    result.x = -result.x;
-    result.y = -result.y;
-    result.z = -result.z;
-    return result;
+    return (vec3_t) {
+        -a.x,
+        -a.y,
+        -a.z,
+    };
 }
 #endif // VEC3_H

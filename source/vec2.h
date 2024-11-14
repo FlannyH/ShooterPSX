@@ -12,90 +12,83 @@ typedef struct {
 } svec2_t;
 
 static vec2_t vec2_from_scalar(const scalar_t a) {
-    const vec2_t result = { a, a };
-    return result;
+    return (vec2_t){ a, a };
 }
 
 static vec2_t vec2_from_scalars(const scalar_t x, const scalar_t y) {
-    const vec2_t result = { x, y };
-    return result;
+    return (vec2_t){ x, y };
 }
 
 static vec2_t vec2_from_int32s(int32_t x, int32_t y) {
-    vec2_t result;
-    result.x = x;
-    result.y = y;
-    return result;
+    return (vec2_t){ x, y };
 }
 
 static vec2_t vec2_add(const vec2_t a, const vec2_t b) {
-    vec2_t result;
-    result.x = (a.x + b.x);
-    result.y = (a.y + b.y);
-    return result;
+    return (vec2_t) {
+        (a.x + b.x),
+        (a.y + b.y),
+    };
 }
 
 static vec2_t vec2_sub(const vec2_t a, const vec2_t b) {
-    vec2_t result;
-    result.x = (a.x - b.x);
-    result.y = (a.y - b.y);
-    return result;
+    return (vec2_t) {
+        (a.x - b.x),
+        (a.y - b.y),
+    };
 }
 
 static vec2_t vec2_mul(const vec2_t a, const vec2_t b) {
-    vec2_t result;
-    result.x = scalar_mul(a.x, b.x);
-    result.y = scalar_mul(a.y, b.y);
-    return result;
+    return (vec2_t) {
+        scalar_mul(a.x, b.x),
+        scalar_mul(a.y, b.y),
+    };
 }
 
 static vec2_t vec2_div(const vec2_t a, const vec2_t b) {
-    vec2_t result;
-    result.x = scalar_div(a.x, b.x);
-    result.y = scalar_div(a.y, b.y);
-    return result;
+    return (vec2_t) {
+        scalar_div(a.x, b.x),
+        scalar_div(a.y, b.y),
+    };
 }
 
 static vec2_t vec2_divs(const vec2_t a, const scalar_t b) {
-    vec2_t result;
-    result.x = scalar_div(a.x, b);
-    result.y = scalar_div(a.y, b);
-    return result;
+    return (vec2_t) {
+        scalar_div(a.x, b),
+        scalar_div(a.y, b),
+    };
 }
 
 static scalar_t vec2_dot(const vec2_t a, const vec2_t b) {
-    scalar_t result;
-    result = 0;
-    result = (result + scalar_mul(a.x, b.x));
-    result = (result + scalar_mul(a.y, b.y));
-    return result;
+    return scalar_mul(a.x, b.x) 
+    +      scalar_mul(a.y, b.y);
 }
+
 static vec2_t vec2_scale(const vec2_t a, const scalar_t b) {
-    vec2_t result;
-    result.x = scalar_mul(a.x, b);
-    result.y = scalar_mul(a.y, b);
-    return result;
+    return (vec2_t) { 
+        scalar_mul(a.x, b),
+        scalar_mul(a.y, b),
+    };
 }
 
 static vec2_t vec2_min(const vec2_t a, const vec2_t b) {
-    vec2_t result;
-    result.x = (a.x < b.x) ? a.x : b.x;
-    result.y = (a.y < b.y) ? a.y : b.y;
-    return result;
+    return (vec2_t) { 
+        (a.x < b.x) ? a.x : b.x,
+        (a.y < b.y) ? a.y : b.y,
+    };
 }
 
 static vec2_t vec2_max(const vec2_t a, const vec2_t b) {
-    vec2_t result;
-    result.x = (a.x > b.x) ? a.x : b.x;
-    result.y = (a.y > b.y) ? a.y : b.y;
-    return result;
+    return (vec2_t) {
+        (a.x > b.x) ? a.x : b.x,
+        (a.y > b.y) ? a.y : b.y,
+    };
 }
 
 static vec2_t vec2_perpendicular(const vec2_t a) {
-    vec2_t result;
-    result.x = -(a.y);
-    result.y = a.x;
-    return result;
+    return (vec2_t) {
+        -(a.y),
+        a.x,
+    };
 }
 
 static scalar_t vec2_cross(const vec2_t a, const vec2_t b) {
@@ -117,22 +110,21 @@ static vec2_t vec2_normalize(const vec2_t a) {
 }
 
 static vec2_t vec2_shift_right(const vec2_t a, const int amount) {
-    vec2_t result = a;
-    result.x >>= amount;
-    result.y >>= amount;
-    return result;
+    return (vec2_t) {
+        a.x >> amount,
+        a.y >> amount,
+    };
 }
 
 static vec2_t vec2_neg(const vec2_t a) {
-    vec2_t result = a;
-    result.x = -result.x;
-    result.y = -result.y;
-    return result;
+    return (vec2_t) {
+        -a.x,
+        -a.y,
+    };
 }
 
 static scalar_t vec2_magnitude(const vec2_t a) {
-    const scalar_t mag2 = vec2_magnitude_squared(a);
-    return scalar_sqrt(mag2);
+    return scalar_sqrt(vec2_magnitude_squared(a));
 }
 
 static void vec2_debug(const vec2_t a) {

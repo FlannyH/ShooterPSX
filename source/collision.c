@@ -234,39 +234,39 @@ int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_
 
     n_ray_triangle_intersects++;
 #define SHIFT_COUNT 5
-    vec3_t vtx0 = vec3_shift_right(triangle->v0, SHIFT_COUNT);
-    vec3_t vtx1 = vec3_shift_right(triangle->v1, SHIFT_COUNT);
-    vec3_t vtx2 = vec3_shift_right(triangle->v2, SHIFT_COUNT);
-    vec3_t ray_pos = vec3_shift_right(ray.position, SHIFT_COUNT);
+    const vec3_t vtx0 = vec3_shift_right(triangle->v0, SHIFT_COUNT);
+    const vec3_t vtx1 = vec3_shift_right(triangle->v1, SHIFT_COUNT);
+    const vec3_t vtx2 = vec3_shift_right(triangle->v2, SHIFT_COUNT);
+    const vec3_t ray_pos = vec3_shift_right(ray.position, SHIFT_COUNT);
 
-    vec3_t edge1 = vec3_sub(vtx1, vtx0);
-    vec3_t edge2 = vec3_sub(vtx2, vtx0);
-    vec3_t h = vec3_cross(ray.direction, edge2);
-    scalar_t det = vec3_dot(edge1, h);
+    const vec3_t edge1 = vec3_sub(vtx1, vtx0);
+    const vec3_t edge2 = vec3_sub(vtx2, vtx0);
+    const vec3_t h = vec3_cross(ray.direction, edge2);
+    const scalar_t det = vec3_dot(edge1, h);
 
     if (det == 0) {
         hit->distance = INT32_MAX;
         return 0;
     }
 
-    scalar_t inv_det = scalar_div(ONE, det);
-    vec3_t v0_ray = vec3_sub(ray_pos, vtx0);
-    scalar_t u = scalar_mul(inv_det, vec3_dot(v0_ray, h));
+    const scalar_t inv_det = scalar_div(ONE, det);
+    const vec3_t v0_ray = vec3_sub(ray_pos, vtx0);
+    const scalar_t u = scalar_mul(inv_det, vec3_dot(v0_ray, h));
 
     if (u < 0 || u > ONE) {
         hit->distance = INT32_MAX;
         return 0;
     }
 
-    vec3_t q = vec3_cross(v0_ray, edge1);
-    scalar_t v = scalar_mul(inv_det, vec3_dot(ray.direction, q));
+    const vec3_t q = vec3_cross(v0_ray, edge1);
+    const scalar_t v = scalar_mul(inv_det, vec3_dot(ray.direction, q));
 
     if (v < 0 || u + v > ONE) {
         hit->distance = INT32_MAX;
         return 0;
     }
 
-    scalar_t t = scalar_mul(inv_det, vec3_dot(edge2, q));
+    const scalar_t t = scalar_mul(inv_det, vec3_dot(edge2, q));
 
     if (t > 0) {
         hit->position = vec3_add(ray.position, vec3_muls(ray.direction, t << SHIFT_COUNT));
@@ -413,7 +413,6 @@ vec2_t find_closest_point_on_triangle_2d(vec2_t v0, vec2_t v1, vec2_t v2, vec2_t
     }
 
     //It's impossible for all the numbers to be negative
-    //WARN_IF("all barycentric coordinates ended up negative! this should be impossible", (edge0 < 0 && edge1 < 0 && edge2 < 0));
     if ((edge0 < 0 && edge1 < 0 && edge2 < 0)) {
         vec2_t error;
         error.x = INT32_MAX;
@@ -771,8 +770,8 @@ level_collision_t bvh_from_file(const char* path, int on_stack, stack_t stack) {
     file_read(path, &data, &size, on_stack, stack);
 
     // Find data and return to user
-    collision_mesh_header_t* header = (collision_mesh_header_t*)data;
-    intptr_t binary = (intptr_t)(header + 1);
+    const collision_mesh_header_t* header = (collision_mesh_header_t*)data;
+    const intptr_t binary = (intptr_t)(header + 1);
 
     // Verify file magic
     if (header->file_magic != MAGIC_FCOL) {

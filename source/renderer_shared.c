@@ -70,7 +70,6 @@ void renderer_draw_model_shaded(const model_t* model, const transform_t* model_t
 
     if (vislist == NULL || n_sections == 0) {
         for (size_t i = 0; i < model->n_meshes; ++i) {
-            //renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
             renderer_draw_mesh_shaded(&model->meshes[i], model_transform, 0, 0, tex_level_start);
         }
     }
@@ -150,7 +149,7 @@ void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const
         pos.x -= ((strlen(text)) * font_dst_width - (font_dst_width / 2)) * ONE / 2;
     }
 
-    vec2_t start_pos = pos;
+    const vec2_t start_pos = pos;
 
     // Draw each character
     while (*text) {

@@ -7,7 +7,6 @@ entity_platform_t* entity_platform_new(void) {
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
 	entity->entity_header.mesh = model_find_mesh(entity_models, "29_platform_test_horizontal");
-
     entity->position_start = (vec3_t){0, 0, 0};;
     entity->position_end = (vec3_t){0, 0, 0};;
     entity->velocity = 512;
@@ -26,8 +25,8 @@ void entity_platform_update(int slot, player_t* player, int dt) {
 	(void)dt;
 
 	entity_platform_t* platform = (entity_platform_t*)&entity_pool[slot * entity_pool_stride];
-	vec3_t platform_pos = platform->entity_header.position;
-	vec3_t player_pos = vec3_sub(player->position, (vec3_t){0, 200 * COL_SCALE, 0});
+	const vec3_t platform_pos = platform->entity_header.position;
+	const vec3_t player_pos = vec3_sub(player->position, (vec3_t){0, 200 * COL_SCALE, 0});
 
 	// Move if signal is triggered
 	if (platform->listen_to_signal && platform->curr_timer_value <= 0) {

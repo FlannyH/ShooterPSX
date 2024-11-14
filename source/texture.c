@@ -14,7 +14,7 @@ uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures,
     file_read(path, &file_data, &size, on_stack, stack);
 
     // Read the texture collection header
-    tex_col_header_t* tex_col_hdr = (tex_col_header_t*)file_data;
+    const tex_col_header_t* tex_col_hdr = (tex_col_header_t*)file_data;
 
     // Verify file magic
     if (tex_col_hdr->file_magic != MAGIC_FTXC) {

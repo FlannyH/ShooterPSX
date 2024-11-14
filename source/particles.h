@@ -74,7 +74,7 @@ particle_system_t* particle_system_new(particle_system_params_t* params) {
 }
 
 void particle_system_update(particle_system_t* system, transform_t* transform) {
-    particle_system_params_t* params = system->params;
+    const particle_system_params_t* params = system->params;
 
     if (system->time_since_first_particle_seconds > params->system_lifetime) return;
 

@@ -21,8 +21,7 @@ int button_pressed_this_frame = 0;
 int mouse_lock = 0;
 uint16_t input_buffer[32];
 
-void input_init(void) {
-}
+void input_init(void) {}
 
 void input_update(void) {
     // Detect controllers
@@ -162,7 +161,7 @@ void input_update(void) {
 
     // Update cheat buffer
     button_pressed_this_frame = 0;
-    uint16_t buttons_pressed = (button_curr[0] ^ button_prev[0]) & button_curr[0];
+    const uint16_t buttons_pressed = (button_curr[0] ^ button_prev[0]) & button_curr[0];
     if (buttons_pressed) {
         for (size_t i = 31; i > 0; --i) input_buffer[i] = input_buffer[i-1];
         input_buffer[0] = buttons_pressed;
@@ -253,7 +252,6 @@ int8_t input_right_stick_y_relative(int player_id) {
 int input_check_cheat_buffer(int n_inputs, const uint16_t* inputs_to_check) {\
     int match = button_pressed_this_frame;
     for (int i = 0; i < n_inputs; ++i) {
-        //printf("expect: %i, got: %i\n", inputs_to_check[i], input_buffer[i]);
         if (inputs_to_check[i] != input_buffer[i]) {
             match = 0;
         }

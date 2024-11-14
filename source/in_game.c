@@ -167,7 +167,7 @@ void state_update_in_game(int dt) {
 
 	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
 
-	int n_sections = player_get_level_section(&state.in_game.player, state.in_game.level.vislist);
+	const int n_sections = player_get_level_section(&state.in_game.player, state.in_game.level.vislist);
 	state.global.frame_counter += 1;
 #if defined(_DEBUG) && defined(_PSX)
 	if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
@@ -259,10 +259,10 @@ void state_update_in_game(int dt) {
 	else {
 		if (input_held(PAD_R2, 0) && state.in_game.player.ammo > 0) {
 			// Cast ray through scene and handle entity collisions
-			scalar_t cosx = hicos(camera_transform.rotation.x);
-			scalar_t sinx = hisin(camera_transform.rotation.x);
-			scalar_t cosy = hicos(camera_transform.rotation.y);
-			scalar_t siny = hisin(camera_transform.rotation.y);
+			const scalar_t cosx = hicos(camera_transform.rotation.x);
+			const scalar_t sinx = hisin(camera_transform.rotation.x);
+			const scalar_t cosy = hicos(camera_transform.rotation.y);
+			const scalar_t siny = hisin(camera_transform.rotation.y);
 			ray_t ray = {
 				.length = INT32_MAX,
 				.position = (vec3_t){camera_transform.position.x, camera_transform.position.y, camera_transform.position.z},
@@ -325,8 +325,8 @@ void state_update_in_game(int dt) {
 	renderer_set_depth_bias(DEPTH_BIAS_VIEWMODELS);
 	if (state.in_game.player.has_gun || 1) {
 		transform_t gun_transform;
-		vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
-		scalar_t speed_1d = vec2_magnitude(vel_2d);
+		const vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
+		const scalar_t speed_1d = vec2_magnitude(vel_2d);
 		if (state.cheats.doom_mode) {
 			gun_transform.position.x = 0 + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE); if (widescreen) gun_transform.position.x += 30;
 			gun_transform.position.y = 165 + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE);
@@ -348,8 +348,8 @@ void state_update_in_game(int dt) {
 	// Sword
 	{
 		transform_t sword_transform;
-		vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
-		scalar_t speed_1d = vec2_magnitude(vel_2d);
+		const vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
+		const scalar_t speed_1d = vec2_magnitude(vel_2d);
 		sword_transform.position.x = -165 + (isin(state.global.time_counter * 6) * speed_1d) / (32 * ONE); if (widescreen) sword_transform.position.x -= 52;
 		sword_transform.position.y = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (64 * ONE);
 		sword_transform.position.z = 180;

@@ -56,7 +56,7 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
     ground_entity_id_curr = -1;
 
     // Cast a cylinder from the player's feet + step height, down to the ground
-    int32_t distance_to_check = 120000;
+    const int32_t distance_to_check = 120000;
     rayhit_t hit = { 0 };
     const vertical_cylinder_t player = {
         .bottom = vec3_sub(self->position, vec3_from_int32s(0, distance_to_check, 0)),
@@ -268,10 +268,10 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
             self->position = vec3_add(self->position, amount_to_eject);
 
             // Absorb penetration force (this sounds hella sus)
-            scalar_t velocity_length = scalar_sqrt(vec3_magnitude_squared(self->velocity));
-            vec3_t velocity_normalized = vec3_divs(self->velocity, velocity_length);
-            vec3_t undesired_motion = vec3_muls(hit.normal, vec3_dot(velocity_normalized, hit.normal));
-            vec3_t desired_motion = vec3_sub(velocity_normalized, undesired_motion);
+            const scalar_t velocity_length = scalar_sqrt(vec3_magnitude_squared(self->velocity));
+            const vec3_t velocity_normalized = vec3_divs(self->velocity, velocity_length);
+            const vec3_t undesired_motion = vec3_muls(hit.normal, vec3_dot(velocity_normalized, hit.normal));
+            const vec3_t desired_motion = vec3_sub(velocity_normalized, undesired_motion);
             self->velocity = vec3_muls(desired_motion, velocity_length);
         }
     }
@@ -282,7 +282,7 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
     if (!self) return;
     if (!level_bvh) return;
 
-    vec3_t player_right = (vec3_t) {
+    const vec3_t player_right = (vec3_t) {
         -hicos(self->rotation.y),
         0,
         +hisin(self->rotation.y),
@@ -305,8 +305,8 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
 #endif
     handle_movement(self, level_bvh, dt_ms);
     
-    vec2_t vel_2d = {self->velocity.x, self->velocity.z};
-    scalar_t speed_1d = vec2_magnitude(vel_2d);
+    const vec2_t vel_2d = {self->velocity.x, self->velocity.z};
+    const scalar_t speed_1d = vec2_magnitude(vel_2d);
     self->transform.position.x = -self->position.x * (4096 / COL_SCALE);
 #ifdef _DEBUG_CAMERA
     (void)time_counter;
@@ -334,8 +334,8 @@ void draw_structure(const vislist_t vis) {
 
     while ((node_handle_ptr != node_add_ptr) && (n_sections < N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE)) {
         // check a node
-        visbvh_node_t* node = &vis.bvh_root[node_stack[node_handle_ptr]];
-        aabb_t aabb = {
+        const visbvh_node_t* node = &vis.bvh_root[node_stack[node_handle_ptr]];
+        const aabb_t aabb = {
             .min = {
                 .x = (scalar_t)(-node->min.x) * COL_SCALE,
                 .y = (scalar_t)(-node->min.y) * COL_SCALE,
@@ -373,7 +373,7 @@ int player_get_level_section(player_t* self, const vislist_t vis) {
     if (!self) return 0;
 
     // Get player position
-    svec3_t position = {
+    const svec3_t position = {
         -self->position.x / COL_SCALE,
         -self->position.y / COL_SCALE,
         -self->position.z / COL_SCALE,

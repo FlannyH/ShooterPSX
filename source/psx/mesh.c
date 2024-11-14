@@ -24,7 +24,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
     file_read(path, &file_data, &size, 1, STACK_TEMP);
 
     // Get header data
-    model_header_t* model_header = (model_header_t*)file_data;
+    const model_header_t* model_header = (model_header_t*)file_data;
 
     // Ensure FMSH header is valid
     if (model_header->file_magic != MAGIC_FMSH) { // "FMSH"
@@ -33,9 +33,9 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
     }
 
     // Find the data sections
-    void* binary_section = &model_header[1];
+    const void* binary_section = &model_header[1];
     const mesh_desc_t* mesh_descriptions = (mesh_desc_t*)((intptr_t)binary_section + model_header->offset_mesh_desc);
-    vertex_3d_t* vertex_data = (vertex_3d_t*)((intptr_t)binary_section + model_header->offset_vertex_data);
+    const vertex_3d_t* vertex_data = (vertex_3d_t*)((intptr_t)binary_section + model_header->offset_vertex_data);
 
     // Create a model object
 	model_t* model;
@@ -155,75 +155,7 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
     (void)path;
     (void)on_stack;
     (void)stack;
-    return NULL; // todo
-
-    // // Read the file
-    // uint32_t* file_data;
-    // size_t size;
-    // file_read(path, &file_data, &size, on_stack, stack);
-
-    // // Read collision header
-    // collision_mesh_header_t* col_mesh = (collision_mesh_header_t*)file_data;
-
-    // // Verify file magic
-    // if (col_mesh->file_magic != MAGIC_FCOL) {
-    //     printf("[ERROR] Error loading collision mesh '%s', file header is invalid!\n", path);
-    //     return 0;
-    // }
-
-    // // Convert all vertices into visual vertices
-	// model_t* model;
-	// if (on_stack) {
-	// 	model = mem_stack_alloc(sizeof(model_t), stack);
-	// 	model->meshes = mem_stack_alloc(sizeof(mesh_t), stack);
-    // 	model->meshes[0].vertices = mem_stack_alloc(sizeof(vertex_3d_t) * col_mesh->n_verts, stack);
-	// }
-	// else {
-	// 	model = mem_alloc(sizeof(model_t), MEM_CAT_MODEL);
-	// 	model->meshes = mem_alloc(sizeof(mesh_t), MEM_CAT_MESH);
-    // 	model->meshes[0].vertices = mem_alloc(sizeof(vertex_3d_t) * col_mesh->n_verts, MEM_CAT_MESH);
-	// }
-    // model->n_meshes = 1;
-    // model->meshes[0].n_quads = 0;
-    // model->meshes[0].n_triangles = col_mesh->n_verts / 3;
-    // model->meshes[0].bounds = (aabb_t) {
-    //     .max = (vec3_t) {.x = INT32_MAX, .y = INT32_MAX, .z = INT32_MAX,},
-    //     .min = (vec3_t) {.x = INT32_MIN, .y = INT32_MIN, .z = INT32_MIN,},
-    // };
-
-    // intptr_t binary = (intptr_t)(col_mesh + 1);
-    // collision_triangle_3d_t* tris = (collision_triangle_3d_t*)(binary + col_mesh->triangle_data_offset);
-    
-    // vertex_3d_t* out = model->meshes[0].vertices;
-    // for (size_t i = 0; i < col_mesh->n_verts / 3; i += 1) {
-    //     // Calculate normal
-    //     vec3_t normal = vec3_neg(tris[i].normal);
-    //     normal.x += 4096; normal.x *= 127; normal.x /= 8192;
-    //     normal.y += 4096; normal.y *= 127; normal.y /= 8192;
-    //     normal.z += 4096; normal.z *= 127; normal.z /= 8192;
-
-    //     for (size_t j = 0; j < 3; ++j) {
-    //         out[(i*3)+j] = (vertex_3d_t){
-    //             .r = normal.x,
-    //             .g = normal.y,
-    //             .b = normal.z,
-    //             .u = 0,
-    //             .v = 0,
-    //             .tex_id = 255,
-    //         };
-    //     }
-    //     out[(i*3)+0].x = tris[i].v0.x / COL_SCALE;
-    //     out[(i*3)+0].y = tris[i].v0.y / COL_SCALE;
-    //     out[(i*3)+0].z = tris[i].v0.z / COL_SCALE;
-    //     out[(i*3)+1].x = tris[i].v1.x / COL_SCALE;
-    //     out[(i*3)+1].y = tris[i].v1.y / COL_SCALE;
-    //     out[(i*3)+1].z = tris[i].v1.z / COL_SCALE;
-    //     out[(i*3)+2].x = tris[i].v2.x / COL_SCALE;
-    //     out[(i*3)+2].y = tris[i].v2.y / COL_SCALE;
-    //     out[(i*3)+2].z = tris[i].v2.z / COL_SCALE;
-    // }
-
-    // return model;
+    return NULL; // unimplemented on PS1
 }
 
 void precompute_tex_triangle(POLY_GT3* prim, const vertex_3d_t* vertices, const int tex_id_start) {

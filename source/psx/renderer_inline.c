@@ -1120,7 +1120,7 @@ static inline void draw_tex_triangle3d_fancy(const mesh_t* mesh, const size_t ve
         return;
     }
 
-    // // If close, subdivice once
+    // If close, subdivice once
     const int32_t sub1_threshold = ((vsync_enable == 2) ? TRI_THRESHOLD_MUL_SUB1_30 : TRI_THRESHOLD_MUL_SUB1_60) * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub1_threshold) {
         draw_level1_subdivided_triangle(mesh, vert_idx, poly_idx, avg_z);
@@ -1217,7 +1217,7 @@ static inline void draw_tex_quad3d_fancy(const mesh_t* mesh, const size_t vert_i
         return;
     }
 
-    // // If close, subdivice once
+    // If close, subdivice once
     const int32_t sub1_threshold = ((vsync_enable == 2) ? TRI_THRESHOLD_MUL_SUB1_30 : TRI_THRESHOLD_MUL_SUB1_60) * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub1_threshold) {
         draw_level1_subdivided_quad(mesh, vert_idx, poly_idx, avg_z);
@@ -1270,7 +1270,7 @@ static inline void draw_tex_triangle3d_fancy_no_precomp(const mesh_t* mesh, cons
         return;
     }
 
-    // // If close, subdivice once
+    // If close, subdivice once
     const int32_t sub1_threshold = ((vsync_enable == 2) ? TRI_THRESHOLD_MUL_SUB1_30 : TRI_THRESHOLD_MUL_SUB1_60) * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub1_threshold) {
         draw_level1_subdivided_triangle(mesh, vert_idx, poly_idx, avg_z);
@@ -1376,7 +1376,7 @@ static inline void draw_tex_quad3d_fancy_no_precomp(const mesh_t* mesh, const si
         return;
     }
 
-    // // If close, subdivice once
+    // If close, subdivice once
     const int32_t sub1_threshold = ((vsync_enable == 2) ? TRI_THRESHOLD_MUL_SUB1_30 : TRI_THRESHOLD_MUL_SUB1_60) * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub1_threshold) {
         draw_level1_subdivided_quad(mesh, vert_idx, poly_idx, avg_z);

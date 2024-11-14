@@ -28,7 +28,7 @@ level_t level_load(const char* level_path) {
     file_read(level_path, &file_data, &size, 1, STACK_TEMP);
 
     // Get header data
-    level_header_t* level_header = (level_header_t*)file_data;
+    const level_header_t* level_header = (level_header_t*)file_data;
 
     // Ensure FMSH header is valid
     if (level_header && (level_header->file_magic != MAGIC_FLVL)) { // "FLVL"
@@ -51,7 +51,7 @@ level_t level_load(const char* level_path) {
     const char* text = (const char*)((binary_section + level_header->text_offset));
 
     // We gotta do some specific memory management if we want to fit as much into the temporary stack as we can
-    size_t marker = mem_stack_get_marker(STACK_TEMP);
+    const size_t marker = mem_stack_get_marker(STACK_TEMP);
 
     // Load level textures
 	texture_cpu_t *tex_level;
@@ -81,13 +81,13 @@ level_t level_load(const char* level_path) {
     mem_stack_reset_to_marker(STACK_TEMP, marker);
 
     // Load entities
-    intptr_t level_entity_pool_stride = entity_pool_stride - sizeof(entity_header_t) + sizeof(entity_header_serialized_t);
+    const intptr_t level_entity_pool_stride = entity_pool_stride - sizeof(entity_header_t) + sizeof(entity_header_serialized_t);
     
     // Deserialize entity data
     for (int i = 0; i < level_header->n_entities; ++i) {
         // Find where data needs to be read
-        entity_header_serialized_t* src_entity_header = (entity_header_serialized_t*)(level_entity_pool + (i * level_entity_pool_stride));
-        uint8_t* src_entity_data = (uint8_t*)&src_entity_header[1]; // right after the entity header
+        const entity_header_serialized_t* src_entity_header = (const entity_header_serialized_t*)(level_entity_pool + (i * level_entity_pool_stride));
+        const uint8_t* src_entity_data = (const uint8_t*)&src_entity_header[1]; // right after the entity header
 
         // Find where data needs to be written
         entity_header_t* dst_entity_header = (entity_header_t*)(entity_pool + (i * entity_pool_stride));

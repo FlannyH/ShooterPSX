@@ -29,7 +29,6 @@ entity_chaser_t* entity_chaser_new(void) {
 	entity->velocity = vec3_from_scalar(0);
 	entity->behavior_timer = 0;
 	entity->last_known_player_pos = vec3_from_scalar(0);
-
 	return entity;
 }
 
@@ -104,8 +103,8 @@ void find_target_node(entity_chaser_t* chaser, vec3_t target_position, find_targ
 			) continue;
 
 			const vec3_t node_position = vec3_from_svec3(nav_graph_nodes[neighbor_id].position);
-		
 			const scalar_t distance_from_node_to_target_position_squared = vec3_magnitude_squared(vec3_sub(node_position, target_position));
+		
 			switch (target_operator) {
 				case FURTHEST:
 					if (distance_from_node_to_target_position_squared > fav_distance_squared) {
@@ -135,7 +134,7 @@ void find_target_node(entity_chaser_t* chaser, vec3_t target_position, find_targ
 
 void entity_chaser_update(int slot, player_t* player, int dt) {
 	entity_chaser_t* chaser = (entity_chaser_t*)&entity_pool[slot * entity_pool_stride];
-	vec3_t chaser_pos = chaser->entity_header.position;
+	const vec3_t chaser_pos = chaser->entity_header.position;
 
 #ifdef _LEVEL_EDITOR
 	// Make sure the player position is set as the home position at the time it gets serialized
@@ -157,7 +156,7 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 	});
 
 	// Register hitboxes
-	aabb_t bounds_body = (aabb_t){
+	const aabb_t bounds_body = (aabb_t){
 		.min = (vec3_t){ 
 			chaser_pos.x - (69 * COL_SCALE), 
 			chaser_pos.y - (0 * COL_SCALE), 
@@ -168,7 +167,7 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 			chaser_pos.y - (-230 * COL_SCALE), 
 			chaser_pos.z - (-69 * COL_SCALE )},
 	};
-	aabb_t bounds_head = (aabb_t){
+	const aabb_t bounds_head = (aabb_t){
 		.min = (vec3_t){ 
 			chaser_pos.x - (25 * COL_SCALE), 
 			chaser_pos.y - (-230 * COL_SCALE), 
@@ -179,14 +178,14 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 			chaser_pos.y - (-340 * COL_SCALE), 
 			chaser_pos.z - (-35 * COL_SCALE )},
 	};
-	entity_collision_box_t box_body = {
+	const entity_collision_box_t box_body = {
 		.aabb = bounds_body,
 		.box_index = 0,
 		.entity_index = slot,
 		.is_solid = 0,
 		.is_trigger = 0,
 	};
-	entity_collision_box_t box_head = {
+	const entity_collision_box_t box_head = {
 		.aabb = bounds_head,
 		.box_index = 1,
 		.entity_index = slot,
@@ -202,7 +201,7 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 
 		for (int i = 0; i < n_nav_graph_nodes; ++i) {
 			const vec3_t node_position = vec3_from_svec3(nav_graph_nodes[i].position);
-			scalar_t distance_squared = vec3_magnitude_squared(vec3_sub(node_position, chaser_pos));
+			const scalar_t distance_squared = vec3_magnitude_squared(vec3_sub(node_position, chaser_pos));
 			if (distance_squared >= 0 && distance_squared < curr_min_distance) {
 				curr_min_distance = distance_squared;
 				chaser->curr_navmesh_node = i;
@@ -213,7 +212,6 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 	if (chaser->behavior_timer > 0) chaser->behavior_timer -= dt;
 	else {
 		chaser->behavior_timer = random_range(CHASER_REACTION_TIME_MIN, CHASER_REACTION_TIME_MAX);
-		printf("state: %s,\tcurr: %i, target: %i\n", state_names[chaser->state], chaser->curr_navmesh_node, chaser->target_navmesh_node);
 		switch (chaser->state) {
 			case CHASER_WAIT: 			
 				decide_action(chaser, player->position);				

@@ -31,7 +31,6 @@ GLuint shader;
 GLuint vao;
 GLuint vbo;
 clock_t dt_clock;
-//GLuint textures[256];
 GLuint textures;
 float tex_res[512];
 clock_t dt = 0;
@@ -164,7 +163,6 @@ static void DebugCallbackFunc(GLenum source, GLenum type, GLuint id,
 				"severity: %i:%s \n	message: %s",
 				source, sourceString, type, typeString, id, severity, severityString,
 				message);
-	//exit(1);
 }
 
 void update_delta_time_ms(void) {
@@ -287,7 +285,6 @@ void renderer_init(void) {
 	debug_layer_init(window);
 
 	// Zero init textures
-	//memset(textures, 0, sizeof(textures));
     void* random_data = mem_alloc(2048 * 512 * 4, MEM_CAT_TEXTURE);
 	glGenTextures(1, &textures);
 	glBindTexture(GL_TEXTURE_2D, textures);
@@ -385,8 +382,6 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 	glm_rotate_y(view_matrix_normal, rotation[1], view_matrix_normal);
 	glm_rotate_z(view_matrix_normal, rotation[2], view_matrix_normal);
 
-    //printf("position:\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\n", position[0], position[1], position[2], rotation[0], rotation[1], rotation[2]);
-
 	// Apply translation
 	glm_translate(view_matrix_normal, position);
 
@@ -405,8 +400,6 @@ void renderer_begin_frame(const transform_t *camera_transform) {
     glm_rotate_x(view_matrix_third_person, rotation[0], view_matrix_third_person);
     glm_rotate_y(view_matrix_third_person, rotation[1], view_matrix_third_person);
     glm_rotate_z(view_matrix_third_person, rotation[2], view_matrix_third_person);
-
-    //printf("position:\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\n", position[0], position[1], position[2], rotation[0], rotation[1], rotation[2]);
 
     // Apply translation
     glm_translate(view_matrix_third_person, position);
@@ -662,9 +655,6 @@ void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) 
 	tex_res[(size_t)index * 2 + 0] = (float)texture->width;
 	tex_res[(size_t)index * 2 + 1] = (float)texture->height;
 
-	// printf("texture %d has avg color: %d, %d, %d\n", index, texture->avg_color.r,
-				//  texture->avg_color.g, texture->avg_color.b);
-
 	// Clean up after we're done
 	mem_free(pixels);
 }
@@ -728,7 +718,7 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 		}
 	}
 
-	vertex_3d_t triangulated[6] = {
+	const vertex_3d_t triangulated[6] = {
 		verts[0], verts[1], verts[2],
 		verts[0], verts[2], verts[3]
 	};
@@ -787,8 +777,8 @@ void renderer_apply_fade(int fade_level) {
 
 void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {
     // This is where all the pixels will be stored
-    size_t width = texture->width == 0 ? 256 : texture->width;
-    size_t height = texture->height == 0 ? 256 : texture->height;
+    const size_t width = (texture->width == 0) ? 256 : texture->width;
+    const size_t height = (texture->height == 0) ? 256 : texture->height;
     pixel32_t* pixels = mem_alloc((size_t)width * (size_t)height * 4, MEM_CAT_TEXTURE);
     // The texture is stored in 8bpp format
     // pixels horizontally - Convert to 32-bit color

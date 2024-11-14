@@ -15,12 +15,12 @@ entity_pickup_t* entity_pickup_new(void) {
 
 void entity_pickup_update(int slot, player_t* player, int dt) {
 	entity_pickup_t* pickup = (entity_pickup_t*)&entity_pool[slot * entity_pool_stride];
-	vec3_t pickup_pos = pickup->entity_header.position;
-	vec3_t player_pos = vec3_sub(player->position, (vec3_t){0, 200 * COL_SCALE, 0});
+	const vec3_t pickup_pos = pickup->entity_header.position;
+	const vec3_t player_pos = vec3_sub(player->position, (vec3_t){0, 200 * COL_SCALE, 0});
     vec3_t pickup_to_player = vec3_sub(player_pos, pickup_pos);
-    scalar_t distance_from_pickup_to_player_squared = vec3_magnitude_squared(pickup_to_player);
-	int close_enough_to_home_in = (distance_from_pickup_to_player_squared < 2000 * ONE) && (distance_from_pickup_to_player_squared > 0);
-	int close_enough_to_collect = (distance_from_pickup_to_player_squared < 200 * ONE) && (distance_from_pickup_to_player_squared > 0);
+    const scalar_t distance_from_pickup_to_player_squared = vec3_magnitude_squared(pickup_to_player);
+	const int close_enough_to_home_in = (distance_from_pickup_to_player_squared < 2000 * ONE) && (distance_from_pickup_to_player_squared > 0);
+	const int close_enough_to_collect = (distance_from_pickup_to_player_squared < 200 * ONE) && (distance_from_pickup_to_player_squared > 0);
 
     // Rendering
     if (pickup->entity_header.mesh == NULL) {

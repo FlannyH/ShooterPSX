@@ -55,23 +55,23 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
 	file_read(path, &data, &size, 1, STACK_TEMP);
 	
 	// Validate header
-	soundbank_header_t* sbk_header = (soundbank_header_t*)data;
+	const soundbank_header_t* sbk_header = (soundbank_header_t*)data;
 	if (sbk_header->file_magic != MAGIC_FSBK) {
 		printf("[ERROR] Error loading sound bank '%s', file header is invalid!\n", path);
         return;
 	}
 
 	// First upload all the samples to audio RAM
-	uint32_t* sample_data = ((uint32_t*)(sbk_header+1)) + sbk_header->offset_sample_data / 4;
+	const uint32_t* sample_data = ((uint32_t*)(sbk_header+1)) + sbk_header->offset_sample_data / 4;
 	if (type == SOUNDBANK_TYPE_MUSIC) 	SpuSetTransferStartAddr(SBK_MUSIC_OFFSET);
 	if (type == SOUNDBANK_TYPE_SFX) 	SpuSetTransferStartAddr(SBK_SFX_OFFSET);
 	SpuWrite(sample_data, sbk_header->length_sample_data);
 
 	// Copy the instruments and regions to another part in memory
-	uint8_t* inst_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_descs;
-	uint8_t* region_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_regions;
-	size_t inst_size = sizeof(instrument_description_t) * 256;
-	size_t region_size = sizeof(instrument_region_header_t) * sbk_header->n_samples;
+	const uint8_t* inst_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_descs;
+	const uint8_t* region_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_regions;
+	const size_t inst_size = sizeof(instrument_description_t) * 256;
+	const size_t region_size = sizeof(instrument_region_header_t) * sbk_header->n_samples;
 	if (type == SOUNDBANK_TYPE_MUSIC) {
 		music_instruments = (instrument_description_t*)mem_stack_alloc(inst_size, STACK_MUSIC);
 		music_instrument_regions = (instrument_region_header_t*)mem_stack_alloc(region_size, STACK_MUSIC);
@@ -132,7 +132,7 @@ void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space
 		&& key <= regions[i].key_max) {
 			// Calculate sample rate and velocity
 			scalar_t s_velocity = ((scalar_t)velocity) * ONE;
-			scalar_t s_channel_volume = (127) * (ONE / 256) * regions[i].volume_multiplier;
+			const scalar_t s_channel_volume = (127) * (ONE / 256) * regions[i].volume_multiplier;
 			s_velocity = scalar_mul(s_velocity, s_channel_volume);
 
 			PANIC_IF("note panning out of bounds!", pan < 0 || pan > 255);
@@ -217,8 +217,8 @@ void music_play_sequence(uint32_t section) {
 	}
 
 	// It is! Find where the data is
-	uint32_t* header_end = (uint32_t*)(curr_loaded_seq + 1); // start of header + 1 whole struct's worth of bytes
-	uint32_t* section_table = header_end + (curr_loaded_seq->offset_section_table / 4); // find the section table and get the entry
+	const uint32_t* header_end = (uint32_t*)(curr_loaded_seq + 1); // start of header + 1 whole struct's worth of bytes
+	const uint32_t* section_table = header_end + (curr_loaded_seq->offset_section_table / 4); // find the section table and get the entry
 	PANIC_IF("misaligned music data!", (((intptr_t)header_end) & 0x03) != 0);
 	PANIC_IF("misaligned music section table!", (((intptr_t)section_table) & 0x03) != 0);
 	sequence_pointer = ((uint8_t*)header_end) + curr_loaded_seq->offset_section_data + section_table[section];
@@ -329,7 +329,7 @@ void audio_tick(int delta_time) {
 						// Calculate A and B for lerp
 						const uint32_t sample_rate_a = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + coarse_min]) >> 8;
 						const uint32_t sample_rate_b = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + coarse_max]) >> 8;
-						uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-fine)) + (sample_rate_b * (fine)))) >> 4;
+						const uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-fine)) + (sample_rate_b * (fine)))) >> 4;
 
 						// Stage a note on event
 						staged_note_on_events[n_staged_note_on_events] = (spu_stage_on_t){
@@ -368,9 +368,9 @@ void audio_tick(int delta_time) {
 				midi_channel_t* midi_chn = &midi_channel[command & 0x0F];
 
 				// bleh. can't guarantee alignment so i have no choice.
-				uint8_t pitch_wheel_low = *sequence_pointer++;
-				uint8_t pitch_wheel_high = *sequence_pointer++;
-				uint16_t pitch_wheel_temp = ((uint16_t)pitch_wheel_low) + (((uint16_t)pitch_wheel_high) << 8);
+				const uint8_t pitch_wheel_low = *sequence_pointer++;
+				const uint8_t pitch_wheel_high = *sequence_pointer++;
+				const uint16_t pitch_wheel_temp = ((uint16_t)pitch_wheel_low) + (((uint16_t)pitch_wheel_high) << 8);
 				midi_chn->pitch_wheel = *(int16_t*)&pitch_wheel_temp;
 			}
 
@@ -467,7 +467,7 @@ void audio_tick(int delta_time) {
 	SpuSetKey(1, note_on);
 
 	for (size_t i = 0; i < N_SPU_CHANNELS; ++i) {
-		spu_channel_t* spu_ch = &spu_channel[i];
+		const spu_channel_t* spu_ch = &spu_channel[i];
 
 		// If sfx in 3D, update it
 		if (spu_ch->midi_channel == MIDI_CHANNEL_SFX_3D) { 
@@ -511,7 +511,7 @@ void audio_tick(int delta_time) {
 		if (spu_ch->key == 255) continue;
 
 		scalar_t s_velocity = ((scalar_t)spu_ch->velocity) * ONE;
-		scalar_t s_channel_volume = ((scalar_t)midi_ch->volume) * (ONE / 256) * music_instrument_regions[spu_ch->region].volume_multiplier;
+		const scalar_t s_channel_volume = ((scalar_t)midi_ch->volume) * (ONE / 256) * music_instrument_regions[spu_ch->region].volume_multiplier;
 		s_velocity = scalar_mul(s_velocity, s_channel_volume);
 
 		PANIC_IF("note panning out of bounds!", midi_ch->panning < 0 || midi_ch->panning > 255);
@@ -536,9 +536,9 @@ void audio_tick(int delta_time) {
 	if (music_playing != 0) {
 		// Handle channel pitches
 		for (size_t i = 0; i < N_SPU_CHANNELS; ++i) {
-			spu_channel_t* spu_ch = &spu_channel[i];
+			const spu_channel_t* spu_ch = &spu_channel[i];
 			if (spu_channel[i].midi_channel >= N_SPU_CHANNELS) continue;
-			midi_channel_t* midi_ch = &midi_channel[spu_channel[i].midi_channel];
+			const midi_channel_t* midi_ch = &midi_channel[spu_channel[i].midi_channel];
 
 			// We only want to update channels that have been playing and aren't going to stop soon, otherwise we have timing issues.
 			if (SPU_CH_ADSR_VOL(i) == 0) continue;

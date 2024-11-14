@@ -15,7 +15,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
     file_read(path, &file_data, &size, on_stack, stack);
 
     // Get header data
-    model_header_t* model_header = (model_header_t*)file_data;
+    const model_header_t* model_header = (model_header_t*)file_data;
 
     // Ensure FMSH header is valid
     if (model_header->file_magic != MAGIC_FMSH) { // "FMSH"
@@ -24,7 +24,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
     }
 
     // Find the data sections
-    void* binary_section = &model_header[1];
+    const void* binary_section = &model_header[1];
     const mesh_desc_t* mesh_descriptions = (mesh_desc_t*)((intptr_t)binary_section + model_header->offset_mesh_desc);
     vertex_3d_t* vertex_data = (vertex_3d_t*)((intptr_t)binary_section + model_header->offset_vertex_data);
 
@@ -65,7 +65,9 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
 
         // Null-terminate it
         string[mesh_name_length] = 0;
+#ifdef _DEBUG
         printf("mesh with name: %s\n", string);
+#endif
 
         // Create a mesh object
         model->meshes[i].n_triangles = mesh_descriptions[i].n_triangles;
@@ -123,7 +125,7 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
     file_read(path, &file_data, &size, on_stack, stack);
 
     // Read collision header
-    collision_mesh_header_t* col_mesh = (collision_mesh_header_t*)file_data;
+    const collision_mesh_header_t* col_mesh = (collision_mesh_header_t*)file_data;
 
     // Verify file magic
     if (col_mesh->file_magic != MAGIC_FCOL) {
@@ -151,8 +153,8 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
         .min = (vec3_t) {.x = INT32_MIN, .y = INT32_MIN, .z = INT32_MIN,},
     };
 
-    intptr_t binary = (intptr_t)(col_mesh + 1);
-    collision_triangle_3d_t* tris = (collision_triangle_3d_t*)(binary + col_mesh->triangle_data_offset);
+    const intptr_t binary = (intptr_t)(col_mesh + 1);
+    const collision_triangle_3d_t* tris = (collision_triangle_3d_t*)(binary + col_mesh->triangle_data_offset);
     
     vertex_3d_t* out = model->meshes[0].vertices;
     for (size_t i = 0; i < col_mesh->n_verts / 3; i += 1) {

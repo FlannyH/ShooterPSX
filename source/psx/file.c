@@ -29,7 +29,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
     }
 
     // Snap file size to 2048 byte grid
-    size_t file_size = (file.size | 2047) + 1;
+    const size_t file_size = (file.size | 2047) + 1;
     
     // Return the actual file size (not rounded upwards)
     *size = file.size;

@@ -12,7 +12,7 @@ collision_mesh_t* model_load_collision(const char* path, int on_stack, stack_t s
     file_read(path, &file_data, &size, on_stack, stack);
 
     // Read collision header
-    collision_mesh_header_t* col_mesh = (collision_mesh_header_t*)file_data;
+    const collision_mesh_header_t* col_mesh = (collision_mesh_header_t*)file_data;
 
     // Verify file magic
     if (col_mesh->file_magic != MAGIC_FCOL) {
@@ -32,43 +32,43 @@ collision_mesh_t* model_load_collision(const char* path, int on_stack, stack_t s
 aabb_t triangle_get_bounds(const triangle_3d_t* self) {
     PANIC_IF("Trying to get triangle bounds from nullptr!", self == NULL);
 
-    aabb_t result;
-    result.min = vec3_min(
-        vec3_min(
-            vec3_from_int32s(self->v0.x, self->v0.y, self->v0.z),
-            vec3_from_int32s(self->v1.x, self->v1.y, self->v1.z)
+    return (aabb_t) {
+        .min = vec3_min(
+            vec3_min(
+                vec3_from_int32s(self->v0.x, self->v0.y, self->v0.z),
+                vec3_from_int32s(self->v1.x, self->v1.y, self->v1.z)
+            ),
+            vec3_from_int32s(self->v2.x, self->v2.y, self->v2.z)
         ),
-        vec3_from_int32s(self->v2.x, self->v2.y, self->v2.z)
-    );
-    result.max = vec3_max(
-        vec3_max(
-            vec3_from_int32s(self->v0.x, self->v0.y, self->v0.z),
-            vec3_from_int32s(self->v1.x, self->v1.y, self->v1.z)
-        ),
-        vec3_from_int32s(self->v2.x, self->v2.y, self->v2.z)
-    );
-    return result;
+        .max = vec3_max(
+            vec3_max(
+                vec3_from_int32s(self->v0.x, self->v0.y, self->v0.z),
+                vec3_from_int32s(self->v1.x, self->v1.y, self->v1.z)
+            ),
+            vec3_from_int32s(self->v2.x, self->v2.y, self->v2.z)
+        )
+    };
 }
 
 aabb_t collision_triangle_get_bounds(const collision_triangle_3d_t* self) {
     PANIC_IF("Trying to get triangle bounds from nullptr!", self == NULL);
 
-    aabb_t result;
-    result.min = vec3_min(
-        vec3_min(
-            self->v0,
-            self->v1
+    return (aabb_t){
+        .min = vec3_min(
+            vec3_min(
+                self->v0,
+                self->v1
+            ),
+            self->v2
         ),
-        self->v2
-    );
-    result.max = vec3_max(
-        vec3_max(
-            self->v0,
-            self->v1
-        ),
-        self->v2
-    );
-    return result;
+        .max = vec3_max(
+            vec3_max(
+                self->v0,
+                self->v1
+            ),
+            self->v2
+        )
+    };
 }
 
 int strings_are_equal(const char* a, const char* b) {

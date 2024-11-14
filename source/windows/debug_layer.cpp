@@ -135,7 +135,7 @@ size_t inspect_enum(size_t value, const char** names, const char* label) {
 }
 
 void inspect_entity(size_t entity_id) {
-    uint8_t entity_type = entity_types[entity_id];
+    const uint8_t entity_type = entity_types[entity_id];
     if (entity_type == ENTITY_NONE) return;
 
     entity_header_t* entity_data = (entity_header_t*)&entity_pool[entity_id * entity_pool_stride];
@@ -197,11 +197,11 @@ void inspect_entity(size_t entity_id) {
             if (ImGui::Checkbox("Return automatically", &auto_return)) { platform->auto_return = (int)auto_return; }
             if (ImGui::Checkbox("Move on player collision", &move_on_player_collision)) { platform->move_on_player_collision = (int)move_on_player_collision; }
 
-            aabb_t start_pos_debug = (aabb_t) {
+            const aabb_t start_pos_debug = (aabb_t) {
                 .min = vec3_sub(platform->position_start, vec3_from_scalar(ONE / 2)),
                 .max = vec3_add(platform->position_start, vec3_from_scalar(ONE / 2)),
             };
-            aabb_t end_pos_debug = (aabb_t) {
+            const aabb_t end_pos_debug = (aabb_t) {
                 .min = vec3_sub(platform->position_end, vec3_from_scalar(ONE / 2)),
                 .max = vec3_add(platform->position_end, vec3_from_scalar(ONE / 2)),
             };
@@ -357,7 +357,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             std::vector<uint8_t> binary_section;
 
             auto write_text_and_get_offset = [](std::vector<uint8_t>& output, char* string) {
-                auto string_offset_in_file = output.size();
+                const auto string_offset_in_file = output.size();
                 intptr_t offset = 0;
                 do {
                     output.push_back(string[offset]);
@@ -366,12 +366,12 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             };
 
             auto write_data_and_get_offset = [](std::vector<uint8_t>& output, const void* data, size_t size_in_bytes) {
-                uint8_t* ptr = (uint8_t*)data;
+                const uint8_t* ptr = (uint8_t*)data;
                 
                 // align to 4 bytes
                 while ((output.size() % 4) != 0) output.push_back(0);
 
-                auto offset_in_file = output.size();
+                const auto offset_in_file = output.size();
                 uintptr_t offset = 0;
                 if (data) {
                     do {
@@ -383,7 +383,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
             // Construct level header and write into binary section as we go along
             entity_defragment(); // make entity allocations contiguous and compact so we can save space...
-            int n_entities = entity_how_many_active(); // ...and reuse this function
+            const int n_entities = entity_how_many_active(); // ...and reuse this function
 
             // Serialize the entities, removing all pointers in the process
             std::vector<uint8_t> entity_data_serialized;
@@ -594,8 +594,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
         if (ImGui::Button("Spawn")) {
             // Figure out where to spawn - in front of the camera
-            vec3_t forward = renderer_get_forward_vector();
-            vec3_t spawn_pos = vec3_add(vec3_muls(camera->position, -COL_SCALE), vec3_muls(forward, -80 * ONE));
+            const vec3_t forward = renderer_get_forward_vector();
+            const vec3_t spawn_pos = vec3_add(vec3_muls(camera->position, -COL_SCALE), vec3_muls(forward, -80 * ONE));
 
             entity_header_t* entity;
 
@@ -706,22 +706,22 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     ImGui::Begin("Viewport", NULL, flags);
     {
         // Get normalized mouse position inside the viewport content area
-        ImVec2 mouse_pos = ImGui::GetMousePos();
-        ImVec2 window_pos = ImGui::GetWindowPos();
-        ImVec2 content_offset_top_left = ImGui::GetWindowContentRegionMin();
-        ImVec2 content_offset_bottom_right = ImGui::GetWindowContentRegionMax();
+        const ImVec2 mouse_pos = ImGui::GetMousePos();
+        const ImVec2 window_pos = ImGui::GetWindowPos();
+        const ImVec2 content_offset_top_left = ImGui::GetWindowContentRegionMin();
+        const ImVec2 content_offset_bottom_right = ImGui::GetWindowContentRegionMax();
         ImVec2 rel_mouse_pos = mouse_pos;
         rel_mouse_pos.x -= content_offset_top_left.x + window_pos.x;
         rel_mouse_pos.y -= content_offset_top_left.y + window_pos.y;
-        float window_width = content_offset_bottom_right.x - content_offset_top_left.x;
-        float window_height = content_offset_bottom_right.y - content_offset_top_left.y;
-        float nrm_mouse_x = (rel_mouse_pos.x / window_width) * 2.0 - 1.0;
-        float nrm_mouse_y = (rel_mouse_pos.y / window_width) * 2.0 - 1.0;
+        const float window_width = content_offset_bottom_right.x - content_offset_top_left.x;
+        const float window_height = content_offset_bottom_right.y - content_offset_top_left.y;
+        const float nrm_mouse_x = (rel_mouse_pos.x / window_width) * 2.0 - 1.0;
+        const float nrm_mouse_y = (rel_mouse_pos.y / window_width) * 2.0 - 1.0;
         w = (int)window_width;
         h = (int)window_height;    
 
         // Draw the viewport
-        auto wsize = ImVec2(w, h);
+        const auto wsize = ImVec2(w, h);
         ImGui::Image((ImTextureID)(intptr_t)fb_texture, wsize, ImVec2(0, 1), ImVec2(1, 0));
 
         // Handle entity gizmo

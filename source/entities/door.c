@@ -6,8 +6,7 @@
 
 entity_door_t* entity_door_new(void) {
 	// Allocate memory for the entity
-	int entity_id = entity_alloc(ENTITY_DOOR);
-    entity_door_t* entity = (entity_door_t*)&entity_pool[entity_id * entity_pool_stride];
+    entity_door_t* entity = (entity_door_t*)&entity_pool[entity_alloc(ENTITY_DOOR) * entity_pool_stride];
 	entity->entity_header.position = (vec3_t){0, 0, 0};
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
@@ -20,7 +19,6 @@ entity_door_t* entity_door_new(void) {
 	entity->signal_id = 0;
 	entity->open_offset = (vec3_t){0, 64 * ONE, 0};
 	entity->entity_header.mesh = NULL;
-
 	return entity;
 }
 
@@ -72,10 +70,10 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	entity_door_t* door = (entity_door_t*)&entity_pool[slot * entity_pool_stride];
 
 	vec3_t door_pos = door->entity_header.position;
-	vec3_t player_pos = player->position;
+	const vec3_t player_pos = player->position;
 
-	scalar_t distance_from_door_to_player_squared = vec3_magnitude_squared(vec3_sub(door_pos, player_pos));
-	int player_close_enough = (distance_from_door_to_player_squared < 4500 * ONE) && (distance_from_door_to_player_squared > 0);
+	const scalar_t distance_from_door_to_player_squared = vec3_magnitude_squared(vec3_sub(door_pos, player_pos));
+	const int player_close_enough = (distance_from_door_to_player_squared < 4500 * ONE) && (distance_from_door_to_player_squared > 0);
 
 	// Handle unlocking with key cards
 	if (door->is_locked && player_close_enough) {
@@ -100,7 +98,7 @@ void entity_door_update(int slot, player_t* player, int dt) {
 		audio_play_sound(sfx_door_unlock, ONE, 1, door_pos, 3600 * ONE); 
 	}
 
-	int prev = door->is_open;
+	const int prev = door->is_open;
 	door->is_open = player_close_enough && !door->is_locked;
 	if (door->is_open && !prev) audio_play_sound(sfx_door_open, ONE, 1, door_pos, 3600 * ONE); 
 	else if (!door->is_open && prev) audio_play_sound(sfx_door_close, ONE, 1, door_pos, 3600 * ONE); 

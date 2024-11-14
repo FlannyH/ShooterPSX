@@ -109,7 +109,7 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 #endif
 
 	// Convert size from bytes to words
-	size_t actual_size_to_alloc = (size + 3) >> 2;
+	const size_t actual_size_to_alloc = (size + 3) >> 2;
 	void* pointer = (void*)(base + *cursor);
 	*cursor += actual_size_to_alloc;
 	return pointer;
@@ -233,7 +233,6 @@ size_t mem_stack_get_free(stack_t stack) {
 
 void* mem_alloc(size_t size, memory_category_t category) {
 #ifdef _DEBUG
-    // printf("allocating %i bytes for category %s\n", size, mem_cat_strings[category]);
     void* result = NULL;
     for (size_t i = 0; i < 512; ++i) {
         if (allocated_memory_pointers[i] == NULL) {

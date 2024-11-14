@@ -151,5 +151,4 @@ ALWAYS_INLINE int is_infinity(const fixed20_12_t a) {
     return (a == INT32_MAX || a == -INT32_MAX);
 }
 
-
 #endif // FIXED_POINT_H

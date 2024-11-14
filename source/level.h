@@ -41,8 +41,6 @@ typedef struct {
     svec3_t player_spawn_position;
     vec3_t player_spawn_rotation;
     char** text_entries;
-    // todo: add other fields as specified in FLVL documentation
-
     int n_text_entries;
     int n_level_textures;
 } level_t;

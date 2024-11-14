@@ -15,7 +15,7 @@ vislist_t vislist_load(const char* path, int on_stack, stack_t stack) {
     file_read(path, &file_data, &size, on_stack, stack);
 
     // Get header data
-    vislist_header_t* vislist_header = (vislist_header_t*)file_data;
+    const vislist_header_t* vislist_header = (vislist_header_t*)file_data;
 
     // Ensure FMSH header is valid
     vislist_t vislist = {0};
@@ -25,7 +25,7 @@ vislist_t vislist_load(const char* path, int on_stack, stack_t stack) {
     }
 
     // Get pointers to data
-    intptr_t binary_section = (intptr_t)(vislist_header + 1);
+    const intptr_t binary_section = (intptr_t)(vislist_header + 1);
     vislist.bvh_root = (visbvh_node_t*)(binary_section + vislist_header->offset_vis_bvh);
     vislist.vislists = (visfield_t*)(binary_section + vislist_header->offset_vis_lists);
     return vislist;

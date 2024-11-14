@@ -105,13 +105,13 @@ void entity_defragment(void) {
 
 		// swap *end and *start
 		{
-			uint8_t temp = entity_types[start];
+			const uint8_t temp = entity_types[start];
 			entity_types[start] = entity_types[end];
 			entity_types[end] = temp;
 		}
 		{
 			entity_union* pool = (entity_union*)entity_pool;
-			entity_union temp = pool[start];
+			const entity_union temp = pool[start];
 			pool[start] = pool[end];
 			pool[end] = temp;
 		}
