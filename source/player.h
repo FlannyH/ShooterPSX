@@ -19,6 +19,7 @@ typedef struct {
     vec3_t velocity;
     vec3_t rotation;
     scalar_t distance_from_ground;
+    int footstep_timer;
     uint8_t health;
     uint8_t armor;
     uint8_t ammo;

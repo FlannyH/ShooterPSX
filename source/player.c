@@ -7,8 +7,11 @@
 #include "input.h"
 #include "entity.h"
 #include "common.h"
+#include "random.h"
 
 #include <string.h>
+
+#define FOOTSTEP_TIMER_MAX 350
 
 transform_t t_level = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };
 
@@ -298,6 +301,13 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
     self->transform.position.y = -self->position.y * (4096 / COL_SCALE);
 #else
     self->transform.position.y = -self->position.y * (4096 / COL_SCALE) + isin(time_counter * 12) * speed_1d / 64;
+    self->footstep_timer += dt_ms;
+    if (self->footstep_timer >= FOOTSTEP_TIMER_MAX) {
+        self->footstep_timer -= FOOTSTEP_TIMER_MAX;
+        if (speed_1d > ONE / 16) {
+            audio_play_sound(random_range(6, 13), ONE, 0, (vec3_t){}, 1); // todo: un-hack this
+        }
+    }
 #endif
     self->transform.position.z = -self->position.z * (4096 / COL_SCALE);
     self->transform.rotation.x = -self->rotation.x;
