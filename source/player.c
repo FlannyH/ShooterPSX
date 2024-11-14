@@ -7,6 +7,7 @@
 #include "input.h"
 #include "entity.h"
 #include "common.h"
+#include "music.h"
 #include "random.h"
 
 #include <string.h>
@@ -305,7 +306,7 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
     if (self->footstep_timer >= FOOTSTEP_TIMER_MAX) {
         self->footstep_timer -= FOOTSTEP_TIMER_MAX;
         if (speed_1d > ONE / 16) {
-            audio_play_sound(random_range(6, 13), ONE, 0, (vec3_t){}, 1); // todo: un-hack this
+            audio_play_sound(random_range(sfx_footstep1, sfx_footstep7 + 1), ONE, 0, (vec3_t){}, 1);
         }
     }
 #endif

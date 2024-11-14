@@ -88,6 +88,40 @@ typedef enum {
     SOUNDBANK_TYPE_SFX,
 } soundbank_type_t;
 
+typedef enum {
+    sfx_ammo,
+    sfx_armor_big,
+    sfx_bullet_impact_concrete,
+    sfx_door_close,
+    sfx_door_open,
+    sfx_door_unlock,
+    sfx_footstep1,
+    sfx_footstep2,
+    sfx_footstep3,
+    sfx_footstep4,
+    sfx_footstep5,
+    sfx_footstep6,
+    sfx_footstep7,
+    sfx_generic,
+    sfx_gun,
+    sfx_health_large,
+    sfx_health_small,
+    sfx_jump_land2,
+    sfx_jump_land1,
+    sfx_key,
+    sfx_player_damage_01,
+    sfx_player_damage_02,
+    sfx_player_death,
+    sfx_powerup,
+    sfx_rev_alt_shot_01,
+    sfx_rev_empty,
+    sfx_rev_shot_1,
+    sfx_rev_shot_2,
+    sfx_rev_shot_3,
+    sfx_rev_shot_4,
+    sfx_shotgun_pickup,
+} sfx_instrument_t;
+
 // Common
 void audio_init(void);
 void audio_tick(int delta_time);
