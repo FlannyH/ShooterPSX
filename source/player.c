@@ -210,12 +210,17 @@ void handle_drag(player_t* self, const int dt_ms) {
     self->velocity.z = velocity_z;
 }
 
+int was_grounded = 0;
+
 void handle_jump(player_t* self) {
     if (is_grounded && input_pressed(PAD_CROSS, 0)) {
         if (self->distance_from_ground - eye_height < jump_ground_threshold) {
             self->velocity.y = initial_jump_velocity;
+            audio_play_sound(sfx_jump_land1, ONE, 0, (vec3_t){}, 1);
         }
     }
+    if (!was_grounded && is_grounded) audio_play_sound(sfx_jump_land2, ONE, 0, (vec3_t){}, 1);
+    was_grounded = is_grounded;
 }
 
 void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_ms) {
@@ -312,7 +317,7 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
     self->footstep_timer += dt_ms;
     if (self->footstep_timer >= FOOTSTEP_TIMER_MAX) {
         self->footstep_timer -= FOOTSTEP_TIMER_MAX;
-        if (speed_1d > ONE / 16) {
+        if (is_grounded && (speed_1d > ONE / 16)) {
             audio_play_sound(random_range(sfx_footstep1, sfx_footstep7 + 1), ONE, 0, (vec3_t){}, 1);
         }
     }
