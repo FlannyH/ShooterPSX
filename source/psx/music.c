@@ -106,11 +106,13 @@ void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space
 		// Avoid div by 0 if listener and audio source are on the same exact position
 		if ((relative_position.x | relative_position.y | relative_position.z) != 0) {
 			// Volume
-			const scalar_t distance_from_listener = vec3_magnitude_squared(relative_position);
-			velocity = 127 - (scalar_div(distance_from_listener * 127, scalar_mul(max_distance, max_distance)) / ONE); 
+			const scalar_t distance_from_listener = scalar_sqrt(vec3_magnitude_squared(relative_position));
+			const scalar_t inverse_volume_scalar = scalar_div(distance_from_listener, max_distance);
+			const scalar_t clamped_volume_scalar = ONE - scalar_clamp(inverse_volume_scalar, 0, ONE);
+			velocity = (127 * clamped_volume_scalar) / ONE;
 
 			// Stereo panning
-			const vec3_t source = vec3_divs(relative_position, scalar_sqrt(distance_from_listener));
+			const vec3_t source = vec3_divs(relative_position, distance_from_listener);
 			const scalar_t norm_left_right = scalar_clamp(vec3_dot(source, listener_right), -ONE, +ONE);
 			pan = 127 + (254 * norm_left_right + ONE) / (ONE * 2);
 		}
