@@ -1103,7 +1103,7 @@ static inline void draw_tex_triangle3d_fancy(const mesh_t* mesh, const size_t ve
     int p;
     gte_nclip();
     gte_stopz(&p);
-    if (p <= 0) return;
+    if (p < -1) return;
 
     // Get depth
     gte_avsz3();
@@ -1157,7 +1157,7 @@ static inline void draw_tex_quad3d_fancy(const mesh_t* mesh, const size_t vert_i
     int p;
     gte_nclip();
     gte_stopz(&p);
-    if (p <= 0) return;
+    if (p < -1) return;
 
     // Store the first vertex, as it will be pushed out by the RTPS call down a couple lines
     gte_stsxy0(&mesh->tex_quads[drawbuffer][poly_idx].x0);
@@ -1253,7 +1253,7 @@ static inline void draw_tex_triangle3d_fancy_no_precomp(const mesh_t* mesh, cons
     int p;
     gte_nclip();
     gte_stopz(&p);
-    if (p <= 0) return;
+    if (p < -1) return;
 
     // Get depth
     gte_avsz3();
@@ -1315,7 +1315,7 @@ static inline void draw_tex_quad3d_fancy_no_precomp(const mesh_t* mesh, const si
     int p;
     gte_nclip();
     gte_stopz(&p);
-    if (p <= 0) return;
+    if (p < -1) return;
 
     // Store the first vertex, as it will be pushed out by the RTPS call down a couple lines
     POLY_GT4* poly = (POLY_GT4*)next_primitive;      
