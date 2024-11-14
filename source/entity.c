@@ -86,7 +86,7 @@ void entity_init(void) {
 	// Load model collection
 #ifdef _LEVEL_EDITOR
 	if (entity_models) {
-		for (int i = 0; i < entity_models->n_meshes; ++i) {
+		for (uint32_t i = 0; i < entity_models->n_meshes; ++i) {
 			mem_free(entity_models->meshes[i].vertices);
 		}
 	}
