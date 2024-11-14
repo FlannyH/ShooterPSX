@@ -278,6 +278,13 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
     if (!self) return;
     if (!level_bvh) return;
 
+    vec3_t player_right = (vec3_t) {
+        -hicos(self->rotation.y),
+        0
+        +hisin(self->rotation.y),
+    };
+    audio_update_listener(self->position, player_right);
+
     if (player_radius_squared == 0) {
         const scalar_t player_radius_scalar = player_radius;
         player_radius_squared = scalar_mul(player_radius_scalar, player_radius_scalar);
