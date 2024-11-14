@@ -1,5 +1,7 @@
 #include "pickup.h"
 
+#include "music.h"
+
 entity_pickup_t* entity_pickup_new(void) {
 	// Allocate memory for the entity
     entity_pickup_t* entity = (entity_pickup_t*)&entity_pool[entity_alloc(ENTITY_PICKUP) * entity_pool_stride];
@@ -61,16 +63,18 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
     }
 
     if (close_enough_to_collect) {
+        int sfx_to_play = sfx_generic;
         switch (pickup->type) {
-            case PICKUP_TYPE_AMMO_SMALL: player->ammo += 5; break;
-            case PICKUP_TYPE_AMMO_BIG: player->ammo += 40; break;
-            case PICKUP_TYPE_ARMOR_SMALL: player->armor += 5; break;
-            case PICKUP_TYPE_ARMOR_BIG: player->armor += 15; break;
-            case PICKUP_TYPE_HEALTH_SMALL: player->health += 15; break;
-            case PICKUP_TYPE_HEALTH_BIG: player->health += 40; break;
-            case PICKUP_TYPE_KEY_BLUE: player->has_key_blue = 1; break;
-            case PICKUP_TYPE_KEY_YELLOW: player->has_key_yellow = 1; break;
+            case PICKUP_TYPE_AMMO_SMALL:    sfx_to_play = sfx_ammo; player->ammo += 5; break;          
+            case PICKUP_TYPE_AMMO_BIG:      sfx_to_play = sfx_ammo; player->ammo += 40; break;         
+            case PICKUP_TYPE_ARMOR_SMALL:   sfx_to_play = sfx_generic; player->armor += 5; break;         
+            case PICKUP_TYPE_ARMOR_BIG:     sfx_to_play = sfx_armor_big; player->armor += 15; break;        
+            case PICKUP_TYPE_HEALTH_SMALL:  sfx_to_play = sfx_health_small; player->health += 15; break;       
+            case PICKUP_TYPE_HEALTH_BIG:    sfx_to_play = sfx_health_large; player->health += 40; break;       
+            case PICKUP_TYPE_KEY_BLUE:      sfx_to_play = sfx_key; player->has_key_blue = 1; break;   
+            case PICKUP_TYPE_KEY_YELLOW:    sfx_to_play = sfx_key; player->has_key_yellow = 1; break; 
         }
+        audio_play_sound(sfx_to_play, ONE, 0, (vec3_t){}, 1); 
         entity_kill(slot);
     }
 }
