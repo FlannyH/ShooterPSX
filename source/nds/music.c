@@ -21,8 +21,10 @@ void audio_init(void) {}
 
 void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space, vec3_t position, scalar_t max_distance) {
     (void)instrument;
+    (void)pitch_multiplier;
     (void)in_3d_space;
     (void)position;
+    (void)max_distance;
     TODO_SOFT()
 }
 

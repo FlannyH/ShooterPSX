@@ -18,6 +18,7 @@ void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space
     (void)pitch_multiplier;
     (void)in_3d_space;
     (void)position;
+    (void)max_distance;
 }
 
 void music_load_sequence(const char* path) {
