@@ -280,7 +280,7 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
 
     vec3_t player_right = (vec3_t) {
         -hicos(self->rotation.y),
-        0
+        0,
         +hisin(self->rotation.y),
     };
     audio_update_listener(self->position, player_right);
