@@ -17,7 +17,6 @@
 transform_t t_level = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };
 
 static scalar_t player_radius_squared = 0;
-int32_t is_grounded = 0;
 int n_sections;
 int sections[N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE];
 int ground_entity_id_prev = -1; // -1 = no entity
@@ -87,7 +86,7 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
     }
 
     // If nothing was hit, there is no ground below the player. Ignore the rest of this function
-    is_grounded = 0;
+    self->is_grounded = 0;
     if (hit.distance == INT32_MAX)
         return;
 
@@ -106,12 +105,12 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
         // Set player camera height to eye_height units above the ground
         self->position.y = (hit.position.y + eye_height);
         
-        is_grounded = 1;
+        self->is_grounded = 1;
     }
 }
 
 void apply_gravity(player_t* self, const int dt_ms) {
-    if (is_grounded) return;
+    if (self->is_grounded) return;
 
     self->velocity.y = (self->velocity.y + gravity * dt_ms);
     if (self->velocity.y > terminal_velocity_up) {
@@ -124,7 +123,7 @@ void apply_gravity(player_t* self, const int dt_ms) {
 
 void handle_stick_input(player_t* self, const int dt_ms) {
     const int sensitivity = input_mouse_connected() ? mouse_sensitivity : stick_sensitivity;        
-    const scalar_t curr_acceleration = (is_grounded) ? (walking_acceleration * dt_ms) : ((walking_acceleration * dt_ms) / air_acceleration_divider);
+    const scalar_t curr_acceleration = (self->is_grounded) ? (walking_acceleration * dt_ms) : ((walking_acceleration * dt_ms) / air_acceleration_divider);
 
     if (input_has_analog(0)) {
         // Moving forwards and backwards
@@ -189,7 +188,7 @@ void handle_drag(player_t* self, const int dt_ms) {
     velocity_z = scalar_div(velocity_z, velocity_scalar);
 
     // Clamp magnitude
-    const scalar_t curr_drag = (is_grounded) ? (walking_drag * dt_ms) : ((walking_drag * dt_ms) / jump_drag_divider);
+    const scalar_t curr_drag = (self->is_grounded) ? (walking_drag * dt_ms) : ((walking_drag * dt_ms) / jump_drag_divider);
     if (velocity_scalar > walking_max_speed) {
         velocity_scalar = walking_max_speed - curr_drag;
     }
@@ -213,14 +212,14 @@ void handle_drag(player_t* self, const int dt_ms) {
 int was_grounded = 0;
 
 void handle_jump(player_t* self) {
-    if (is_grounded && input_pressed(PAD_CROSS, 0)) {
+    if (self->is_grounded && input_pressed(PAD_CROSS, 0)) {
         if (self->distance_from_ground - eye_height < jump_ground_threshold) {
             self->velocity.y = initial_jump_velocity;
             audio_play_sound(sfx_jump_land1, ONE, 0, (vec3_t){}, 1);
         }
     }
-    if (!was_grounded && is_grounded) audio_play_sound(sfx_jump_land2, ONE, 0, (vec3_t){}, 1);
-    was_grounded = is_grounded;
+    if (!was_grounded && self->is_grounded) audio_play_sound(sfx_jump_land2, ONE, 0, (vec3_t){}, 1);
+    was_grounded = self->is_grounded;
 }
 
 void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_ms) {
@@ -294,7 +293,7 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
         const scalar_t player_radius_scalar = player_radius;
         player_radius_squared = scalar_mul(player_radius_scalar, player_radius_scalar);
     }
-    is_grounded = 0;
+    self->is_grounded = 0;
 #ifndef _DEBUG_CAMERA
     apply_gravity(self, dt_ms);
     check_ground_collision(self, level_bvh, dt_ms);
@@ -317,7 +316,7 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
     self->footstep_timer += dt_ms;
     if (self->footstep_timer >= FOOTSTEP_TIMER_MAX) {
         self->footstep_timer -= FOOTSTEP_TIMER_MAX;
-        if (is_grounded && (speed_1d > ONE / 16)) {
+        if (self->is_grounded && (speed_1d > ONE / 16)) {
             audio_play_sound(random_range(sfx_footstep1, sfx_footstep7 + 1), ONE, 0, (vec3_t){}, 1);
         }
     }

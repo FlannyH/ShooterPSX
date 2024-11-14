@@ -45,14 +45,19 @@ state_t prev_state = STATE_NONE;
 state_vars_t state;
 
 int main(void) {
-	mem_init();
-	mem_debug();
 	// Init systems
+	mem_init();
+
+#ifdef _DEBUG
+	mem_debug();
+#endif
+
 	renderer_init();
 	input_init();
 	audio_init();
 	init();
 	setup_timers();
+
 	// Init state variables
 	memset(&state, 0, sizeof(state));
 	state.in_game.level = (level_t){0};
@@ -69,7 +74,6 @@ int main(void) {
 #ifndef _WINDOWS
         int delta_time_raw = renderer_get_delta_time_raw();
         int delta_time = renderer_convert_dt_raw_to_ms(delta_time_raw);
-		// printf("%i, %i\n", delta_time_raw, delta_time);
 #else
         int delta_time = renderer_get_delta_time_ms();
 #endif
@@ -77,6 +81,7 @@ int main(void) {
         delta_time = scalar_min(delta_time, 40);
 #endif
 		state.global.time_counter += delta_time;
+
 		// If a state change happened, transition between them
 		if (current_state != prev_state) {
 			// Exit the previous state

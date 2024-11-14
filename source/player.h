@@ -26,6 +26,7 @@ typedef struct {
     unsigned int has_key_blue : 1;
     unsigned int has_key_yellow : 1;
     unsigned int has_gun : 1;
+    unsigned int is_grounded : 1;
 } player_t;
 
 const static int32_t eye_height = 200 * COL_SCALE;
