@@ -243,6 +243,10 @@ void* mem_alloc(size_t size, memory_category_t category) {
             break;
         }
     }
+    if (!result) {
+        printf("[ERROR] Ran out of memory debug slots! Dumping memory debug info:\n");
+        mem_debug();
+    }
     return result;
 #else
 	(void)category;
@@ -278,19 +282,25 @@ void mem_debug(void) {
 #ifdef _DEBUG
     // Sum up each category
     size_t size_per_category[16] = {0};
+    int n_per_category[16] = {0};
     size_t size_total = 0;
+	int n_total = 0;
     for (size_t i = 0; i < 512; ++i) {
-        size_per_category[allocated_memory_category[i]] += allocated_memory_size[i];
-        size_total += allocated_memory_size[i];
+		if (allocated_memory_pointers[i]) {
+        	size_per_category[allocated_memory_category[i]] += allocated_memory_size[i];
+        	size_total += allocated_memory_size[i];
+			n_per_category[allocated_memory_category[i]] += 1;
+			n_total++;
+		}
     }
     printf("\n--------MEMORY-DEBUG--------\n");
-    printf("MEM_CAT_UNDEFINED: %i bytes\n", size_per_category[MEM_CAT_UNDEFINED]);
-    printf("MEM_CAT_TEXTURE:   %i bytes\n", size_per_category[MEM_CAT_TEXTURE]);
-    printf("MEM_CAT_MODEL:     %i bytes\n", size_per_category[MEM_CAT_MODEL]);
-    printf("MEM_CAT_MESH:      %i bytes\n", size_per_category[MEM_CAT_MESH]);
-    printf("MEM_CAT_COLLISION: %i bytes\n", size_per_category[MEM_CAT_COLLISION]);
-    printf("MEM_CAT_AUDIO:     %i bytes\n", size_per_category[MEM_CAT_AUDIO]);
-    printf("MEM_CAT_FILE:      %i bytes\n", size_per_category[MEM_CAT_FILE]);
-    printf("total:             %i bytes\n", size_total);
+    printf("MEM_CAT_UNDEFINED: %i bytes (%i allocations)\n", size_per_category[MEM_CAT_UNDEFINED], n_per_category[MEM_CAT_UNDEFINED]);
+    printf("MEM_CAT_TEXTURE:   %i bytes (%i allocations)\n", size_per_category[MEM_CAT_TEXTURE], n_per_category[MEM_CAT_TEXTURE]);
+    printf("MEM_CAT_MODEL:     %i bytes (%i allocations)\n", size_per_category[MEM_CAT_MODEL], n_per_category[MEM_CAT_MODEL]);
+    printf("MEM_CAT_MESH:      %i bytes (%i allocations)\n", size_per_category[MEM_CAT_MESH], n_per_category[MEM_CAT_MESH]);
+    printf("MEM_CAT_COLLISION: %i bytes (%i allocations)\n", size_per_category[MEM_CAT_COLLISION], n_per_category[MEM_CAT_COLLISION]);
+    printf("MEM_CAT_AUDIO:     %i bytes (%i allocations)\n", size_per_category[MEM_CAT_AUDIO], n_per_category[MEM_CAT_AUDIO]);
+    printf("MEM_CAT_FILE:      %i bytes (%i allocations)\n", size_per_category[MEM_CAT_FILE], n_per_category[MEM_CAT_FILE]);
+    printf("total:             %i bytes (%i allocations)\n", size_total, n_total);
 #endif
 }
