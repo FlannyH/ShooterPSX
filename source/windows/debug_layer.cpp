@@ -331,6 +331,21 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     ImGui::Begin("Level Metadata");
     {
         auto load = [curr_level, player]() {
+            mem_debug();
+            if (curr_level && curr_level->graphics) {
+                // only slightly cursed, at least we can be sure that the pc/level editor builds use mem_alloc for these
+                for (uint32_t i = 0; i < curr_level->graphics->n_meshes; ++i) {
+                    mem_free(curr_level->graphics->meshes[i].vertices);
+                }
+                for (uint32_t i = 0; i < curr_level->collision_mesh_debug->n_meshes; ++i) {
+                    mem_free(curr_level->collision_mesh_debug->meshes[i].vertices);
+                }
+                mem_free(curr_level->collision_mesh_debug->meshes);
+                mem_free(curr_level->collision_mesh_debug);
+            }
+            tex_alloc_cursor = 0;
+            mem_debug();
+
             uint32_t* data;
             size_t size;
             file_read(level_path, &data, &size, 1, STACK_TEMP);

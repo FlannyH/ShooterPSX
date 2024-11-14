@@ -182,5 +182,7 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
         out[(i*3)+2].z = tris[i].v2.z / COL_SCALE;
     }
 
+    if (!on_stack) mem_free(file_data);
+
     return model;
 }

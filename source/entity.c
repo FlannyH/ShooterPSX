@@ -84,7 +84,14 @@ void entity_init(void) {
 	mem_stack_release(STACK_TEMP);
 
 	// Load model collection
-    entity_models = model_load("\\assets\\models\\entity.msh", 1, STACK_ENTITY, tex_entity_start, 0);
+#ifdef _LEVEL_EDITOR
+	if (entity_models) {
+		for (int i = 0; i < entity_models->n_meshes; ++i) {
+			mem_free(entity_models->meshes[i].vertices);
+		}
+	}
+#endif
+	entity_models = model_load("\\assets\\models\\entity.msh", 1, STACK_ENTITY, tex_entity_start, 0);
 	mem_stack_release(STACK_TEMP);
 
 	memset(entity_signals, 0, sizeof(entity_signals));
