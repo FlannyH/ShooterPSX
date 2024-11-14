@@ -29,6 +29,10 @@
 
 void state_enter_title_screen(void) {
 	if (!state.title_screen.assets_in_memory) {
+		// Wait for rendering to finish
+		renderer_begin_frame(&id_transform);
+		renderer_end_frame();
+
 		// Load graphics data
 #if defined(_PSX) || defined(_WINDOWS)
 		texture_cpu_t *tex_menu1;
@@ -53,6 +57,7 @@ void state_enter_title_screen(void) {
 		texture_collection_load("\\assets\\models\\ui_tex\\ui.txc", &tex_ui, 1, STACK_TEMP);
 		renderer_upload_8bit_texture_page(tex_ui, 5);
 #endif
+		music_stop();
 		mem_stack_release(STACK_TEMP);
 		state.title_screen.assets_in_memory = 1;
 		mem_stack_release(STACK_MUSIC);
@@ -60,6 +65,7 @@ void state_enter_title_screen(void) {
 		audio_load_soundbank("\\assets\\audio\\sfx.sbk", SOUNDBANK_TYPE_SFX); mem_stack_release(STACK_TEMP);
 		music_load_sequence("\\assets\\audio\\music\\level3.dss");
 		music_play_sequence(0);
+		music_set_volume(255);
 	}
 	state.global.fade_level = 255;
 }
