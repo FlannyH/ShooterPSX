@@ -65,9 +65,6 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
 
         // Null-terminate it
         string[mesh_name_length] = 0;
-#ifdef _DEBUG
-        printf("mesh with name: %s\n", string);
-#endif
 
         // Create a mesh object
         model->meshes[i].n_triangles = mesh_descriptions[i].n_triangles;
