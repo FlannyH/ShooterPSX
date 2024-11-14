@@ -373,9 +373,11 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
                 auto offset_in_file = output.size();
                 uintptr_t offset = 0;
-                do {
-                    output.push_back(ptr[offset]);
-                } while (++offset < size_in_bytes);
+                if (data) {
+                    do {
+                        output.push_back(ptr[offset]);
+                    } while (++offset < size_in_bytes);
+                }
                 return offset_in_file;
             };
 
