@@ -70,7 +70,6 @@ void state_update_debug_menu_music(int dt) {
 			case 1: 
 			case 2: 
 			case 3: 
-				printf("playmusic\n");
 				music_stop();
 				mem_stack_release(STACK_TEMP);
 				mem_stack_release(STACK_MUSIC);
