@@ -3,6 +3,9 @@
 
 #include "fixed_point.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 typedef struct {
     fixed20_12_t x, y;
 } vec2_t;
@@ -133,5 +136,7 @@ static void vec2_debug(const vec2_t a) {
     print_fixed_point(a.y);
     printf("\n");
 }
+
+#pragma GCC diagnostic pop
 
 #endif // VEC2_H

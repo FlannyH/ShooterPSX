@@ -22,11 +22,11 @@ entity_platform_t* entity_platform_new(void) {
 }
 
 void entity_platform_update(int slot, player_t* player, int dt) {
+	(void)player;
 	(void)dt;
 
 	entity_platform_t* platform = (entity_platform_t*)&entity_pool[slot * entity_pool_stride];
 	const vec3_t platform_pos = platform->entity_header.position;
-	const vec3_t player_pos = vec3_sub(player->position, (vec3_t){0, 200 * COL_SCALE, 0});
 
 	// Move if signal is triggered
 	if (platform->listen_to_signal && platform->curr_timer_value <= 0) {

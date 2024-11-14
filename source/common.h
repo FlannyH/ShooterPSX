@@ -25,7 +25,7 @@
 #define GiB (1024 * MiB)
 #define ONE (1 << 12)
 
-static void panic_if(const char* error_if_false, const int condition, const int line, const char* file) {
+inline static void panic_if(const char* error_if_false, const int condition, const int line, const char* file) {
 #ifdef _DEBUG
     if (condition) {
         printf("%s @ %i: assert failed! %s\n", file, line, error_if_false);
@@ -38,7 +38,7 @@ static void panic_if(const char* error_if_false, const int condition, const int 
 #endif
 }
 
-static void warn_if(const char* error_if_false, const int condition, const int line, const char* file) {
+inline static void warn_if(const char* error_if_false, const int condition, const int line, const char* file) {
 #ifdef _DEBUG
     if (condition) {
         printf("%s @ %i: assert failed! %s\n", file, line, error_if_false);

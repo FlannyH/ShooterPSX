@@ -50,14 +50,6 @@ void input_update(void) {
     button_curr[1] = 0;
 
     // Update analog sticks
-    int count_axes1 = 0;
-    int count_axes2 = 0;
-    int count_buttons1 = 0;
-    int count_buttons2 = 0;
-    const float* axes_1 = glfwGetJoystickAxes(player1_index, &count_axes1);
-    const float* axes_2 = glfwGetJoystickAxes(player2_index, &count_axes2);
-    const unsigned char* buttons_1 = glfwGetJoystickButtons(player1_index, &count_buttons1);
-    const unsigned char* buttons_2 = glfwGetJoystickButtons(player2_index, &count_buttons2);
     GLFWgamepadstate state1;
     GLFWgamepadstate state2;
     glfwGetGamepadState(player1_index, &state1);

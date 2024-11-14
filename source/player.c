@@ -228,6 +228,8 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
     self->position.z += self->velocity.z * dt_ms;
 
     for (size_t i = 0; i < 2; ++i) {
+        rayhit_t hit = {};
+#ifndef _DEBUG_CAMERA
         // Collide
         const vertical_cylinder_t cyl = {
             .bottom = (vec3_t){self->position.x, self->position.y - eye_height - 4096 + step_height, self->position.z},
@@ -236,8 +238,6 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
             .radius_squared = player_radius_squared,
             .is_wall_check = 1,
         };
-        rayhit_t hit = {};
-#ifndef _DEBUG_CAMERA
         bvh_intersect_vertical_cylinder(level_bvh, cyl, &hit);
         for (size_t i = 0; i < entity_n_active_aabb; ++i) {
             rayhit_t curr_hit;
@@ -305,13 +305,13 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
 #endif
     handle_movement(self, level_bvh, dt_ms);
     
-    const vec2_t vel_2d = {self->velocity.x, self->velocity.z};
-    const scalar_t speed_1d = vec2_magnitude(vel_2d);
     self->transform.position.x = -self->position.x * (4096 / COL_SCALE);
 #ifdef _DEBUG_CAMERA
     (void)time_counter;
     self->transform.position.y = -self->position.y * (4096 / COL_SCALE);
 #else
+    const vec2_t vel_2d = {self->velocity.x, self->velocity.z};
+    const scalar_t speed_1d = vec2_magnitude(vel_2d);
     self->transform.position.y = -self->position.y * (4096 / COL_SCALE) + isin(time_counter * 12) * speed_1d / 64;
     self->footstep_timer += dt_ms;
     if (self->footstep_timer >= FOOTSTEP_TIMER_MAX) {

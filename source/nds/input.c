@@ -63,7 +63,6 @@ int input_released(uint16_t button_mask, int player_id) {
 int input_check_cheat_buffer(int n_inputs, const uint16_t* inputs_to_check) {
     int match = button_pressed_this_frame;
     for (int i = 0; i < n_inputs; ++i) {
-        //printf("expect: %i, got: %i\n", inputs_to_check[i], input_buffer[i]);
         if (inputs_to_check[i] != input_buffer[i]) {
             match = 0;
         }

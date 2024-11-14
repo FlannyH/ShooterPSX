@@ -141,15 +141,6 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 	chaser->home_position = chaser_pos;
 #endif
 
-	static const char* state_names[] = {
-		"WAIT",
-		"RETURN_HOME",
-		"CHASE",
-		"FLEE",
-		"STRAFE",
-		"SHOOT",
-	};
-
 	renderer_debug_draw_sphere((sphere_t){
 		.center = chaser->last_known_player_pos,
 		.radius = 50 * ONE,

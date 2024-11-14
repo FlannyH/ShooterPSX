@@ -167,7 +167,6 @@ void state_update_in_game(int dt) {
 
 	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
 
-	const int n_sections = player_get_level_section(&state.in_game.player, state.in_game.level.vislist);
 	state.global.frame_counter += 1;
 #if defined(_DEBUG) && defined(_PSX)
 	if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
@@ -176,6 +175,7 @@ void state_update_in_game(int dt) {
 		PROFILE("lvl_gfx", renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists, 0), 1);
 		PROFILE("entity", entity_update_all(&state.in_game.player, dt), 1);
 		PROFILE("player", player_update(&state.in_game.player, &state.in_game.level.collision_bvh, dt, state.global.time_counter), 1);
+		const int n_sections = player_get_level_section(&state.in_game.player, state.in_game.level.vislist);
 		FntPrint(-1, "sections: ");
 		for (int i = 0; i < n_sections; ++i) FntPrint(-1, "%i, ", sections[i]);
 		FntPrint(-1, "\n");

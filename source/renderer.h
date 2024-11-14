@@ -57,7 +57,7 @@ int renderer_should_close(void);
 int renderer_get_level_section_from_position(const model_t *model, vec3_t position);
 void renderer_set_depth_bias(int bias);
 
-static uint8_t mul_8x8(const uint8_t a, const uint8_t b) {
+inline uint8_t mul_8x8(const uint8_t a, const uint8_t b) {
     uint16_t c = ((uint16_t)a * (uint16_t)b) >> 8;
     if (c > 255) c = 255;
     return (uint8_t)c;

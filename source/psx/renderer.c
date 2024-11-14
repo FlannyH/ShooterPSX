@@ -67,6 +67,9 @@ RECT palettes[256];
 // Import inline helper functions
 #include "renderer_inline.c"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+
 void renderer_init(void) {
     // Reset GPU and enable interrupts
     ResetGraph(0);
@@ -514,3 +517,5 @@ void renderer_draw_particle_system(particle_system_t* system, scalar_t dt) {
         renderer_draw_2d_quad_axis_aligned(center, size, (vec2_t){0, 0}, (vec2_t){63, 63}, color, depth, system->params->texture_id + p->curr_frame / ONE, 0);
     }
 }
+
+#pragma GCC diagnostic pop

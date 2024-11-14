@@ -1,7 +1,8 @@
 #include <psxgte.h>
 #include <inline_c.h>
 
-#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 
 // Vertically the primitive's CLUT to 16 pixels, and then add the fade level to the Y coordinate
 #define SET_DISTANCE_FADE(primitive, fade_level) \
@@ -17,7 +18,6 @@
 
 // Also overwrites the primitive code, so do this before calling setPolyGT3() etc
 #define COPY_COLOR(src, dest) *(uint32_t*)dest = *(uint32_t*)src;
-
 #define COPY_POS(src, dest) *(uint32_t*)dest = *(uint32_t*)src;
 #define COPY_UV(src, dest) *(uint16_t*)dest = *(uint16_t*)src;
 
@@ -1401,3 +1401,5 @@ static inline void draw_tex_quad3d_fancy_no_precomp(const mesh_t* mesh, const si
     addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, poly);
     return;
 }
+
+#pragma GCC diagnostic pop

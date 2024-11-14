@@ -38,14 +38,12 @@ level_t level_load(const char* level_path) {
 
     // Find the data sections
     const uintptr_t binary_section = (const uintptr_t)&level_header[1];
-    const void* entity_data = (const void*)(binary_section);
     const char* path_music = (const char*)((binary_section + level_header->path_music_offset));
     const char* path_bank = (const char*)((binary_section + level_header->path_bank_offset));
     const char* path_textures = (const char*)((binary_section + level_header->path_texture_offset));
     const char* path_collision = (const char*)((binary_section + level_header->path_collision_offset));
     const char* path_vislist = (const char*)((binary_section + level_header->path_vislist_offset));
     const char* path_graphics = (const char*)((binary_section + level_header->path_model_offset));
-    const char* path_graphics_lod = (const char*)((binary_section + level_header->path_model_lod_offset));
     const char* level_entity_pool = (const char*)((binary_section + level_header->entity_pool_offset));
     const char* level_entity_types = (const char*)((binary_section + level_header->entity_types_offset));
     const char* text = (const char*)((binary_section + level_header->text_offset));

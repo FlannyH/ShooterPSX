@@ -128,7 +128,6 @@ void bvh_debug_draw_nav_graph(const level_collision_t* bvh) {
         svec3_t s_pos1 = bvh->nav_graph_nodes[i].position;
         s_pos1.y += 2;
         const vec3_t pos1 = vec3_from_svec3(s_pos1);
-        const nav_node_t* node = &bvh->nav_graph_nodes[i];
 
         for (size_t j = 0; j < 4; ++j) {
             const uint16_t id_neighbor = bvh->nav_graph_nodes[i].neighbor_ids[j];
@@ -341,8 +340,6 @@ int vertical_cylinder_aabb_intersect_fancy(const aabb_t* aabb, const vertical_cy
             return 1;
         }
 
-        const scalar_t vertical_cylinder_center_y = (vertical_cylinder.bottom.y + vertical_cylinder.height / 2);
-        const scalar_t aabb_center_y = (aabb->min.y + aabb->max.y / 2);
         if ((vertical_cylinder.bottom.y + vertical_cylinder.height / 2) > (aabb->min.y + aabb->max.y / 2)) {
             hit->normal = (vec3_t){0, 4096, 0};
             hit->distance = vertical_cylinder.bottom.y - aabb->max.y;
