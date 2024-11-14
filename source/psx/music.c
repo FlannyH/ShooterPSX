@@ -25,6 +25,8 @@ int n_staged_note_off_events = 0;
 #define N_MIDI_CHANNELS 16
 spu_channel_t spu_channel[N_SPU_CHANNELS];
 midi_channel_t midi_channel[N_MIDI_CHANNELS];
+vec3_t sfx_origins[N_SPU_CHANNELS];
+scalar_t sfx_max_distances[N_SPU_CHANNELS];
 
 // Instruments
 instrument_description_t* music_instruments = NULL;
@@ -175,10 +177,12 @@ void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space
 				.adsr2 = regions[i].reg_adsr2,
 				.vol_l = stereo_volume.x >> 12,
 				.vol_r = stereo_volume.y >> 12,
-				.midi_channel = 255, // no midi channel
+				.midi_channel = (in_3d_space) ? (MIDI_CHANNEL_SFX_3D) : (MIDI_CHANNEL_SFX_2D),
 				.key = key,
 				.region = i + sfx_instruments[instrument].region_start_index,
-				.velocity = velocity
+				.velocity = velocity,
+				.position = position,
+				.max_distance = max_distance
 			};
 			n_staged_note_on_events++;
 		}
@@ -454,46 +458,82 @@ void audio_tick(int delta_time) {
 		spu_channel[channel_id].midi_channel = staged_note_on_events[i].midi_channel;
 		spu_channel[channel_id].region = staged_note_on_events[i].region;
 		spu_channel[channel_id].velocity = staged_note_on_events[i].velocity;
+		sfx_origins[channel_id] = staged_note_on_events[i].position;
+		sfx_max_distances[channel_id] = staged_note_on_events[i].max_distance;
 	}
 
 	WARN_IF("note_off and note_on staged on same channel!", (note_off & note_on) != 0);
 	SpuSetKey(0, note_off);
 	SpuSetKey(1, note_on);
 
-	// Handle channel volumes
-	if (music_playing != 0) {
-		for (size_t i = 0; i < N_SPU_CHANNELS; ++i) {
-			// Calculate velocity
-			spu_channel_t* spu_ch = &spu_channel[i];
-			if (spu_channel[i].midi_channel >= N_SPU_CHANNELS) continue;
-			midi_channel_t* midi_ch = &midi_channel[spu_channel[i].midi_channel];
-			if (SPU_CH_ADSR_VOL(i) == 0) continue;
-			if (note_on & (1 << i)) continue;
-			if (note_off & (1 << i)) continue;
-			if (spu_ch->key == 255) continue;
+	for (size_t i = 0; i < N_SPU_CHANNELS; ++i) {
+		spu_channel_t* spu_ch = &spu_channel[i];
 
-			scalar_t s_velocity = ((scalar_t)spu_ch->velocity) * ONE;
-			scalar_t s_channel_volume = ((scalar_t)midi_ch->volume) * (ONE / 256) * music_instrument_regions[spu_ch->region].volume_multiplier;
-			s_velocity = scalar_mul(s_velocity, s_channel_volume);
+		// If sfx in 3D, update it
+		if (spu_ch->midi_channel == MIDI_CHANNEL_SFX_3D) { 
+			const vec3_t relative_position = vec3_sub(sfx_origins[i], listener_pos);
 
-			PANIC_IF("note panning out of bounds!", midi_ch->panning < 0 || midi_ch->panning > 255);
-			PANIC_IF("region panning out of bounds!", (music_instrument_regions[spu_ch->region].panning < 0) || (music_instrument_regions[spu_ch->region].panning > 255));
+			// Avoid div by 0 if listener and audio source are on the same exact position
+			if ((relative_position.x | relative_position.y | relative_position.z) != 0) {
+				// Volume
+				const scalar_t distance_from_listener = scalar_sqrt(vec3_magnitude_squared(relative_position));
+				const scalar_t inverse_volume_scalar = scalar_div(distance_from_listener, sfx_max_distances[i]);
+				const scalar_t clamped_volume_scalar = ONE - scalar_clamp(inverse_volume_scalar, 0, ONE);
+				const scalar_t s_channel_volume = (127) * (ONE / 256) * music_instrument_regions[spu_ch->region].volume_multiplier;
+				const scalar_t s_velocity = scalar_mul((127 * clamped_volume_scalar), s_channel_volume);
 
-			const vec2_t stereo_volume = vec2_mul(
-				(vec2_t){
-					scalar_mul((uint32_t)lut_panning[254 - midi_ch->panning], s_velocity),
-					scalar_mul((uint32_t)lut_panning[midi_ch->panning], s_velocity),
-				},
-				(vec2_t){
-					(uint32_t)lut_panning[254 - music_instrument_regions[spu_ch->region].panning],
-					(uint32_t)lut_panning[music_instrument_regions[spu_ch->region].panning],
-				}
-			);
+				// Stereo panning
+				const vec3_t source = vec3_divs(relative_position, distance_from_listener);
+				const scalar_t norm_left_right = scalar_clamp(vec3_dot(source, listener_right), -ONE, +ONE);
+				const int pan = 127 + (254 * norm_left_right + ONE) / (ONE * 2);
+				
+				const vec2_t stereo_volume = vec2_mul(
+					(vec2_t){
+						scalar_mul((uint32_t)lut_panning[254 - pan], s_velocity),
+						scalar_mul((uint32_t)lut_panning[pan], s_velocity),
+					},
+					(vec2_t){
+						(uint32_t)lut_panning[254 - music_instrument_regions[spu_ch->region].panning],
+						(uint32_t)lut_panning[music_instrument_regions[spu_ch->region].panning],
+					}
+				);
 
-			SPU_CH_VOL_L(i) = stereo_volume.x >> 12;
-			SPU_CH_VOL_R(i) = stereo_volume.y >> 12;
+				SPU_CH_VOL_L(i) = stereo_volume.x >> 12;
+				SPU_CH_VOL_R(i) = stereo_volume.y >> 12;
+			}
 		}
 
+		if (spu_ch->midi_channel >= N_SPU_CHANNELS) continue;
+		midi_channel_t* midi_ch = &midi_channel[spu_ch->midi_channel];
+		if (SPU_CH_ADSR_VOL(i) == 0) continue;
+		if (note_on & (1 << i)) continue;
+		if (note_off & (1 << i)) continue;
+		if (spu_ch->key == 255) continue;
+
+		scalar_t s_velocity = ((scalar_t)spu_ch->velocity) * ONE;
+		scalar_t s_channel_volume = ((scalar_t)midi_ch->volume) * (ONE / 256) * music_instrument_regions[spu_ch->region].volume_multiplier;
+		s_velocity = scalar_mul(s_velocity, s_channel_volume);
+
+		PANIC_IF("note panning out of bounds!", midi_ch->panning < 0 || midi_ch->panning > 255);
+		PANIC_IF("region panning out of bounds!", (music_instrument_regions[spu_ch->region].panning < 0) || (music_instrument_regions[spu_ch->region].panning > 255));
+
+		const vec2_t stereo_volume = vec2_mul(
+			(vec2_t){
+				scalar_mul((uint32_t)lut_panning[254 - midi_ch->panning], s_velocity),
+				scalar_mul((uint32_t)lut_panning[midi_ch->panning], s_velocity),
+			},
+			(vec2_t){
+				(uint32_t)lut_panning[254 - music_instrument_regions[spu_ch->region].panning],
+				(uint32_t)lut_panning[music_instrument_regions[spu_ch->region].panning],
+			}
+		);
+
+		SPU_CH_VOL_L(i) = stereo_volume.x >> 12;
+		SPU_CH_VOL_R(i) = stereo_volume.y >> 12;
+	}
+
+	// Handle channel volumes
+	if (music_playing != 0) {
 		// Handle channel pitches
 		for (size_t i = 0; i < N_SPU_CHANNELS; ++i) {
 			spu_channel_t* spu_ch = &spu_channel[i];

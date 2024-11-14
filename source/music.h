@@ -49,6 +49,9 @@ typedef struct {
 #define SPU_STATE_PLAYING_NOTE 2
 #define SPU_STATE_RELEASING_NOTE 3
 
+#define MIDI_CHANNEL_SFX_2D 255
+#define MIDI_CHANNEL_SFX_3D 254
+
 typedef struct {
     uint8_t key;          // currently playing key
     uint8_t velocity;     // currently playing velocity
@@ -59,6 +62,8 @@ typedef struct {
 #define SPU_STAGE_ON 1
 #define SPU_STAGE_OFF 0
 typedef struct {
+    vec3_t position; // only if midi_channel == MIDI_CHANNEL_SFX_*
+    scalar_t max_distance; // only if midi_channel == MIDI_CHANNEL_SFX_*
     uint32_t voice_start;
     uint16_t sample_rate;
     uint16_t adsr1;
