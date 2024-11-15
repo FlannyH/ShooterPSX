@@ -54,20 +54,8 @@ aabb_t collision_triangle_get_bounds(const collision_triangle_3d_t* self) {
     PANIC_IF("Trying to get triangle bounds from nullptr!", self == NULL);
 
     return (aabb_t){
-        .min = vec3_min(
-            vec3_min(
-                self->v0,
-                self->v1
-            ),
-            self->v2
-        ),
-        .max = vec3_max(
-            vec3_max(
-                self->v0,
-                self->v1
-            ),
-            self->v2
-        )
+        .min = vec3_min(vec3_min(self->v0, self->v1), self->v2),
+        .max = vec3_max(vec3_max(self->v0, self->v1), self->v2)
     };
 }
 

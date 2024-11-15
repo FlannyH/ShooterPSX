@@ -2,7 +2,10 @@
 #define LUT
 #include <stdint.h>
 
-// Q20.12 fixed point multiplier for panning
+// Q20.12 fixed point multiplier for panning. 
+// Applies circular panning law for a pan value where 0 = left, 127 = center, 254 - right
+// Value goes from 0 - 4096, which corresponds to the volume of the right channel.
+// To get the left channel, plug in `254 - panning` instead
 static const uint16_t lut_panning[256] = {
     0x0000, 0x0019, 0x0032, 0x004b, 0x0064, 0x007e, 0x0097, 0x00b0,
     0x00c9, 0x00e2, 0x00fb, 0x0114, 0x012d, 0x0146, 0x015f, 0x0178,
@@ -66,7 +69,7 @@ static const uint16_t lut_wait_times[32] = {
     320,    384,    448,    512,    640,    768,    896,    1024,
 };
 
-// Font mapping
+// Mapping ASCII to letter index
 static const char lut_font_letters[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

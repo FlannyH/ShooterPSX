@@ -44,6 +44,7 @@ vec3_t camera_dir;
 extern uint8_t tex_id_start;
 int curr_depth_bias = 0;
 
+// todo: i can probably make this more clean
 // Need to define these somewhere so it compiles, unused in Windows build
 int is_pal = 0;
 int vsync_enable = 0; // 0 = unlocked, 1 = 60 fps or 50 fps, 2 = 30 fps or 25 fps
@@ -518,21 +519,26 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 	// Copy data into it
 	glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(vertex_3d_t), mesh->vertices, GL_STATIC_DRAW);
 
-	// Enable depth and draw
+	// Enable depth, culling
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+
 #ifdef _LEVEL_EDITOR
+	// Enable stencil, which we use to detect clicking on entities in the level editor
 	glEnable(GL_STENCIL_TEST);
 	glStencilMask(0xFF);
 	glStencilFunc(GL_ALWAYS, drawing_entity_id, 0xFF);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 #endif
-	glCullFace(GL_FRONT);
+
+	// Draw
 	glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
     glDrawArrays(GL_QUADS, mesh->n_triangles * 3, mesh->n_quads * 4);
 
 	n_total_triangles += mesh->n_triangles;
     tex_id_start = 0;
+
 #ifdef _LEVEL_EDITOR
 	drawing_entity_id = 255;
 #endif
@@ -645,11 +651,12 @@ void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) 
 	// Upload texture
 	glBindTexture(GL_TEXTURE_2D, textures);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 
-	((int16_t)index / 4) * 64, 
-	(((int16_t)index) % 4) * 64, 
-	texture->width, 
-	texture->height, 
-	GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+		((int16_t)index / 4) * 64, 
+		(((int16_t)index) % 4) * 64, 
+		texture->width, 
+		texture->height, 
+		GL_RGBA, GL_UNSIGNED_BYTE, pixels
+	);
 
 	// Store texture resolution
 	tex_res[(size_t)index * 2 + 0] = (float)texture->width;
@@ -780,16 +787,16 @@ void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8
     const size_t width = (texture->width == 0) ? 256 : texture->width;
     const size_t height = (texture->height == 0) ? 256 : texture->height;
     pixel32_t* pixels = mem_alloc((size_t)width * (size_t)height * 4, MEM_CAT_TEXTURE);
-    // The texture is stored in 8bpp format
-    // pixels horizontally - Convert to 32-bit color
+
+    // The texture is stored in 8bpp format, convert it to 32-bit color
     for (size_t i = 0; i < ((size_t)width * (size_t)height); ++i) {
-        // Get indices from texture
+        // Get indices from source texture
         const uint8_t color_index = texture->data[i];
 
         // Get 16-bit color values from palette
         const pixel16_t pixel = texture->palette[color_index];
 
-        // Expand to 32-bit color
+        // Expand to 32-bit color and store to destination texture
         pixels[i].r = pixel.r << 3;
         pixels[i].g = pixel.g << 3;
         pixels[i].b = pixel.b << 3;
@@ -803,14 +810,12 @@ void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8
         256,
         width,
         height,
-        GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        GL_RGBA, GL_UNSIGNED_BYTE, pixels
+	);
 
     // Store texture resolution
     tex_res[(size_t)index * 2 + 0] = (float)width;
     tex_res[(size_t)index * 2 + 1] = (float)height;
-
-    printf("texture %d has avg color: %d, %d, %d\n", index, texture->avg_color.r,
-        texture->avg_color.g, texture->avg_color.b);
 
     // Clean up after we're done
     mem_free(pixels);

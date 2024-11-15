@@ -28,7 +28,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
     const mesh_desc_t* mesh_descriptions = (mesh_desc_t*)((intptr_t)binary_section + model_header->offset_mesh_desc);
     vertex_3d_t* vertex_data = (vertex_3d_t*)((intptr_t)binary_section + model_header->offset_vertex_data);
 
-    // Create a model object
+    // Create a model
 	model_t* model;
 	if (on_stack) {
 		model = mem_stack_alloc(sizeof(model_t), stack);
@@ -40,7 +40,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
 	}
     model->n_meshes = model_header->n_submeshes;
 
-    // Loop over each submesh and create a model
+    // Loop over each submesh and populate the model
     uint8_t* mesh_name_cursor = (uint8_t*)((intptr_t)binary_section + model_header->offset_mesh_names);
     for (size_t i = 0; i < model_header->n_submeshes; ++i) {
         // Get mesh name length
@@ -130,7 +130,7 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
         return 0;
     }
 
-    // Convert all vertices into visual vertices
+    // Allocate space for visual mesh
 	model_t* model;
 	if (on_stack) {
 		model = mem_stack_alloc(sizeof(model_t), stack);
@@ -145,17 +145,24 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
     model->n_meshes = 1;
     model->meshes[0].n_quads = 0;
     model->meshes[0].n_triangles = col_mesh->n_verts / 3;
+
+    // Since collision model is only meant to be see in the level 
+    // editor, don't bother calculating bounding boxes for culling
     model->meshes[0].bounds = (aabb_t) {
         .max = (vec3_t) {.x = INT32_MAX, .y = INT32_MAX, .z = INT32_MAX,},
         .min = (vec3_t) {.x = INT32_MIN, .y = INT32_MIN, .z = INT32_MIN,},
     };
 
+    // Find the collision triangle data
     const intptr_t binary = (intptr_t)(col_mesh + 1);
     const collision_triangle_3d_t* tris = (collision_triangle_3d_t*)(binary + col_mesh->triangle_data_offset);
     
+    // We need graphics vertices to be able to render the 
+    // model, so let's convert them one triangle at a time
     vertex_3d_t* out = model->meshes[0].vertices;
+
     for (size_t i = 0; i < col_mesh->n_verts / 3; i += 1) {
-        // Calculate normal
+        // Generate vertex colors based on the triangle's normal
         vec3_t normal = vec3_neg(tris[i].normal);
         normal.x += 4096; normal.x *= 127; normal.x /= 8192;
         normal.y += 4096; normal.y *= 127; normal.y /= 8192;
@@ -171,6 +178,8 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
                 .tex_id = 255,
             };
         }
+
+        // Scale collision space vertex position data to graphics space
         out[(i*3)+0].x = tris[i].v0.x / COL_SCALE;
         out[(i*3)+0].y = tris[i].v0.y / COL_SCALE;
         out[(i*3)+0].z = tris[i].v0.z / COL_SCALE;

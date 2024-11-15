@@ -18,9 +18,9 @@ typedef struct {
     uint32_t path_bank_offset;      // Offset to string containing the path to the soundbank file (.sbk) to use in this level
     uint32_t path_texture_offset;   // Offset to string containing the path to the level texture collection file (.txc) to load in this level
     uint32_t path_collision_offset; // Offset to string containing the path to the collision model file (.col) to load in this level
-    uint32_t path_vislist_offset;   // Offset to string containing the path to the collision model file (.col) to load in this level
+    uint32_t path_vislist_offset;   // Offset to string containing the path to the vislist file (.vis) to load in this level
     uint32_t path_model_offset;     // Offset to string containing the path to the level model file (.msh) to load in this level
-    uint32_t path_model_lod_offset; // Optional offset to string containing the path to the level model file (.msh) to load in this level. Set to 0 if not using LODs.
+    uint32_t path_model_lod_offset; // Offset to string containing the path to the level model file (.msh) to load in this level. Set to 0 if not using LODs.
     uint32_t entity_types_offset;   // Offset to entity_types data, which gets copied into `entity_types` directly
     uint32_t entity_pool_offset;    // Offset to entity_pool data, which gets copied into `entity_pool` directly
     uint32_t level_name_offset;     // Offset to string containing display name of the level as shown in game to the player

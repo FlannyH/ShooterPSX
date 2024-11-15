@@ -267,7 +267,7 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
             };
             self->position = vec3_add(self->position, amount_to_eject);
 
-            // Absorb penetration force (this sounds hella sus)
+            // Absorb penetration force (lol)
             const scalar_t velocity_length = scalar_sqrt(vec3_magnitude_squared(self->velocity));
             const vec3_t velocity_normalized = vec3_divs(self->velocity, velocity_length);
             const vec3_t undesired_motion = vec3_muls(hit.normal, vec3_dot(velocity_normalized, hit.normal));
@@ -366,7 +366,6 @@ int player_get_level_section(player_t* self, const vislist_t vis) {
                 sections[n_sections++] = node->child_or_vis_index & 0x7fffffff;
             }
         }
-        
 
         node_handle_ptr = (node_handle_ptr + 1) % 32;
     }

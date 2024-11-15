@@ -483,7 +483,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
         // Load button
         if (ImGui::Button("Load")) {
-            // If the level path is empty
+            // If the level path is empty, open file dialog
             if (level_path[0] == '\0' || level_path[0] == ' ') {
                 load_after_select = true;
                 file_dialog.SetTitle("Open level file");
@@ -498,7 +498,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         // Save button
         ImGui::SameLine();
         if (ImGui::Button("Save")) {
-            // If the level path is empty
+            // If the level path is empty, open file dialog
             if (level_path[0] == '0' || level_path[0] == ' ') {
                 save_after_select = true;
                 file_dialog.SetTitle("Open level file");
@@ -513,6 +513,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         // Save as button
         ImGui::SameLine();
         if (ImGui::Button("Save as")) {
+            // Open file dialog
             save_after_select = true;
             file_dialog.SetTitle("Open level file");
             file_dialog.SetTypeFilters({ ".lvl" });

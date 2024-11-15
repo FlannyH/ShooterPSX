@@ -25,7 +25,7 @@ void entity_update_all(player_t* player, int dt) {
 	// Reset counters
 	entity_n_active_aabb = 0;
 
-	// Loop over all entities
+	// Update all entities
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
 		switch (entity_types[i]) {
 			case ENTITY_NONE: break;
@@ -51,6 +51,7 @@ int entity_alloc(uint8_t entity_type) {
 	return -1;
 }
 
+// Make sure to update entity_union when adding new entity types
 typedef struct {
 	union {
 		entity_header_t header;
@@ -69,7 +70,7 @@ void entity_init(void) {
 
 	entity_n_active_aabb = 0;
 
-	// Allocate entity pool - make sure to update this when adding new entities
+	// Allocate entity pool
 	entity_pool_stride = sizeof(entity_union);
 	entity_pool = mem_stack_alloc(ENTITY_LIST_LENGTH * sizeof(entity_union), STACK_ENTITY);
 
@@ -125,8 +126,8 @@ void entity_defragment(void) {
 	}
 }
 
-// Sets the mesh pointer, which is only valid for the runtime of this program, to 
-// null. It will be recalculated in the entity code after loading
+// Sets the mesh pointer, which is only valid for the runtime of this program, to null. 
+// It will be recalculated in the entity code later
 void entity_sanitize(void) {
 	entity_union* pool = (entity_union*)entity_pool;
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {

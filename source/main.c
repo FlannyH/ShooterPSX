@@ -53,6 +53,7 @@ int main(void) {
 
 	renderer_init();
 	input_init();
+	input_set_stick_deadzone(36);
 	audio_init();
 	init();
 	setup_timers();
@@ -62,9 +63,6 @@ int main(void) {
 	state.in_game.level = (level_t){0};
 	state.global.frame_counter = 0;
 	state.global.show_debug = 0;
-
-	// Stick deadzone
-	input_set_stick_deadzone(36);
 
 	// Let's start here
 	current_state = STATE_DEBUG_MENU_MAIN;
