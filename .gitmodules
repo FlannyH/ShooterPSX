@@ -28,3 +28,6 @@
 [submodule "external/imgui-filebrowser"]
 	path = external/imgui-filebrowser
 	url = https://github.com/AirGuanZ/imgui-filebrowser
+[submodule "tools/fsfa-builder"]
+	path = tools/fsfa-builder
+	url = https://github.com/FlannyH/fsfa-builder
