@@ -11,6 +11,8 @@ The very first item in the list must be a folder named `root`. If the first item
 |------|------|-------------|
 | char[4] | file_magic | File magic: "FSFA" |
 | u32 | n_items | How many items does this file contain |
+| u32 | items_offset | Offset (bytes) to the items list, relative to the end of the header |
+| u32 | data_offset | Offset (bytes) to the data section, relative to the end of the header |
 
 ## Item
 | Type | Name | Description |
@@ -18,12 +20,12 @@ The very first item in the list must be a folder named `root`. If the first item
 | u8  | type | 0 = folder, 1 = file
 | char[12] | name | The item's name. This string is null terminated if the length is below 12, and not null terminated if the length is equal to 12 |
 | char[3] | extension | The item's file extension. This field is ignored for folders.
-| u32 | offset | Where the item's data is located, relative to the start of the archive's header.
+| u32 | offset | Folders: First child index. Files: Offset to file contents, relative to the start of the binary section.
 | u32 | size | Folders: how many items are stored in the folder. Files: file size in bytes
 
 `name` and `extension` are used to traverse the file system and find specific files.
 
-For files, `offset` points to the start of the file contents. For folders, `offset` points to an array of `u16` values, where each value is an index into the items array. This means the max number of items in a folder is 65535, which should be more than enough for most purposes.
+For files, `offset` is an offset into the binary section, pointing to the file contents. For folders, `offset` represents an index into the items array, pointing to the first item in the folder. Each item in the folder is stored consecutively. For example, if `offset` is 5 and `size` is 4, the items contained in the folder would be indices 5, 6, 7, and 8.
 
 For CD-based systems like the PS1, it may be worth aligning the start of the item's data to a multiple of the sector size in bytes (e.g. 2048 bytes) if the item is big enough, like with big files. For smaller files you might want to pack multiple together into one sector.
 
@@ -39,28 +41,28 @@ Let's imagine a simple example archive with 2 files in the root folder: a file n
 Header (offset 0x00):
 - file_magic = "FSFA"
 - n_items = 3
+- data_offset = 0x80
 
 Item list (offset 0x08):
 - 0: (root folder)
   - type = 0 (folder)
   - name = "root\0"
   - extension = "\0" (empty null terminated string)
-  - offset = 0x80 
+  - offset = 1 (first child index)
   - size = 2 (items)
 - 1: "text.txt"
   - type = 1 (file)
   - name = "text\0" 
   - extension = "txt" (without null terminator)
-  - offset = 0x84
+  - offset = 0
   - size = 12 (bytes)
 - 2: "Example Text.txt"
   - type = 1 (file)
   - name = "Example Text" (without null terminator)
   - extension = "txt" (without null terminator)
-  - offset = 0x90
-  - size = 12 (bytes)
+  - offset = 12
+  - size = 7 (bytes)
 
-Data (offset 0x80):
-- folder 0 data (0x80): `u16[] = {1, 2}`
-- file 1 data (0x84): `char[] = "hello world!"` (without null terminator)
-- file 2 data (0x90): `char[] = "example"` (without null terminator)
+Data section (offset 0x80):
+- file 1 data (0x80): `char[] = "hello world!"` (without null terminator)
+- file 2 data (0x8C): `char[] = "example"` (without null terminator)
