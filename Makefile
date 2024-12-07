@@ -417,7 +417,12 @@ psx_soundfont_generator:
 	@echo Building $@
 	@make -C tools/psx_soundfont_generator TARGET_DIR=../../$(PATH_TOOLS_BIN)
 
-tools: obj2psx midi2psx psx_vislist_generator psx_soundfont_generator
+fsfa_builder:
+	@mkdir -p $(PATH_TOOLS_BIN)
+	@echo Building $@
+	@make -C tools/fsfa-builder TARGET_DIR=../../$(PATH_TOOLS_BIN)
+
+tools: obj2psx midi2psx psx_vislist_generator psx_soundfont_generator fsfa_builder
 
 # For levels, make the first 2 art .col, .vis, and then the rest. this way everything can be built in the right order
 COMPILED_ASSET_LIST = $(PATH_ASSETS)/GOURAUD.FSH \
