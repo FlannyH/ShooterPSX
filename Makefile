@@ -528,9 +528,9 @@ $(PATH_ASSETS)/audio/music/%.dss: $(PATH_ASSETS_TO_BUILD)/audio/music/%.mid
 $(PATH_TEMP)/assets.sfa: $(COMPILED_ASSET_LIST)
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@$(PATH_TOOLS_BIN)/fsfa_builder$(EXE_EXT) $(PATH_ASSETS) $@
+	@$(PATH_TOOLS_BIN)/fsfa_builder$(EXE_EXT) $(PATH_ASSETS) $@ --align 2048
 
-assets: $(PATH_TEMP)/assets.sfa
+assets: tools $(PATH_TEMP)/assets.sfa
 
 clean_assets: 
 	rm -rf $(PATH_ASSETS)
