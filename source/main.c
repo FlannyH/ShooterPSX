@@ -15,6 +15,7 @@
 #include "timer.h"
 #include "input.h"
 #include "music.h"
+#include "file.h"
 #include "text.h"
 
 #ifdef _PSX
@@ -51,6 +52,7 @@ int main(void) {
 	mem_debug();
 #endif
 
+	file_init("\\assets.sfa");
 	renderer_init();
 	input_init();
 	input_set_stick_deadzone(36);
