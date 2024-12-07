@@ -268,7 +268,7 @@ $(PATH_BUILD_WIN)/$(PROJECT_NAME): mkdir_output_win windows_dependencies $(OBJ_W
 	@echo Linking $@
 	@$(CXX) -o $@ $(OBJ_WIN) $(OBJ_IMGUI) $(LINKER_FLAGS)
 	@echo Copying assets
-	@cp -r $(PATH_ASSETS) $(dir $@)
+	@cp $(PATH_TEMP)/assets.sfa $(dir $@)
 
 $(PATH_BUILD_LEVEL_EDITOR)/imgui.ini:
 	@mkdir -p $(dir $@)
@@ -280,7 +280,7 @@ $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor: mkdir_output_win windows_dependencies $(
 	@echo Linking $@
 	@$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
 	@echo Copying assets
-	@cp -r $(PATH_ASSETS) $(dir $@)
+	@cp $(PATH_TEMP)/assets.sfa $(dir $@)
 
 $(PATH_OBJ_WIN)/%.o: $(PATH_SOURCE)/%.c
 	@mkdir -p $(dir $@)
