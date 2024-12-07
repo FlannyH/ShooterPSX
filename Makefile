@@ -525,7 +525,12 @@ $(PATH_ASSETS)/audio/music/%.dss: $(PATH_ASSETS_TO_BUILD)/audio/music/%.mid
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/midi2psx$(EXE_EXT) $< $@
 
-assets: $(COMPILED_ASSET_LIST)
+$(PATH_TEMP)/assets.sfa: $(COMPILED_ASSET_LIST)
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@$(PATH_TOOLS_BIN)/fsfa_builder$(EXE_EXT) $(PATH_ASSETS) $@
+
+assets: $(PATH_TEMP)/assets.sfa
 
 clean_assets: 
 	rm -rf $(PATH_ASSETS)
