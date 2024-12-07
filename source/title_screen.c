@@ -39,31 +39,31 @@ void state_enter_title_screen(void) {
 		texture_cpu_t *tex_menu2;
 		texture_cpu_t *tex_ui;
 		mem_stack_release(STACK_TEMP);
-		texture_collection_load("\\assets\\models\\ui_tex\\menu1.txc", &tex_menu1, 1, STACK_TEMP);
+		texture_collection_load("models/ui_tex/menu1.txc", &tex_menu1, 1, STACK_TEMP);
 		renderer_upload_8bit_texture_page(tex_menu1, 3);
 		mem_stack_release(STACK_TEMP);
-		texture_collection_load("\\assets\\models\\ui_tex\\menu2.txc", &tex_menu2, 1, STACK_TEMP);
+		texture_collection_load("models/ui_tex/menu2.txc", &tex_menu2, 1, STACK_TEMP);
 		renderer_upload_8bit_texture_page(tex_menu2, 4);
 		mem_stack_release(STACK_TEMP);
-		texture_collection_load("\\assets\\models\\ui_tex\\ui.txc", &tex_ui, 1, STACK_TEMP);
+		texture_collection_load("models/ui_tex/ui.txc", &tex_ui, 1, STACK_TEMP);
 		renderer_upload_8bit_texture_page(tex_ui, 5);
 #elif defined(_NDS)
 		texture_cpu_t *tex_menu;
 		texture_cpu_t *tex_ui;
 		mem_stack_release(STACK_TEMP);
-		texture_collection_load("\\assets\\models\\ui_tex\\menu_ds.txc", &tex_menu, 1, STACK_TEMP);
+		texture_collection_load("models/ui_tex/menu_ds.txc", &tex_menu, 1, STACK_TEMP);
 		renderer_upload_8bit_texture_page(tex_menu, 4);
 		mem_stack_release(STACK_TEMP);
-		texture_collection_load("\\assets\\models\\ui_tex\\ui.txc", &tex_ui, 1, STACK_TEMP);
+		texture_collection_load("models/ui_tex/ui.txc", &tex_ui, 1, STACK_TEMP);
 		renderer_upload_8bit_texture_page(tex_ui, 5);
 #endif
 		music_stop();
 		mem_stack_release(STACK_TEMP);
 		state.title_screen.assets_in_memory = 1;
 		mem_stack_release(STACK_MUSIC);
-		audio_load_soundbank("\\assets\\audio\\instr.sbk", SOUNDBANK_TYPE_MUSIC); mem_stack_release(STACK_TEMP);
-		audio_load_soundbank("\\assets\\audio\\sfx.sbk", SOUNDBANK_TYPE_SFX); mem_stack_release(STACK_TEMP);
-		music_load_sequence("\\assets\\audio\\music\\level3.dss");
+		audio_load_soundbank("audio/instr.sbk", SOUNDBANK_TYPE_MUSIC); mem_stack_release(STACK_TEMP);
+		audio_load_soundbank("audio/sfx.sbk", SOUNDBANK_TYPE_SFX); mem_stack_release(STACK_TEMP);
+		music_load_sequence("audio/music/level3.dss");
 		music_play_sequence(0);
 		music_set_volume(255);
 	}
@@ -118,7 +118,7 @@ void state_update_title_screen(int dt) {
 		state.title_screen.button_pressed = 0;
 		switch (state.title_screen.button_selected) {
 			case 0: // start game
-				state.in_game.level_load_path = "\\assets\\levels\\level1.lvl";
+				state.in_game.level_load_path = "levels/level1.lvl";
 				current_state = STATE_IN_GAME;
 				break;
 			case 1: // settings

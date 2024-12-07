@@ -263,7 +263,7 @@ void renderer_init(void) {
 	glm_perspective(glm_rad(90.0f), 4.0f / 3.0f, 0.1f, 100000.f, perspective_matrix);
 
 	// Load shaders
-	shader = shader_from_file("\\assets\\GOURAUD.VSH", "\\assets\\GOURAUD.FSH");
+	shader = shader_from_file("GOURAUD.VSH", "GOURAUD.FSH");
 
 	// Set up VAO and VBO
 	glGenVertexArrays(1, &vao);

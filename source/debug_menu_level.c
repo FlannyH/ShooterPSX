@@ -48,10 +48,10 @@ void state_update_debug_menu_level(int dt) {
 	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_debug_menu_level[0], 1, 1, white);
 
 	char* levels[] = {
-		"\\assets\\levels\\test.lvl",
-		"\\assets\\levels\\test2.lvl",
-		"\\assets\\levels\\level1.lvl",
-		"\\assets\\levels\\level2.lvl",
+		"levels/test.lvl",
+		"levels/test2.lvl",
+		"levels/level1.lvl",
+		"levels/level2.lvl",
 	};
 
 	// Draw settings text and box

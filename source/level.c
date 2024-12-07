@@ -133,7 +133,7 @@ level_t level_load(const char* level_path) {
     mem_stack_release(STACK_MUSIC);
     if (path_music[0] != 0 && path_bank[0] != 0) {
         audio_load_soundbank(path_bank, SOUNDBANK_TYPE_MUSIC); mem_stack_reset_to_marker(STACK_TEMP, marker);
-        audio_load_soundbank("\\assets\\audio\\sfx.sbk", SOUNDBANK_TYPE_SFX); mem_stack_reset_to_marker(STACK_TEMP, marker);
+        audio_load_soundbank("audio/sfx.sbk", SOUNDBANK_TYPE_SFX); mem_stack_reset_to_marker(STACK_TEMP, marker);
         music_load_sequence(path_music);
         music_play_sequence(0);
         music_set_volume(255);

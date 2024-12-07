@@ -43,10 +43,10 @@ void state_update_debug_menu_music(int dt) {
 	input_update();
 
 	char* songs[] = {
-		"\\assets\\audio\\music\\level1.dss",
-		"\\assets\\audio\\music\\level2.dss",
-		"\\assets\\audio\\music\\level3.dss",
-		"\\assets\\audio\\music\\subnivis.dss",
+		"audio/music/level1.dss",
+		"audio/music/level2.dss",
+		"audio/music/level3.dss",
+		"audio/music/subnivis.dss",
 	};
 
 	// Handle button navigation
@@ -73,9 +73,9 @@ void state_update_debug_menu_music(int dt) {
 				music_stop();
 				mem_stack_release(STACK_TEMP);
 				mem_stack_release(STACK_MUSIC);
-				audio_load_soundbank("\\assets\\audio\\instr.sbk", SOUNDBANK_TYPE_MUSIC);
+				audio_load_soundbank("audio/instr.sbk", SOUNDBANK_TYPE_MUSIC);
 				mem_stack_release(STACK_TEMP);
-				audio_load_soundbank("\\assets\\audio\\sfx.sbk", SOUNDBANK_TYPE_SFX);
+				audio_load_soundbank("audio/sfx.sbk", SOUNDBANK_TYPE_SFX);
 				mem_stack_release(STACK_TEMP);
 				music_load_sequence(songs[state.debug_menu_music.button_selected]);
 				music_set_volume(255);

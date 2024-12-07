@@ -77,7 +77,7 @@ void entity_init(void) {
     // Load entity textures
 	texture_cpu_t *entity_textures;
     tex_entity_start = tex_alloc_cursor;
-	n_entity_textures = texture_collection_load("\\assets\\models\\entity.txc", &entity_textures, 1, STACK_TEMP);
+	n_entity_textures = texture_collection_load("models/entity.txc", &entity_textures, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_entity_textures; ++i) {
 	    renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
 	}
@@ -92,7 +92,7 @@ void entity_init(void) {
 		}
 	}
 #endif
-	entity_models = model_load("\\assets\\models\\entity.msh", 1, STACK_ENTITY, tex_entity_start, 0);
+	entity_models = model_load("models/entity.msh", 1, STACK_ENTITY, tex_entity_start, 0);
 	mem_stack_release(STACK_TEMP);
 
 	memset(entity_signals, 0, sizeof(entity_signals));
