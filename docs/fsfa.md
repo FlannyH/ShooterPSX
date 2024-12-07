@@ -11,8 +11,8 @@ The very first item in the list must be a folder named `root`. If the first item
 |------|------|-------------|
 | char[4] | file_magic | File magic: "FSFA" |
 | u32 | n_items | How many items does this file contain |
-| u32 | items_offset | Offset (bytes) to the items list, relative to the end of the header |
-| u32 | data_offset | Offset (bytes) to the data section, relative to the end of the header |
+| u32 | items_offset | Offset (bytes) to the items list, relative to the start of the file |
+| u32 | data_offset | Offset (bytes) to the data section, relative to the start of the file |
 
 ## Item
 | Type | Name | Description |
