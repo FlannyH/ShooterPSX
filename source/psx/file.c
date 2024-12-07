@@ -24,7 +24,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
     // Search for the file on disc - return false if it does not exist
     CdlFILE file;
     if (!CdSearchFile(&file, new_path)) {
-        printf("Can't find file %s!", new_path);
+        printf("[ERROR] Failed to load file %s\n", path);
         return 0;
     }
 
