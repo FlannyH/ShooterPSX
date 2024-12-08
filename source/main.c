@@ -48,11 +48,9 @@ void platform_init(void) {
 #ifdef _PSX
     // Reset GPU and enable interrupts
     ResetGraph(0);
-	CdInit();
 #endif
 #ifdef _NDS
 	defaultExceptionHandler();
-	nitroFSInit(NULL);
 #endif
 }
 

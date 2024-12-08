@@ -390,7 +390,7 @@ $(PATH_BUILD_NDS)/$(PROJECT_NAME).nds: $(PATH_TEMP_NDS)/$(PROJECT_NAME).elf
 	@echo Building $@
 	@mkdir -p $(PATH_TEMP_NDS)/nitrofs
 	@cp -r $(PATH_ASSETS) $(PATH_TEMP_NDS)/nitrofs
-	$(BLOCKSDS)/tools/ndstool/ndstool$(EXE_EXT) -c $@ -7 $(BLOCKSDS)/sys/default_arm7/arm7.elf -9 $< $(NDSTOOL_ARGS) -d $(PATH_TEMP_NDS)/nitrofs -b $(PATH_ASSETS_TO_BUILD)/ds_icon.png "$(PROJECT_NAME)"
+	$(BLOCKSDS)/tools/ndstool/ndstool$(EXE_EXT) -c $@ -7 $(BLOCKSDS)/sys/default_arm7/arm7.elf -9 $< $(NDSTOOL_ARGS) -d $(PATH_TEMP_NDS)/nitrofs/assets -b $(PATH_ASSETS_TO_BUILD)/ds_icon.png "$(PROJECT_NAME)"
 
 nds: tools assets $(PATH_BUILD_NDS)/$(PROJECT_NAME).nds
 
