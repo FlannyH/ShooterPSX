@@ -6,9 +6,6 @@
 #include "level.h"
 #include "vec3.h"
 
-int main(void);
-void init(void);
-
 typedef enum {
     STATE_NONE,
     STATE_TITLE_SCREEN,

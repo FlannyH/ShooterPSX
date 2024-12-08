@@ -270,17 +270,17 @@ $(PATH_BUILD_WIN)/$(PROJECT_NAME): mkdir_output_win windows_dependencies $(OBJ_W
 	@echo Copying assets
 	@cp $(PATH_TEMP)/assets.sfa $(dir $@)
 
-$(PATH_BUILD_LEVEL_EDITOR)/imgui.ini:
+$(PATH_BUILD_LEVEL_EDITOR)/assets/imgui.ini:
 	@mkdir -p $(dir $@)
 	@echo Copying default imgui.ini
 	@cp $(PATH_ASSETS_TO_BUILD)/level_editor/imgui.ini $@
 
-$(PATH_BUILD_LEVEL_EDITOR)/LevelEditor: mkdir_output_win windows_dependencies $(OBJ_LEVEL_EDITOR) $(PATH_BUILD_LEVEL_EDITOR)/imgui.ini
+$(PATH_BUILD_LEVEL_EDITOR)/LevelEditor: mkdir_output_win windows_dependencies $(OBJ_LEVEL_EDITOR) $(PATH_BUILD_LEVEL_EDITOR)/assets/imgui.ini
 	@mkdir -p $(dir $@)
 	@echo Linking $@
 	@$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
 	@echo Copying assets
-	@cp $(PATH_TEMP)/assets.sfa $(dir $@)
+	@cp -r $(PATH_ASSETS) $(dir $@)
 
 $(PATH_OBJ_WIN)/%.o: $(PATH_SOURCE)/%.c
 	@mkdir -p $(dir $@)

@@ -44,6 +44,8 @@ state_t current_state = STATE_NONE;
 state_t prev_state = STATE_NONE;
 state_vars_t state;
 
+void init(void);
+
 int main(void) {
 	// Init systems
 	mem_init();

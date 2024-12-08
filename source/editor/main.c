@@ -10,15 +10,23 @@
 #include "../file.h"
 
 #include <string.h>
+#include <unistd.h> 
 
 int widescreen = 0;
 state_t current_state = STATE_NONE;
 state_t prev_state = STATE_NONE;
 state_vars_t state;
 
-int main(void) {
+int main(int argc, char** argv) {
+    if      (argc == 1) chdir("./assets/");
+    else if (argc == 2) chdir(argv[1]);
+    else {
+        printf("Usage: level_editor.exe [assets_folder]\n");
+        printf("Default assets folder is \"./assets/\"\n");
+        exit(1);
+    }
+
     mem_init();
-    file_init("\\assets.sfa");
     renderer_init();
     input_init();
 	entity_init();
