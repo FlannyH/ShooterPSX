@@ -7,6 +7,7 @@
 #include "../player.h"
 #include "../input.h"
 #include "../level.h"
+#include "../file.h"
 
 #include <string.h>
 
@@ -17,6 +18,7 @@ state_vars_t state;
 
 int main(void) {
     mem_init();
+    file_init("\\assets.sfa");
     renderer_init();
     input_init();
 	entity_init();
