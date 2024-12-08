@@ -139,18 +139,13 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
             }
         }
 
-        for (uint32_t i = name_start; i < name_end; ++i) printf("%c", path[i]);
-        printf("\n");
-
         // compare item name to current path name
         int match = 1;
         for (size_t i = 0; i < sizeof(item->name); ++i) {
             if ((name_start + i) >= name_end) break;
             if (item->name[i] == '0') break;
-            printf("    %c - %c\n", path[name_start + i], item->name[i]);
             if (path[name_start + i] != item->name[i]) { match = 0; break; }
         }
-        printf("match: %i\n", match);
 
         if (!match) {
             --subitem_counter;
@@ -164,7 +159,6 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
             subitem_cursor = item->offset;
             name_start = name_end + 1;
             find_next_name = 1;
-            printf("moving into subfolder\n");
             continue;
         }
 
@@ -172,14 +166,11 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
         if (item->extension[0] != '\0') {
             int extension_match = 1;
             const size_t extension_start = name_end + 1; // if it has an extension, this will be right after the dot
-            printf(".%s\n", &path[extension_start]);
             for (size_t i = 0; i < sizeof(item->extension); ++i) {
-                printf("    %c - %c\n", path[extension_start + i], item->extension[i]);
                 if (item->extension[i] != path[extension_start + i]) { extension_match = 0; break; }
                 if (item->extension[i] == '\0') break;
                 if (path[extension_start + i] == '\0') break;
             }
-            printf("extension_match: %i\n", extension_match);
             if (!extension_match) {
                 --subitem_counter;
                 ++subitem_cursor;
@@ -192,8 +183,6 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
         *size = item->size;
         fseek(file_archive, item->offset + archive_header.data_offset, SEEK_SET);
         fread(*destination, 1, item->size, file_archive);
-
-        printf("file loaded!\n");
 
         return 1;
     }
