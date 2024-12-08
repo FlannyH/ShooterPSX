@@ -27,6 +27,7 @@ typedef struct {
 } fsfa_item_t;
 
 FILE* file_archive = NULL;
+fsfa_header_t archive_header;
 fsfa_item_t* item_table = NULL;
 
 void file_init(const char* path) {
@@ -59,27 +60,17 @@ void file_init(const char* path) {
     file_archive = fopen(new_path, "rb");
     if (file_archive == NULL) {
         printf("[ERROR] Failed to load file archive \"%s\"\n", new_path);
-        return 0;
+        return;
     }
 
     // Read file table
-    fsfa_header_t header;
-    fread(&header, sizeof(header), 1, file_archive) < sizeof(header);
-    item_table = mem_alloc(header.n_items * sizeof(fsfa_item_t), MEM_CAT_FILE);
-
-    fseek(item_table, header.items_offset, SEEK_SET);
-    fread(item_table, sizeof(fsfa_item_t), header.n_items, file_archive);
+    fread(&archive_header, sizeof(archive_header), 1, file_archive);
+    item_table = mem_alloc(archive_header.n_items * sizeof(fsfa_item_t), MEM_CAT_FILE);
+    fseek(file_archive, archive_header.items_offset, SEEK_SET);
+    fread(item_table, sizeof(fsfa_item_t), archive_header.n_items, file_archive);
 }
 
 int file_read(const char* path, uint32_t** destination, size_t* size, int on_stack, stack_t stack) {
-    // Find file in item table
-    size_t queue[16];
-    queue[0] = 0;
-    size_t queue_cursor = 0;
-    size_t queue_end = 1;
-    size_t name_start = 0;
-    size_t name_end = 0;
-
     if (path[0] == '\0') {
         printf("[ERROR] Empty file path\n");
     }
@@ -88,30 +79,34 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
         printf("[ERROR] Failed to read file archive: first entry in item table is not a folder\n");
     }
 
-    for (int i = 0; i < item_table[0].size; ++i) {
-        queue[i] = i + 1;
-        ++queue_end;
-    }
+    size_t subitem_cursor = 1;
+    size_t subitem_counter = item_table[0].size;
+    size_t name_start = 0;
+    size_t name_end = 0;
 
-    while (queue_cursor < queue_end) {
+    int find_next_name = 1;
+
+    while (subitem_counter > 0) {
         if (path[name_start] == '0') return 0;
 
-        const fsfa_item_t* const item = &item_table[queue[queue_cursor]];
+        const fsfa_item_t* const item = &item_table[subitem_cursor];
 
-        // find next name in path string
-        name_end = name_start;
-        while (1) {
-            if (path[name_end] == '0') break;
-            if (path[name_end] == '/') break;
-            if (path[name_end] == '\\') break;
-            if (path[name_end] == '.') break;
-            ++name_end;
+        if (find_next_name) {
+            find_next_name = 0;
+            name_end = name_start;
+            while (1) {
+                if (path[name_end] == '0') break;
+                if (path[name_end] == '/') break;
+                if (path[name_end] == '\\') break;
+                if (path[name_end] == '.') break;
+                ++name_end;
+            }
         }
 
-        for (int i = name_start; i < name_end; ++i) printf("%c", path[i]);
+        for (uint32_t i = name_start; i < name_end; ++i) printf("%c", path[i]);
         printf("\n");
 
-        // check if it matches the name of this queue entry's file
+        // compare item name to current path name
         int match = 1;
         for (size_t i = 0; i < sizeof(item->name); ++i) {
             if ((name_start + i) >= name_end) break;
@@ -121,21 +116,51 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
         }
         printf("match: %i\n", match);
 
-        if (!match) goto next;
+        if (!match) {
+            --subitem_counter;
+            ++subitem_cursor;
+            continue;
+        }
 
-        // todo: if folder, add subitems to queue
-        while (1) {}
+        // if we matched a folder, clear the queue and fill it with its subitems
+        if (item->type == FSFA_ITEM_TYPE_FOLDER) {
+            subitem_counter = item->size;
+            subitem_cursor = item->offset;
+            name_start = name_end + 1;
+            find_next_name = 1;
+            printf("moving into subfolder\n");
+            continue;
+        }
 
-        next:
-        ++queue_cursor;
+        // otherwise verify extension and then load file data
+        if (item->extension[0] != '\0') {
+            int extension_match = 1;
+            const size_t extension_start = name_end + 1; // if it has an extension, this will be right after the dot
+            printf(".%s\n", &path[extension_start]);
+            for (size_t i = 0; i < sizeof(item->extension); ++i) {
+                printf("    %c - %c\n", path[extension_start + i], item->extension[i]);
+                if (item->extension[i] != path[extension_start + i]) { extension_match = 0; break; }
+                if (item->extension[i] == '\0') break;
+                if (path[extension_start + i] == '\0') break;
+            }
+            printf("extension_match: %i\n", extension_match);
+            if (!extension_match) {
+                --subitem_counter;
+                ++subitem_cursor;
+                continue;
+            };
+        }
+
+        if (on_stack) *destination = (uint32_t*)mem_stack_alloc(item->size, stack);
+        else *destination = (uint32_t*)mem_alloc(item->size, MEM_CAT_FILE);
+        *size = item->size;
+        fseek(file_archive, item->offset + archive_header.data_offset, SEEK_SET);
+        fread(*destination, 1, item->size, file_archive);
+
+        printf("file loaded!\n");
+
+        return 1;
     }
 
-    // Allocate memory for the data
-	if (on_stack) *destination = (uint32_t*)mem_stack_alloc(*size, stack);
-	else *destination = (uint32_t*)mem_alloc(*size, MEM_CAT_FILE);
-
-    // Read the data
-    fread(*destination, sizeof(char), *size, file_archive);
-    printf("[INFO] Loaded file %s\n", path);
-    return 1;
+    return 0;
 }
