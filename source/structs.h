@@ -35,17 +35,6 @@ typedef struct {
     int is_wall_check;
 } vertical_cylinder_t;
 
-typedef enum {
-    axis_x,
-    axis_y,
-    axis_z,
-} axis_t;
-
-typedef struct {
-    int16_t x, y; // 2D position
-    uint8_t r, g, b, pad; // 8-bit RGB color (and padding for alignment)
-} vertex_2d_t;
-
 typedef struct {
     int16_t x, y, z; // 3D position
     uint8_t r, g, b; // 8-bit RGB color
