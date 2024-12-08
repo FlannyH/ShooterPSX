@@ -19,18 +19,37 @@ transform_t t_level = { {0,0,0},{0,0,0},{-4096,-4096,-4096} };
 static scalar_t player_radius_squared = 0;
 int n_sections;
 int sections[N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE];
-int ground_entity_id_prev = -1; // -1 = no entity
-int ground_entity_id_curr = -1; // -1 = no entity
-transform_t ground_entity_prev = {};
-transform_t ground_entity_curr = {};
+
+void player_init(player_t* player, vec3_t position, vec3_t rotation, int health, int armor, int ammo) {
+    player->transform = (transform_t){
+        .position = vec3_from_scalar(0),
+        .rotation = vec3_from_scalar(0),
+        .scale = vec3_from_scalar(ONE)
+    };
+    player->position = position;
+    player->velocity = vec3_from_scalar(0);
+    player->rotation = rotation;
+    player->footstep_timer = 0;
+    player->ground_entity_id_prev = -1;
+    player->ground_entity_id_curr = -1;
+    player->ground_entity_prev = (transform_t){0};
+    player->ground_entity_curr = (transform_t){0};
+    player->health = health;
+    player->armor = armor;
+    player->ammo = ammo;
+    player->has_key_blue = 0;
+    player->has_key_yellow = 0;
+    player->has_gun = 1;
+    player->is_grounded = 1;
+}
 
 void check_ground_collision(player_t* self, level_collision_t* level_bvh, const int dt_ms) {
     WARN_IF("player radius squared was not computed, and is equal to 0", player_radius_squared == 0);
 
-    if (ground_entity_id_curr != -1) {
-        const entity_header_t* entity = (entity_header_t*)(&entity_pool[ground_entity_id_curr * entity_pool_stride]);
-        ground_entity_prev = ground_entity_curr;
-        ground_entity_curr = (transform_t){
+    if (self->ground_entity_id_curr != -1) {
+        const entity_header_t* entity = (entity_header_t*)(&entity_pool[self->ground_entity_id_curr * entity_pool_stride]);
+        self->ground_entity_prev = self->ground_entity_curr;
+        self->ground_entity_curr = (transform_t){
             .position = entity->position,
             .rotation = entity->rotation,
             .scale = entity->scale,
@@ -38,22 +57,22 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
     }
 
     // If we entered the entity this frame, notify the entity
-    if (ground_entity_id_prev == -1 && ground_entity_id_curr != -1) {
-        entity_send_player_intersect(ground_entity_id_curr, self);
+    if (self->ground_entity_id_prev == -1 && self->ground_entity_id_curr != -1) {
+        entity_send_player_intersect(self->ground_entity_id_curr, self);
     }
 
     // If we're on an entity this frame, move the player along with it    
-    if (ground_entity_id_prev == ground_entity_id_curr && ground_entity_id_curr != -1) {
-        self->position = vec3_add(self->position, vec3_sub(ground_entity_curr.position, ground_entity_prev.position));
-        self->rotation = vec3_add(self->rotation, vec3_sub(ground_entity_curr.rotation, ground_entity_prev.rotation));
+    if (self->ground_entity_id_prev == self->ground_entity_id_curr && self->ground_entity_id_curr != -1) {
+        self->position = vec3_add(self->position, vec3_sub(self->ground_entity_curr.position, self->ground_entity_prev.position));
+        self->rotation = vec3_add(self->rotation, vec3_sub(self->ground_entity_curr.rotation, self->ground_entity_prev.rotation));
     }
     // If we left the entity this frame, add momentum to the player
-    else if (ground_entity_id_prev != -1 && ground_entity_id_curr == -1) {
-        self->velocity = vec3_add(self->velocity, vec3_divs(vec3_sub(ground_entity_curr.position, ground_entity_prev.position), ONE * dt_ms));
+    else if (self->ground_entity_id_prev != -1 && self->ground_entity_id_curr == -1) {
+        self->velocity = vec3_add(self->velocity, vec3_divs(vec3_sub(self->ground_entity_curr.position, self->ground_entity_prev.position), ONE * dt_ms));
     }
 
-    ground_entity_id_prev = ground_entity_id_curr;
-    ground_entity_id_curr = -1;
+    self->ground_entity_id_prev = self->ground_entity_id_curr;
+    self->ground_entity_id_curr = -1;
 
     // Cast a cylinder from the player's feet + step height, down to the ground
     const int32_t distance_to_check = 120000;
@@ -92,7 +111,7 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
 
     // If the player is standing on an entity, move the player along with the entity
     if (hit.type == RAY_HIT_TYPE_ENTITY_HITBOX && !hit.entity_hitbox.not_move_player_along) {
-        ground_entity_id_curr = hit.entity_hitbox.entity_index;
+        self->ground_entity_id_curr = hit.entity_hitbox.entity_index;
     }
 
     // Check the Y distance from the ground to the player's feet
@@ -213,10 +232,8 @@ int was_grounded = 0;
 
 void handle_jump(player_t* self) {
     if (self->is_grounded && input_pressed(PAD_CROSS, 0)) {
-        if (self->distance_from_ground - eye_height < jump_ground_threshold) {
-            self->velocity.y = initial_jump_velocity;
-            audio_play_sound(sfx_jump_land1, ONE, 0, (vec3_t){}, 1);
-        }
+        self->velocity.y = initial_jump_velocity;
+        audio_play_sound(sfx_jump_land1, ONE, 0, (vec3_t){}, 1);
     }
     if (!was_grounded && self->is_grounded) audio_play_sound(sfx_jump_land2, ONE, 0, (vec3_t){}, 1);
     was_grounded = self->is_grounded;

@@ -34,11 +34,7 @@ int main(int argc, char** argv) {
     
     level_t level = (level_t){0}; // start with empty level
     memset(&level, 0, sizeof(level));
-    player_t player = (player_t){0};
-    player.position.x = 11705653 / 2;
-   	player.position.y = 11413985 / 2;
-    player.position.z = 2112866  / 2;
-	player.rotation.y = 4096 * 16;
+    player_t player; player_init(&player, vec3_from_scalar(0), vec3_from_scalar(0), 40, 0, 0);
     player_update(&player, &level.collision_bvh, 0, 0);
 
     int dt = 40;

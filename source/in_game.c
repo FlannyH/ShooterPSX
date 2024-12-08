@@ -59,16 +59,11 @@ void state_enter_in_game(void) {
 	tex_alloc_cursor = 0;
 
 	state.in_game.level = level_load(state.in_game.level_load_path);
-	state.in_game.player.position = vec3_from_svec3(state.in_game.level.player_spawn_position);
-	state.in_game.player.rotation = state.in_game.level.player_spawn_rotation;
-
-    // Init player
-    state.in_game.player.velocity.x = 0;
-   	state.in_game.player.velocity.y = 0;
-    state.in_game.player.velocity.z = 0;
-	vec3_debug(state.in_game.player.position);
-	vec3_debug(state.in_game.player.velocity);
-	vec3_debug(state.in_game.player.rotation);
+	player_init(&state.in_game.player,
+		vec3_from_svec3(state.in_game.level.player_spawn_position),
+		state.in_game.level.player_spawn_rotation,
+		40, 0, 0
+	);
 
 	// Load weapon textures
     load_weapon_textures();
@@ -81,13 +76,6 @@ void state_enter_in_game(void) {
 		FntLoad(320,256);
 		FntOpen(32, 32, 256, 192, 0, 512);
 	#endif
-
-	// Init player data
-	state.in_game.player.has_key_blue = 0;
-	state.in_game.player.has_key_yellow = 0;
-	state.in_game.player.health = 40;
-	state.in_game.player.armor = 0;
-	state.in_game.player.ammo = 0;
 }
 
 void load_weapon_textures(void) {

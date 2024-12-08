@@ -18,8 +18,11 @@ typedef struct {
     vec3_t position;
     vec3_t velocity;
     vec3_t rotation;
-    scalar_t distance_from_ground;
     int footstep_timer;
+    int ground_entity_id_prev; // -1 = no entity
+    int ground_entity_id_curr; // -1 = no entity
+    transform_t ground_entity_prev;
+    transform_t ground_entity_curr;
     uint8_t health;
     uint8_t armor;
     uint8_t ammo;
@@ -45,6 +48,7 @@ const static int32_t jump_drag_divider = 4;
 const static int32_t initial_jump_velocity = 5900 / 8;
 const static int32_t jump_ground_threshold = 16000 / 8;
 
+void player_init(player_t* player, vec3_t position, vec3_t rotation, int health, int armor, int ammo);
 void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms, const int time_counter);
 int player_get_level_section(player_t* self, const vislist_t vis);
 

@@ -330,7 +330,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     }
     ImGui::Begin("Level Metadata");
     {
-        auto load = [curr_level, player]() {
+        auto load = [curr_level, &player]() {
             mem_debug();
             if (curr_level && curr_level->graphics) {
                 // only slightly cursed, at least we can be sure that the pc/level editor builds use mem_alloc for these
@@ -363,8 +363,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             *curr_level = level_load(level_path);
             player_spawn_position = vec3_from_svec3(curr_level->player_spawn_position);
             player_spawn_rotation = curr_level->player_spawn_rotation;
-            player->position = player_spawn_position;
-            player->rotation = player_spawn_rotation;
+            player_init(player, player_spawn_position, player_spawn_rotation, 40, 0, 0);
             player_update(player, &curr_level->collision_bvh, 0, 0); // Tick the player with 0 delta time to update the camera transform
         };
 
