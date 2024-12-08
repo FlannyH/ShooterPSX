@@ -43,13 +43,14 @@ void file_init(const char* path) {
     }
 
     // Verify file magic
+    fread(&archive_header, sizeof(archive_header), 1, file_archive);
     if (archive_header.file_magic != MAGIC_FSFA) {
-        printf("[ERROR] Failed to load file archive \"%s\": incorrect file magic\n", new_path);
+        char* magic = (char*)&archive_header.file_magic;
+        printf("[ERROR] Failed to load file archive \"%s\". incorrect file magic: expected \"FSFA\", got \"%c%c%c%c\"\n", new_path, magic[0], magic[1], magic[2], magic[3]);
         return;
     }
 
     // Read file table
-    fread(&archive_header, sizeof(archive_header), 1, file_archive);
     item_table = mem_alloc(archive_header.n_items * sizeof(fsfa_item_t), MEM_CAT_FILE);
     fseek(file_archive, archive_header.items_offset, SEEK_SET);
     fread(item_table, sizeof(fsfa_item_t), archive_header.n_items, file_archive);
