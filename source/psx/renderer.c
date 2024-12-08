@@ -71,9 +71,6 @@ RECT palettes[256];
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 
 void renderer_init(void) {
-    // Reset GPU and enable interrupts
-    ResetGraph(0);
-
     SetVideoMode(MODE_NTSC);
 
     // Configures the pair of DISPENVs

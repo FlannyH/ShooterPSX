@@ -6,7 +6,7 @@
 #ifndef _NDS
 //#define PAL
 //#define _DEBUG_CAMERA
-//#define _DEBUG
+// #define _DEBUG
 //#define _DEBUG_VERBOSE
 #endif
 

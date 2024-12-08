@@ -42,6 +42,12 @@ void file_init(const char* path) {
         return;
     }
 
+    // Verify file magic
+    if (archive_header.file_magic != MAGIC_FSFA) {
+        printf("[ERROR] Failed to load file archive \"%s\": incorrect file magic\n", new_path);
+        return;
+    }
+
     // Read file table
     fread(&archive_header, sizeof(archive_header), 1, file_archive);
     item_table = mem_alloc(archive_header.n_items * sizeof(fsfa_item_t), MEM_CAT_FILE);

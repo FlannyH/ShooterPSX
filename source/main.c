@@ -44,7 +44,17 @@ state_t current_state = STATE_NONE;
 state_t prev_state = STATE_NONE;
 state_vars_t state;
 
-void init(void);
+void platform_init(void) {
+#ifdef _PSX
+    // Reset GPU and enable interrupts
+    ResetGraph(0);
+	CdInit();
+#endif
+#ifdef _NDS
+	defaultExceptionHandler();
+	nitroFSInit(NULL);
+#endif
+}
 
 int main(void) {
 	// Init systems
@@ -54,12 +64,12 @@ int main(void) {
 	mem_debug();
 #endif
 
+	platform_init();
 	file_init("\\assets.sfa");
 	renderer_init();
 	input_init();
 	input_set_stick_deadzone(36);
 	audio_init();
-	init();
 	setup_timers();
 
 	// Init state variables
@@ -129,14 +139,4 @@ int main(void) {
 	debug_layer_close();
 #endif
     return 0;
-}
-
-void init(void) {
-#ifdef _PSX
-	CdInit();
-#endif
-#ifdef _NDS
-	defaultExceptionHandler();
-	nitroFSInit(NULL);
-#endif
 }
