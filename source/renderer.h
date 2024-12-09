@@ -30,9 +30,6 @@ extern "C" {
 
 const static transform_t id_transform = { {0,0,0},{0,0,0}, {-4096, -4096, -4096} };
 extern int widescreen;
-#ifdef _LEVEL_EDITOR
-extern int drawing_entity_id;
-#endif
 
 // Functions
 void renderer_init(void); // Initializes the renderer by configuring the GPU, setting the video mode, and preparing the drawing environment
@@ -61,6 +58,7 @@ int renderer_n_meshes_drawn(void);
 #ifdef _LEVEL_EDITOR
 float* renderer_debug_perspective_matrix(void);
 float* renderer_debug_view_matrix(void);
+void renderer_set_drawing_entity_id(int id);
 #endif
 
 inline uint8_t mul_8x8(const uint8_t a, const uint8_t b) {

@@ -547,6 +547,12 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 #endif
 }
 
+#ifdef _LEVEL_EDITOR
+void renderer_set_drawing_entity_id(int id) {
+	drawing_entity_id = id;
+}
+#endif
+
 void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const transform_t* model_transform) {
     // Calculate model matrix
     mat4 model_matrix;
