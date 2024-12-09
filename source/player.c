@@ -86,7 +86,8 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
     };
     bvh_intersect_vertical_cylinder(level_bvh, player, &hit);
 
-    for (size_t i = 0; i < entity_n_active_aabb; ++i) {
+    const size_t n_active_aabb = entity_get_n_active_aabb();
+    for (size_t i = 0; i < n_active_aabb; ++i) {
         rayhit_t curr_hit;
         if (!entity_aabb_queue[i].is_solid && !entity_aabb_queue[i].is_trigger) continue;
 
@@ -256,7 +257,8 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
             .is_wall_check = 1,
         };
         bvh_intersect_vertical_cylinder(level_bvh, cyl, &hit);
-        for (size_t i = 0; i < entity_n_active_aabb; ++i) {
+        const size_t n_active_aabb = entity_get_n_active_aabb();
+        for (size_t i = 0; i < n_active_aabb; ++i) {
             rayhit_t curr_hit;
             curr_hit.distance = INT32_MAX;
             if (!entity_aabb_queue[i].is_solid && !entity_aabb_queue[i].is_trigger) continue;

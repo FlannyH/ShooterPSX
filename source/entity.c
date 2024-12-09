@@ -16,7 +16,7 @@ entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
 uint8_t entity_types[ENTITY_LIST_LENGTH];
 uint8_t* entity_pool = NULL;
 size_t entity_pool_stride = 0;
-size_t entity_n_active_aabb;
+size_t entity_n_active_aabb = 0;
 model_t* entity_models = NULL;
 int n_entity_textures = 0;
 int entity_signals[ENTITY_SIGNAL_COUNT];
@@ -198,6 +198,10 @@ void entity_deserialize_and_write_slot(int slot, const entity_header_serialized_
 
 size_t entity_get_pool_stride(void) {
 	return entity_pool_stride;
+}
+
+size_t entity_get_n_active_aabb(void) {
+	return entity_n_active_aabb;
 }
 
 #ifdef _DEBUG

@@ -68,7 +68,6 @@ extern "C" {
     extern GLuint fb_texture;
     extern GLuint fbo;
     extern entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
-    extern size_t entity_n_active_aabb;
 }
 
 float scalar_to_float(scalar_t a) {
@@ -224,7 +223,8 @@ void inspect_entity(size_t entity_id) {
     }
 
     // Render its registered bounding boxes
-    for (size_t i = 0; i < entity_n_active_aabb; ++i) {
+    const size_t n_active_aabb = entity_get_n_active_aabb();
+    for (size_t i = 0; i < n_active_aabb; ++i) {
         const entity_collision_box_t box = entity_aabb_queue[i];
         if (box.entity_index != entity_id) continue;
         const pixel32_t color = (box.is_solid) ? (red) : ((box.is_trigger) ? green : blue);
