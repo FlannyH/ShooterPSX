@@ -81,8 +81,6 @@ void debug_layer_update_gameplay(void) {
 #include <level.h>
 #include <file.h>
 extern "C" {
-    extern mat4 perspective_matrix;
-    extern mat4 view_matrix;
     extern int w;
     extern int h;
     extern GLuint fb_texture;
@@ -783,8 +781,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 glm_rotate_y(model_matrix, (float)render_transform.rotation.y * 2 * PI / 131072.0f, model_matrix);
                 glm_rotate_z(model_matrix, (float)render_transform.rotation.z * 2 * PI / 131072.0f, model_matrix);
             if (ImGuizmo::Manipulate(
-                &view_matrix[0][0],
-                &perspective_matrix[0][0],
+                renderer_debug_view_matrix(),
+                renderer_debug_perspective_matrix(),
                 ImGuizmo::TRANSLATE,
                 ImGuizmo::LOCAL,
                 &model_matrix[0][0],

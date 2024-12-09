@@ -56,6 +56,12 @@ int renderer_convert_dt_raw_to_ms(int dt_raw);
 int renderer_should_close(void);
 int renderer_get_level_section_from_position(const model_t *model, vec3_t position);
 void renderer_set_depth_bias(int bias);
+int renderer_n_meshes_drawn(void);
+
+#ifdef _LEVEL_EDITOR
+float* renderer_debug_perspective_matrix(void);
+float* renderer_debug_view_matrix(void);
+#endif
 
 inline uint8_t mul_8x8(const uint8_t a, const uint8_t b) {
     uint16_t c = ((uint16_t)a * (uint16_t)b) >> 8;
@@ -67,13 +73,6 @@ inline uint8_t mul_8x8(const uint8_t a, const uint8_t b) {
 vec3_t renderer_get_forward_vector(void); // Used in the level editor to determine where to spawn new entities
 #endif 
 
-extern int n_rendered_triangles;
-extern int n_rendered_quads;
-extern int n_rendered_untex_triangles;
-extern int n_rendered_untex_quads;
-extern int n_calls_to_draw_triangle;
-extern int n_calls_to_draw_quad;
-extern int n_meshes_drawn;
 extern int n_meshes_total;
 extern int n_polygons_drawn;
 extern int n_sections;

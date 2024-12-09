@@ -670,8 +670,6 @@ int renderer_get_delta_time_raw(void) { return 0; }
 
 int renderer_get_delta_time_ms(void) { return dt; }
 
-uint32_t renderer_get_n_rendered_triangles(void) { return 0; }
-
 uint32_t renderer_get_n_total_triangles(void) { return n_total_triangles; }
 
 int renderer_should_close(void) { return glfwWindowShouldClose(window); }
@@ -827,4 +825,12 @@ void renderer_set_video_mode(int is_pal) {
 
 void renderer_set_depth_bias(int bias) {
 	curr_depth_bias = bias;
+}
+
+float* renderer_debug_perspective_matrix(void) {
+	return &perspective_matrix[0][0];
+}
+
+float* renderer_debug_view_matrix(void) {
+	return &view_matrix[0][0];
 }
