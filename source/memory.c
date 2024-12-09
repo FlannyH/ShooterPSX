@@ -227,6 +227,13 @@ size_t mem_stack_get_occupied(stack_t stack) {
 	}
 }
 
+#ifdef _DEBUG
+char* mem_stack_get_name(int i) {
+	if (i < 0 || i >= N_STACK_TYPES) return "(invalid)";
+	return stack_names[i];
+}
+#endif
+
 size_t mem_stack_get_free(stack_t stack) {
 	return mem_stack_get_size(stack) - mem_stack_get_occupied(stack);
 }

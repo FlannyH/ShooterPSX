@@ -271,7 +271,7 @@ void draw_debug_info(int dt, const int n_sections) {
     FntPrint(-1, "gun anim timer: %i\n", state.in_game.gun_animation_timer);
     for (int i = 0; i < N_STACK_TYPES; ++i) {
         FntPrint(-1, "%s: %i / %i KiB (%i%%)\n",
-                 stack_names[i],
+                 mem_stack_get_name(i),
                  mem_stack_get_occupied(i) / KiB,
                  mem_stack_get_size(i) / KiB,
                  (mem_stack_get_occupied(i) * 100) / mem_stack_get_size(i));
