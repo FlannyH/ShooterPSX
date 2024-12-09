@@ -17,7 +17,6 @@ int vsync_enable = 1;
 int is_pal = 0;
 int textures[256] = {0};
 int texture_pages[8] = {0};
-int n_rendered_triangles = 0;
 int n_rendered_quads = 0;
 int vblank_counter = 0;
 
@@ -70,9 +69,6 @@ void renderer_begin_frame(const transform_t* camera_transform) {
     glRotateZi(angle_to_16(camera_transform->rotation.z));
     glTranslatef32(-camera_transform->position.x >> 12, -camera_transform->position.y >> 12, -camera_transform->position.z >> 12);
     memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
-    
-    n_rendered_triangles = 0;
-    n_rendered_quads = 0;
 }
 
 void renderer_end_frame(void) {
@@ -157,7 +153,6 @@ void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_tran
         glTexCoord2i(v2.u >> 2, v2.v >> 2);
         glVertex3v16(v2.x, v2.y, v2.z);
         vert_idx += 3;
-        n_rendered_triangles++;
     }
     glEnd();
     // Draw quads
