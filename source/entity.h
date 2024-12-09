@@ -82,7 +82,6 @@ typedef struct {
 } entity_collision_box_t;
 
 extern entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
-extern size_t entity_n_active_aabb;
 extern int entity_signals[ENTITY_SIGNAL_COUNT];
 void entity_init(void);
 int entity_alloc(uint8_t entity_type);
@@ -98,6 +97,7 @@ uint8_t entity_get_type(int index);
 entity_header_t* entity_get_header(int index);
 model_t* entity_get_models(void);
 size_t entity_get_pool_stride(void);
+size_t entity_get_n_active_aabb(void);
 
 #ifdef _DEBUG
 void entity_debug(void);

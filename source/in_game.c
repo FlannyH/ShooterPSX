@@ -175,7 +175,8 @@ void state_update_in_game(int dt) {
 			shoot(camera_transform);
 		}
 		if (state.global.show_debug) {
-			for (size_t i = 0; i < entity_n_active_aabb; ++i) {
+			const size_t n_active_aabb = entity_get_n_active_aabb();
+			for (size_t i = 0; i < n_active_aabb; ++i) {
 				renderer_debug_draw_aabb(&entity_aabb_queue[i].aabb, pink, &id_transform);
 			}
 		}
@@ -380,7 +381,8 @@ void shoot(const transform_t camera_transform) {
 	bvh_intersect_ray(&state.in_game.level.collision_bvh, ray, &hit);
 
 	// Intersect entities
-	for (size_t i = 0; i < entity_n_active_aabb; ++i) {
+	const size_t n_active_aabb = entity_get_n_active_aabb();
+	for (size_t i = 0; i < n_active_aabb; ++i) {
 		rayhit_t entity_hit;
 		if (ray_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, ray, &entity_hit)) {
 			if (entity_hit.distance < hit.distance) {
