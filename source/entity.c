@@ -179,6 +179,23 @@ entity_header_t* entity_get_header(int index) {
 	return (entity_header_t*)(&entity_pool[index * entity_pool_stride]);
 }
 
+void entity_deserialize_and_write_slot(int slot, const entity_header_serialized_t* header) {
+	const uint8_t* src_entity_data = (const uint8_t*)&header[1]; // right after the entity header
+
+	// Find where data needs to be written
+	entity_header_t* dst_entity_header = (entity_header_t*)(entity_pool + (slot * entity_pool_stride));
+	uint8_t* dst_entity_data = (uint8_t*)&dst_entity_header[1]; // right after the entity header
+
+	// Write entity header
+	dst_entity_header->position = header->position;
+	dst_entity_header->rotation = header->rotation;
+	dst_entity_header->scale = header->scale;
+	dst_entity_header->mesh = NULL;
+
+	// Copy entity data - we just need to copy everything after the header, so subtract the header size
+	memcpy(dst_entity_data, src_entity_data, entity_pool_stride - sizeof(entity_header_t));
+}
+
 #ifdef _DEBUG
 void entity_debug(void) {
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {

@@ -8,9 +8,6 @@
 #include <entity.h>
 #include <string.h>
 
-extern uint8_t entity_types[ENTITY_LIST_LENGTH];
-extern uint8_t* entity_pool;
-
 level_t level_load(const char* level_path) {
 #ifdef _PSX
     // Wait until done rendering (it uses the temporary stack), then clear the memory stacks
@@ -45,7 +42,7 @@ level_t level_load(const char* level_path) {
     const char* path_vislist = (const char*)((binary_section + level_header->path_vislist_offset));
     const char* path_graphics = (const char*)((binary_section + level_header->path_model_offset));
     const char* level_entity_pool = (const char*)((binary_section + level_header->entity_pool_offset));
-    const char* level_entity_types = (const char*)((binary_section + level_header->entity_types_offset));
+    const uint8_t* level_entity_types = (const uint8_t*)((binary_section + level_header->entity_types_offset));
     const char* text = (const char*)((binary_section + level_header->text_offset));
 
     // We gotta do some specific memory management if we want to fit as much into the temporary stack as we can
@@ -85,20 +82,7 @@ level_t level_load(const char* level_path) {
     for (int i = 0; i < level_header->n_entities; ++i) {
         // Find where data needs to be read
         const entity_header_serialized_t* src_entity_header = (const entity_header_serialized_t*)(level_entity_pool + (i * level_entity_pool_stride));
-        const uint8_t* src_entity_data = (const uint8_t*)&src_entity_header[1]; // right after the entity header
-
-        // Find where data needs to be written
-        entity_header_t* dst_entity_header = (entity_header_t*)(entity_pool + (i * entity_pool_stride));
-        uint8_t* dst_entity_data = (uint8_t*)&dst_entity_header[1]; // right after the entity header
-        
-        // Write entity header
-        dst_entity_header->position = src_entity_header->position;
-        dst_entity_header->rotation = src_entity_header->rotation;
-        dst_entity_header->scale = src_entity_header->scale;
-        dst_entity_header->mesh = NULL;
-
-        // Copy entity data - we just need to copy everything after the header, so subtract the header size
-        memcpy(dst_entity_data, src_entity_data, entity_pool_stride - sizeof(entity_header_t));
+        entity_deserialize_and_write_slot(i, src_entity_header);
     }
     entity_sanitize();
 
