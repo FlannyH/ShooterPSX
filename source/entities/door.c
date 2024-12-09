@@ -6,7 +6,7 @@
 
 entity_door_t* entity_door_new(void) {
 	// Allocate memory for the entity
-    entity_door_t* entity = (entity_door_t*)&entity_pool[entity_alloc(ENTITY_DOOR) * entity_pool_stride];
+	entity_door_t* entity = (entity_door_t*)entity_get_header(entity_alloc(ENTITY_DOOR));
 	entity->entity_header.position = (vec3_t){0, 0, 0};
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
@@ -67,7 +67,7 @@ mesh_t* update_mesh(entity_door_t* door) {
 
 void entity_door_update(int slot, player_t* player, int dt) {
 	(void)dt;
-	entity_door_t* door = (entity_door_t*)&entity_pool[slot * entity_pool_stride];
+	entity_door_t* door = (entity_door_t*)entity_get_header(slot);
 
 	vec3_t door_pos = door->entity_header.position;
 	const vec3_t player_pos = player->position;

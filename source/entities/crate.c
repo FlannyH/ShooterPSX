@@ -4,7 +4,7 @@
 
 entity_crate_t* entity_crate_new(void) {
 	// Allocate memory for the entity
-	entity_crate_t* entity = (entity_crate_t*)&entity_pool[entity_alloc(ENTITY_CRATE) * entity_pool_stride];
+	entity_crate_t* entity = (entity_crate_t*)entity_get_header(entity_alloc(ENTITY_CRATE));
 	entity->entity_header.position = (vec3_t){0, 0, 0};
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
@@ -20,7 +20,7 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 
 	(void)dt;
 	(void)player;
-	entity_crate_t* crate = (entity_crate_t*)&entity_pool[slot * entity_pool_stride];
+	entity_crate_t* crate = (entity_crate_t*)entity_get_header(slot);
 	const vec3_t crate_pos = crate->entity_header.position;
 
 	// Register collision
@@ -62,7 +62,7 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 
 void entity_crate_on_hit(int slot, int hitbox_index) {
 	(void)hitbox_index;
-	entity_crate_t* crate = (entity_crate_t*)&entity_pool[slot * entity_pool_stride];
+	entity_crate_t* crate = (entity_crate_t*)entity_get_header(slot);
 	crate->entity_header.mesh = NULL; // Mark the mesh for refreshing
 	entity_set_type(slot, (uint8_t)ENTITY_PICKUP); // pickup struct is practically identical to crate struct so this works :D
 }

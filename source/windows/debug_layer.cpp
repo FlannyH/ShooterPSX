@@ -118,7 +118,7 @@ void inspect_entity(size_t entity_id) {
     const uint8_t entity_type = entity_get_type(entity_id);
     if (entity_type == ENTITY_NONE) return;
 
-    entity_header_t* entity_data = (entity_header_t*)&entity_pool[entity_id * entity_pool_stride];
+    entity_header_t* entity_data = entity_get_header(entity_id);
             
     if (ImGui::TreeNodeEx("Entity Header", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (entity_data->mesh) ImGui::Text("Mesh: %s", entity_data->mesh->name);
@@ -383,7 +383,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             std::vector<uint8_t> entity_data_serialized;
             for (intptr_t i = 0; i < n_entities; ++i) {
                 // Get header
-                const entity_header_t header = *((entity_header_t*)(entity_pool + (entity_pool_stride * i)));
+                const entity_header_t header = *entity_get_header(i);
 
                 // Write entity header
                 write_data_and_get_offset(entity_data_serialized, &header.position, sizeof(vec3_t));
@@ -391,7 +391,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 write_data_and_get_offset(entity_data_serialized, &header.scale, sizeof(vec3_t));
 
                 // Write entity data
-                const uint8_t* entity_data = entity_pool + (entity_pool_stride * i) + sizeof(entity_header_t);
+                const uint8_t* entity_data = ((const uint8_t*)entity_get_header(i)) + sizeof(entity_header_t);
                 const size_t size = entity_pool_stride - sizeof(entity_header_t);
                 write_data_and_get_offset(entity_data_serialized, entity_data, size);
             }
@@ -731,7 +731,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         mat4 delta;
         
         if (*selected_entity_slot != -1) {
-                entity_header_t* selected_entity = (entity_header_t*)&entity_pool[(*selected_entity_slot) * entity_pool_stride];
+                entity_header_t* selected_entity = entity_get_header(*selected_entity_slot);
 
                 // Transform to world units
                 transform_t render_transform;

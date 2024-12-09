@@ -175,6 +175,10 @@ uint8_t entity_get_type(int index) {
 	return entity_types[index];
 }
 
+entity_header_t* entity_get_header(int index) {
+	return (entity_header_t*)(&entity_pool[index * entity_pool_stride]);
+}
+
 #ifdef _DEBUG
 void entity_debug(void) {
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
