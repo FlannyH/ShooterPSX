@@ -35,9 +35,10 @@ GLuint textures;
 float tex_res[512];
 clock_t dt = 0;
 uint32_t n_total_triangles = 0;
-int w, h;
-int prev_w = 0;
-int prev_h = 0;
+int window_w = 32;
+int window_h = 32;
+int prev_window_w = 0;
+int prev_window_h = 0;
 transform_t cam_transform;
 vec3_t camera_pos;
 vec3_t camera_dir;
@@ -242,6 +243,14 @@ GLuint shader_from_file(char *vert_path, char *frag_path) {
 	return shader_gpu;
 }
 
+int renderer_width(void) {
+    return window_w;
+}
+
+int renderer_height(void) {
+    return window_h;
+}
+
 void renderer_init(void) {
 	// Create OpenGL window
 	glfwInit();
@@ -322,7 +331,7 @@ void renderer_init(void) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-	glfwGetWindowSize(window, &w, &h);
+	glfwGetWindowSize(window, &window_w, &window_h);
 	#endif
 }
 double lasttime = 0.0;
@@ -335,19 +344,19 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 #else
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glfwGetWindowSize(window, &w, &h);
+	glfwGetWindowSize(window, &window_w, &window_h);
 #endif
-	glViewport(0, 0, w, h);
+	glViewport(0, 0, window_w, window_h);
 
-	if (w != prev_w || h != prev_h) {
+	if (window_w != prev_window_w || window_h != prev_window_h) {
 		// Recreate projection matrix
-		glm_perspective(glm_rad(90.0f), (float)w / (float)h, 0.1f, 1000000.f,
+		glm_perspective(glm_rad(90.0f), (float)window_w / (float)window_h, 0.1f, 1000000.f,
 										perspective_matrix);
 
 #ifdef _LEVEL_EDITOR
 	// Resize color attachment
 	glBindTexture(GL_TEXTURE_2D, fb_texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, window_w, window_h, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 	
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fb_texture, 0);
@@ -355,7 +364,7 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 
 	// Resize depth attachment
 	glBindTexture(GL_TEXTURE_2D, fb_depth);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, window_w, window_h, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 	
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
@@ -448,7 +457,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 	// Calculate model matrix
 	mat4 model_matrix;
 	glm_mat4_identity(model_matrix);
-    glViewport(0, 0, w, h);
+    glViewport(0, 0, window_w, window_h);
     tex_id_start = tex_id_offset;
 
 	// Apply rotation
@@ -550,6 +559,11 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 #ifdef _LEVEL_EDITOR
 void renderer_set_drawing_entity_id(int id) {
 	drawing_entity_id = id;
+}
+
+void renderer_update_window_res(int width, int height) {
+	window_w = width;
+	window_h = height;
 }
 #endif
 

@@ -25,6 +25,14 @@ void vblank_handler(void) {
     ++vblank_counter;
 }
 
+int renderer_width(void) {
+    return 256;
+}
+
+int renderer_height(void) {
+    return 192;
+}
+
 void renderer_init(void) {
     videoSetMode(MODE_0_3D);
     // Setup layer 1 as console layer

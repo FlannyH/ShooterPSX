@@ -68,6 +68,14 @@ RECT palettes[256];
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 
+int renderer_width(void) {
+    return res_x;
+}
+
+int renderer_height(void) {
+    return curr_res_y;
+}
+
 void renderer_init(void) {
     SetVideoMode(MODE_NTSC);
 
