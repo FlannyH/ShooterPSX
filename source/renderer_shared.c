@@ -9,11 +9,6 @@
 // Shared rendering parameters
 uint8_t tex_id_start = 0;
 
-// Debug parameters
-#ifdef _LEVEL_EDITOR
-extern int drawing_entity_id;
-#endif
-
 void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {
     const vec2_t tl = {center.x - size.x/2, center.y - size.y/2};
     const vec2_t tr = {center.x + size.x/2, center.y - size.y/2};
@@ -65,7 +60,7 @@ void renderer_draw_model_shaded(const model_t* model, const transform_t* model_t
     tex_id_start = tex_id_offset;
 
 #ifdef _LEVEL_EDITOR
-	drawing_entity_id = 255;
+	renderer_set_drawing_entity_id(255);
 #endif
 
     if (vislist == NULL || n_sections == 0) {
