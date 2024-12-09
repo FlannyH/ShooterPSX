@@ -43,6 +43,7 @@ vec3_t camera_pos;
 vec3_t camera_dir;
 extern uint8_t tex_id_start;
 int curr_depth_bias = 0;
+int n_meshes_drawn = 0;
 
 // todo: i can probably make this more clean
 // Need to define these somewhere so it compiles, unused in Windows build
@@ -442,6 +443,8 @@ void renderer_end_frame(void) {
 
 int32_t max_dot_value = 0;
 void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_transform, int local, int facing_camera, int tex_id_offset) {
+	++n_meshes_drawn;
+
 	// Calculate model matrix
 	mat4 model_matrix;
 	glm_mat4_identity(model_matrix);
@@ -671,6 +674,8 @@ int renderer_get_delta_time_raw(void) { return 0; }
 int renderer_get_delta_time_ms(void) { return dt; }
 
 uint32_t renderer_get_n_total_triangles(void) { return n_total_triangles; }
+
+int renderer_n_meshes_drawn(void) { return n_meshes_drawn; }
 
 int renderer_should_close(void) { return glfwWindowShouldClose(window); }
 

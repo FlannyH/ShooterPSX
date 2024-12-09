@@ -19,6 +19,7 @@ int textures[256] = {0};
 int texture_pages[8] = {0};
 int n_rendered_quads = 0;
 int vblank_counter = 0;
+int n_meshes_drawn = 0;
 
 void vblank_handler(void) {
     ++vblank_counter;
@@ -79,6 +80,8 @@ void renderer_end_frame(void) {
 }
 
 void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform, int local, int facing_camera, int tex_id_offset) {
+    ++n_meshes_drawn; 
+    
     // Set up model view matrix
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -314,6 +317,8 @@ int renderer_get_delta_time_raw(void) {
 int renderer_get_delta_time_ms(void) {
     TODO()
 }
+
+int renderer_n_meshes_drawn(void) { return n_meshes_drawn; }
 
 int renderer_convert_dt_raw_to_ms(int dt_raw) {
     return (1666 * dt_raw) / 100;
