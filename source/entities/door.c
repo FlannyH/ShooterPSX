@@ -27,36 +27,36 @@ mesh_t* update_mesh(entity_door_t* door) {
 	if (door->is_rotated) {
 		if (door->is_big_door) {
 			if (door->is_locked) {
-				mesh = model_find_mesh(entity_models, "05_door_big_locked_rotated");
+				mesh = model_find_mesh(entity_get_models(), "05_door_big_locked_rotated");
 			}
 			else {
-				mesh = model_find_mesh(entity_models, "07_door_big_unlocked_rotated");
+				mesh = model_find_mesh(entity_get_models(), "07_door_big_unlocked_rotated");
 			}
 		}
 		else {
 			if (door->is_locked) {
-				mesh = model_find_mesh(entity_models, "01_door_small_locked_rotated");
+				mesh = model_find_mesh(entity_get_models(), "01_door_small_locked_rotated");
 			}
 			else {
-				mesh = model_find_mesh(entity_models, "03_door_small_unlocked_rotated");
+				mesh = model_find_mesh(entity_get_models(), "03_door_small_unlocked_rotated");
 			}
 		}
 	}
 	else {
 		if (door->is_big_door) {
 			if (door->is_locked) {
-				mesh = model_find_mesh(entity_models, "04_door_big_locked");
+				mesh = model_find_mesh(entity_get_models(), "04_door_big_locked");
 			}
 			else {
-				mesh = model_find_mesh(entity_models, "06_door_big_unlocked");
+				mesh = model_find_mesh(entity_get_models(), "06_door_big_unlocked");
 			}
 		}
 		else {
 			if (door->is_locked) {
-				mesh = model_find_mesh(entity_models, "00_door_small_locked");
+				mesh = model_find_mesh(entity_get_models(), "00_door_small_locked");
 			}
 			else {
-				mesh = model_find_mesh(entity_models, "02_door_small_unlocked");
+				mesh = model_find_mesh(entity_get_models(), "02_door_small_unlocked");
 			}
 		}
 	}

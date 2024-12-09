@@ -25,14 +25,14 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
     // Rendering
     if (pickup->entity_header.mesh == NULL) {
         switch (pickup->type) {
-            case PICKUP_TYPE_AMMO_SMALL:   pickup->entity_header.mesh = model_find_mesh(entity_models, "08_pickup_ammo_small");   break;
-            case PICKUP_TYPE_AMMO_BIG:     pickup->entity_header.mesh = model_find_mesh(entity_models, "09_pickup_ammo_big");     break;
-            case PICKUP_TYPE_ARMOR_SMALL:  pickup->entity_header.mesh = model_find_mesh(entity_models, "10_pickup_armor_small");  break;
-            case PICKUP_TYPE_ARMOR_BIG:    pickup->entity_header.mesh = model_find_mesh(entity_models, "11_pickup_armor_big");    break;
-            case PICKUP_TYPE_HEALTH_SMALL: pickup->entity_header.mesh = model_find_mesh(entity_models, "12_pickup_health_small"); break;
-            case PICKUP_TYPE_HEALTH_BIG:   pickup->entity_header.mesh = model_find_mesh(entity_models, "13_pickup_health_big");   break;
-            case PICKUP_TYPE_KEY_BLUE:     pickup->entity_header.mesh = model_find_mesh(entity_models, "14_pickup_key_blue");     break;
-            case PICKUP_TYPE_KEY_YELLOW:   pickup->entity_header.mesh = model_find_mesh(entity_models, "15_pickup_key_yellow");   break;
+            case PICKUP_TYPE_AMMO_SMALL:   pickup->entity_header.mesh = model_find_mesh(entity_get_models(), "08_pickup_ammo_small");   break;
+            case PICKUP_TYPE_AMMO_BIG:     pickup->entity_header.mesh = model_find_mesh(entity_get_models(), "09_pickup_ammo_big");     break;
+            case PICKUP_TYPE_ARMOR_SMALL:  pickup->entity_header.mesh = model_find_mesh(entity_get_models(), "10_pickup_armor_small");  break;
+            case PICKUP_TYPE_ARMOR_BIG:    pickup->entity_header.mesh = model_find_mesh(entity_get_models(), "11_pickup_armor_big");    break;
+            case PICKUP_TYPE_HEALTH_SMALL: pickup->entity_header.mesh = model_find_mesh(entity_get_models(), "12_pickup_health_small"); break;
+            case PICKUP_TYPE_HEALTH_BIG:   pickup->entity_header.mesh = model_find_mesh(entity_get_models(), "13_pickup_health_big");   break;
+            case PICKUP_TYPE_KEY_BLUE:     pickup->entity_header.mesh = model_find_mesh(entity_get_models(), "14_pickup_key_blue");     break;
+            case PICKUP_TYPE_KEY_YELLOW:   pickup->entity_header.mesh = model_find_mesh(entity_get_models(), "15_pickup_key_yellow");   break;
         }
 
     PANIC_IF("Pickup entity could not find mesh!", pickup->entity_header.mesh == NULL);

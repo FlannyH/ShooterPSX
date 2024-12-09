@@ -163,6 +163,10 @@ const char* entity_names[] = {
 	NULL
 };
 
+model_t* entity_get_models(void) {
+	return entity_models;
+}
+
 #ifdef _DEBUG
 void entity_debug(void) {
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
