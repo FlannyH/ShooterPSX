@@ -81,7 +81,6 @@ typedef struct {
 	unsigned int not_move_player_along : 1; // if the player is standing on this box, should they be moved along with the entity this collision box belongs to?
 } entity_collision_box_t;
 
-extern model_t* entity_models;
 extern uint8_t entity_types[ENTITY_LIST_LENGTH];
 extern uint8_t* entity_pool;
 extern size_t entity_pool_stride;
@@ -96,6 +95,7 @@ void entity_sanitize(void);
 void entity_update_all(player_t* player, int dt);
 void entity_kill(int slot);
 void entity_send_player_intersect(int slot, player_t* player);
+model_t* entity_get_models(void);
 
 #ifdef _DEBUG
 void entity_debug(void);

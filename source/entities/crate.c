@@ -8,15 +8,15 @@ entity_crate_t* entity_crate_new(void) {
 	entity->entity_header.position = (vec3_t){0, 0, 0};
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
-	entity->entity_header.mesh = model_find_mesh(entity_models, "28_crate");
+	entity->entity_header.mesh = model_find_mesh(entity_get_models(), "28_crate");
     entity->pickup_to_spawn = PICKUP_TYPE_NONE;
 	return entity;
 }
 
 void entity_crate_update(int slot, player_t* player, int dt) {
-	PANIC_IF("entity_models is null!", entity_models == NULL);
-	PANIC_IF("entity_models->meshes is null!", entity_models->meshes == NULL);
-	PANIC_IF("entity_models does not contain enough meshes!", entity_models->n_meshes < N_ENTITY_MESH_IDS);
+	PANIC_IF("entity_models is null!", entity_get_models() == NULL);
+	PANIC_IF("entity_models->meshes is null!", entity_get_models()->meshes == NULL);
+	PANIC_IF("entity_models does not contain enough meshes!", entity_get_models()->n_meshes < N_ENTITY_MESH_IDS);
 
 	(void)dt;
 	(void)player;
@@ -24,7 +24,7 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 	const vec3_t crate_pos = crate->entity_header.position;
 
 	// Register collision
-	aabb_t bounds = entity_models->meshes[ENTITY_MESH_CRATE].bounds;
+	aabb_t bounds = entity_get_models()->meshes[ENTITY_MESH_CRATE].bounds;
 	bounds.min.x *= COL_SCALE; bounds.min.y *= COL_SCALE; bounds.min.z *= COL_SCALE; 
 	bounds.max.x *= COL_SCALE; bounds.max.y *= COL_SCALE; bounds.max.z *= COL_SCALE; 
 	const aabb_t collision_box = {
@@ -55,7 +55,7 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 	drawing_entity_id = slot;
 #endif
 	if (crate->entity_header.mesh == NULL) {
-		crate->entity_header.mesh = model_find_mesh(entity_models, "28_crate");
+		crate->entity_header.mesh = model_find_mesh(entity_get_models(), "28_crate");
 	}
 	renderer_draw_mesh_shaded(crate->entity_header.mesh, &render_transform, 0, 0, tex_entity_start);
 }
