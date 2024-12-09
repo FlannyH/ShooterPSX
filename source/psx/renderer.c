@@ -455,6 +455,8 @@ int renderer_get_delta_time_ms(void) {
     return renderer_convert_dt_raw_to_ms(dt_raw);
 }
 
+int renderer_n_meshes_drawn(void) { return n_meshes_drawn; }
+
 int renderer_convert_dt_raw_to_ms(int dt_raw) {
     int dt_ms;
     if (vsync_enable) {
