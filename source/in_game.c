@@ -401,7 +401,7 @@ void shoot(const transform_t camera_transform) {
 #endif
 	// If we hit an entity, run its on_hit function
 	if (!is_infinity(hit.distance) && hit.type == RAY_HIT_TYPE_ENTITY_HITBOX) {
-		switch (entity_types[hit.entity_hitbox.entity_index]) {
+		switch (entity_get_type(hit.entity_hitbox.entity_index)) {
 			case ENTITY_DOOR: entity_door_on_hit(hit.entity_hitbox.entity_index, hit.entity_hitbox.box_index); break;
 			case ENTITY_PICKUP: entity_pickup_on_hit(hit.entity_hitbox.entity_index, hit.entity_hitbox.box_index); break;
 			case ENTITY_CRATE: entity_crate_on_hit(hit.entity_hitbox.entity_index, hit.entity_hitbox.box_index); break;
