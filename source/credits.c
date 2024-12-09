@@ -54,7 +54,7 @@ void state_update_credits(int dt) {
 
 	// If any input is pressed or the credits text is over, go back to title screen
 	if (input_pressed(0xFFFF, 0) || state.credits.scroll < -5800000) {
-		current_state = STATE_TITLE_SCREEN;
+		set_current_state(STATE_TITLE_SCREEN);
 	}
 	return;
 }

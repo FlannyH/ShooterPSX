@@ -17,6 +17,10 @@ state_t current_state = STATE_NONE;
 state_t prev_state = STATE_NONE;
 state_vars_t state;
 
+void set_current_state(state_t state) { current_state = state; }
+state_t get_current_state(void) { return current_state; }
+state_t get_prev_state(void) { return prev_state; }
+
 int main(int argc, char** argv) {
     if      (argc == 1) chdir("./assets/");
     else if (argc == 2) chdir(argv[1]);

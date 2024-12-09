@@ -44,6 +44,10 @@ state_t current_state = STATE_NONE;
 state_t prev_state = STATE_NONE;
 state_vars_t state;
 
+void set_current_state(state_t state) { current_state = state; }
+state_t get_current_state(void) { return current_state; }
+state_t get_prev_state(void) { return prev_state; }
+
 void platform_init(void) {
 #ifdef _PSX
     // Reset GPU and enable interrupts

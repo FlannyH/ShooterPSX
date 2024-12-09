@@ -23,7 +23,7 @@
 #endif
 
 void state_enter_settings(void) {
-	state.global.state_to_return_to = prev_state;
+	state.global.state_to_return_to = get_prev_state();
 	state.global.fade_level = 255;
 	state.title_screen.button_pressed = 0;
 	while (state.global.fade_level > 0) {
@@ -114,7 +114,7 @@ void state_update_settings(int dt) {
 			case 3: // controller sensitivity
 				break;
 			case 4: // back
-				current_state = state.global.state_to_return_to;
+				set_current_state(state.global.state_to_return_to);
 				break;
 		}
 	}
