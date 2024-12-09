@@ -48,8 +48,6 @@ int is_pal = 0;
 int drawn_first_frame = 0;
 int frame_counter = 0;
 int n_meshes_drawn = 0;
-int n_meshes_total = 0;
-int n_polygons_drawn = 0;
 int delta_time_raw_curr = 0;
 int delta_time_raw_prev = 0;
 int tex_level_start = 0;
@@ -142,8 +140,6 @@ void renderer_begin_frame(const transform_t* camera_transform) {
 	camera_dir.y = view_matrix.m[2][1];
 	camera_dir.z = view_matrix.m[2][2];
     n_meshes_drawn = 0;
-    n_meshes_total = 0;
-	n_polygons_drawn = 0;
 }
 
 void renderer_end_frame(void) {
@@ -178,7 +174,6 @@ void renderer_end_frame(void) {
 }
 
 void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t* model_transform, int local, int facing_camera, int tex_id_offset) {
-    ++n_meshes_total;
     if (!mesh) {
         printf("renderer_draw_mesh_shaded: mesh was null!\n");
         return;

@@ -248,8 +248,7 @@ void draw_debug_info(int dt, const int n_sections) {
     for (int i = 0; i < n_sections; ++i) FntPrint(-1, "%i, ", sections[i]);
     FntPrint(-1, "\n");
     FntPrint(-1, "dt: %i\n", dt);
-    FntPrint(-1, "meshes drawn: %i / %i\n", renderer_n_meshes_drawn(), n_meshes_total);
-    FntPrint(-1, "polygons drawn: %i\n", n_polygons_drawn);
+    FntPrint(-1, "meshes drawn: %i\n", renderer_n_meshes_drawn());
     FntPrint(-1, "frame: %i\n", state.global.frame_counter);
     FntPrint(-1, "time: %i.%03i\n", state.global.time_counter / 1000, state.global.time_counter % 1000);
     FntPrint(-1, "player pos: %i, %i, %i\n",

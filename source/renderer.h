@@ -71,8 +71,6 @@ inline uint8_t mul_8x8(const uint8_t a, const uint8_t b) {
 vec3_t renderer_get_forward_vector(void); // Used in the level editor to determine where to spawn new entities
 #endif 
 
-extern int n_meshes_total;
-extern int n_polygons_drawn;
 extern int n_sections;
 extern int tex_level_start;
 extern int tex_entity_start;
