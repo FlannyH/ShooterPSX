@@ -12,7 +12,7 @@
 #include <string.h>
 extern state_vars_t state;
 
-entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
+entity_collision_box_t entity_aabb_queue[ENTITY_AABB_QUEUE_LENGTH];
 uint8_t entity_types[ENTITY_LIST_LENGTH];
 uint8_t* entity_pool = NULL;
 size_t entity_pool_stride = 0;
@@ -168,14 +168,23 @@ model_t* entity_get_models(void) {
 }
 
 void entity_set_type(int index, uint8_t type) {
+#ifdef _DEBUG
+	PANIC_IF("index out of bounds", index < 0 || index >= ENTITY_LIST_LENGTH);
+#endif
 	entity_types[index] = type;
 }
 
 uint8_t entity_get_type(int index) {
+#ifdef _DEBUG
+	PANIC_IF("index out of bounds", index < 0 || index >= ENTITY_LIST_LENGTH);
+#endif
 	return entity_types[index];
 }
 
 entity_header_t* entity_get_header(int index) {
+#ifdef _DEBUG
+	PANIC_IF("index out of bounds", index < 0 || index >= ENTITY_LIST_LENGTH);
+#endif
 	return (entity_header_t*)(&entity_pool[index * entity_pool_stride]);
 }
 
@@ -205,14 +214,23 @@ size_t entity_get_n_active_aabb(void) {
 }
 
 entity_collision_box_t* entity_get_aabb_queue_entry(int index) {
+#ifdef _DEBUG
+	PANIC_IF("index out of bounds", index < 0 || index >= ENTITY_AABB_QUEUE_LENGTH);
+#endif
 	return &entity_aabb_queue[index];
 }
 
 int entity_get_signal(int index) {
+#ifdef _DEBUG
+	PANIC_IF("index out of bounds", index < 0 || index >= ENTITY_SIGNAL_COUNT);
+#endif
 	return entity_signals[index];
 }
 
 void entity_set_signal(int index, int value) {
+#ifdef _DEBUG
+	PANIC_IF("index out of bounds", index < 0 || index >= ENTITY_SIGNAL_COUNT);
+#endif
 	entity_signals[index] = value;
 }
 
