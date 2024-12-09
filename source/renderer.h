@@ -54,11 +54,14 @@ int renderer_should_close(void);
 void renderer_set_depth_bias(int bias);
 int renderer_n_meshes_drawn(void);
 int renderer_get_camera_level_section(vec3_t pos, const vislist_t vis);
+int renderer_width(void);
+int renderer_height(void);
 
 #ifdef _LEVEL_EDITOR
 float* renderer_debug_perspective_matrix(void);
 float* renderer_debug_view_matrix(void);
 void renderer_set_drawing_entity_id(int id);
+void renderer_update_window_res(int width, int height);
 #endif
 
 inline uint8_t mul_8x8(const uint8_t a, const uint8_t b) {
@@ -77,7 +80,6 @@ extern int tex_weapon_start;
 extern int tex_alloc_cursor;
 extern int vsync_enable;
 extern int is_pal;
-extern int res_x;
 #ifdef __cplusplus
 }
 #endif

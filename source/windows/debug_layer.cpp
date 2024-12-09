@@ -63,8 +63,6 @@ void debug_layer_end(void) {
 #include <level.h>
 #include <file.h>
 extern "C" {
-    extern int w;
-    extern int h;
     extern GLuint fb_texture;
     extern GLuint fbo;
 }
@@ -716,11 +714,10 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         const float window_height = content_offset_bottom_right.y - content_offset_top_left.y;
         const float nrm_mouse_x = (rel_mouse_pos.x / window_width) * 2.0 - 1.0;
         const float nrm_mouse_y = (rel_mouse_pos.y / window_width) * 2.0 - 1.0;
-        w = (int)window_width;
-        h = (int)window_height;    
+        renderer_update_window_res((int)window_width, (int)window_height);
 
         // Draw the viewport
-        const auto wsize = ImVec2(w, h);
+        const auto wsize = ImVec2(renderer_width(), renderer_height());
         ImGui::Image((ImTextureID)(intptr_t)fb_texture, wsize, ImVec2(0, 1), ImVec2(1, 0));
 
         // Handle entity gizmo
@@ -793,7 +790,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             if (input_pressed(PAD_L2, 0)) {
                 // Read stencil buffer
                 uint8_t entity_index = 255;
-                glReadPixels((GLint)rel_mouse_pos.x, (GLint)(h-rel_mouse_pos.y), 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &entity_index);
+                glReadPixels((GLint)rel_mouse_pos.x, (GLint)(renderer_height() - rel_mouse_pos.y), 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &entity_index);
                 
                 if (!ImGuizmo::IsOver() && !ImGuizmo::IsUsingAny()) {
                     if (entity_index != 255) {

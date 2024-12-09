@@ -65,8 +65,8 @@ void state_update_settings(int dt) {
 	}
 
 	// Draw values
-	char num_display[4];
-	snprintf(num_display, 4, "%i", res_x);
+	char num_display[6];
+	snprintf(num_display, 6, "%i", renderer_width());
 	char* fps_text = "UNLOCKED";
 	if (vsync_enable == 1) {
 		if (is_pal) fps_text = "50 FPS";
