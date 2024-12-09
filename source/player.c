@@ -47,7 +47,7 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
     WARN_IF("player radius squared was not computed, and is equal to 0", player_radius_squared == 0);
 
     if (self->ground_entity_id_curr != -1) {
-        const entity_header_t* entity = (entity_header_t*)(&entity_pool[self->ground_entity_id_curr * entity_pool_stride]);
+        const entity_header_t* entity = entity_get_header(self->ground_entity_id_curr);
         self->ground_entity_prev = self->ground_entity_curr;
         self->ground_entity_curr = (transform_t){
             .position = entity->position,

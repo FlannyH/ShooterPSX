@@ -4,7 +4,7 @@
 
 entity_pickup_t* entity_pickup_new(void) {
 	// Allocate memory for the entity
-    entity_pickup_t* entity = (entity_pickup_t*)&entity_pool[entity_alloc(ENTITY_PICKUP) * entity_pool_stride];
+    entity_pickup_t* entity = (entity_pickup_t*)entity_get_header(entity_alloc(ENTITY_PICKUP));
 	entity->entity_header.position = (vec3_t){0, 0, 0};
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
@@ -14,7 +14,7 @@ entity_pickup_t* entity_pickup_new(void) {
 }
 
 void entity_pickup_update(int slot, player_t* player, int dt) {
-	entity_pickup_t* pickup = (entity_pickup_t*)&entity_pool[slot * entity_pool_stride];
+	entity_pickup_t* pickup = (entity_pickup_t*)entity_get_header(slot);
 	const vec3_t pickup_pos = pickup->entity_header.position;
 	const vec3_t player_pos = vec3_sub(player->position, (vec3_t){0, 200 * COL_SCALE, 0});
     vec3_t pickup_to_player = vec3_sub(player_pos, pickup_pos);

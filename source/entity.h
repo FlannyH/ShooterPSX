@@ -82,7 +82,6 @@ typedef struct {
 } entity_collision_box_t;
 
 extern uint8_t entity_types[ENTITY_LIST_LENGTH];
-extern uint8_t* entity_pool;
 extern size_t entity_pool_stride;
 extern entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
 extern size_t entity_n_active_aabb;
@@ -97,6 +96,7 @@ void entity_update_all(player_t* player, int dt);
 void entity_kill(int slot);
 void entity_send_player_intersect(int slot, player_t* player);
 uint8_t entity_get_type(int index);
+entity_header_t* entity_get_header(int index);
 model_t* entity_get_models(void);
 
 #ifdef _DEBUG

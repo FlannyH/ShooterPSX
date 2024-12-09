@@ -5,7 +5,7 @@
 extern state_vars_t state;
 
 entity_trigger_t* entity_trigger_new(void) {
-    entity_trigger_t* entity = (entity_trigger_t*)&entity_pool[entity_alloc(ENTITY_TRIGGER) * entity_pool_stride];
+    entity_trigger_t* entity = (entity_trigger_t*)entity_get_header(entity_alloc(ENTITY_PICKUP));
     entity->entity_header.position = (vec3_t){0, 0, 0};
     entity->entity_header.rotation = (vec3_t){0, 0, 0};
     entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
@@ -19,7 +19,7 @@ entity_trigger_t* entity_trigger_new(void) {
 
 void entity_trigger_update(int slot, player_t* player, int dt) {
     (void)player;
-    entity_trigger_t* trigger = (entity_trigger_t*)&entity_pool[slot * entity_pool_stride];
+    entity_trigger_t* trigger = (entity_trigger_t*)entity_get_header(slot);
 
     if (!trigger->is_busy) {
         const vec3_t trigger_pos = trigger->entity_header.position;
@@ -89,7 +89,7 @@ void entity_trigger_on_hit(int slot, int hitbox_index) {
 void entity_trigger_player_intersect(int slot, player_t* player) {
     (void)player;
 
-    entity_trigger_t* trigger = (entity_trigger_t*)&entity_pool[slot * entity_pool_stride];
+    entity_trigger_t* trigger = (entity_trigger_t*)entity_get_header(slot);
     trigger->intersecting_curr = 1;
 }
 

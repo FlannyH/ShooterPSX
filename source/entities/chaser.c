@@ -18,7 +18,7 @@ extern state_vars_t state;
 
 entity_chaser_t* entity_chaser_new(void) {
 	// Allocate memory for the entity
-	entity_chaser_t* entity = (entity_chaser_t*)&entity_pool[entity_alloc(ENTITY_CHASER) * entity_pool_stride];
+	entity_chaser_t* entity = (entity_chaser_t*)entity_get_header(entity_alloc(ENTITY_CHASER));
 	entity->entity_header.position = (vec3_t){ 0, 0, 0 };
 	entity->entity_header.rotation = (vec3_t){ 0, 0, 0 };
 	entity->entity_header.scale = (vec3_t){ ONE, ONE, ONE };
@@ -133,7 +133,7 @@ void find_target_node(entity_chaser_t* chaser, vec3_t target_position, find_targ
 }
 
 void entity_chaser_update(int slot, player_t* player, int dt) {
-	entity_chaser_t* chaser = (entity_chaser_t*)&entity_pool[slot * entity_pool_stride];
+	entity_chaser_t* chaser = (entity_chaser_t*)entity_get_header(slot);
 	const vec3_t chaser_pos = chaser->entity_header.position;
 
 #ifdef _LEVEL_EDITOR

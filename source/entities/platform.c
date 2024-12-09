@@ -2,7 +2,7 @@
 
 entity_platform_t* entity_platform_new(void) {
 	// Allocate memory for the entity
-	entity_platform_t* entity = (entity_platform_t*)&entity_pool[entity_alloc(ENTITY_PLATFORM) * entity_pool_stride];
+	entity_platform_t* entity = (entity_platform_t*)entity_get_header(entity_alloc(ENTITY_PICKUP));
 	entity->entity_header.position = (vec3_t){0, 0, 0};
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
@@ -25,7 +25,7 @@ void entity_platform_update(int slot, player_t* player, int dt) {
 	(void)player;
 	(void)dt;
 
-	entity_platform_t* platform = (entity_platform_t*)&entity_pool[slot * entity_pool_stride];
+	entity_platform_t* platform = (entity_platform_t*)entity_get_header(slot);
 	const vec3_t platform_pos = platform->entity_header.position;
 
 	// Move if signal is triggered
@@ -107,7 +107,7 @@ void entity_platform_on_hit(int slot, int hitbox_index) {
 void entity_platform_player_intersect(int slot, player_t* player) {
 	(void)player;
 
-	entity_platform_t* platform = (entity_platform_t*)&entity_pool[slot * entity_pool_stride];
+	entity_platform_t* platform = (entity_platform_t*)entity_get_header(slot);
 	if (platform->move_on_player_collision && platform->curr_timer_value <= 0) {
 		platform->target_is_end = !platform->target_is_end;
 	}
