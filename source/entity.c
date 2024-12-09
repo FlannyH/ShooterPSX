@@ -204,6 +204,10 @@ size_t entity_get_n_active_aabb(void) {
 	return entity_n_active_aabb;
 }
 
+entity_collision_box_t* entity_get_aabb_queue_entry(int index) {
+	return &entity_aabb_queue[index];
+}
+
 #ifdef _DEBUG
 void entity_debug(void) {
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {

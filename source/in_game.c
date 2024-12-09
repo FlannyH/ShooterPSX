@@ -177,7 +177,7 @@ void state_update_in_game(int dt) {
 		if (state.global.show_debug) {
 			const size_t n_active_aabb = entity_get_n_active_aabb();
 			for (size_t i = 0; i < n_active_aabb; ++i) {
-				renderer_debug_draw_aabb(&entity_aabb_queue[i].aabb, pink, &id_transform);
+				renderer_debug_draw_aabb(&entity_get_aabb_queue_entry(i)->aabb, pink, &id_transform);
 			}
 		}
 	}
@@ -384,12 +384,13 @@ void shoot(const transform_t camera_transform) {
 	const size_t n_active_aabb = entity_get_n_active_aabb();
 	for (size_t i = 0; i < n_active_aabb; ++i) {
 		rayhit_t entity_hit;
-		if (ray_aabb_intersect_fancy(&entity_aabb_queue[i].aabb, ray, &entity_hit)) {
+		const entity_collision_box_t* const box = entity_get_aabb_queue_entry(i);
+		if (ray_aabb_intersect_fancy(&box->aabb, ray, &entity_hit)) {
 			if (entity_hit.distance < hit.distance) {
 				hit = entity_hit;
 				hit.type = RAY_HIT_TYPE_ENTITY_HITBOX;
-				hit.entity_hitbox.box_index = entity_aabb_queue[i].box_index;
-				hit.entity_hitbox.entity_index = entity_aabb_queue[i].entity_index;
+				hit.entity_hitbox.box_index = box->box_index;
+				hit.entity_hitbox.entity_index = box->entity_index;
 			}
 		}
 	}
