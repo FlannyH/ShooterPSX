@@ -78,14 +78,16 @@ typedef struct {
 } state_vars_t;
 
 extern state_vars_t state;
-extern state_t current_state;
-extern state_t prev_state;
 
 #define FADE_SPEED 18
 #define FADE_SPEED_SLOW 5
 
 #define DEPTH_BIAS_VIEWMODELS 64
 #define DEPTH_BIAS_LEVEL 256
+
+void set_current_state(state_t state);
+state_t get_current_state(void);
+state_t get_prev_state(void);
 
 // Title screen
 void state_enter_title_screen(void);

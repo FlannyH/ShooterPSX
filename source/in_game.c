@@ -50,7 +50,7 @@ void state_enter_in_game(void) {
 #endif
 
 	input_lock_mouse();
-	if (prev_state == STATE_PAUSE_MENU) return;
+	if (get_prev_state() == STATE_PAUSE_MENU) return;
 
 	mem_stack_release(STACK_LEVEL);
 	mem_stack_release(STACK_ENTITY);
@@ -159,7 +159,7 @@ void state_update_in_game(int dt) {
 	}
 
 	if (input_pressed(PAD_START, 0)) {
-		current_state = STATE_PAUSE_MENU;
+		set_current_state(STATE_PAUSE_MENU);
 	}
 
 	// Play shoot animation

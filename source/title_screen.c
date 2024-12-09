@@ -119,13 +119,13 @@ void state_update_title_screen(int dt) {
 		switch (state.title_screen.button_selected) {
 			case 0: // start game
 				state.in_game.level_load_path = "levels/level1.lvl";
-				current_state = STATE_IN_GAME;
+				set_current_state(STATE_IN_GAME);
 				break;
 			case 1: // settings
-				current_state = STATE_SETTINGS;
+				set_current_state(STATE_SETTINGS);
 				break;
 			case 2: // credits
-				current_state = STATE_CREDITS;
+				set_current_state(STATE_CREDITS);
 				break;
 		}
 	}
@@ -148,7 +148,7 @@ void state_update_title_screen(int dt) {
 #endif
 
 	if (input_pressed(PAD_START, 0)) {
-		current_state = STATE_IN_GAME;
+		set_current_state(STATE_IN_GAME);
 	} 
 	if (state.global.fade_level > 0) {
 		renderer_apply_fade(state.global.fade_level);
@@ -166,7 +166,7 @@ void state_exit_title_screen(void) {
 		renderer_apply_fade(state.global.fade_level);
 		renderer_end_frame();
 		state.global.fade_level += FADE_SPEED;
-		if (current_state == STATE_IN_GAME) music_set_volume(255 - state.global.fade_level);
+		if (get_current_state() == STATE_IN_GAME) music_set_volume(255 - state.global.fade_level);
 	}
 
     // One last frame with the screen blank

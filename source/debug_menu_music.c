@@ -25,7 +25,7 @@
 
 void state_enter_debug_menu_music(void) {
     state_enter_title_screen();
-	state.global.state_to_return_to = prev_state;
+	state.global.state_to_return_to = get_prev_state();
 	state.global.fade_level = 255;
 	state.title_screen.button_pressed = 0;
 	while (state.global.fade_level > 0) {
@@ -82,7 +82,7 @@ void state_update_debug_menu_music(int dt) {
 				music_play_sequence(0);
 				break;
 			case 4:
-                current_state = STATE_DEBUG_MENU_MAIN;
+				set_current_state(STATE_DEBUG_MENU_MAIN);
 				break;
 		}
 	}

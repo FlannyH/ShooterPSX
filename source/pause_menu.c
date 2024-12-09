@@ -35,7 +35,7 @@ void state_update_pause_menu(int dt) {
 	renderer_begin_frame(&id_transform);
 	input_update();
 	if (input_pressed(PAD_START, 0)) {
-		current_state = STATE_IN_GAME;
+		set_current_state(STATE_IN_GAME);
 	}
 	
 	// Check cheats
@@ -93,14 +93,14 @@ void state_update_pause_menu(int dt) {
 		state.pause_menu.button_pressed = 0;
 		switch (state.pause_menu.button_selected) {
 			case 0: // continue
-				current_state = STATE_IN_GAME;
+				set_current_state(STATE_IN_GAME);
 				break;
 			case 1: // settings
-				current_state = STATE_SETTINGS;
+				set_current_state(STATE_SETTINGS);
 				break;
 			case 2: // exit game
 				music_stop();
-				current_state = STATE_TITLE_SCREEN;
+				set_current_state(STATE_TITLE_SCREEN);
 				break;
 		}
 	}
