@@ -81,7 +81,6 @@ typedef struct {
 	unsigned int not_move_player_along : 1; // if the player is standing on this box, should they be moved along with the entity this collision box belongs to?
 } entity_collision_box_t;
 
-extern entity_collision_box_t entity_aabb_queue[ENTITY_LIST_LENGTH];
 extern int entity_signals[ENTITY_SIGNAL_COUNT];
 void entity_init(void);
 int entity_alloc(uint8_t entity_type);
@@ -98,6 +97,7 @@ entity_header_t* entity_get_header(int index);
 model_t* entity_get_models(void);
 size_t entity_get_pool_stride(void);
 size_t entity_get_n_active_aabb(void);
+entity_collision_box_t* entity_get_aabb_queue_entry(int index);
 
 #ifdef _DEBUG
 void entity_debug(void);
