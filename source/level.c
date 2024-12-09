@@ -76,7 +76,7 @@ level_t level_load(const char* level_path) {
     mem_stack_reset_to_marker(STACK_TEMP, marker);
 
     // Load entities
-    const intptr_t level_entity_pool_stride = entity_pool_stride - sizeof(entity_header_t) + sizeof(entity_header_serialized_t);
+    const intptr_t level_entity_pool_stride = entity_get_pool_stride() - sizeof(entity_header_t) + sizeof(entity_header_serialized_t);
     
     // Deserialize entity data
     for (int i = 0; i < level_header->n_entities; ++i) {

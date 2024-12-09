@@ -392,7 +392,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
                 // Write entity data
                 const uint8_t* entity_data = ((const uint8_t*)entity_get_header(i)) + sizeof(entity_header_t);
-                const size_t size = entity_pool_stride - sizeof(entity_header_t);
+                const size_t size = entity_get_pool_stride() - sizeof(entity_header_t);
                 write_data_and_get_offset(entity_data_serialized, entity_data, size);
             }
 

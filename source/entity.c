@@ -196,6 +196,10 @@ void entity_deserialize_and_write_slot(int slot, const entity_header_serialized_
 	memcpy(dst_entity_data, src_entity_data, entity_pool_stride - sizeof(entity_header_t));
 }
 
+size_t entity_get_pool_stride(void) {
+	return entity_pool_stride;
+}
+
 #ifdef _DEBUG
 void entity_debug(void) {
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
