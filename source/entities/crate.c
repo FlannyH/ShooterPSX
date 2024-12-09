@@ -64,7 +64,7 @@ void entity_crate_on_hit(int slot, int hitbox_index) {
 	(void)hitbox_index;
 	entity_crate_t* crate = (entity_crate_t*)&entity_pool[slot * entity_pool_stride];
 	crate->entity_header.mesh = NULL; // Mark the mesh for refreshing
-	entity_types[slot] = (uint8_t)ENTITY_PICKUP; // pickup struct is practically identical to crate struct so this works :D
+	entity_set_type(slot, (uint8_t)ENTITY_PICKUP); // pickup struct is practically identical to crate struct so this works :D
 }
 
 void entity_crate_player_intersect(int slot, player_t *player) {

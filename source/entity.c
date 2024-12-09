@@ -167,6 +167,14 @@ model_t* entity_get_models(void) {
 	return entity_models;
 }
 
+void entity_set_type(int index, uint8_t type) {
+	entity_types[index] = type;
+}
+
+uint8_t entity_get_type(int index) {
+	return entity_types[index];
+}
+
 #ifdef _DEBUG
 void entity_debug(void) {
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {

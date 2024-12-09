@@ -115,7 +115,7 @@ size_t inspect_enum(size_t value, const char** names, const char* label) {
 }
 
 void inspect_entity(size_t entity_id) {
-    const uint8_t entity_type = entity_types[entity_id];
+    const uint8_t entity_type = entity_get_type(entity_id);
     if (entity_type == ENTITY_NONE) return;
 
     entity_header_t* entity_data = (entity_header_t*)&entity_pool[entity_id * entity_pool_stride];
@@ -409,6 +409,11 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 }
             }
 
+            uint8_t* entity_types = (uint8_t*)malloc(n_entities);
+            for (int i = 0; i < n_entities; ++i) {
+                entity_types[i] = entity_get_type(i);
+            }
+
             level_header_t header = {
                 .file_magic = MAGIC_FLVL,
                 .path_music_offset = (uint32_t)write_text_and_get_offset(binary_section, path_music),
@@ -576,7 +581,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         // Entity count:
         int entity_count = 0;
         for (size_t i = 0; i < ENTITY_LIST_LENGTH; ++i) {
-            if (entity_types[i] != ENTITY_NONE) {
+            if (entity_get_type(i) != ENTITY_NONE) {
                 ++entity_count;
             }
         }
@@ -635,9 +640,9 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     {
         if (ImGui::TreeNode("All entities")) {
             for (size_t i = 0; i < ENTITY_LIST_LENGTH; ++i) {
-                if (entity_types[i] != ENTITY_NONE) {
+                if (entity_get_type((int)i) != ENTITY_NONE) {
                     static std::string tree_nodes[ENTITY_LIST_LENGTH];
-                    tree_nodes[i] = std::format("{} - {}", i, entity_names[entity_types[i]]);
+                    tree_nodes[i] = std::format("{} - {}", i, entity_names[entity_get_type((int)i)]);
                     if (ImGui::TreeNode(tree_nodes[i].c_str())) {
                         inspect_entity(i);
                         ImGui::TreePop();
@@ -652,7 +657,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             inspect_entity(*selected_entity_slot);
             
             // If deleted, deselect it
-            if (entity_types[*selected_entity_slot] == ENTITY_NONE) {
+            if (entity_get_type(*selected_entity_slot) == ENTITY_NONE) {
                 *selected_entity_slot = -1;
             }
         }

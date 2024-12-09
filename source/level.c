@@ -102,7 +102,10 @@ level_t level_load(const char* level_path) {
     }
     entity_sanitize();
 
-    memcpy(entity_types, level_entity_types, level_header->n_entities);
+    const int n_entities = level_header->n_entities;
+    for (int i = 0; i < n_entities; ++i) {
+        entity_set_type(i, level_entity_types[i]);
+    }
 
     // Load text data
     level.n_text_entries = 0;

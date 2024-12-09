@@ -89,12 +89,14 @@ extern size_t entity_n_active_aabb;
 extern int entity_signals[ENTITY_SIGNAL_COUNT];
 void entity_init(void);
 int entity_alloc(uint8_t entity_type);
+void entity_set_type(int index, uint8_t type);
 void entity_register_collision_box(const entity_collision_box_t* box); // (*box) gets copied, can safely be freed after calling this function
 void entity_defragment(void);
 void entity_sanitize(void);
 void entity_update_all(player_t* player, int dt);
 void entity_kill(int slot);
 void entity_send_player_intersect(int slot, player_t* player);
+uint8_t entity_get_type(int index);
 model_t* entity_get_models(void);
 
 #ifdef _DEBUG
