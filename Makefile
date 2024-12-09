@@ -135,8 +135,9 @@ OBJ_NDS					= 	$(patsubst %.c, 	$(PATH_OBJ_NDS)/%.o,	        $(CODE_NDS_C))				\
 OBJ_LEVEL_EDITOR		= 	$(patsubst %.c, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVEL_EDITOR_C))		\
 							$(patsubst %.cpp, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVEL_EDITOR_CPP))		
 
-CFLAGS = -Wall -Wextra -std=c11 -Wno-old-style-declaration -Wno-format
-CXXFLAGS = -Wall -Wextra -std=c++20 -Wno-format
+CFLAGS = -Wall -Wextra -std=c11 -Wno-old-style-declaration -Wno-format -flto=auto -fuse-linker-plugin
+CXXFLAGS = -Wall -Wextra -std=c++20 -Wno-format -flto=auto -fuse-linker-plugin
+LINKER_FLAGS = -flto=auto -save-temps
 
 .PHONY: all submodules tools assets windows level_editor psx nds clean mkdir_output_win windows_dependencies glfw gl3w imgui imguizmo
 all: submodules tools assets windows level_editor psx nds 
@@ -147,14 +148,11 @@ windows: LIBRARIES = glfw3 stdc++
 ifeq ($(OS),Windows_NT)
 windows: LIBRARIES += gdi32 opengl32
 endif
-# ifeq ($(OS),Windows_NT)
-# 	windows: LIBRARIES += gdi32 opengl32
-# endif
 windows: CC = gcc
 windows: CXX = g++
 windows: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -g
 windows: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20 -g
-windows: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_WIN)) -std=c++20
+windows: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_WIN)) -std=c++20
 windows: INCLUDE_DIRS = source \
 			   external/cglm/include \
 			   external/gl3w/include \
@@ -168,7 +166,7 @@ level_editor: CC = gcc
 level_editor: CXX = g++
 level_editor: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -g
 level_editor: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20 -g
-level_editor: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_WIN)) -std=c++20
+level_editor: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_WIN)) -std=c++20
 level_editor: INCLUDE_DIRS = source \
 			   external/cglm/include \
 			   external/gl3w/include \
@@ -325,7 +323,7 @@ psx: CC = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-gcc$(EXE_EXT)
 psx: CXX = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-g++$(EXE_EXT)
 psx: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -Wno-unused-function -fanalyzer -O3 -g -Wa,--strip-local-absolute -ffreestanding -fno-builtin -nostdlib -fdata-sections -ffunction-sections -fsigned-char -fno-strict-overflow -fdiagnostics-color=always -msoft-float -march=r3000 -mtune=r3000 -mabi=32 -mno-mt -mno-llsc -G8 -fno-pic -mno-abicalls -mgpopt -mno-extern-sdata -MMD -MP
 psx: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20
-psx: LINKER_FLAGS = $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PSX)) -nostdlib -Wl,-gc-sections -G8 -static -T$(PSN00BSDK_LIBS)/ldscripts/exe.ld
+psx: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PSX)) -nostdlib -Wl,-gc-sections -G8 -static -T$(PSN00BSDK_LIBS)/ldscripts/exe.ld
 psx: INCLUDE_DIRS = source \
 			   $(PATH_LIB_WIN)/gl3w/include \
 			   $(PSN00BSDK_PATH)/include/libpsn00b 
@@ -365,7 +363,7 @@ nds: CC = $(GCC_ARM_NONE_EABI_PATH)/bin/arm-none-eabi-gcc$(EXE_EXT)
 nds: CXX = $(GCC_ARM_NONE_EABI_PATH)/bin/arm-none-eabi-g++$(EXE_EXT)
 nds: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -mthumb -mcpu=arm946e-s+nofp -std=gnu17 -O2 -ffunction-sections -fdata-sections -specs=$(BLOCKSDS)/sys/crts/ds_arm9.specs
 nds: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -mthumb -mcpu=arm946e-s+nofp -std=gnu++17 -O2 -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -specs=$(BLOCKSDS)/sys/crts/ds_arm9.specs
-nds: LINKER_FLAGS = $(patsubst %, -L%, $(PATH_LIB_NDS)) -mthumb -mcpu=arm946e-s+nofp -Wl,--start-group $(patsubst %, -l%, $(LIBRARIES)) -Wl,--end-group -specs=$(BLOCKSDS)/sys/crts/ds_arm9.specs
+nds: LINKER_FLAGS += $(patsubst %, -L%, $(PATH_LIB_NDS)) -mthumb -mcpu=arm946e-s+nofp -Wl,--start-group $(patsubst %, -l%, $(LIBRARIES)) -Wl,--end-group -specs=$(BLOCKSDS)/sys/crts/ds_arm9.specs
 nds: INCLUDE_DIRS = source \
 					$(BLOCKSDS)/libs/libnds/include
 nds: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
