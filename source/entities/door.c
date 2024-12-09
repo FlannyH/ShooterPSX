@@ -92,7 +92,7 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	}
 
 	// Handle unlocking by signal
-	if (door->is_locked && door->open_by_signal && entity_signals[door->signal_id] > 0) {
+	if (door->is_locked && door->open_by_signal && entity_get_signal(door->signal_id) > 0) {
 		door->is_locked = 0;
 		door->state_changed = 1;
 		audio_play_sound(sfx_door_unlock, ONE, 1, door_pos, 3600 * ONE); 

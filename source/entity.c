@@ -208,6 +208,14 @@ entity_collision_box_t* entity_get_aabb_queue_entry(int index) {
 	return &entity_aabb_queue[index];
 }
 
+int entity_get_signal(int index) {
+	return entity_signals[index];
+}
+
+void entity_set_signal(int index, int value) {
+	entity_signals[index] = value;
+}
+
 #ifdef _DEBUG
 void entity_debug(void) {
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {

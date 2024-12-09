@@ -68,7 +68,7 @@ void entity_trigger_update(int slot, player_t* player, int dt) {
     }
 
     if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_SIGNAL) {
-        entity_signals[trigger->signal.id] = trigger->signal.value_to_send;
+        entity_set_signal(trigger->signal.id, trigger->signal.value_to_send);
         if (trigger->destroy_on_player_intersect) {
             entity_kill(slot);
         }
