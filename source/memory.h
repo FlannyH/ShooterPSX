@@ -35,6 +35,8 @@ void mem_delayed_free(void* ptr);
 void mem_free_scheduled_frees(void);
 void mem_debug(void);
 
-extern char* stack_names[];
+#ifdef _DEBUG
+char* mem_stack_get_name(int i);
+#endif
 
 #endif
