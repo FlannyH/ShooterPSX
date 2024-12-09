@@ -30,7 +30,7 @@ void entity_platform_update(int slot, player_t* player, int dt) {
 
 	// Move if signal is triggered
 	if (platform->listen_to_signal && platform->curr_timer_value <= 0) {
-		platform->target_is_end = entity_signals[platform->signal_id] % 2;
+		platform->target_is_end = entity_get_signal(platform->signal_id) % 2;
 	}
 
 	// Movement
