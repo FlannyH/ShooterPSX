@@ -81,7 +81,6 @@ typedef struct {
 	unsigned int not_move_player_along : 1; // if the player is standing on this box, should they be moved along with the entity this collision box belongs to?
 } entity_collision_box_t;
 
-extern const char* entity_names[];
 extern model_t* entity_models;
 extern uint8_t entity_types[ENTITY_LIST_LENGTH];
 extern uint8_t* entity_pool;

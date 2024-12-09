@@ -23,7 +23,7 @@
 #include <format>
 #endif
 
-static double dt_smooth = 0.0f;
+extern const char* entity_names[];
 
 void debug_layer_init(GLFWwindow* window) {
     ImGui::CreateContext();
@@ -55,24 +55,6 @@ void debug_layer_end(void) {
     // Render to window
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-void debug_layer_update_gameplay(void) {
-    // Update deltatime
-    dt_smooth = dt_smooth + ((static_cast<double>(renderer_get_delta_time_ms()) / 1000.) - dt_smooth) * 0.01;
-
-    // Draw debug windows
-    ImGui::Begin("DebugInfo");
-    ImGui::Text("Frametime: %f ms", dt_smooth * 1000);
-    ImGui::Text("FPS: %f", 1.0 / dt_smooth);
-    ImGui::Text("n_ray_aabb_intersects: %i\n", n_ray_aabb_intersects);
-    ImGui::Text("n_ray_triangle_intersects: %i\n", n_ray_triangle_intersects);
-    ImGui::Text("n_vertical_cylinder_aabb_intersects: %i\n", n_vertical_cylinder_aabb_intersects);
-    ImGui::Text("n_vertical_cylinder_triangle_intersects: %i\n", n_vertical_cylinder_triangle_intersects);
-    ImGui::Text("n_ray_aabb_intersects: %i\n", n_ray_aabb_intersects);
-    ImGui::Text("n_ray_aabb_intersects: %i\n", n_ray_aabb_intersects);
-    ImGui::End();
-    collision_clear_stats();
 }
 
 #ifdef _LEVEL_EDITOR
