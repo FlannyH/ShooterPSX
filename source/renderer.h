@@ -51,9 +51,9 @@ int renderer_get_delta_time_raw(void);
 int renderer_get_delta_time_ms(void);
 int renderer_convert_dt_raw_to_ms(int dt_raw);
 int renderer_should_close(void);
-int renderer_get_level_section_from_position(const model_t *model, vec3_t position);
 void renderer_set_depth_bias(int bias);
 int renderer_n_meshes_drawn(void);
+int renderer_get_camera_level_section(vec3_t pos, const vislist_t vis);
 
 #ifdef _LEVEL_EDITOR
 float* renderer_debug_perspective_matrix(void);
@@ -71,7 +71,6 @@ inline uint8_t mul_8x8(const uint8_t a, const uint8_t b) {
 vec3_t renderer_get_forward_vector(void); // Used in the level editor to determine where to spawn new entities
 #endif 
 
-extern int n_sections;
 extern int tex_level_start;
 extern int tex_entity_start;
 extern int tex_weapon_start;
@@ -79,7 +78,6 @@ extern int tex_alloc_cursor;
 extern int vsync_enable;
 extern int is_pal;
 extern int res_x;
-extern int sections[N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE];
 #ifdef __cplusplus
 }
 #endif

@@ -8,6 +8,52 @@
 
 // Shared rendering parameters
 uint8_t tex_id_start = 0;
+int n_sections;
+int sections[N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE];
+
+int renderer_get_camera_level_section(vec3_t pos, const vislist_t vis) {
+    // Get player position
+    const svec3_t position = {
+        -pos.x / COL_SCALE,
+        -pos.y / COL_SCALE,
+        -pos.z / COL_SCALE,
+    };
+    n_sections = 0;
+
+    // Find all the vis leaf nodes we're currently inside of
+    uint32_t node_stack[32] = {0};
+    uint32_t node_handle_ptr = 0;
+    uint32_t node_add_ptr = 1;
+
+    while ((node_handle_ptr != node_add_ptr) && (n_sections < N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE)) {
+        // check a node
+        visbvh_node_t* node = &vis.bvh_root[node_stack[node_handle_ptr]];
+
+        // If a node was hit
+        if (
+            position.x >= node->min.x &&  position.x <= node->max.x &&
+            position.y >= node->min.y &&  position.y <= node->max.y &&
+            position.z >= node->min.z &&  position.z <= node->max.z
+        ) {
+            // If the node is an interior node
+            if ((node->child_or_vis_index & 0x80000000) == 0) {
+                // Add the 2 children to the stack
+                node_stack[node_add_ptr] = node->child_or_vis_index;
+                node_add_ptr = (node_add_ptr + 1) % 32;
+                node_stack[node_add_ptr] = node->child_or_vis_index + 1;
+                node_add_ptr = (node_add_ptr + 1) % 32;
+            }
+            else {
+                // Add this node index to the list
+                sections[n_sections++] = node->child_or_vis_index & 0x7fffffff;
+            }
+        }
+
+        node_handle_ptr = (node_handle_ptr + 1) % 32;
+    }
+
+    return n_sections; // -1 means no section
+}
 
 void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {
     const vec2_t tl = {center.x - size.x/2, center.y - size.y/2};
@@ -90,25 +136,6 @@ void renderer_draw_model_shaded(const model_t* model, const transform_t* model_t
     }
 
 	tex_id_start = 0;
-}
-
-int renderer_get_level_section_from_position(const model_t* model, vec3_t position) {
-    position.x = -position.x / COL_SCALE;
-    position.y = -position.y / COL_SCALE;
-    position.z = -position.z / COL_SCALE;
-    n_sections = 0;
-    for (size_t i = 0; i < model->n_meshes; ++i) {
-        if (n_sections == N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE) break;
-        if (point_aabb_intersect(&model->meshes[i].bounds, position)) {
-            renderer_debug_draw_aabb(&model->meshes[i].bounds, green, &id_transform);
-            sections[n_sections] = i;
-            n_sections += 1;
-        }
-        else {
-            renderer_debug_draw_aabb(&model->meshes[i].bounds, red, &id_transform);
-        }
-    }
-    return n_sections; // -1 means no section
 }
 
 void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const int centered, const pixel32_t color) {

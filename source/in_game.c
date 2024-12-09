@@ -113,7 +113,7 @@ void state_update_in_game(int dt) {
 	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
 	
 	// Figure out where the player is so we can use the right vislist
-	const int n_sections = player_get_level_section(&state.in_game.player, state.in_game.level.vislist);
+	const int n_sections = renderer_get_camera_level_section(state.in_game.player.position, state.in_game.level.vislist);
 	
 	state.global.frame_counter += 1;
 
