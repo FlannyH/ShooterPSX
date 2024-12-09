@@ -27,12 +27,7 @@ int vertical_cylinder_aabb_intersect(const aabb_t* aabb, vertical_cylinder_t ver
 int vertical_cylinder_aabb_intersect_fancy(const aabb_t* aabb, const vertical_cylinder_t vertical_cylinder, rayhit_t* hit);
 int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vertical_cylinder_t vertical_cylinder, rayhit_t* hit);
 
-
 // Statistics
 void collision_clear_stats(void);
-extern int n_ray_aabb_intersects;
-extern int n_ray_triangle_intersects;
-extern int n_vertical_cylinder_aabb_intersects;
-extern int n_vertical_cylinder_triangle_intersects;
 
 #endif // COLLISION_H
