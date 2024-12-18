@@ -210,3 +210,37 @@ void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const
         ++text;
     }
 }
+
+int fade_level = 0; // 255 means black, 0 means no fade
+int fade_speed = 0;
+
+void renderer_start_fade_in(int speed) {
+    fade_level = 255;
+    fade_speed = -speed;
+}
+
+void renderer_start_fade_out(int speed) {
+    fade_level = 0;
+    fade_speed = speed;
+}
+
+int renderer_is_fading(void) {
+    if (fade_speed > 0 && fade_level < 255) {
+        return 1;
+    }
+    if (fade_speed < 0 && fade_level > 0) {
+        return 1;
+    }
+    return 0;
+}
+
+void renderer_tick_fade(void) {
+    fade_level += fade_speed;
+    if (fade_level > 255) fade_level = 255;
+    if (fade_level < 0) fade_level = 0;
+    renderer_apply_fade(fade_level);
+}
+
+int renderer_get_fade_level(void) {
+    return fade_level;
+}

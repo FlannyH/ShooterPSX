@@ -81,6 +81,7 @@ void renderer_begin_frame(const transform_t* camera_transform) {
 }
 
 void renderer_end_frame(void) {
+    renderer_tick_fade();
     glFlush(0);
     while (vblank_counter < vsync_enable) {
         swiWaitForVBlank();

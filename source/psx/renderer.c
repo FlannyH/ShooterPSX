@@ -151,6 +151,8 @@ void renderer_begin_frame(const transform_t* camera_transform) {
 }
 
 void renderer_end_frame(void) {
+    renderer_tick_fade();
+    
     // Wait for GPU to finish drawing and V-blank
     DrawSync(0);
 

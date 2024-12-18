@@ -23,7 +23,6 @@ typedef struct {
 		int frame_counter;
 		int time_counter;
 		int show_debug;
-		int fade_level; // 255 means black, 0 means no fade
 		state_t state_to_return_to;
 	} global;
 	struct {

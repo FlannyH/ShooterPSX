@@ -76,6 +76,8 @@ void state_enter_in_game(void) {
 		FntLoad(320,256);
 		FntOpen(32, 32, 256, 192, 0, 512);
 	#endif
+
+	renderer_start_fade_in(FADE_SPEED);
 }
 
 void load_weapon_textures(void) {
@@ -153,10 +155,6 @@ void state_update_in_game(int dt) {
 #if defined(_DEBUG) && defined(_PSX)
 	}
 #endif
-	if (state.global.fade_level > 0) {
-		renderer_apply_fade(state.global.fade_level);
-		state.global.fade_level -= FADE_SPEED;
-	}
 
 	if (input_pressed(PAD_START, 0)) {
 		set_current_state(STATE_PAUSE_MENU);

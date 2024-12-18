@@ -25,16 +25,13 @@
 void state_enter_debug_menu_main(void) {
     state_enter_title_screen();
 	state.global.state_to_return_to = get_prev_state();
-	state.global.fade_level = 255;
 	state.title_screen.button_pressed = 0;
-	while (state.global.fade_level > 0) {
+	renderer_start_fade_in(FADE_SPEED);
+	while (renderer_is_fading()) {
 		renderer_begin_frame(&id_transform);
 		ui_render_background();
-		renderer_apply_fade(state.global.fade_level);
-		state.global.fade_level -= FADE_SPEED;
 		renderer_end_frame();
 	}
-	state.global.fade_level = 0;
 }
 
 void state_update_debug_menu_main(int dt) {
@@ -98,15 +95,12 @@ void state_update_debug_menu_main(int dt) {
 }
 
 void state_exit_debug_menu_main(void) {
-	state.global.fade_level = 0;
+	renderer_start_fade_out(FADE_SPEED);
 
-	while (state.global.fade_level < 255) {
+	while (renderer_is_fading()) {
 		renderer_begin_frame(&id_transform);
 		input_update();
 		ui_render_background();
-		state.global.fade_level += FADE_SPEED;
-		renderer_apply_fade(state.global.fade_level);
 		renderer_end_frame();
 	}
-	state.global.fade_level = 255;
 }

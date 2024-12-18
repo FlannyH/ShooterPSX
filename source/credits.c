@@ -28,18 +28,16 @@
 #endif
 
 void state_enter_credits(void) {
-	state.global.fade_level = 255;
-	while (state.global.fade_level > 0) {
+	renderer_start_fade_in(FADE_SPEED);
+	while (renderer_is_fading()) {
 		renderer_begin_frame(&id_transform);
 		ui_render_background();
-		renderer_apply_fade(state.global.fade_level);
-		state.global.fade_level -= FADE_SPEED;
 		renderer_end_frame();
 	}
-	state.global.fade_level = 0;
 	state.credits.scroll = 0;
 	return;
 }
+
 void state_update_credits(int dt) {
 	renderer_begin_frame(&id_transform);
 	ui_render_background();
@@ -62,8 +60,8 @@ void state_exit_credits(void) {
 	music_stop();
 
 	// Fade
-	state.global.fade_level = 0;
-	while (state.global.fade_level < 255) {
+	renderer_start_fade_out(FADE_SPEED);
+	while (renderer_is_fading()) {
 		renderer_begin_frame(&id_transform);
 		ui_render_background();
 
@@ -76,10 +74,7 @@ void state_exit_credits(void) {
 		// title screen, fixing a bug where it'd immediately press the credits button again
 		input_update();
 
-		renderer_apply_fade(state.global.fade_level);
-		state.global.fade_level += FADE_SPEED;
 		renderer_end_frame();
 	}
-	state.global.fade_level = 255;
 	state.title_screen.assets_in_memory = 0;
 }
