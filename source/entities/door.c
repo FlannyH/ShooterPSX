@@ -131,8 +131,8 @@ void entity_door_update(int slot, player_t* player, int dt) {
 
 	door->state_changed = 0;
 
-	// Render mesh - we need to shift it because my implementation of multiplication loses some precision
-	door_pos = vec3_add(door_pos, vec3_shift_right(vec3_muls(door->open_offset, door->curr_interpolation_value << 3), 3));
+	// Render mesh
+	door_pos = vec3_add(door_pos, vec3_muls(door->open_offset, door->curr_interpolation_value));
 	transform_t render_transform;
 
     render_transform.position.x = -door_pos.x / COL_SCALE;
