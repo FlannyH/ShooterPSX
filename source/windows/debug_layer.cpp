@@ -648,7 +648,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             }
             ImGui::TreePop();
         }
-        if (selected_entity_slot) {
+        if (selected_entity_slot != NULL && *selected_entity_slot >= 0) {
             ImGui::Text("Selected entity");
             ImGui::Spacing();
             inspect_entity(*selected_entity_slot);
