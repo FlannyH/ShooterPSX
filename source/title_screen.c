@@ -67,7 +67,7 @@ void state_enter_title_screen(void) {
 		music_play_sequence(0);
 		music_set_volume(255);
 	}
-	state.global.fade_level = 255;
+	renderer_start_fade_in(FADE_SPEED);
 }
 
 void state_update_title_screen(int dt) {
@@ -149,29 +149,21 @@ void state_update_title_screen(int dt) {
 
 	if (input_pressed(PAD_START, 0)) {
 		set_current_state(STATE_IN_GAME);
-	} 
-	if (state.global.fade_level > 0) {
-		renderer_apply_fade(state.global.fade_level);
-		state.global.fade_level -= FADE_SPEED;
-	} 
+	}
 	renderer_end_frame();
 }
 void state_exit_title_screen(void) {
-	state.global.fade_level = 0;
-	while (state.global.fade_level < 255) {
+	renderer_start_fade_out(FADE_SPEED);
+	while (renderer_is_fading()) {
 		renderer_begin_frame(&id_transform);
 		input_update();
         ui_render_background();
         ui_render_logo();
-		renderer_apply_fade(state.global.fade_level);
 		renderer_end_frame();
-		state.global.fade_level += FADE_SPEED;
-		if (get_current_state() == STATE_IN_GAME) music_set_volume(255 - state.global.fade_level);
+		if (get_current_state() == STATE_IN_GAME) music_set_volume(255 - renderer_get_fade_level());
 	}
 
     // One last frame with the screen blank
-	state.global.fade_level = 255;
     renderer_begin_frame(&id_transform);
-    renderer_apply_fade(state.global.fade_level);
     renderer_end_frame();
 }

@@ -441,6 +441,8 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 }
 
 void renderer_end_frame(void) {
+    renderer_tick_fade();
+	
 	while (glfwGetTime() < lasttime + (1.0/60.0)) {}
     lasttime += 1.0/60.0;
 	update_delta_time_ms();

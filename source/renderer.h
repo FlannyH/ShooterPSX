@@ -41,6 +41,11 @@ void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl
 void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page);
 void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const int centered, const pixel32_t color);
 void renderer_apply_fade(int fade_level);
+void renderer_tick_fade(void);
+void renderer_start_fade_in(int speed);
+void renderer_start_fade_out(int speed);
+int renderer_is_fading(void);
+int renderer_get_fade_level(void);
 void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const transform_t* model_transform);
 void renderer_debug_draw_aabb(const aabb_t* box, pixel32_t color, const transform_t* model_transform);
 void renderer_debug_draw_sphere(sphere_t sphere);
