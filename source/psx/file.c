@@ -8,20 +8,23 @@
 #include <psxcd.h> // Disc IO
 #include <common.h>
 
+#define SECTOR_SIZE 2048
+#define SECTOR_SIZE_MASK 2047
+
 int file_archive_sector = -1;
 fsfa_header_t archive_header;
 fsfa_item_t* item_table = NULL;
 
 void seek_in_archive(int offset_bytes) {
 #ifdef _DEBUG
-    if (offset_bytes % 2048 != 0) {
+    if (offset_bytes % SECTOR_SIZE != 0) {
         printf("[ERROR] Misaligned disc read\n");
-        while(1){};
+        while(1){}; // Intentional hang for debugging
     }
 #endif
 
     CdlLOC loc;
-    CdIntToPos((offset_bytes / 2048) + file_archive_sector, &loc);
+    CdIntToPos((offset_bytes / SECTOR_SIZE) + file_archive_sector, &loc);
     CdControl(CdlSetloc, &loc, 0);
 }
 
@@ -66,10 +69,10 @@ void file_init(const char* path) {
     // Copy file table to a more permanent location in RAM
     memcpy(&archive_header, header, sizeof(fsfa_header_t));
     size_t item_table_size = archive_header.n_items * sizeof(fsfa_item_t);
-    item_table_size = (item_table_size | 2047) + 1; // align to next multiple of 2048 (disc sector size)
+    item_table_size = (item_table_size | SECTOR_SIZE_MASK) + 1; // align to next multiple of 2048 (disc sector size)
     uint32_t* item_table_storage = mem_alloc(item_table_size, MEM_CAT_FILE);
-    seek_in_archive(archive_header.items_offset & ~2047);
-    CdRead(item_table_size / 2048, item_table_storage, CdlModeSpeed);
+    seek_in_archive(archive_header.items_offset & ~SECTOR_SIZE_MASK);
+    CdRead(item_table_size / SECTOR_SIZE, item_table_storage, CdlModeSpeed);
     CdReadSync(0, 0);
     item_table = (fsfa_item_t*)(item_table_storage + (archive_header.items_offset / sizeof(uint32_t)));
 }
@@ -151,7 +154,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
         else *destination = (uint32_t*)mem_alloc(item_size_aligned, MEM_CAT_FILE);
         *size = item->size;
         seek_in_archive(item->offset + archive_header.data_offset);
-        CdRead(item_size_aligned / 2048, *destination, CdlModeSpeed);
+        CdRead(item_size_aligned / SECTOR_SIZE, *destination, CdlModeSpeed);
         CdReadSync(0, 0);
 
         return 1;
