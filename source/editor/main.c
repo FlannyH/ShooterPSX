@@ -1,5 +1,6 @@
 #include "../main.h"
 
+#include "camera.h"
 #include "../pc/debug_layer.h"
 #include "../pc/psx.h"
 #include "../renderer.h"
@@ -40,6 +41,7 @@ int main(int argc, char** argv) {
     memset(&level, 0, sizeof(level));
     player_t player; player_init(&player, vec3_from_scalar(0), vec3_from_scalar(0), 40, 0, 0);
     player_update(&player, &level.collision_bvh, 0, 0);
+    debug_camera_t camera = debug_camera_new();
 
     int dt = 40;
     int time_counter = 0;
@@ -70,15 +72,15 @@ int main(int argc, char** argv) {
         // Update camera
         input_update();
         if (mouse_lock) {
-            player_update(&player, &level.collision_bvh, dt, time_counter);
+            debug_camera_update(&camera, dt);
         }
         
-        renderer_begin_frame(&player.transform);
+        renderer_begin_frame(&camera.transform);
         {
             entity_update_all(&player, 0);
             
             debug_layer_begin();
-            debug_layer_manipulate_entity(&player.transform, &selected_entity, &mouse_over_viewport, &level, &player);
+            debug_layer_manipulate_entity(&camera.transform, &selected_entity, &mouse_over_viewport, &level, &player);
             debug_layer_end();
         }
         renderer_end_frame();

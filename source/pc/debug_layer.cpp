@@ -538,6 +538,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             
             player->position = player_spawn_position;
             player->rotation = player_spawn_rotation;
+            camera->position = player_spawn_position;
+            camera->rotation = player_spawn_position;
             player_update(player, &curr_level->collision_bvh, 0, 0); // Tick the player with 0 delta time to update the camera transform
         }
     }
