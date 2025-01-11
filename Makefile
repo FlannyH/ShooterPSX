@@ -114,7 +114,7 @@ PATH_OBJ_LEVEL_EDITOR = $(PATH_TEMP_LEVEL_EDITOR)/obj
 
 # Misc source file definitions
 CODE_GAME_MAIN = main.c
-CODE_LEVEL_EDITOR = editor/main.c
+CODE_LEVEL_EDITOR = editor/main.c editor/camera.c
 
 # Create code sets and object sets
 CODE_PSX_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PSX_C) 	$(CODE_GAME_MAIN)
@@ -135,9 +135,9 @@ OBJ_NDS					= 	$(patsubst %.c, 	$(PATH_OBJ_NDS)/%.o,	        $(CODE_NDS_C))				\
 OBJ_LEVEL_EDITOR		= 	$(patsubst %.c, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVEL_EDITOR_C))		\
 							$(patsubst %.cpp, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVEL_EDITOR_CPP))		
 
-CFLAGS = -Wall -Wextra -std=c11 -Wno-old-style-declaration -Wno-format -flto=auto -fuse-linker-plugin
-CXXFLAGS = -Wall -Wextra -std=c++20 -Wno-format -flto=auto -fuse-linker-plugin
-LINKER_FLAGS = -flto=auto -save-temps
+CFLAGS = -Wall -Wextra -std=c11 -Wno-old-style-declaration -Wno-format 
+CXXFLAGS = -Wall -Wextra -std=c++20 -Wno-format
+LINKER_FLAGS = 
 
 .PHONY: all submodules tools assets pc level_editor psx nds clean mkdir_output_win windows_dependencies glfw gl3w imgui imguizmo
 all: submodules tools assets pc level_editor psx nds 
@@ -324,9 +324,9 @@ psx: LIBRARIES = gcc \
 				 gcc 
 psx: CC = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-gcc$(EXE_EXT)
 psx: CXX = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-g++$(EXE_EXT)
-psx: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -Wno-unused-function -fanalyzer -O3 -g -Wa,--strip-local-absolute -ffreestanding -fno-builtin -nostdlib -fdata-sections -ffunction-sections -fsigned-char -fno-strict-overflow -fdiagnostics-color=always -msoft-float -march=r3000 -mtune=r3000 -mabi=32 -mno-mt -mno-llsc -G8 -fno-pic -mno-abicalls -mgpopt -mno-extern-sdata -MMD -MP
-psx: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20
-psx: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PSX)) -nostdlib -Wl,-gc-sections -G8 -static -T$(PSN00BSDK_LIBS)/ldscripts/exe.ld
+psx: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -Wno-unused-function -fanalyzer -O3 -g -Wa,--strip-local-absolute -ffreestanding -fno-builtin -nostdlib -fdata-sections -ffunction-sections -fsigned-char -fno-strict-overflow -fdiagnostics-color=always -msoft-float -march=r3000 -mtune=r3000 -mabi=32 -mno-mt -mno-llsc -G8 -fno-pic -mno-abicalls -mgpopt -mno-extern-sdata -MMD -MP -flto=auto -fuse-linker-plugin
+psx: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20 -flto=auto -fuse-linker-plugin
+psx: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PSX)) -nostdlib -Wl,-gc-sections -G8 -static -T$(PSN00BSDK_LIBS)/ldscripts/exe.ld -flto=auto -save-temps
 psx: INCLUDE_DIRS = source \
 			   $(PATH_LIB_WIN)/gl3w/include \
 			   $(PSN00BSDK_PATH)/include/libpsn00b 
