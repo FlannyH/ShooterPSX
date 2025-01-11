@@ -23,7 +23,7 @@
 #include <psxpad.h>
 #endif
 
-#ifdef _WINDOWS
+#ifdef _PC
 #include "windows/psx.h"
 #include "windows/debug_layer.h"
 #endif

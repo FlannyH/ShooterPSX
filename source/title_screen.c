@@ -17,7 +17,7 @@
 #include <psxpad.h>
 #endif
 
-#ifdef _WINDOWS
+#ifdef _PC
 #include "windows/psx.h"
 #include "windows/debug_layer.h"
 #endif
@@ -34,7 +34,7 @@ void state_enter_title_screen(void) {
 		renderer_end_frame();
 
 		// Load graphics data
-#if defined(_PSX) || defined(_WINDOWS)
+#if defined(_PSX) || defined(_PC)
 		texture_cpu_t *tex_menu1;
 		texture_cpu_t *tex_menu2;
 		texture_cpu_t *tex_ui;

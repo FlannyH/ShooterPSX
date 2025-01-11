@@ -26,7 +26,7 @@
 #include <psxpad.h>
 #endif
 
-#ifdef _WINDOWS
+#ifdef _PC
 #include "windows/psx.h"
 #include "windows/debug_layer.h"
 #endif
@@ -84,7 +84,7 @@ int main(void) {
 	current_state = STATE_DEBUG_MENU_MAIN;
 
     while (!renderer_should_close()) {
-#ifndef _WINDOWS
+#ifndef _PC
         int delta_time_raw = renderer_get_delta_time_raw();
         int delta_time = renderer_convert_dt_raw_to_ms(delta_time_raw);
 #else
@@ -137,7 +137,7 @@ int main(void) {
 			case STATE_DEBUG_MENU_MUSIC:	state_update_debug_menu_music(delta_time);	break;
 		}
 	}
-#ifdef _WINDOWS
+#ifdef _PC
 	debug_layer_close();
 #endif
     return 0;

@@ -143,7 +143,7 @@ LINKER_FLAGS = -flto=auto -save-temps
 all: submodules tools assets windows level_editor psx nds 
 
 # Windows target
-windows: DEFINES = _WINDOWS
+windows: DEFINES = _PC
 windows: LIBRARIES = glfw3 stdc++ 
 ifeq ($(OS),Windows_NT)
 windows: LIBRARIES += gdi32 opengl32
@@ -160,8 +160,11 @@ windows: INCLUDE_DIRS = source \
 			   external/imgui \
 			   $(PATH_LIB_WIN)/gl3w/include
 windows: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
-level_editor: DEFINES = _WINDOWS _WIN32 _LEVEL_EDITOR _DEBUG_CAMERA _DEBUG
-level_editor: LIBRARIES = glfw3 stdc++ gdi32 opengl32
+level_editor: DEFINES = _PC _LEVEL_EDITOR _DEBUG_CAMERA _DEBUG
+level_editor: LIBRARIES = glfw3 stdc++
+ifeq ($(OS),Windows_NT)
+level_editor: LIBRARIES += gdi32 opengl32
+endif
 level_editor: CC = gcc
 level_editor: CXX = g++
 level_editor: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -g

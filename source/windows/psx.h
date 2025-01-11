@@ -2,7 +2,6 @@
 #define WIN_GTE_H
 
 // This entire document is a duct tape fix for the Windows debug version
-#ifdef _WINDOWS
 #include <stdint.h>
 typedef struct {
     int32_t vx, vy, vz;
@@ -55,5 +54,4 @@ typedef enum {
 } PadButton;
 
 #else
-#endif
 #endif
