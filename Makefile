@@ -42,11 +42,11 @@ PATH_ASSETS = assets
 PATH_TOOLS_BIN = tools/bin/
 
 PATH_TEMP_PSX = 		  $(PATH_TEMP)/psx
-PATH_TEMP_WIN = 		  $(PATH_TEMP)/windows
+PATH_TEMP_WIN = 		  $(PATH_TEMP)/pc
 PATH_TEMP_NDS = 		  $(PATH_TEMP)/nds
 PATH_TEMP_LEVEL_EDITOR =  $(PATH_TEMP)/level_editor
 PATH_BUILD_PSX = 		  $(PATH_BUILD)/psx
-PATH_BUILD_WIN = 		  $(PATH_BUILD)/windows
+PATH_BUILD_WIN = 		  $(PATH_BUILD)/pc
 PATH_BUILD_NDS = 		  $(PATH_BUILD)/nds
 PATH_BUILD_LEVEL_EDITOR = $(PATH_BUILD)/level_editor
 PATH_LIB_WIN = $(PATH_TEMP_WIN)/lib
@@ -89,13 +89,13 @@ CODE_ENGINE_PSX_C = psx/file.c \
 				    psx/timer.c 
 
 # Source files specific to Windows
-CODE_ENGINE_WIN_C = windows/file.c \
-				    windows/input.c \
-				    windows/mesh.c \
-				    windows/music.c \
-				    windows/psx.c \
-				    windows/renderer.c 
-CODE_ENGINE_WIN_CPP = windows/debug_layer.cpp
+CODE_ENGINE_WIN_C = pc/file.c \
+				    pc/input.c \
+				    pc/mesh.c \
+				    pc/music.c \
+				    pc/psx.c \
+				    pc/renderer.c 
+CODE_ENGINE_WIN_CPP = pc/debug_layer.cpp
 
 # Source files specific to NDS
 CODE_ENGINE_NDS_C = nds/psx.c \
@@ -139,27 +139,27 @@ CFLAGS = -Wall -Wextra -std=c11 -Wno-old-style-declaration -Wno-format -flto=aut
 CXXFLAGS = -Wall -Wextra -std=c++20 -Wno-format -flto=auto -fuse-linker-plugin
 LINKER_FLAGS = -flto=auto -save-temps
 
-.PHONY: all submodules tools assets windows level_editor psx nds clean mkdir_output_win windows_dependencies glfw gl3w imgui imguizmo
-all: submodules tools assets windows level_editor psx nds 
+.PHONY: all submodules tools assets pc level_editor psx nds clean mkdir_output_win windows_dependencies glfw gl3w imgui imguizmo
+all: submodules tools assets pc level_editor psx nds 
 
 # Windows target
-windows: DEFINES = _PC
-windows: LIBRARIES = glfw3 stdc++ 
+pc: DEFINES = _PC
+pc: LIBRARIES = glfw3 stdc++ 
 ifeq ($(OS),Windows_NT)
-windows: LIBRARIES += gdi32 opengl32
+pc: LIBRARIES += gdi32 opengl32
 endif
-windows: CC = gcc
-windows: CXX = g++
-windows: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -g
-windows: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20 -g
-windows: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_WIN)) -std=c++20
-windows: INCLUDE_DIRS = source \
+pc: CC = gcc
+pc: CXX = g++
+pc: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -g
+pc: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20 -g
+pc: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_WIN)) -std=c++20
+pc: INCLUDE_DIRS = source \
 			   external/cglm/include \
 			   external/gl3w/include \
 			   external/glfw/include \
 			   external/imgui \
 			   $(PATH_LIB_WIN)/gl3w/include
-windows: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
+pc: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 level_editor: DEFINES = _PC _LEVEL_EDITOR _DEBUG_CAMERA _DEBUG
 level_editor: LIBRARIES = glfw3 stdc++
 ifeq ($(OS),Windows_NT)
@@ -184,7 +184,7 @@ mkdir_output_win:
 	mkdir -p $(PATH_TEMP_WIN)
 	mkdir -p $(PATH_OBJ_WIN)
 	mkdir -p $(PATH_OBJ_WIN)/entities
-	mkdir -p $(PATH_OBJ_WIN)/windows
+	mkdir -p $(PATH_OBJ_WIN)/pc
 
 submodules:
 	git submodule update --init --recursive
@@ -303,7 +303,7 @@ $(PATH_OBJ_LEVEL_EDITOR)/%.o: $(PATH_SOURCE)/%.cpp
 	@echo Compiling $<
 	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
-windows: tools assets $(PATH_BUILD_WIN)/$(PROJECT_NAME)
+pc: tools assets $(PATH_BUILD_WIN)/$(PROJECT_NAME)
 level_editor: tools assets $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor
 
 # PSX target

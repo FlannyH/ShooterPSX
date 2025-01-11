@@ -1,6 +1,6 @@
 #include "input.h"
 
-#include "windows/psx.h"
+#include "pc/psx.h"
 
 #include <GL/gl3w.h>
 

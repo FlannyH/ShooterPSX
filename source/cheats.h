@@ -7,7 +7,7 @@
 #elif defined(_NDS)
 #include "nds/psx.h"
 #else
-#include "windows/psx.h"
+#include "pc/psx.h"
 #endif
 
 // Cheats are defined in reverse order, it was easier to implement that way

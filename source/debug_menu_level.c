@@ -14,8 +14,8 @@
 #endif
 
 #ifdef _PC
-#include "windows/psx.h"
-#include "windows/debug_layer.h"
+#include "pc/psx.h"
+#include "pc/debug_layer.h"
 #endif
 
 #ifdef _NDS

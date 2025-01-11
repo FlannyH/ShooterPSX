@@ -1,7 +1,7 @@
 #include "../main.h"
 
-#include "../windows/debug_layer.h"
-#include "../windows/psx.h"
+#include "../pc/debug_layer.h"
+#include "../pc/psx.h"
 #include "../renderer.h"
 #include "../entity.h"
 #include "../player.h"
