@@ -29,6 +29,8 @@ void input_rumble(uint8_t left_strength, uint8_t right_enable);
 int input_mouse_connected(void);
 void input_lock_mouse(void);
 void input_unlock_mouse(void);
+int input_mouse_movement_x(void);
+int input_mouse_movement_y(void);
 
 #ifdef __cplusplus
 }

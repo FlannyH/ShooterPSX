@@ -21,6 +21,10 @@ int player1_index = -1;
 int player2_index = -1;
 int button_pressed_this_frame = 0;
 int mouse_lock = 0;
+double cursor_pos_prev_x = 0.0;
+double cursor_pos_prev_y = 0.0;
+double cursor_pos_x = 0.0;
+double cursor_pos_y = 0.0;
 uint16_t input_buffer[32];
 
 void input_init(void) {}
@@ -108,9 +112,6 @@ void input_update(void) {
     }
 
     // Keyboard & mouse input
-    static double cursor_pos_prev_x = 0.0;
-    static double cursor_pos_prev_y = 0.0;
-    double cursor_pos_x, cursor_pos_y;
     glfwGetCursorPos(window, &cursor_pos_x, &cursor_pos_y);
     right_stick_x[0] = (int8_t)(cursor_pos_prev_x - cursor_pos_x);
     right_stick_y[0] = (int8_t)(cursor_pos_prev_y - cursor_pos_y);
@@ -266,7 +267,16 @@ void input_lock_mouse(void) {
     mouse_lock = 1;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
+
 void input_unlock_mouse(void) {
     mouse_lock = 0;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
+int input_mouse_movement_x(void) {
+    return (int)(cursor_pos_prev_x - cursor_pos_x);
+}
+
+int input_mouse_movement_y(void) {
+    return (int)(cursor_pos_prev_y - cursor_pos_y);
 }
