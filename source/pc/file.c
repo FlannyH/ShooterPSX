@@ -68,10 +68,6 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
         memcpy(&new_path[1], path, length - 2);
         new_path[length - 2] = 0;
     }
-    else if (path[0] == '\\' || path[0] == '/') {
-        new_path = mem_stack_alloc(length, STACK_TEMP);
-        strcpy(new_path, path + 1); // Get rid of the leading '/'
-    }
     else {
         strcpy(new_path, path);
     }
