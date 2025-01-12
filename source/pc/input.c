@@ -32,6 +32,7 @@ double mouse_scroll_prev = 0.0;
 uint16_t input_buffer[32];
 
 void input_scroll_callback(GLFWwindow* window, double x_offset, double y_offset) {
+    (void)window;
     (void)x_offset;
     mouse_scroll_incoming += y_offset;
 }
