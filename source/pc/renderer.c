@@ -422,13 +422,16 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 	glClearStencil(255);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+#ifndef _LEVEL_EDITOR
     if (input_held(PAD_SQUARE, 0)) {
         memcpy(view_matrix, view_matrix_topdown, sizeof(view_matrix_topdown));
     }
     else if (input_held(PAD_TRIANGLE, 0)) {
         memcpy(view_matrix, view_matrix_third_person, sizeof(view_matrix_third_person));
     }
-    else {
+    else 
+#endif
+	{
         memcpy(view_matrix, view_matrix_normal, sizeof(view_matrix_normal));
     }
 
