@@ -149,4 +149,6 @@ void state_exit_settings(void) {
 		}
 		renderer_end_frame();
 	}
+
+	renderer_start_fade_in(FADE_SPEED);
 }
