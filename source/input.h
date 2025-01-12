@@ -31,6 +31,7 @@ void input_lock_mouse(void);
 void input_unlock_mouse(void);
 int input_mouse_movement_x(void);
 int input_mouse_movement_y(void);
+int input_mouse_scroll(void);
 
 #ifdef __cplusplus
 }

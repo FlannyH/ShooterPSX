@@ -25,9 +25,19 @@ double cursor_pos_prev_x = 0.0;
 double cursor_pos_prev_y = 0.0;
 double cursor_pos_x = 0.0;
 double cursor_pos_y = 0.0;
+double mouse_scroll_incoming = 0.0;
+double mouse_scroll_curr = 0.0;
+double mouse_scroll_prev = 0.0;
 uint16_t input_buffer[32];
 
-void input_init(void) {}
+void input_scroll_callback(GLFWwindow* window, double x_offset, double y_offset) {
+    (void)x_offset;
+    mouse_scroll_incoming += y_offset;
+}
+
+void input_init(void) {
+    glfwSetScrollCallback(window, input_scroll_callback);
+}
 
 void input_update(void) {
     // Detect controllers
@@ -112,6 +122,8 @@ void input_update(void) {
     }
 
     // Keyboard & mouse input
+    mouse_scroll_prev = mouse_scroll_curr;
+    mouse_scroll_curr = mouse_scroll_incoming;
     glfwGetCursorPos(window, &cursor_pos_x, &cursor_pos_y);
     right_stick_x[0] = (int8_t)(cursor_pos_prev_x - cursor_pos_x);
     right_stick_y[0] = (int8_t)(cursor_pos_prev_y - cursor_pos_y);
@@ -279,4 +291,8 @@ int input_mouse_movement_x(void) {
 
 int input_mouse_movement_y(void) {
     return (int)(cursor_pos_prev_y - cursor_pos_y);
+}
+
+int input_mouse_scroll(void) { 
+    return (int)(mouse_scroll_curr - mouse_scroll_prev);
 }
