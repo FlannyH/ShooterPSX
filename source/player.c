@@ -146,12 +146,12 @@ void handle_stick_input(player_t* self, const int dt_ms) {
 
     if (input_has_analog(0)) {
         // Moving forwards and backwards
-        self->velocity.x += hisin(self->rotation.y) * input_left_stick_y(0) * (curr_acceleration) >> 16;
-        self->velocity.z += hicos(self->rotation.y) * input_left_stick_y(0) * (curr_acceleration) >> 16;
+        self->velocity.x -= hisin(self->rotation.y) * input_left_stick_y(0) * (curr_acceleration) >> 16;
+        self->velocity.z -= hicos(self->rotation.y) * input_left_stick_y(0) * (curr_acceleration) >> 16;
 
         // Strafing left and right
-        self->velocity.x -= hicos(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
-        self->velocity.z += hisin(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
+        self->velocity.x += hicos(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
+        self->velocity.z -= hisin(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
 
         // Look up and down
         self->rotation.x -= (int32_t)(input_right_stick_y(0)) * (sensitivity * dt_ms) >> 12;
@@ -182,14 +182,14 @@ void handle_stick_input(player_t* self, const int dt_ms) {
         self->rotation.y += dpad_x * (sensitivity * dt_ms) >> 12;
         
         // Moving forwards and backwards
-        const int32_t dpad_y = ((int32_t)(input_held(PAD_UP, 0) != 0) * -127) + ((int32_t)(input_held(PAD_DOWN, 0) != 0) * 127);
+        const int32_t dpad_y = ((int32_t)(input_held(PAD_UP, 0) != 0) * 127) + ((int32_t)(input_held(PAD_DOWN, 0) != 0) * -127);
         self->velocity.x += hisin(self->rotation.y) * dpad_y * (curr_acceleration) >> 16;
         self->velocity.z += hicos(self->rotation.y) * dpad_y * (curr_acceleration) >> 16;
 
         // Strafing left and right
-        const int32_t shoulder_x = ((int32_t)(input_held(PAD_L1, 0) != 0) * -127) + ((int32_t)(input_held(PAD_R1, 0) != 0) * 127);
-        self->velocity.x -= hicos(self->rotation.y) * shoulder_x * (curr_acceleration) >> 16;
-        self->velocity.z += hisin(self->rotation.y) * shoulder_x * (curr_acceleration) >> 16;
+        const int32_t shoulder_x = ((int32_t)(input_held(PAD_L1, 0) != 0) * 127) + ((int32_t)(input_held(PAD_R1, 0) != 0) * -127);
+        self->velocity.x += hicos(self->rotation.y) * shoulder_x * (curr_acceleration) >> 16;
+        self->velocity.z -= hisin(self->rotation.y) * shoulder_x * (curr_acceleration) >> 16;
     }
 }
 
@@ -256,6 +256,7 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
             .is_wall_check = 1,
         };
         bvh_intersect_vertical_cylinder(level_bvh, cyl, &hit);
+
         const size_t n_active_aabb = entity_get_n_active_aabb();
         for (size_t i = 0; i < n_active_aabb; ++i) {
             const entity_collision_box_t* const box = entity_get_aabb_queue_entry(i);
