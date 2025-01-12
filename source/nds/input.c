@@ -130,5 +130,6 @@ int input_mouse_connected(void) {
 }
 
 void input_lock_mouse(void) {}
-
 void input_unlock_mouse(void) {}
+int input_mouse_movement_x(void) { return 0; }
+int input_mouse_movement_y(void) { return 0; }

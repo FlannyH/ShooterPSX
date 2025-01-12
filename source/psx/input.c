@@ -1,4 +1,3 @@
-#ifdef _PSX
 #include "input.h"
 
 #include "fixed_point.h"
@@ -166,4 +165,5 @@ int input_mouse_connected(void) {
 }
 void input_lock_mouse(void){}
 void input_unlock_mouse(void){}
-#endif
+int input_mouse_movement_x(void) { return 0; }
+int input_mouse_movement_y(void) { return 0; }
