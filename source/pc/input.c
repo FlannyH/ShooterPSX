@@ -21,6 +21,7 @@ int player1_index = -1;
 int player2_index = -1;
 int button_pressed_this_frame = 0;
 int mouse_lock = 0;
+int mouse_lock_prev = 0;
 double cursor_pos_prev_x = 0.0;
 double cursor_pos_prev_y = 0.0;
 double cursor_pos_x = 0.0;
@@ -136,11 +137,17 @@ void input_update(void) {
         glfwSetCursorPos(window, w, h);
         cursor_pos_prev_x = w;
         cursor_pos_prev_y = h;
+        if (!mouse_lock_prev && mouse_lock) {
+            cursor_pos_x = w;
+            cursor_pos_y = h;
+        }
     }
     else {
         cursor_pos_prev_x = cursor_pos_x;
         cursor_pos_prev_y = cursor_pos_y;
     }
+    mouse_lock_prev = mouse_lock;
+
     left_stick_x[0] = 0;
     left_stick_y[0] = 0;
     if (glfwGetKey(window, GLFW_KEY_W)) { left_stick_y[0] += 127; }

@@ -95,17 +95,19 @@ void debug_camera_update(debug_camera_t* self, const int dt_ms, const int regist
     // Move the player based on velocity
     self->position = vec3_add(self->position, vec3_muls(self->velocity, dt_ms * ONE));
 
-    // Look up and down
-    self->transform.rotation.x -= (int32_t)(input_mouse_movement_y() * 8) * (mouse_sensitivity) >> 12;
-    if (self->transform.rotation.x > 32768) {
-        self->transform.rotation.x = 32768;
+    if (register_input) {
+        // Look up and down
+        self->transform.rotation.x -= (int32_t)(input_mouse_movement_y() * 8) * (mouse_sensitivity) >> 12;
+        if (self->transform.rotation.x > 32768) {
+            self->transform.rotation.x = 32768;
+        }
+        if (self->transform.rotation.x < -32768) {
+            self->transform.rotation.x = -32768;
+        }
+    
+        // Look left and right
+        self->transform.rotation.y += (int32_t)(input_mouse_movement_x() * 8) * (mouse_sensitivity) >> 12;
     }
-    if (self->transform.rotation.x < -32768) {
-        self->transform.rotation.x = -32768;
-    }
-
-    // Look left and right
-    self->transform.rotation.y += (int32_t)(input_mouse_movement_x() * 8) * (mouse_sensitivity) >> 12;
 
     // Transform from a position in collision space to a view offset in graphics space
     self->transform.position.x = -self->position.x * (4096 / COL_SCALE);
