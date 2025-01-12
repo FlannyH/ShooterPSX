@@ -71,9 +71,7 @@ int main(int argc, char** argv) {
 
         // Update camera
         input_update();
-        if (mouse_lock) {
-            debug_camera_update(&camera, dt);
-        }
+        debug_camera_update(&camera, dt, mouse_lock);
         
         renderer_begin_frame(&camera.transform);
         {
