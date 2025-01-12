@@ -41,13 +41,11 @@ int8_t apply_deadzone(uint8_t input) {
     const int16_t sign = (stick < 0) ? -1 : +1;
     if (stick < 0) stick = -stick;
 
-    // Subtract deadzone and clamp to 0, 127
+    // Remap from 0, 127-deadzone to 0, 127, and then clamp for good measure
     stick -= deadzone16;
+    stick = stick * 127 / (127-deadzone16);
     if (stick < 0) stick = 0;
     else if (stick > 127) stick = 127;
-    
-    // Remap from 0, 127-deadzone to 0, 127
-    stick = stick * 127 / (127-deadzone16);
 
     // Re-apply sign
     stick *= sign;
@@ -79,10 +77,10 @@ void input_update(void) {
 
         // If we have analog sticks, update those, taking deadzone into account
         if (input_has_analog(i)) {
-            left_stick_x_curr[i] = apply_deadzone(pad[i]->ls_x);
-            left_stick_y_curr[i] = apply_deadzone(pad[i]->ls_y);
-            right_stick_x_curr[i] = apply_deadzone(pad[i]->rs_x);
-            right_stick_y_curr[i] = apply_deadzone(pad[i]->rs_y);
+            left_stick_x_curr[i] = -apply_deadzone(pad[i]->ls_x);
+            left_stick_y_curr[i] = -apply_deadzone(pad[i]->ls_y);
+            right_stick_x_curr[i] = -apply_deadzone(pad[i]->rs_x);
+            right_stick_y_curr[i] = -apply_deadzone(pad[i]->rs_y);
         }
     }
 }
