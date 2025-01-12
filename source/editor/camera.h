@@ -7,7 +7,6 @@
 
 typedef struct {
     transform_t transform; // graphics space
-    vec3_t position; // collision space
     vec3_t velocity;
     scalar_t drag;
     scalar_t max_speed;
