@@ -19,6 +19,8 @@ uniform int curr_depth_bias;
 void main()
 {
 	gl_Position = proj_matrix * view_matrix * model_matrix * vec4(in_position, 1.0);
+	gl_Position.x = floor(gl_Position.x/gl_Position.w * 512.0) / 512.0 * gl_Position.w;
+	gl_Position.y = floor(gl_Position.y/gl_Position.w * 240.0) / 240.0 * gl_Position.w;
     gl_Position.z += float(curr_depth_bias) / 2048.0;
 	out_color = in_color * 2;
 	out_texcoord = in_texcoord.xy;

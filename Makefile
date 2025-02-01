@@ -428,6 +428,8 @@ tools: obj2psx midi2psx psx_vislist_generator psx_soundfont_generator fsfa_build
 # For levels, make the first 2 art .col, .vis, and then the rest. this way everything can be built in the right order
 COMPILED_ASSET_LIST = $(PATH_ASSETS)/GOURAUD.FSH \
 					  $(PATH_ASSETS)/GOURAUD.VSH \
+					  $(PATH_ASSETS)/BLIT.FSH \
+					  $(PATH_ASSETS)/BLIT.VSH \
 					  $(PATH_ASSETS)/levels/test.lvl \
 					  $(PATH_ASSETS)/levels/test2.lvl \
 					  $(PATH_ASSETS)/levels/level1.lvl \

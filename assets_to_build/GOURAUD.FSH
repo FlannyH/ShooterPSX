@@ -39,4 +39,5 @@ void main()
     if (abs(out_texture - 254.0f) < 0.5f)  {
         discard;
     }
+    frag_color.xyz = pow(frag_color.xyz, vec3(2.8 / 2.2)); // closer to how it looks on my ps1
 }

@@ -27,7 +27,8 @@ mat4 view_matrix;
 mat4 view_matrix_topdown;
 mat4 view_matrix_third_person;
 mat4 view_matrix_normal;
-GLuint shader;
+GLuint shader_gouraud;
+GLuint shader_blit;
 GLuint vao;
 GLuint vbo;
 clock_t dt_clock;
@@ -35,10 +36,15 @@ GLuint textures;
 float tex_res[512];
 clock_t dt = 0;
 uint32_t n_total_triangles = 0;
+int render_w = 512;
+int render_h = 240;
+int prev_render_w = 0;
+int prev_render_h = 0;
 int window_w = 32;
 int window_h = 32;
 int prev_window_w = 0;
 int prev_window_h = 0;
+float aspect = 16.0f / 9.0f;
 transform_t cam_transform;
 vec3_t camera_pos;
 vec3_t camera_dir;
@@ -56,10 +62,10 @@ int tex_level_start = 0;
 int tex_alloc_cursor = 0;
 int res_x = 512; // Pretend it's the same as PSX
 
-#ifdef _LEVEL_EDITOR
 GLuint fbo;
 GLuint fb_texture;
 GLuint fb_depth;
+#ifdef _LEVEL_EDITOR
 int drawing_entity_id = 255;
 #endif
 
@@ -244,11 +250,11 @@ GLuint shader_from_file(char *vert_path, char *frag_path) {
 }
 
 int renderer_width(void) {
-    return window_w;
+    return render_w;
 }
 
 int renderer_height(void) {
-    return window_h;
+    return render_h;
 }
 
 void renderer_init(void) {
@@ -273,7 +279,8 @@ void renderer_init(void) {
 	glm_perspective(glm_rad(90.0f), 4.0f / 3.0f, 0.1f, 100000.f, perspective_matrix);
 
 	// Load shaders
-	shader = shader_from_file("GOURAUD.VSH", "GOURAUD.FSH");
+	shader_gouraud = shader_from_file("GOURAUD.VSH", "GOURAUD.FSH");
+	shader_blit = shader_from_file("BLIT.VSH", "BLIT.FSH");
 
 	// Set up VAO and VBO
 	glGenVertexArrays(1, &vao);
@@ -307,7 +314,6 @@ void renderer_init(void) {
     glBindTexture(GL_TEXTURE_2D, 0);
     mem_free(random_data);
 
-	#ifdef _LEVEL_EDITOR // Create separate framebuffer
 	// Generate fbo
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -316,8 +322,8 @@ void renderer_init(void) {
 	glGenTextures(1, &fb_texture);
 	glBindTexture(GL_TEXTURE_2D, fb_texture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, 0, GL_RGBA, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 	
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fb_texture, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -325,14 +331,13 @@ void renderer_init(void) {
 	glGenTextures(1, &fb_depth);
 	glBindTexture(GL_TEXTURE_2D, fb_depth);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 	
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
 	glfwGetWindowSize(window, &window_w, &window_h);
-	#endif
 }
 double lasttime = 0.0;
 void renderer_begin_frame(const transform_t *camera_transform) {
@@ -340,37 +345,38 @@ void renderer_begin_frame(const transform_t *camera_transform) {
     cam_transform = *camera_transform;
 	lasttime = glfwGetTime();
 	// Set up viewport
-#ifdef _LEVEL_EDITOR
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-#else
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, render_w, render_h);
+
+#ifndef _LEVEL_EDITOR
 	glfwGetWindowSize(window, &window_w, &window_h);
 #endif
-	glViewport(0, 0, window_w, window_h);
-
 	if (window_w != prev_window_w || window_h != prev_window_h) {
 		// Recreate projection matrix
-		glm_perspective(glm_rad(90.0f), (float)window_w / (float)window_h, 0.1f, 1000000.f,
-										perspective_matrix);
+		aspect = (float)window_w / (float)window_h;
+		widescreen = (aspect >= 16.0f/10.0f);
+		glm_perspective(glm_rad(90.0f), aspect, 0.1f, 1000000.f, perspective_matrix);
+		prev_window_w = window_w;
+		prev_window_h = window_h;
+	}
 
-#ifdef _LEVEL_EDITOR
-	// Resize color attachment
-	glBindTexture(GL_TEXTURE_2D, fb_texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, window_w, window_h, 0, GL_RGBA, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 	
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fb_texture, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+	if (render_w != prev_render_w || render_h != prev_render_h) {
+		// Resize color attachment
+		glBindTexture(GL_TEXTURE_2D, fb_texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, render_w, render_h, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 	
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fb_texture, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
-	// Resize depth attachment
-	glBindTexture(GL_TEXTURE_2D, fb_depth);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, window_w, window_h, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 	
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-#endif
+		// Resize depth attachment
+		glBindTexture(GL_TEXTURE_2D, fb_depth);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, render_w, render_h, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 	
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	// Convert from PS1 to GLM
@@ -449,6 +455,22 @@ void renderer_end_frame(void) {
 	while (glfwGetTime() < lasttime + (1.0/60.0)) {}
     lasttime += 1.0/60.0;
 	update_delta_time_ms();
+
+	glfwGetWindowSize(window, &window_w, &window_h);
+
+#ifndef _LEVEL_EDITOR
+	// Blit framebuffer to window
+	glUseProgram(shader_blit);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_STENCIL_TEST);
+	glViewport(0, 0, window_w, window_h);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, fb_texture);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glUseProgram(0);
+#endif
+
 	// Flip buffers
 	glfwSwapInterval(vsync_enable);
 	glfwSwapBuffers(window);
@@ -462,7 +484,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 	// Calculate model matrix
 	mat4 model_matrix;
 	glm_mat4_identity(model_matrix);
-    glViewport(0, 0, window_w, window_h);
+    glViewport(0, 0, render_w, render_h);
     tex_id_start = tex_id_offset;
 
 	// Apply rotation
@@ -504,7 +526,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 	}
 
 	// Bind shader
-	glUseProgram(shader);
+	glUseProgram(shader_gouraud);
 
 	// Bind texture
 	glBindTexture(GL_TEXTURE_2D, textures);
@@ -514,24 +536,24 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
 	// Set matrices
-	glUniformMatrix4fv(glGetUniformLocation(shader, "proj_matrix"), 1, GL_FALSE, &perspective_matrix[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "proj_matrix"), 1, GL_FALSE, &perspective_matrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
 	if (local) {
 		static const mat4 id_matrix =   {{1.0f, 0.0f, 0.0f, 0.0f},                    \
                                  		 {0.0f, -1.0f, 0.0f, 0.0f},                    \
                                  		 {0.0f, 0.0f, -1.0f, 0.0f},                    \
                                  		 {0.0f, 0.0f, 0.0f, 1.0f}};
-		glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE, &id_matrix[0][0]);
+		glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "view_matrix"), 1, GL_FALSE, &id_matrix[0][0]);
 	}
 	else {
-		glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE, &view_matrix[0][0]);
+		glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "view_matrix"), 1, GL_FALSE, &view_matrix[0][0]);
 	}
 
-    glUniform1i(glGetUniformLocation(shader, "texture_bound"), mesh->vertices[0].tex_id != 255);
-    glUniform1i(glGetUniformLocation(shader, "texture_offset"), tex_id_start);
-	glUniform1i(glGetUniformLocation(shader, "texture_is_page"), 0);
-	glUniform1i(glGetUniformLocation(shader, "curr_depth_bias"), curr_depth_bias);
-	glUniform1f(glGetUniformLocation(shader, "alpha"), 1.0f);
+    glUniform1i(glGetUniformLocation(shader_gouraud, "texture_bound"), mesh->vertices[0].tex_id != 255);
+    glUniform1i(glGetUniformLocation(shader_gouraud, "texture_offset"), tex_id_start);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "texture_is_page"), 0);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "curr_depth_bias"), curr_depth_bias);
+	glUniform1f(glGetUniformLocation(shader_gouraud, "alpha"), 1.0f);
     
 	// Copy data into it
 	glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(vertex_3d_t), mesh->vertices, GL_STATIC_DRAW);
@@ -569,6 +591,9 @@ void renderer_set_drawing_entity_id(int id) {
 void renderer_update_window_res(int width, int height) {
 	window_w = width;
 	window_h = height;
+	render_w = width;
+	render_h = height;
+	aspect = (float)width / (float)height;
 }
 #endif
 
@@ -597,23 +622,23 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     glm_rotate_z(model_matrix, (float)model_transform->rotation.z * 2 * PI / 131072.0f, model_matrix);
 
     // Bind shader
-    glUseProgram(shader);
+    glUseProgram(shader_gouraud);
 
     // Bind texture
     glBindTexture(GL_TEXTURE_2D, 0);
-    glUniform1i(glGetUniformLocation(shader, "texture_bound"), 0);
+    glUniform1i(glGetUniformLocation(shader_gouraud, "texture_bound"), 0);
 
     // Bind vertex buffers
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
     // Set matrices
-    glUniformMatrix4fv(glGetUniformLocation(shader, "proj_matrix"), 1, GL_FALSE, &perspective_matrix[0][0]);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE, &view_matrix[0][0]);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
-	glUniform1i(glGetUniformLocation(shader, "texture_is_page"), 0);
-	glUniform1i(glGetUniformLocation(shader, "curr_depth_bias"), curr_depth_bias - 16);
-	glUniform1f(glGetUniformLocation(shader, "alpha"), 1.0f);
+    glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "proj_matrix"), 1, GL_FALSE, &perspective_matrix[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "view_matrix"), 1, GL_FALSE, &view_matrix[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
+    glUniform1i(glGetUniformLocation(shader_gouraud, "texture_is_page"), 0);
+    glUniform1i(glGetUniformLocation(shader_gouraud, "curr_depth_bias"), curr_depth_bias - 16);
+    glUniform1f(glGetUniformLocation(shader_gouraud, "alpha"), 1.0f);
 
     // Copy data into it
     line_3d_t line;
@@ -759,7 +784,7 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 	};
 
 	// Bind shader
-	glUseProgram(shader);
+	glUseProgram(shader_gouraud);
 
 	// Bind texture
 	glBindTexture(GL_TEXTURE_2D, textures);
@@ -776,15 +801,15 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 	screen_matrix[0][0] = 1.0f / 256.0f;
 	screen_matrix[1][1] = -2.0f / 240.0f;
 	screen_matrix[2][2] = 1.0f / 256.0f;
-	glUniformMatrix4fv(glGetUniformLocation(shader, "proj_matrix"), 1, GL_FALSE, &id_matrix[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "view_matrix"), 1, GL_FALSE, &screen_matrix[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "model_matrix"), 1, GL_FALSE, &id_matrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "proj_matrix"), 1, GL_FALSE, &id_matrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "view_matrix"), 1, GL_FALSE, &screen_matrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "model_matrix"), 1, GL_FALSE, &id_matrix[0][0]);
 
-	glUniform1i(glGetUniformLocation(shader, "texture_bound"), texture_id != 255);
-	glUniform1i(glGetUniformLocation(shader, "texture_offset"), 0);
-	glUniform1i(glGetUniformLocation(shader, "texture_is_page"), is_page);
-	glUniform1i(glGetUniformLocation(shader, "curr_depth_bias"), curr_depth_bias);
-	glUniform1f(glGetUniformLocation(shader, "alpha"), ((float)color.a) / 255.0f);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "texture_bound"), texture_id != 255);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "texture_offset"), 0);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "texture_is_page"), is_page);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "curr_depth_bias"), curr_depth_bias);
+	glUniform1f(glGetUniformLocation(shader_gouraud, "alpha"), ((float)color.a) / 255.0f);
 
 	// Copy data into it
 	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(vertex_3d_t), triangulated, GL_STATIC_DRAW);
