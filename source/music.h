@@ -24,15 +24,18 @@ typedef struct {
 
 // Instrument Region header
 typedef struct {
-    uint8_t key_min;            // Minimum MIDI key for this instrument region
-    uint8_t key_max;            // Maximum MIDI key for this instrument region
-    uint16_t volume_multiplier; // @8.8 fixed point volume multiplier
-    uint32_t sample_start;      // Offset (bytes) into sample data chunk. Can be written to SPU Sample Start Address
-    uint32_t sample_rate;       // Sample rate (Hz) at MIDI key 60 (C5)
-    uint16_t reg_adsr1;         // Raw data to be written to SPU_CH_ADSR1 when enabling a note
-    uint16_t reg_adsr2;         // Raw data to be written to SPU_CH_ADSR2 when enabling a note
-    uint8_t panning;            // Panning for this region, 0 = left, 127 = middle, 254 = right
-    uint8_t pad[3];
+    uint32_t sample_start;  // Offset (bytes) into sample data chunk. Can be written to SPU Sample Start Address |
+    uint32_t sample_rate;   // Sample rate (Hz) at MIDI key 60 (C5)                                              |
+    uint16_t delay;         // Delay stage length in milliseconds                                                |
+    uint16_t attack;        // Attack stage length in milliseconds                                               |
+    uint16_t hold;          // Hold stage length in milliseconds                                                 |
+    uint16_t decay;         // Decay stage length in milliseconds                                                |
+    uint16_t sustain;       // Sustain volume where 0 = 0.0 and 65535 = 1.0                                      |
+    uint16_t release;       // Release stage length in milliseconds                                              |
+    uint16_t volume;        // Q8.8 volume multiplier applied after the volume envelope                      |
+    uint16_t panning;       // Panning for this region, 0 = left, 127 = middle, 254 = right                      |
+    uint8_t key_min;        // Minimum MIDI key for this instrument region                                       |
+    uint8_t key_max;        // Maximum MIDI key for this instrument region         
 } instrument_region_header_t;
 
 // Dynamic Song Sequence header
@@ -59,6 +62,11 @@ typedef struct {
     uint8_t midi_channel; // the midi channel that spawned this channel
 } spu_channel_t;
 
+typedef struct {
+    uint16_t stage_time; // Time in milliseconds how long we've been at this envelope stage
+    uint16_t stage; // What stage we're at now
+} volume_env_t;
+
 #define SPU_STAGE_ON 1
 #define SPU_STAGE_OFF 0
 typedef struct {
@@ -66,14 +74,11 @@ typedef struct {
     scalar_t max_distance; // only if midi_channel == MIDI_CHANNEL_SFX_*
     uint32_t voice_start;
     uint16_t sample_rate;
-    uint16_t adsr1;
-    uint16_t adsr2;
-    uint16_t vol_l;
-    uint16_t vol_r;
     uint8_t key;
     uint8_t midi_channel;
     uint8_t region;
     uint8_t velocity;
+    uint8_t panning;
 } spu_stage_on_t;
 
 typedef struct {
@@ -92,6 +97,17 @@ typedef enum {
     SOUNDBANK_TYPE_MUSIC,
     SOUNDBANK_TYPE_SFX,
 } soundbank_type_t;
+
+typedef enum {
+    ENV_STAGE_IDLE,
+    ENV_STAGE_DELAY,
+    ENV_STAGE_ATTACK,
+    ENV_STAGE_HOLD,
+    ENV_STAGE_DECAY,
+    ENV_STAGE_SUSTAIN,
+    ENV_STAGE_RELEASE,
+    N_ENV_STAGES,
+} env_stage_T;
 
 typedef enum {
     sfx_ammo,
@@ -131,11 +147,9 @@ typedef enum {
 void audio_init(void);
 void audio_tick(int delta_time);
 void audio_load_soundbank(const char* path, soundbank_type_t type);
-void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space, vec3_t position, scalar_t max_distance);
+void audio_play_sound(int instrument, int pitch_wheel, int in_3d_space, vec3_t position, scalar_t max_distance);
 
 // Music
-void music_test_sound(void);
-void music_test_instr_region(int region);
 void music_load_sequence(const char* path);
 void music_play_sequence(uint32_t section);
 void music_set_volume(int volume);

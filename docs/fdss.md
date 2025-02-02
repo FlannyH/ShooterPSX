@@ -28,7 +28,7 @@
 ### Meta Command overview
 | Command Code  | Description            | Operands                                                  | Example / Notes
 | ------------- | ---------------------- | --------------------------------------------------------- | ------------------------------------
-| \$8x          | Set Tempo              | tempo (u12) | \$83 \$C0: Set tick length. To convert this value to microseconds per tick, divide it by 49152.
+| \$8x          | Set Tempo              | tempo (u12) | \$83 \$C0: Set tick length. To convert this value to seconds per tick, divide it by 49152.
 | \$9x          | Reserved               |
 | \$A0 - $BF    | Wait a number of ticks | (none) | Actual number of ticks to wait is fetched from a look-up table, see detailed description.
 | \$Bx          | Reserved               |
@@ -78,7 +78,7 @@ The channel's instrument is set to the instrument index operand's value. Any sub
 | Instrument Index | 0 - 255 | Instrument 0 to 255 | Instrument 0 = 0
 
 #### ($8x) - Set Tempo
-Sets the new tick length. This is a 12-bit value (0 - 4095). To get the tick length in microseconds, divide this value by 49152. Let's break down why this number was chosen.
+Sets the new tick length. This is a 12-bit value (0 - 4095). To get the tick length in seconds, divide this value by 49152. Let's break down why this number was chosen.
 
 Let's say we have a song sequence that is played at 120 BPM, with 48 pulses per quarter note (PPQ). PPQ values are commonly a multiple of 24 in MIDI files. At 120 BPM, each quarter note lasts 0.5 seconds, which means 2 quarter notes fit in one second. This means we have 96 ticks per second. Then, to make sure we can have tempos from 30 BPM all the way to 480 BPM without losing too much resolution or accuracy, the factor 512 was chosen. This way, the minimum tempo is 15 BPM at 48 PPQ, and while technically the upper limit would be 61440 BPM, you can keep within 1% of the desired BPM up to 1266 BPM.
 
