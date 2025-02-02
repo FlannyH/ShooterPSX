@@ -307,10 +307,14 @@ void renderer_init(void) {
 	glGenTextures(1, &textures);
 	glBindTexture(GL_TEXTURE_2D, textures);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 2048, 512, 0, GL_RGBA, GL_UNSIGNED_BYTE, random_data);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 6); // 64x64 textures have 6 mipmaps
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1.0f);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST_MIPMAP_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+	glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
     mem_free(random_data);
 
@@ -710,6 +714,7 @@ void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) 
 		texture->height, 
 		GL_RGBA, GL_UNSIGNED_BYTE, pixels
 	);
+	glGenerateMipmap(GL_TEXTURE_2D);
 
 	// Store texture resolution
 	tex_res[(size_t)index * 2 + 0] = (float)texture->width;
