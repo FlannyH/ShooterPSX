@@ -185,9 +185,9 @@ void state_update_in_game(int dt) {
 	renderer_set_depth_bias(DEPTH_BIAS_VIEWMODELS);
 
 	// Animate and render gun
+	const vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
+	const scalar_t speed_1d = vec2_magnitude(vel_2d) / PLAYER_VELOCITY_PRECISION;
 	if (state.in_game.player.has_gun || 1) {
-		const vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
-		const scalar_t speed_1d = vec2_magnitude(vel_2d);
 
 		transform_t gun_transform;
 		if (state.cheats.doom_mode) {
@@ -213,8 +213,6 @@ void state_update_in_game(int dt) {
 	// Animate and render sword
 	{
 		transform_t sword_transform;
-		const vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
-		const scalar_t speed_1d = vec2_magnitude(vel_2d);
 		sword_transform.position.x = -165 + (isin(state.global.time_counter * 6) * speed_1d) / (32 * ONE); if (widescreen) sword_transform.position.x -= 52;
 		sword_transform.position.y = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (64 * ONE);
 		sword_transform.position.z = 180;

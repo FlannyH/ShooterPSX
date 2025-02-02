@@ -35,6 +35,8 @@ clock_t dt_clock;
 GLuint textures;
 float tex_res[512];
 clock_t dt = 0;
+float dt_ms_float = 0;
+int dt_ms_int = 0;
 uint32_t n_total_triangles = 0;
 int render_w = 512;
 int render_h = 240;
@@ -178,9 +180,13 @@ void update_delta_time_ms(void) {
 	clock_t new_dt;
 	do {
 		new_dt = clock();
-		dt = ((new_dt - dt_clock) * 1000) / CLOCKS_PER_SEC;
-	} while  (dt < 4);
+		dt = new_dt - dt_clock;
+	} while (dt < 1);
 	dt_clock = new_dt; 
+
+	dt_ms_float += ((float)dt * 1000.0f) / (float)CLOCKS_PER_SEC;
+	dt_ms_int = (int)dt_ms_float;
+	dt_ms_float -= (float)dt_ms_int;
 }
 
 bool load_shader_part(char *path, const ShaderType type, const GLuint *program) {
@@ -270,7 +276,7 @@ void renderer_init(void) {
 	gl3wInit();
     glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(DebugCallbackFunc, NULL);
-	glfwSwapInterval(1);
+	glfwSwapInterval(0);
 
 	// Set viewport
 	glViewport(0, 0, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING);
@@ -456,8 +462,6 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 void renderer_end_frame(void) {
     renderer_tick_fade();
 	
-	while (glfwGetTime() < lasttime + (1.0/60.0)) {}
-    lasttime += 1.0/60.0;
 	update_delta_time_ms();
 
 	glfwGetWindowSize(window, &window_w, &window_h);
@@ -726,7 +730,7 @@ void renderer_upload_texture(const texture_cpu_t *texture, const uint8_t index) 
 
 int renderer_get_delta_time_raw(void) { return 0; }
 
-int renderer_get_delta_time_ms(void) { return dt; }
+int renderer_get_delta_time_ms(void) { return dt_ms_int; }
 
 uint32_t renderer_get_n_total_triangles(void) { return n_total_triangles; }
 
