@@ -25,6 +25,7 @@ int n_staged_note_off_events = 0;
 #define N_MIDI_CHANNELS 16
 spu_channel_t spu_channel[N_SPU_CHANNELS];
 midi_channel_t midi_channel[N_MIDI_CHANNELS];
+volume_env_t vol_envs[N_SPU_CHANNELS];
 vec3_t sfx_origins[N_SPU_CHANNELS];
 scalar_t sfx_max_distances[N_SPU_CHANNELS];
 
@@ -47,6 +48,9 @@ int16_t wait_timer = 0;
 vec3_t listener_pos;
 vec3_t listener_forward;
 vec3_t listener_right;
+
+scalar_t ms_per_tick = 0;
+scalar_t ms_precision_counter = 0;
 
 void audio_load_soundbank(const char* path, soundbank_type_t type) {
 	// Load the SBK file
@@ -94,62 +98,25 @@ void audio_init(void) {
 	listener_right = (vec3_t){ONE, 0, 0};
 }
 
-void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space, vec3_t position, scalar_t max_distance) {
-    // todo: expose these to user
-	// todo: 3d origin for sound
-	const int key = 60;
-	const int pitch_wheel = 0;
-	int velocity = 127;
-	int pan = 127;
-
-	if (in_3d_space) {
-		const vec3_t relative_position = vec3_sub(position, listener_pos);
-
-		// Avoid div by 0 if listener and audio source are on the same exact position
-		if ((relative_position.x | relative_position.y | relative_position.z) != 0) {
-			// Volume
-			const scalar_t distance_from_listener = scalar_sqrt(vec3_magnitude_squared(relative_position));
-			const scalar_t inverse_volume_scalar = scalar_div(distance_from_listener, max_distance);
-			const scalar_t clamped_volume_scalar = ONE - scalar_clamp(inverse_volume_scalar, 0, ONE);
-			velocity = (127 * clamped_volume_scalar) / ONE;
-
-			// Stereo panning
-			const vec3_t source = vec3_divs(relative_position, distance_from_listener);
-			const scalar_t norm_left_right = scalar_clamp(vec3_dot(source, listener_right), -ONE, +ONE);
-			pan = 127 + (254 * norm_left_right + ONE) / (ONE * 2);
-		}
-	}
+void audio_stage_on(int instrument, int key, int pan, int velocity, int pitch_wheel, int midi_channel, vec3_t position, scalar_t max_distance) {
+	if (sfx_instrument_regions == NULL || music_instrument_regions == NULL) return;
+	if (sfx_instruments == NULL || music_instruments == NULL) return;
+	
+	PANIC_IF("note panning out of bounds!", pan < 0 || pan > 255);
 
 	// Find first instrument region that fits, and start playing the note
-	const uint16_t n_regions = sfx_instruments[instrument].n_regions;
-	const uint16_t region_id_start = sfx_instruments[instrument].region_start_index;
+	const int is_sfx = (midi_channel >= N_MIDI_CHANNELS);
+	const instrument_description_t* const instr = (is_sfx) ? &sfx_instruments[instrument] : &music_instruments[instrument];
+	const uint16_t n_regions = instr->n_regions;
+	const uint16_t region_id_start = instr->region_start_index;
 
-	PANIC_IF("region id will go out of bounds!", (region_id_start >= n_sfx_instrument_regions) || ((region_id_start + n_regions) > n_sfx_instrument_regions));
-	const instrument_region_header_t* regions = &sfx_instrument_regions[region_id_start];
+	if (is_sfx) PANIC_IF("region id will go out of bounds!", (region_id_start >= n_sfx_instrument_regions) || ((region_id_start + n_regions) > n_sfx_instrument_regions));
+	else        PANIC_IF("region id will go out of bounds!", (region_id_start >= n_music_instrument_regions) || ((region_id_start + n_regions) > n_music_instrument_regions));
+	const instrument_region_header_t* regions = (is_sfx) ? &sfx_instrument_regions[region_id_start] : &music_instrument_regions[region_id_start];
 
 	for (size_t i = 0; i < n_regions; ++i) {
 		if (key >= regions[i].key_min 
 		&& key <= regions[i].key_max) {
-			// Calculate sample rate and velocity
-			scalar_t s_velocity = ((scalar_t)velocity) * ONE;
-			const scalar_t s_channel_volume = (127) * (ONE / 256) * regions[i].volume_multiplier;
-			s_velocity = scalar_mul(s_velocity, s_channel_volume);
-
-			PANIC_IF("note panning out of bounds!", pan < 0 || pan > 255);
-			PANIC_IF("region panning out of bounds!", regions[i].panning < 0 || regions[i].panning > 255);
-
-			const vec2_t stereo_volume = vec2_mul(
-				(vec2_t){
-					scalar_mul((uint32_t)lut_panning[254 - pan], s_velocity),
-					scalar_mul((uint32_t)lut_panning[pan], s_velocity),
-				},
-				(vec2_t){
-					(uint32_t)lut_panning[254 - regions[i].panning],
-					(uint32_t)lut_panning[regions[i].panning],
-				}
-			);
-			
-			
 			// Handle channel pitch
 			int coarse_min, coarse_max, fine;
 			if (pitch_wheel >= 0) {
@@ -167,19 +134,14 @@ void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space
 			const uint32_t sample_rate_a = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + coarse_min]) >> 8;
 			const uint32_t sample_rate_b = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + coarse_max]) >> 8;
 			uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-fine)) + (sample_rate_b * (fine)))) >> 4;
-			sample_rate = scalar_mul(sample_rate, pitch_multiplier);
-			
+
 			// Stage a note on event					
 			staged_note_on_events[n_staged_note_on_events] = (spu_stage_on_t){
-				.voice_start = SBK_SFX_OFFSET + regions[i].sample_start,
+				.voice_start = (is_sfx ? SBK_SFX_OFFSET : SBK_MUSIC_OFFSET) + regions[i].sample_start,
 				.sample_rate = sample_rate / 44100,
-				.adsr1 = regions[i].reg_adsr1,
-				.adsr2 = regions[i].reg_adsr2,
-				.vol_l = stereo_volume.x >> 12,
-				.vol_r = stereo_volume.y >> 12,
-				.midi_channel = (in_3d_space) ? (MIDI_CHANNEL_SFX_3D) : (MIDI_CHANNEL_SFX_2D),
+				.midi_channel = midi_channel,
 				.key = key,
-				.region = i + sfx_instruments[instrument].region_start_index,
+				.region = i + instr->region_start_index,
 				.velocity = velocity,
 				.position = position,
 				.max_distance = max_distance
@@ -187,6 +149,13 @@ void audio_play_sound(int instrument, scalar_t pitch_multiplier, int in_3d_space
 			n_staged_note_on_events++;
 		}
 	}
+}
+
+void audio_play_sound(int instrument, int pitch_wheel, int in_3d_space, vec3_t position, scalar_t max_distance) {
+	const int key = 60;
+	int velocity = 127;
+	int pan = 127;
+	audio_stage_on(instrument, key, pan, velocity, pitch_wheel, in_3d_space ? MIDI_CHANNEL_SFX_3D : MIDI_CHANNEL_SFX_2D, position, max_distance);
 };
 
 void music_load_sequence(const char* path) {
@@ -205,7 +174,6 @@ void music_load_sequence(const char* path) {
 
 	if (curr_loaded_seq) mem_free(curr_loaded_seq);
 	curr_loaded_seq = (dyn_song_seq_header_t*)data; // curr_loaded_seq now owns this memory
-
 }
 
 void music_play_sequence(uint32_t section) {
@@ -232,6 +200,7 @@ void music_play_sequence(uint32_t section) {
 		midi_channel[i].pitch_wheel = 0;
 	}
 	memset(spu_channel, 0, sizeof(spu_channel));
+	memset(vol_envs, 0, sizeof(vol_envs));
 
 	n_staged_note_on_events = 0;
 	n_staged_note_off_events = 0;
@@ -283,70 +252,7 @@ void audio_tick(int delta_time) {
 
 				// These are the channels we'll be updating
 				midi_channel_t* midi_chn = &midi_channel[command & 0x0F];
-
-				// Find first instrument region that fits, and start playing the note
-				const uint16_t n_regions = music_instruments[midi_chn->instrument].n_regions;
-				const uint16_t region_id_start = music_instruments[midi_chn->instrument].region_start_index;
-
-				PANIC_IF("region id will go out of bounds!", (region_id_start >= n_music_instrument_regions) || ((region_id_start + n_regions) > n_music_instrument_regions));
-				const instrument_region_header_t* regions = &music_instrument_regions[region_id_start];
-
-				for (size_t i = 0; i < n_regions; ++i) {
-					if (key >= regions[i].key_min 
-					&& key <= regions[i].key_max) {
-						// Calculate sample rate and velocity
-						scalar_t s_velocity = ((scalar_t)velocity) * ONE;
-						scalar_t s_channel_volume = (127) * (ONE / 256) * regions[i].volume_multiplier;
-						s_velocity = scalar_mul(s_velocity, s_channel_volume);
-
-						PANIC_IF("note panning out of bounds!", midi_chn->panning < 0 || midi_chn->panning > 255);
-						PANIC_IF("region panning out of bounds!", regions[i].panning < 0 || regions[i].panning > 255);
-
-						const vec2_t stereo_volume = vec2_mul(
-							(vec2_t){
-								scalar_mul((uint32_t)lut_panning[254 - midi_chn->panning], s_velocity),
-								scalar_mul((uint32_t)lut_panning[midi_chn->panning], s_velocity),
-							},
-							(vec2_t){
-								(uint32_t)lut_panning[254 - regions[i].panning],
-								(uint32_t)lut_panning[regions[i].panning],
-							}
-						);
-
-						// Handle channel pitch
-						int coarse_min, coarse_max, fine;
-						if (midi_chn->pitch_wheel >= 0) {
-							coarse_min = midi_chn->pitch_wheel / 1000;
-							coarse_max = coarse_min + 1;
-							fine = ((midi_chn->pitch_wheel * 256) / 1000) & 0xFF;
-						} 
-						else {
-							coarse_max = (midi_chn->pitch_wheel + 1) / 1000;
-							coarse_min = coarse_max - 1;
-							fine = ((midi_chn->pitch_wheel * 256) / 1000) & 0xFF;
-						}
-
-						// Calculate A and B for lerp
-						const uint32_t sample_rate_a = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + coarse_min]) >> 8;
-						const uint32_t sample_rate_b = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + coarse_max]) >> 8;
-						const uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-fine)) + (sample_rate_b * (fine)))) >> 4;
-
-						// Stage a note on event
-						staged_note_on_events[n_staged_note_on_events] = (spu_stage_on_t){
-							.voice_start = SBK_MUSIC_OFFSET + regions[i].sample_start,
-							.sample_rate = sample_rate / 44100,
-							.adsr1 = regions[i].reg_adsr1,
-							.adsr2 = regions[i].reg_adsr2,
-							.vol_l = stereo_volume.x >> 12,
-							.vol_r = stereo_volume.y >> 12,
-							.midi_channel = command & 0x0F,
-							.key = key,
-							.region = i + music_instruments[midi_chn->instrument].region_start_index,
-							.velocity = velocity
-						};
-						n_staged_note_on_events++;
-					}
-				}
+				audio_stage_on(midi_chn->instrument, key, midi_chn->panning, velocity, midi_chn->pitch_wheel, command & 0x0F, vec3_from_scalar(0), 0);
 			}
 
 			// Set Channel Volume
@@ -384,6 +290,7 @@ void audio_tick(int delta_time) {
 			// Set tempo
 			else if ((command & 0xF0) == 0x80) {
 				uint32_t value = ((((uint32_t)command) << 8) + ((int32_t)(*sequence_pointer++))) & 0xFFF; // Raw value from song data
+				ms_per_tick = (value * ONE * 1000) / 49152;
 				value = (value * 44100) / 512; // Convert from raw value to sysclock
 				TIMER_RELOAD(2) = (uint16_t)value;
 			}
@@ -421,9 +328,10 @@ void audio_tick(int delta_time) {
 	// Handle staged events
 	uint32_t note_on = 0;
 	uint32_t note_off = 0;
+	uint32_t note_cut = 0;
 	for (int stage_i = 0; stage_i < n_staged_note_off_events; ++stage_i) {
 		// Find channels that have this key and this channel
-		for (int spu_i = 0; spu_i < MAX_STAGED_NOTE_EVENTS; ++spu_i) {
+		for (int spu_i = 0; spu_i < N_SPU_CHANNELS; ++spu_i) {
 			// If the MIDI key and channel match, kill this note
 			if (staged_note_off_events[stage_i].key == spu_channel[spu_i].key
 			&& staged_note_off_events[stage_i].midi_channel == spu_channel[spu_i].midi_channel) {
@@ -432,25 +340,35 @@ void audio_tick(int delta_time) {
 			}
 		}
 	}
+
 	for (int i = 0; i < n_staged_note_on_events; ++i) {
 		// Find free channel
-		int channel_id = 0;
-		for (channel_id = 0; channel_id < MAX_STAGED_NOTE_EVENTS; ++channel_id) {
-			if (SPU_CH_ADSR_VOL(channel_id) != 0) continue;
-			if (note_on & (1 << channel_id)) continue;
-			if (note_off & (1 << channel_id)) continue;
-			break;
+		int channel_id = -1;
+		int max_release_stage_time = -1;
+		for (int j = 0; j < N_SPU_CHANNELS; ++j) {
+			if (note_on & (1 << j)) continue;
+			if (note_off & (1 << j)) continue;
+			if (vol_envs[j].stage == ENV_STAGE_RELEASE && vol_envs[j].stage_time > max_release_stage_time) {
+				max_release_stage_time = vol_envs[j].stage_time;
+				channel_id = j;
+				continue;
+			}
+			if (vol_envs[j].stage == ENV_STAGE_IDLE || SPU_CH_ADSR_VOL(j) == 0) {
+				channel_id = j;
+				break;
+			}
 		}
 
-		if (channel_id >= 24) break;
+		if (channel_id < 0) break;
+		if (channel_id >= N_SPU_CHANNELS) break;
 
 		// Trigger note on that channel
 		SpuSetVoiceStartAddr(channel_id, staged_note_on_events[i].voice_start);
 		SpuSetVoicePitch(channel_id, staged_note_on_events[i].sample_rate);
-		SPU_CH_ADSR1(channel_id) = staged_note_on_events[i].adsr1;
-		SPU_CH_ADSR2(channel_id) = staged_note_on_events[i].adsr2;
-		SPU_CH_VOL_L(channel_id) = staged_note_on_events[i].vol_l;
-		SPU_CH_VOL_R(channel_id) = staged_note_on_events[i].vol_r;
+		SPU_CH_ADSR1(channel_id) = 0x00FF; // constant sustain
+		SPU_CH_ADSR2(channel_id) = 0x0000;
+		SPU_CH_VOL_L(channel_id) = 8000;
+		SPU_CH_VOL_R(channel_id) = 8000;
 		note_on |= 1 << channel_id;
 
 		// Store some metadata
@@ -460,71 +378,124 @@ void audio_tick(int delta_time) {
 		spu_channel[channel_id].velocity = staged_note_on_events[i].velocity;
 		sfx_origins[channel_id] = staged_note_on_events[i].position;
 		sfx_max_distances[channel_id] = staged_note_on_events[i].max_distance;
+		vol_envs[channel_id].stage_time = 0;
+		vol_envs[channel_id].stage = ENV_STAGE_DELAY;
 	}
 
-	WARN_IF("note_off and note_on staged on same channel!", (note_off & note_on) != 0);
-	SpuSetKey(0, note_off);
-	SpuSetKey(1, note_on);
+	// Update channels
+	ms_precision_counter += ms_per_tick * delta_time;
+	int delta_stage_time = ms_precision_counter / ONE;
+	ms_precision_counter -= delta_stage_time * ONE;
 
-	for (size_t i = 0; i < N_SPU_CHANNELS; ++i) {
+	for (int i = 0; i < N_SPU_CHANNELS; ++i) {
 		const spu_channel_t* spu_ch = &spu_channel[i];
+		instrument_region_header_t* region = NULL;
 
-		// If sfx in 3D, update it
-		if (spu_ch->midi_channel == MIDI_CHANNEL_SFX_3D) { 
-			const vec3_t relative_position = vec3_sub(sfx_origins[i], listener_pos);
-
-			// Avoid div by 0 if listener and audio source are on the same exact position
-			if ((relative_position.x | relative_position.y | relative_position.z) != 0) {
-				// Volume
-				const scalar_t distance_from_listener = scalar_sqrt(vec3_magnitude_squared(relative_position));
-				const scalar_t inverse_volume_scalar = scalar_div(distance_from_listener, sfx_max_distances[i]);
-				const scalar_t clamped_volume_scalar = ONE - scalar_clamp(inverse_volume_scalar, 0, ONE);
-				const scalar_t s_channel_volume = (127) * (ONE / 256) * music_instrument_regions[spu_ch->region].volume_multiplier;
-				const scalar_t s_velocity = scalar_mul((127 * clamped_volume_scalar), s_channel_volume);
-
-				// Stereo panning
-				const vec3_t source = vec3_divs(relative_position, distance_from_listener);
-				const scalar_t norm_left_right = scalar_clamp(vec3_dot(source, listener_right), -ONE, +ONE);
-				const int pan = 127 + (254 * norm_left_right + ONE) / (ONE * 2);
-				
-				const vec2_t stereo_volume = vec2_mul(
-					(vec2_t){
-						scalar_mul((uint32_t)lut_panning[254 - pan], s_velocity),
-						scalar_mul((uint32_t)lut_panning[pan], s_velocity),
-					},
-					(vec2_t){
-						(uint32_t)lut_panning[254 - music_instrument_regions[spu_ch->region].panning],
-						(uint32_t)lut_panning[music_instrument_regions[spu_ch->region].panning],
-					}
-				);
-
-				SPU_CH_VOL_L(i) = stereo_volume.x >> 12;
-				SPU_CH_VOL_R(i) = stereo_volume.y >> 12;
-			}
+		scalar_t channel_volume = 127;
+		scalar_t channel_panning = 127;
+		if (spu_ch->midi_channel < N_MIDI_CHANNELS) {
+			const midi_channel_t* midi_ch = &midi_channel[spu_ch->midi_channel];
+			channel_volume = midi_ch->volume;
+			channel_panning = midi_ch->panning;
+			region = &music_instrument_regions[spu_ch->region];
+		}
+		else {
+			region = &sfx_instrument_regions[spu_ch->region];
 		}
 
-		if (spu_ch->midi_channel >= N_SPU_CHANNELS) continue;
-		midi_channel_t* midi_ch = &midi_channel[spu_ch->midi_channel];
-		if (SPU_CH_ADSR_VOL(i) == 0) continue;
-		if (note_on & (1 << i)) continue;
-		if (note_off & (1 << i)) continue;
-		if (spu_ch->key == 255) continue;
+		// This code may run before the soundbanks are loaded, so if the instrument region is null, skip this channel
+		if (region == NULL) break;
+		
+		// Update volume envelope
+		vol_envs[i].stage_time += delta_stage_time;
+		scalar_t adsr_volume = 0; // 0 = 0.0, 255 = 1.0
 
+		if (vol_envs[i].stage == ENV_STAGE_IDLE) {
+			adsr_volume = 0;
+		}
+		if (vol_envs[i].stage == ENV_STAGE_DELAY) {
+			adsr_volume = 0;
+			if (vol_envs[i].stage_time >= region->delay) {
+				vol_envs[i].stage_time -= region->delay;
+				vol_envs[i].stage = ENV_STAGE_ATTACK;
+			} 
+		}
+		if (vol_envs[i].stage == ENV_STAGE_ATTACK) {
+			if (region->attack == 0) {
+				vol_envs[i].stage = ENV_STAGE_HOLD;
+			}
+			else {
+				adsr_volume = scalar_lerp(0, ONE, (vol_envs[i].stage_time * ONE) / region->attack);
+				if (vol_envs[i].stage_time >= region->attack) {
+					vol_envs[i].stage_time -= region->attack;
+					vol_envs[i].stage = ENV_STAGE_HOLD;
+				}
+			}
+		}
+		if (vol_envs[i].stage == ENV_STAGE_HOLD) {
+			adsr_volume = 255;
+			if (vol_envs[i].stage_time >= region->hold) {
+				vol_envs[i].stage_time -= region->hold;
+				vol_envs[i].stage = ENV_STAGE_DECAY;
+			} 
+		}
+		if (vol_envs[i].stage == ENV_STAGE_DECAY) {
+			if (region->decay == 0) {
+				vol_envs[i].stage = ENV_STAGE_SUSTAIN;
+			}
+			else {
+				adsr_volume = scalar_lerp(ONE, region->sustain >> 4, (vol_envs[i].stage_time * ONE) / region->decay);
+				if (vol_envs[i].stage_time >= region->decay) {
+					vol_envs[i].stage_time -= region->decay;
+					vol_envs[i].stage = ENV_STAGE_SUSTAIN;
+				} 
+			}
+		}
+		if (vol_envs[i].stage == ENV_STAGE_SUSTAIN) {
+			adsr_volume = region->sustain >> 4;
+			if (note_off & (1 << i)) {
+				vol_envs[i].stage_time = 0;
+				vol_envs[i].stage = ENV_STAGE_RELEASE;
+			} 
+		}
+		if (vol_envs[i].stage == ENV_STAGE_RELEASE) {
+			if (region->release == 0) {
+				vol_envs[i].stage = ENV_STAGE_IDLE;
+				note_cut |= (1 << i);
+				adsr_volume = 0;
+			}
+			else {
+				adsr_volume = scalar_lerp(region->sustain >> 4, 0, (vol_envs[i].stage_time * ONE) / region->release);
+				if (vol_envs[i].stage_time >= region->release) {
+					vol_envs[i].stage = ENV_STAGE_IDLE;
+					note_cut |= (1 << i);
+					adsr_volume = 0;
+				}
+			}
+		}
+		if (vol_envs[i].stage >= N_ENV_STAGES) {
+			vol_envs[i].stage = ENV_STAGE_IDLE;
+		}
+
+		if (adsr_volume > ONE) adsr_volume = ONE;
+
+		// Volume 
 		scalar_t s_velocity = ((scalar_t)spu_ch->velocity) * ONE;
-		const scalar_t s_channel_volume = ((scalar_t)midi_ch->volume) * (ONE / 256) * music_instrument_regions[spu_ch->region].volume_multiplier;
+		const scalar_t s_channel_volume = channel_volume * region->volume * (ONE / 256) ;
 		s_velocity = scalar_mul(s_velocity, s_channel_volume);
+		s_velocity = scalar_mul(s_velocity, adsr_volume);
 
-		PANIC_IF("note panning out of bounds!", midi_ch->panning < 0 || midi_ch->panning > 255);
-		PANIC_IF("region panning out of bounds!", (music_instrument_regions[spu_ch->region].panning < 0) || (music_instrument_regions[spu_ch->region].panning > 255));
+		PANIC_IF("note panning out of bounds!", channel_panning < 0 || channel_panning > 255);
+		PANIC_IF("region panning out of bounds!", (region->panning < 0) || (region->panning > 255));
 
 		const vec2_t stereo_volume = vec2_mul(
 			(vec2_t){
-				scalar_mul((uint32_t)lut_panning[254 - midi_ch->panning], s_velocity),
-				scalar_mul((uint32_t)lut_panning[midi_ch->panning], s_velocity),
+				scalar_mul((uint32_t)lut_panning[254 - channel_panning], s_velocity),
+				scalar_mul((uint32_t)lut_panning[channel_panning], s_velocity),
 			},
 			(vec2_t){
-				(uint32_t)lut_panning[254 - music_instrument_regions[spu_ch->region].panning],
-				(uint32_t)lut_panning[music_instrument_regions[spu_ch->region].panning],
+				(uint32_t)lut_panning[254 - region->panning],
+				(uint32_t)lut_panning[region->panning],
 			}
 		);
 
@@ -532,40 +503,9 @@ void audio_tick(int delta_time) {
 		SPU_CH_VOL_R(i) = stereo_volume.y >> 12;
 	}
 
-	// Handle channel volumes
-	if (music_playing != 0) {
-		// Handle channel pitches
-		for (size_t i = 0; i < N_SPU_CHANNELS; ++i) {
-			const spu_channel_t* spu_ch = &spu_channel[i];
-			if (spu_channel[i].midi_channel >= N_SPU_CHANNELS) continue;
-			const midi_channel_t* midi_ch = &midi_channel[spu_channel[i].midi_channel];
-
-			// We only want to update channels that have been playing and aren't going to stop soon, otherwise we have timing issues.
-			if (SPU_CH_ADSR_VOL(i) == 0) continue;
-			if (note_on & (1 << i)) continue;
-			if (note_off & (1 << i)) continue;
-			if (spu_ch->key == 255) continue;
-	
-			// Handle channel pitch
-			int coarse_min, coarse_max, fine;
-			if (midi_ch->pitch_wheel >= 0) {
-				coarse_min = midi_ch->pitch_wheel / 1000;
-				coarse_max = coarse_min + 1;
-				fine = ((midi_ch->pitch_wheel * 256) / 1000) & 0xFF;
-			} else {
-				coarse_max = (midi_ch->pitch_wheel + 1) / 1000;
-				coarse_min = coarse_max - 1;
-				fine = ((midi_ch->pitch_wheel * 256) / 1000) & 0xFF;
-			}
-
-			// Calculate A and B for lerp
-			PANIC_IF("SPU channel's instrument region is out of bounds!", spu_ch->region >= n_music_instrument_regions);
-			const uint32_t sample_rate_a = ((uint32_t)music_instrument_regions[spu_ch->region].sample_rate * (uint32_t)lut_note_pitch[spu_ch->key + coarse_min]) >> 8;
-			const uint32_t sample_rate_b = ((uint32_t)music_instrument_regions[spu_ch->region].sample_rate * (uint32_t)lut_note_pitch[spu_ch->key + coarse_max]) >> 8;
-			uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-fine)) + (sample_rate_b * (fine)))) >> 4;
-			SpuSetVoicePitch(i, sample_rate / 44100);
-		}
-	}
+	WARN_IF("note_off and note_on staged on same channel!", (note_off & note_on) != 0);
+	SpuSetKey(0, note_cut);
+	SpuSetKey(1, note_on);
 
 	n_staged_note_on_events = 0;
 	n_staged_note_off_events = 0;

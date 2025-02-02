@@ -240,8 +240,6 @@ void draw_debug_info(int dt, const int n_sections) {
     PROFILE("player", player_update(&state.in_game.player, &state.in_game.level.collision_bvh, dt, state.global.time_counter), 1);
 
     // Print some useful debug info to the screen
-    FntPrint(-1, "sections: ");
-    for (int i = 0; i < n_sections; ++i) FntPrint(-1, "%i, ", sections[i]);
     FntPrint(-1, "\n");
     FntPrint(-1, "dt: %i\n", dt);
     FntPrint(-1, "meshes drawn: %i\n", renderer_n_meshes_drawn());
