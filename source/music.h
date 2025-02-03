@@ -107,7 +107,7 @@ typedef enum {
     ENV_STAGE_SUSTAIN,
     ENV_STAGE_RELEASE,
     N_ENV_STAGES,
-} env_stage_T;
+} env_stage_t;
 
 typedef enum {
     sfx_ammo,

@@ -2,15 +2,6 @@
 
 #include "common.h"
 
-void music_test_sound(void) {
-    TODO_SOFT()
-}
-
-void music_test_instr_region(int region) {
-    (void)region;
-    TODO_SOFT()
-}
-
 void audio_load_soundbank(const char* path, soundbank_type_t type) {
     (void)path;
     (void)type;
