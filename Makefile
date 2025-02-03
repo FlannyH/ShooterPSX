@@ -144,9 +144,9 @@ all: submodules tools assets pc level_editor psx nds
 
 # Windows target
 pc: DEFINES = _PC
-pc: LIBRARIES = glfw3 stdc++ 
+pc: LIBRARIES = glfw3 portaudio stdc++
 ifeq ($(OS),Windows_NT)
-pc: LIBRARIES += gdi32 opengl32
+pc: LIBRARIES += gdi32 opengl32 winmm ole32 SetupAPI 
 endif
 pc: CC = gcc
 pc: CXX = g++
@@ -154,6 +154,7 @@ pc: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -g
 pc: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20 -g
 pc: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PC)) -std=c++20
 pc: INCLUDE_DIRS = source \
+			   external/portaudio/include \
 			   external/cglm/include \
 			   external/gl3w/include \
 			   external/glfw/include \
@@ -161,9 +162,9 @@ pc: INCLUDE_DIRS = source \
 			   $(PATH_LIB_PC)/gl3w/include
 pc: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 level_editor: DEFINES = _PC _LEVEL_EDITOR _DEBUG_CAMERA _DEBUG
-level_editor: LIBRARIES = glfw3 stdc++
+level_editor: LIBRARIES = glfw3 portaudio stdc++ 
 ifeq ($(OS),Windows_NT)
-level_editor: LIBRARIES += gdi32 opengl32
+level_editor: LIBRARIES += gdi32 opengl32 winmm ole32 SetupAPI 
 endif
 level_editor: CC = gcc
 level_editor: CXX = g++
@@ -171,8 +172,9 @@ level_editor: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -g
 level_editor: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20 -g
 level_editor: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PC)) -std=c++20
 level_editor: INCLUDE_DIRS = source \
-			   external/cglm/include \
+			   external/portaudio/include \
 			   external/gl3w/include \
+			   external/glfw/include \
 			   external/glfw/include \
 			   external/imgui \
 			   external/imguizmo \
@@ -189,7 +191,7 @@ mkdir_output_pc:
 submodules:
 	git submodule update --init --recursive
 	
-windows_dependencies: submodules glfw gl3w imgui imguizmo
+pc_dependencies: submodules glfw gl3w imgui imguizmo portaudio
 
 GLFW_LIB_PATHS = $(PATH_LIB_PC)/glfw/src/libglfw3.a \
 				 $(PATH_LIB_PC)/glfw/src/glfw3.lib \
@@ -202,8 +204,13 @@ glfw:
 	@cmake -S external/glfw -B $(PATH_LIB_PC)/glfw -G "Unix Makefiles"
 	@cmake --build $(PATH_LIB_PC)/glfw --target glfw
 	cp $(PATH_LIB_PC)/glfw/src/libglfw3.a $(PATH_LIB_PC)
-	@echo Could not find compiled glfw library!
 
+# Build portaudio
+portaudio:
+	mkdir -p $(PATH_LIB_PC)/portaudio
+	@cmake -S external/portaudio -B $(PATH_LIB_PC)/portaudio -G "Unix Makefiles"
+	@cmake --build $(PATH_LIB_PC)/portaudio --target portaudio
+	cp $(PATH_LIB_PC)/portaudio/libportaudio.a $(PATH_LIB_PC)
 
 OBJ_PC += $(PATH_LIB_PC)/gl3w.o
 OBJ_LEVEL_EDITOR += $(PATH_LIB_PC)/gl3w.o
@@ -279,7 +286,7 @@ $(PATH_BUILD_LEVEL_EDITOR)/assets/imgui.ini:
 $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor: mkdir_output_pc pc_dependencies $(OBJ_LEVEL_EDITOR) $(PATH_BUILD_LEVEL_EDITOR)/assets/imgui.ini
 	@mkdir -p $(dir $@)
 	@echo Linking $@
-	@$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
+	$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
 	@echo Copying assets
 	@cp -r $(PATH_ASSETS)/pc/* $(dir $@)/assets
 	@cp -r $(PATH_ASSETS)/shared/* $(dir $@)/assets
