@@ -415,7 +415,7 @@ void shoot(const transform_t camera_transform) {
 	state.in_game.screen_shake_dampening_rotation = 2;
 
 	// Play shoot sound
-	audio_play_sound(random_range(sfx_rev_shot_1, sfx_rev_shot_4 + 1), ONE, 0, (vec3_t){}, ONE);
+	audio_play_sound(random_range(sfx_rev_shot_1, sfx_rev_shot_4 + 1), 0, 0, (vec3_t){}, ONE);
 
 	// Reduce ammo count
 	state.in_game.player.ammo--;
