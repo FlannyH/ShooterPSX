@@ -98,6 +98,26 @@ void audio_init(void) {
 	listener_right = (vec3_t){ONE, 0, 0};
 }
 
+uint32_t calculate_channel_pitch(uint32_t base_sample_rate, int key, int pitch_wheel) {
+	// Handle channel pitch
+	int coarse_min, coarse_max, fine;
+	if (pitch_wheel >= 0) {
+		coarse_min = pitch_wheel / 1000;
+		coarse_max = coarse_min + 1;
+		fine = ((pitch_wheel * 256) / 1000) & 0xFF;
+	} 
+	else {
+		coarse_max = (pitch_wheel + 1) / 1000;
+		coarse_min = coarse_max - 1;
+		fine = ((pitch_wheel * 256) / 1000) & 0xFF;
+	}
+
+	// Calculate A and B for lerp
+	const uint32_t sample_rate_a = (base_sample_rate * (uint32_t)lut_note_pitch[key + coarse_min]) >> 8;
+	const uint32_t sample_rate_b = (base_sample_rate * (uint32_t)lut_note_pitch[key + coarse_max]) >> 8;
+	return (uint32_t)(((sample_rate_a * (255-fine)) + (sample_rate_b * (fine)))) >> 4;
+} 
+
 void audio_stage_on(int instrument, int key, int pan, int velocity, int pitch_wheel, int midi_channel, vec3_t position, scalar_t max_distance) {
 	if (sfx_instrument_regions == NULL || music_instrument_regions == NULL) return;
 	if (sfx_instruments == NULL || music_instruments == NULL) return;
@@ -117,28 +137,10 @@ void audio_stage_on(int instrument, int key, int pan, int velocity, int pitch_wh
 	for (size_t i = 0; i < n_regions; ++i) {
 		if (key >= regions[i].key_min 
 		&& key <= regions[i].key_max) {
-			// Handle channel pitch
-			int coarse_min, coarse_max, fine;
-			if (pitch_wheel >= 0) {
-				coarse_min = pitch_wheel / 1000;
-				coarse_max = coarse_min + 1;
-				fine = ((pitch_wheel * 256) / 1000) & 0xFF;
-			} 
-			else {
-				coarse_max = (pitch_wheel + 1) / 1000;
-				coarse_min = coarse_max - 1;
-				fine = ((pitch_wheel * 256) / 1000) & 0xFF;
-			}
-
-			// Calculate A and B for lerp
-			const uint32_t sample_rate_a = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + coarse_min]) >> 8;
-			const uint32_t sample_rate_b = ((uint32_t)regions[i].sample_rate * (uint32_t)lut_note_pitch[key + coarse_max]) >> 8;
-			uint32_t sample_rate = (uint32_t)(((sample_rate_a * (255-fine)) + (sample_rate_b * (fine)))) >> 4;
-
 			// Stage a note on event					
 			staged_note_on_events[n_staged_note_on_events] = (spu_stage_on_t){
 				.voice_start = (is_sfx ? SBK_SFX_OFFSET : SBK_MUSIC_OFFSET) + regions[i].sample_start,
-				.sample_rate = sample_rate / 44100,
+				.sample_rate = calculate_channel_pitch(regions[i].sample_rate, key, pitch_wheel) / 44100,
 				.midi_channel = midi_channel,
 				.key = key,
 				.region = i + instr->region_start_index,
@@ -508,6 +510,13 @@ void audio_tick(int delta_time) {
 
 		SPU_CH_VOL_L(i) = stereo_volume.x >> 12;
 		SPU_CH_VOL_R(i) = stereo_volume.y >> 12;
+
+		// Handle channel pitch
+		if (spu_ch->key < 128 && spu_ch->midi_channel < N_MIDI_CHANNELS && vol_envs[i].stage != ENV_STAGE_IDLE) {
+			const midi_channel_t* midi_ch = &midi_channel[spu_ch->midi_channel];
+			uint32_t inst_sample_rate = music_instrument_regions[spu_ch->region].sample_rate;
+			SpuSetVoicePitch(i, calculate_channel_pitch(inst_sample_rate, spu_ch->key, midi_ch->pitch_wheel) / 44100);
+		}
 	}
 
 	WARN_IF("note_off and note_on staged on same channel!", (note_off & note_on) != 0);
