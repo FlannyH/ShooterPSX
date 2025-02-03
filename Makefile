@@ -42,14 +42,14 @@ PATH_ASSETS = assets
 PATH_TOOLS_BIN = tools/bin/
 
 PATH_TEMP_PSX = 		  $(PATH_TEMP)/psx
-PATH_TEMP_WIN = 		  $(PATH_TEMP)/pc
+PATH_TEMP_PC = 		      $(PATH_TEMP)/pc
 PATH_TEMP_NDS = 		  $(PATH_TEMP)/nds
 PATH_TEMP_LEVEL_EDITOR =  $(PATH_TEMP)/level_editor
 PATH_BUILD_PSX = 		  $(PATH_BUILD)/psx
-PATH_BUILD_WIN = 		  $(PATH_BUILD)/pc
+PATH_BUILD_PC = 		  $(PATH_BUILD)/pc
 PATH_BUILD_NDS = 		  $(PATH_BUILD)/nds
 PATH_BUILD_LEVEL_EDITOR = $(PATH_BUILD)/level_editor
-PATH_LIB_WIN = $(PATH_TEMP_WIN)/lib
+PATH_LIB_PC  = $(PATH_TEMP_PC)/lib
 PATH_LIB_PSX = $(PSN00BSDK_LIBS)/release
 PATH_LIB_NDS = $(BLOCKSDS)/libs/libnds/lib
 
@@ -89,13 +89,13 @@ CODE_ENGINE_PSX_C = psx/file.c \
 				    psx/timer.c 
 
 # Source files specific to Windows
-CODE_ENGINE_WIN_C = pc/file.c \
-				    pc/input.c \
-				    pc/mesh.c \
-				    pc/music.c \
-				    pc/psx.c \
-				    pc/renderer.c 
-CODE_ENGINE_WIN_CPP = pc/debug_layer.cpp
+CODE_ENGINE_PC_C =   pc/file.c \
+				     pc/input.c \
+				     pc/mesh.c \
+				     pc/music.c \
+				     pc/psx.c \
+				     pc/renderer.c 
+CODE_ENGINE_PC_CPP = pc/debug_layer.cpp
 
 # Source files specific to NDS
 CODE_ENGINE_NDS_C = nds/psx.c \
@@ -108,7 +108,7 @@ CODE_ENGINE_NDS_C = nds/psx.c \
 
 # Where the object files go
 PATH_OBJ_PSX = $(PATH_TEMP_PSX)/obj
-PATH_OBJ_WIN = $(PATH_TEMP_WIN)/obj
+PATH_OBJ_PC  = $(PATH_TEMP_PC)/obj
 PATH_OBJ_NDS = $(PATH_TEMP_NDS)/obj
 PATH_OBJ_LEVEL_EDITOR = $(PATH_TEMP_LEVEL_EDITOR)/obj
 
@@ -119,17 +119,17 @@ CODE_LEVEL_EDITOR = editor/main.c editor/camera.c
 # Create code sets and object sets
 CODE_PSX_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PSX_C) 	$(CODE_GAME_MAIN)
 CODE_PSX_CPP			= $(CODE_ENGINE_SHARED_CPP) 	
-CODE_WIN_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_WIN_C) 	$(CODE_GAME_MAIN)
-CODE_WIN_CPP			= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_WIN_CPP)
+CODE_PC_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PC_C) 	$(CODE_GAME_MAIN)
+CODE_PC_CPP			    = $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_PC_CPP)
 CODE_NDS_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_NDS_C) 	$(CODE_GAME_MAIN)
 CODE_NDS_CPP			= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_NDS_CPP)
-CODE_LEVEL_EDITOR_C		= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_WIN_C) 	$(CODE_LEVEL_EDITOR) 
-CODE_LEVEL_EDITOR_CPP	= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_WIN_CPP)
+CODE_LEVEL_EDITOR_C		= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PC_C) 	$(CODE_LEVEL_EDITOR) 
+CODE_LEVEL_EDITOR_CPP	= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_PC_CPP)
 
 OBJ_PSX					= 	$(patsubst %.c, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_C))				\
 							$(patsubst %.cpp, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_CPP))				
-OBJ_WIN					= 	$(patsubst %.c, 	$(PATH_OBJ_WIN)/%.o,	        $(CODE_WIN_C))				\
-							$(patsubst %.cpp, 	$(PATH_OBJ_WIN)/%.o,	        $(CODE_WIN_CPP))				
+OBJ_PC					= 	$(patsubst %.c, 	$(PATH_OBJ_PC)/%.o,	            $(CODE_PC_C))				\
+							$(patsubst %.cpp, 	$(PATH_OBJ_PC)/%.o,	            $(CODE_PC_CPP))				
 OBJ_NDS					= 	$(patsubst %.c, 	$(PATH_OBJ_NDS)/%.o,	        $(CODE_NDS_C))				\
 							$(patsubst %.cpp, 	$(PATH_OBJ_NDS)/%.o,	        $(CODE_NDS_CPP))				
 OBJ_LEVEL_EDITOR		= 	$(patsubst %.c, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVEL_EDITOR_C))		\
@@ -139,7 +139,7 @@ CFLAGS = -Wall -Wextra -std=c11 -Wno-old-style-declaration -Wno-format
 CXXFLAGS = -Wall -Wextra -std=c++20 -Wno-format
 LINKER_FLAGS = 
 
-.PHONY: all submodules tools assets pc level_editor psx nds clean mkdir_output_win windows_dependencies glfw gl3w imgui imguizmo
+.PHONY: all submodules tools assets pc level_editor psx nds clean mkdir_output_pc pc_dependencies glfw gl3w imgui imguizmo
 all: submodules tools assets pc level_editor psx nds 
 
 # Windows target
@@ -152,13 +152,13 @@ pc: CC = gcc
 pc: CXX = g++
 pc: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -g
 pc: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20 -g
-pc: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_WIN)) -std=c++20
+pc: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PC)) -std=c++20
 pc: INCLUDE_DIRS = source \
 			   external/cglm/include \
 			   external/gl3w/include \
 			   external/glfw/include \
 			   external/imgui \
-			   $(PATH_LIB_WIN)/gl3w/include
+			   $(PATH_LIB_PC)/gl3w/include
 pc: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 level_editor: DEFINES = _PC _LEVEL_EDITOR _DEBUG_CAMERA _DEBUG
 level_editor: LIBRARIES = glfw3 stdc++
@@ -169,7 +169,7 @@ level_editor: CC = gcc
 level_editor: CXX = g++
 level_editor: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -g
 level_editor: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20 -g
-level_editor: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_WIN)) -std=c++20
+level_editor: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PC)) -std=c++20
 level_editor: INCLUDE_DIRS = source \
 			   external/cglm/include \
 			   external/gl3w/include \
@@ -177,45 +177,45 @@ level_editor: INCLUDE_DIRS = source \
 			   external/imgui \
 			   external/imguizmo \
 			   external/imgui-filebrowser \
-			   $(PATH_LIB_WIN)/gl3w/include
+			   $(PATH_LIB_PC)/gl3w/include
 level_editor: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 
-mkdir_output_win:
-	mkdir -p $(PATH_TEMP_WIN)
-	mkdir -p $(PATH_OBJ_WIN)
-	mkdir -p $(PATH_OBJ_WIN)/entities
-	mkdir -p $(PATH_OBJ_WIN)/pc
+mkdir_output_pc:
+	mkdir -p $(PATH_TEMP_PC)
+	mkdir -p $(PATH_OBJ_PC)
+	mkdir -p $(PATH_OBJ_PC)/entities
+	mkdir -p $(PATH_OBJ_PC)/pc
 
 submodules:
 	git submodule update --init --recursive
 	
 windows_dependencies: submodules glfw gl3w imgui imguizmo
 
-GLFW_LIB_PATHS = $(PATH_LIB_WIN)/glfw/src/libglfw3.a \
-				 $(PATH_LIB_WIN)/glfw/src/glfw3.lib \
-				 $(PATH_LIB_WIN)/glfw/src/Debug/glfw3.lib \
-				 $(PATH_LIB_WIN)/glfw/src/Release/glfw3.lib \
+GLFW_LIB_PATHS = $(PATH_LIB_PC)/glfw/src/libglfw3.a \
+				 $(PATH_LIB_PC)/glfw/src/glfw3.lib \
+				 $(PATH_LIB_PC)/glfw/src/Debug/glfw3.lib \
+				 $(PATH_LIB_PC)/glfw/src/Release/glfw3.lib \
 
 # Build glfw - using Unix Makefiles generator because we're already using Make anyway
 glfw:
-	mkdir -p $(PATH_LIB_WIN)/glfw
-	@cmake -S external/glfw -B $(PATH_LIB_WIN)/glfw -G "Unix Makefiles"
-	@cmake --build $(PATH_LIB_WIN)/glfw --target glfw
-	cp $(PATH_LIB_WIN)/glfw/src/libglfw3.a $(PATH_LIB_WIN)
+	mkdir -p $(PATH_LIB_PC)/glfw
+	@cmake -S external/glfw -B $(PATH_LIB_PC)/glfw -G "Unix Makefiles"
+	@cmake --build $(PATH_LIB_PC)/glfw --target glfw
+	cp $(PATH_LIB_PC)/glfw/src/libglfw3.a $(PATH_LIB_PC)
 	@echo Could not find compiled glfw library!
 
 
-OBJ_WIN += $(PATH_LIB_WIN)/gl3w.o
-OBJ_LEVEL_EDITOR += $(PATH_LIB_WIN)/gl3w.o
+OBJ_PC += $(PATH_LIB_PC)/gl3w.o
+OBJ_LEVEL_EDITOR += $(PATH_LIB_PC)/gl3w.o
 gl3w:
-	mkdir -p $(PATH_LIB_WIN)/gl3w
-	@cmake -S external/gl3w -B $(PATH_LIB_WIN)/gl3w -G "Unix Makefiles"
-	@cmake --build $(PATH_LIB_WIN)/gl3w
-	$(CC) -std=c11 -I$(PATH_LIB_WIN)/gl3w/include -c $(PATH_LIB_WIN)/gl3w/src/gl3w.c -o $(PATH_LIB_WIN)/gl3w.o
+	mkdir -p $(PATH_LIB_PC)/gl3w
+	@cmake -S external/gl3w -B $(PATH_LIB_PC)/gl3w -G "Unix Makefiles"
+	@cmake --build $(PATH_LIB_PC)/gl3w
+	$(CC) -std=c11 -I$(PATH_LIB_PC)/gl3w/include -c $(PATH_LIB_PC)/gl3w/src/gl3w.c -o $(PATH_LIB_PC)/gl3w.o
 
 # Define the base directories
 IMGUI_SRC_DIR = external/imgui
-IMGUI_OBJ_DIR = $(PATH_LIB_WIN)/imgui
+IMGUI_OBJ_DIR = $(PATH_LIB_PC)/imgui
 IMGUI_BACKENDS_OBJ_DIR = $(IMGUI_OBJ_DIR)/backends
 
 # List of source files
@@ -241,7 +241,7 @@ imgui: $(OBJ_IMGUI)
 
 # Define the base directories
 IMGUIZMO_SRC_DIR = external/imguizmo
-IMGUIZMO_OBJ_DIR = $(PATH_LIB_WIN)/imguizmo
+IMGUIZMO_OBJ_DIR = $(PATH_LIB_PC)/imguizmo
 IMGUIZMO_BACKENDS_OBJ_DIR = $(IMGUIZMO_OBJ_DIR)/backends
 
 # List of source files
@@ -264,10 +264,10 @@ $(IMGUIZMO_OBJ_DIR)/%.o: $(IMGUIZMO_SRC_DIR)/%.cpp
 # Target rule for building imguizmo
 imguizmo: $(OBJ_IMGUIZMO)
 
-$(PATH_BUILD_WIN)/$(PROJECT_NAME): mkdir_output_win windows_dependencies $(OBJ_WIN)
+$(PATH_BUILD_PC)/$(PROJECT_NAME): mkdir_output_pc pc_dependencies $(OBJ_PC)
 	@mkdir -p $(dir $@)
 	@echo Linking $@
-	@$(CXX) -o $@ $(OBJ_WIN) $(OBJ_IMGUI) $(LINKER_FLAGS)
+	@$(CXX) -o $@ $(OBJ_PC) $(OBJ_IMGUI) $(LINKER_FLAGS)
 	@echo Copying assets
 	@cp $(PATH_TEMP)/pc/assets.sfa $(dir $@)
 
@@ -276,7 +276,7 @@ $(PATH_BUILD_LEVEL_EDITOR)/assets/imgui.ini:
 	@echo Copying default imgui.ini
 	@cp $(PATH_ASSETS_TO_BUILD)/level_editor/imgui.ini $@
 
-$(PATH_BUILD_LEVEL_EDITOR)/LevelEditor: mkdir_output_win windows_dependencies $(OBJ_LEVEL_EDITOR) $(PATH_BUILD_LEVEL_EDITOR)/assets/imgui.ini
+$(PATH_BUILD_LEVEL_EDITOR)/LevelEditor: mkdir_output_pc pc_dependencies $(OBJ_LEVEL_EDITOR) $(PATH_BUILD_LEVEL_EDITOR)/assets/imgui.ini
 	@mkdir -p $(dir $@)
 	@echo Linking $@
 	@$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
@@ -284,12 +284,12 @@ $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor: mkdir_output_win windows_dependencies $(
 	@cp -r $(PATH_ASSETS)/pc/* $(dir $@)/assets
 	@cp -r $(PATH_ASSETS)/shared/* $(dir $@)/assets
 
-$(PATH_OBJ_WIN)/%.o: $(PATH_SOURCE)/%.c
+$(PATH_OBJ_PC)/%.o: $(PATH_SOURCE)/%.c
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
-$(PATH_OBJ_WIN)/%.o: $(PATH_SOURCE)/%.cpp
+$(PATH_OBJ_PC)/%.o: $(PATH_SOURCE)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
@@ -304,7 +304,7 @@ $(PATH_OBJ_LEVEL_EDITOR)/%.o: $(PATH_SOURCE)/%.cpp
 	@echo Compiling $<
 	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
-pc: tools assets $(PATH_BUILD_WIN)/$(PROJECT_NAME)
+pc: tools assets $(PATH_BUILD_PC)/$(PROJECT_NAME)
 level_editor: tools assets $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor
 
 # PSX target
@@ -329,7 +329,7 @@ psx: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -Wno-unused-function -fanalyzer -O
 psx: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20 -flto=auto -fuse-linker-plugin
 psx: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PSX)) -nostdlib -Wl,-gc-sections -G8 -static -T$(PSN00BSDK_LIBS)/ldscripts/exe.ld -flto=auto -save-temps
 psx: INCLUDE_DIRS = source \
-			   $(PATH_LIB_WIN)/gl3w/include \
+			   $(PATH_LIB_PC)/gl3w/include \
 			   $(PSN00BSDK_PATH)/include/libpsn00b 
 psx: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 
