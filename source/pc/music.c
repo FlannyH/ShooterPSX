@@ -10,7 +10,13 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
 }
 
 int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffer, const PaStreamCallbackTimeInfo*, PaStreamCallbackFlags, void* user_data) {
-    printf("pa: %i frames\n", frames_per_buffer);
+    const double sample_length = (float)1.0 / (float)SAMPLE_RATE;
+    float* output = (float*)output_buffer;
+
+    for (int i = 0; i < frames_per_buffer; ++i) {
+        output[i] = (i % 576/4 == 0) ? (0.0f) : (1.0f);
+    } 
+    
     return paContinue;
 }
 
@@ -30,7 +36,7 @@ void audio_init(void) {
     const PaStreamParameters output_parameters = {
         device_index,
         2,
-        paInt8,
+        paFloat32,
         Pa_GetDeviceInfo(device_index)->defaultLowOutputLatency,
         NULL,
     };
