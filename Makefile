@@ -269,7 +269,7 @@ $(PATH_BUILD_WIN)/$(PROJECT_NAME): mkdir_output_win windows_dependencies $(OBJ_W
 	@echo Linking $@
 	@$(CXX) -o $@ $(OBJ_WIN) $(OBJ_IMGUI) $(LINKER_FLAGS)
 	@echo Copying assets
-	@cp $(PATH_TEMP)/assets.sfa $(dir $@)
+	@cp $(PATH_TEMP)/pc/assets.sfa $(dir $@)
 
 $(PATH_BUILD_LEVEL_EDITOR)/assets/imgui.ini:
 	@mkdir -p $(dir $@)
@@ -281,7 +281,8 @@ $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor: mkdir_output_win windows_dependencies $(
 	@echo Linking $@
 	@$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
 	@echo Copying assets
-	@cp -r $(PATH_ASSETS) $(dir $@)
+	@cp -r $(PATH_ASSETS)/pc/* $(dir $@)/assets
+	@cp -r $(PATH_ASSETS)/shared/* $(dir $@)/assets
 
 $(PATH_OBJ_WIN)/%.o: $(PATH_SOURCE)/%.c
 	@mkdir -p $(dir $@)
@@ -426,71 +427,73 @@ fsfa_builder:
 tools: obj2psx midi2psx psx_vislist_generator psx_soundfont_generator fsfa_builder
 
 # For levels, make the first 2 art .col, .vis, and then the rest. this way everything can be built in the right order
-COMPILED_ASSET_LIST = $(PATH_ASSETS)/GOURAUD.FSH \
-					  $(PATH_ASSETS)/GOURAUD.VSH \
-					  $(PATH_ASSETS)/BLIT.FSH \
-					  $(PATH_ASSETS)/BLIT.VSH \
-					  $(PATH_ASSETS)/levels/test.lvl \
-					  $(PATH_ASSETS)/levels/test2.lvl \
-					  $(PATH_ASSETS)/levels/level1.lvl \
-					  $(PATH_ASSETS)/levels/level2.lvl \
-					  $(PATH_ASSETS)/models/entity.msh \
-					  $(PATH_ASSETS)/models/entity.txc \
-					  $(PATH_ASSETS)/models/level.col \
-					  $(PATH_ASSETS)/models/level.vis \
-					  $(PATH_ASSETS)/models/level.msh \
-					  $(PATH_ASSETS)/models/level.txc \
-					  $(PATH_ASSETS)/models/level2.col \
-					  $(PATH_ASSETS)/models/level2.vis \
-					  $(PATH_ASSETS)/models/level2.msh \
-					  $(PATH_ASSETS)/models/level2.txc \
-					  $(PATH_ASSETS)/models/test.col \
-					  $(PATH_ASSETS)/models/test.vis \
-					  $(PATH_ASSETS)/models/test.msh \
-					  $(PATH_ASSETS)/models/test.txc \
-					  $(PATH_ASSETS)/models/test2.col \
-					  $(PATH_ASSETS)/models/test2.vis \
-					  $(PATH_ASSETS)/models/test2.msh \
-					  $(PATH_ASSETS)/models/test2.txc \
-					  $(PATH_ASSETS)/models/weapons.msh \
-					  $(PATH_ASSETS)/models/weapons.txc \
-					  $(PATH_ASSETS)/models/ui_tex/menu1.txc \
-					  $(PATH_ASSETS)/models/ui_tex/menu2.txc \
-					  $(PATH_ASSETS)/models/ui_tex/menu_ds.txc \
-					  $(PATH_ASSETS)/models/ui_tex/ui.txc \
-					  $(PATH_ASSETS)/audio/instr.sbk \
-					  $(PATH_ASSETS)/audio/sfx.sbk \
-					  $(PATH_ASSETS)/audio/music/black.dss \
-					  $(PATH_ASSETS)/audio/music/combust.dss \
-					  $(PATH_ASSETS)/audio/music/e1m1.dss \
-					  $(PATH_ASSETS)/audio/music/e3m3.dss \
-					  $(PATH_ASSETS)/audio/music/energia.dss \
-					  $(PATH_ASSETS)/audio/music/justice.dss \
-					  $(PATH_ASSETS)/audio/music/level1.dss \
-					  $(PATH_ASSETS)/audio/music/level2.dss \
-					  $(PATH_ASSETS)/audio/music/level3.dss \
-					  $(PATH_ASSETS)/audio/music/pitchtst.dss \
-					  $(PATH_ASSETS)/audio/music/subnivis.dss
+COMPILED_ASSET_LIST = $(PATH_ASSETS)/pc/GOURAUD.FSH \
+					  $(PATH_ASSETS)/pc/GOURAUD.VSH \
+					  $(PATH_ASSETS)/pc/BLIT.FSH \
+					  $(PATH_ASSETS)/pc/BLIT.VSH \
+					  $(PATH_ASSETS)/shared/levels/test.lvl \
+					  $(PATH_ASSETS)/shared/levels/test2.lvl \
+					  $(PATH_ASSETS)/shared/levels/level1.lvl \
+					  $(PATH_ASSETS)/shared/levels/level2.lvl \
+					  $(PATH_ASSETS)/shared/models/entity.msh \
+					  $(PATH_ASSETS)/shared/models/entity.txc \
+					  $(PATH_ASSETS)/shared/models/level.col \
+					  $(PATH_ASSETS)/shared/models/level.vis \
+					  $(PATH_ASSETS)/shared/models/level.msh \
+					  $(PATH_ASSETS)/shared/models/level.txc \
+					  $(PATH_ASSETS)/shared/models/level2.col \
+					  $(PATH_ASSETS)/shared/models/level2.vis \
+					  $(PATH_ASSETS)/shared/models/level2.msh \
+					  $(PATH_ASSETS)/shared/models/level2.txc \
+					  $(PATH_ASSETS)/shared/models/test.col \
+					  $(PATH_ASSETS)/shared/models/test.vis \
+					  $(PATH_ASSETS)/shared/models/test.msh \
+					  $(PATH_ASSETS)/shared/models/test.txc \
+					  $(PATH_ASSETS)/shared/models/test2.col \
+					  $(PATH_ASSETS)/shared/models/test2.vis \
+					  $(PATH_ASSETS)/shared/models/test2.msh \
+					  $(PATH_ASSETS)/shared/models/test2.txc \
+					  $(PATH_ASSETS)/shared/models/weapons.msh \
+					  $(PATH_ASSETS)/shared/models/weapons.txc \
+					  $(PATH_ASSETS)/shared/models/ui_tex/menu1.txc \
+					  $(PATH_ASSETS)/shared/models/ui_tex/menu2.txc \
+					  $(PATH_ASSETS)/shared/models/ui_tex/menu_ds.txc \
+					  $(PATH_ASSETS)/shared/models/ui_tex/ui.txc \
+					  $(PATH_ASSETS)/pc/audio/instr.sbk \
+					  $(PATH_ASSETS)/pc/audio/sfx.sbk \
+					  $(PATH_ASSETS)/psx/audio/instr.sbk \
+					  $(PATH_ASSETS)/psx/audio/sfx.sbk \
+					  $(PATH_ASSETS)/shared/audio/music/black.dss \
+					  $(PATH_ASSETS)/shared/audio/music/combust.dss \
+					  $(PATH_ASSETS)/shared/audio/music/e1m1.dss \
+					  $(PATH_ASSETS)/shared/audio/music/e3m3.dss \
+					  $(PATH_ASSETS)/shared/audio/music/energia.dss \
+					  $(PATH_ASSETS)/shared/audio/music/justice.dss \
+					  $(PATH_ASSETS)/shared/audio/music/level1.dss \
+					  $(PATH_ASSETS)/shared/audio/music/level2.dss \
+					  $(PATH_ASSETS)/shared/audio/music/level3.dss \
+					  $(PATH_ASSETS)/shared/audio/music/pitchtst.dss \
+					  $(PATH_ASSETS)/shared/audio/music/subnivis.dss
 
 # Shaders for Windows and Level Editor build
-$(PATH_ASSETS)/%.FSH: $(PATH_ASSETS_TO_BUILD)/%.FSH
+$(PATH_ASSETS)/pc/%.FSH: $(PATH_ASSETS_TO_BUILD)/%.FSH
 	@mkdir -p $(dir $@)
 	@echo Copying $@
 	@cp $< $@
 
-$(PATH_ASSETS)/%.VSH: $(PATH_ASSETS_TO_BUILD)/%.VSH
+$(PATH_ASSETS)/pc/%.VSH: $(PATH_ASSETS_TO_BUILD)/%.VSH
 	@mkdir -p $(dir $@)
 	@echo Copying $@
 	@cp $< $@
 
 # Level files - just copy as is
-$(PATH_ASSETS)/levels/%.lvl: $(PATH_ASSETS_TO_BUILD)/levels/%.lvl
+$(PATH_ASSETS)/shared/levels/%.lvl: $(PATH_ASSETS_TO_BUILD)/levels/%.lvl
 	@mkdir -p $(dir $@)
 	@echo Copying $@
 	@cp $< $@
 
 # If we encounter a vislist, we need to compile the model slightly differently. So do that before creating the vislist
-$(PATH_ASSETS)/models/%.vis: $(PATH_ASSETS_TO_BUILD)/models/%.obj
+$(PATH_ASSETS)/shared/models/%.vis: $(PATH_ASSETS_TO_BUILD)/models/%.obj
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $(basename $@) --split
@@ -498,42 +501,58 @@ $(PATH_ASSETS)/models/%.vis: $(PATH_ASSETS_TO_BUILD)/models/%.obj
 	@$(PATH_TOOLS_BIN)/psx_vislist_generator$(EXE_EXT) $(basename $@).msh $(basename $@).col $@
 
 # Collision model
-$(PATH_ASSETS)/models/%.col: $(PATH_ASSETS_TO_BUILD)/models/%_col.obj
+$(PATH_ASSETS)/shared/models/%.col: $(PATH_ASSETS_TO_BUILD)/models/%_col.obj
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $(basename $@) --collision
 
 # Any other model, like weapon models or entity models
-$(PATH_ASSETS)/models/%.msh: $(PATH_ASSETS_TO_BUILD)/models/%.obj
+$(PATH_ASSETS)/shared/models/%.msh: $(PATH_ASSETS_TO_BUILD)/models/%.obj
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $(basename $@)
-$(PATH_ASSETS)/models/%.txc: $(PATH_ASSETS)/models/%.msh
+$(PATH_ASSETS)/shared/models/%.txc: $(PATH_ASSETS)/models/%.msh
 
 # UI textures
-$(PATH_ASSETS)/models/ui_tex/%.txc: $(PATH_ASSETS_TO_BUILD)/models/ui_tex/%.png
+$(PATH_ASSETS)/shared/models/ui_tex/%.txc: $(PATH_ASSETS_TO_BUILD)/models/ui_tex/%.png
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $@
 
 # Soundbank
-$(PATH_ASSETS)/audio/%.sbk: $(PATH_ASSETS_TO_BUILD)/audio/%.csv
+$(PATH_ASSETS)/pc/audio/%.sbk: $(PATH_ASSETS_TO_BUILD)/audio/%.csv
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
-	@$(PATH_TOOLS_BIN)/psx_soundfont_generator$(EXE_EXT) $< $@
+	@$(PATH_TOOLS_BIN)/psx_soundfont_generator$(EXE_EXT) $< $@ pcm16
+
+$(PATH_ASSETS)/psx/audio/%.sbk: $(PATH_ASSETS_TO_BUILD)/audio/%.csv
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@$(PATH_TOOLS_BIN)/psx_soundfont_generator$(EXE_EXT) $< $@ psx
 
 # Music sequences
-$(PATH_ASSETS)/audio/music/%.dss: $(PATH_ASSETS_TO_BUILD)/audio/music/%.mid
+$(PATH_ASSETS)/shared/audio/music/%.dss: $(PATH_ASSETS_TO_BUILD)/audio/music/%.mid
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/midi2psx$(EXE_EXT) $< $@
 
-$(PATH_TEMP)/assets.sfa: $(COMPILED_ASSET_LIST)
+$(PATH_TEMP)/pc/assets.sfa: $(COMPILED_ASSET_LIST)
 	@mkdir -p $(dir $@)
+	@mkdir -p $(PATH_TEMP)/pc/assets/
 	@echo Compiling $<
-	@$(PATH_TOOLS_BIN)/fsfa_builder$(EXE_EXT) $(PATH_ASSETS) $@ --align 2048
+	@cp -r $(PATH_ASSETS)/shared/* $(PATH_TEMP)/pc/assets/
+	@cp -r $(PATH_ASSETS)/pc/* $(PATH_TEMP)/pc/assets/
+	@$(PATH_TOOLS_BIN)/fsfa_builder$(EXE_EXT) $(PATH_TEMP)/pc/assets/ $@ --align 2048
 
-assets: tools $(PATH_TEMP)/assets.sfa
+$(PATH_TEMP)/psx/assets.sfa: $(COMPILED_ASSET_LIST)
+	@mkdir -p $(dir $@)
+	@mkdir -p $(PATH_TEMP)/psx/assets/
+	@echo Compiling $<
+	@cp -r $(PATH_ASSETS)/shared/* $(PATH_TEMP)/psx/assets/
+	@cp -r $(PATH_ASSETS)/psx/* $(PATH_TEMP)/psx/assets/
+	@$(PATH_TOOLS_BIN)/fsfa_builder$(EXE_EXT) $(PATH_TEMP)/psx/assets/ $@ --align 2048
+
+assets: tools $(PATH_TEMP)/pc/assets.sfa $(PATH_TEMP)/psx/assets.sfa
 
 clean_assets: 
 	rm -rf $(PATH_ASSETS)

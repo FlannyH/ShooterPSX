@@ -18,7 +18,7 @@
 
 		<directory_tree>
             <file name="SUBNIVIS.EXE"	type="data" source="temp/psx/SubNivis.exe" />
-            <file name="ASSETS.SFA"		type="data" source="temp/assets.sfa" />
+            <file name="ASSETS.SFA"		type="data" source="temp/psx/assets.sfa" />
             <file name="SYSTEM.CNF"		type="data" source="system.cnf" />
 		</directory_tree>
 	</track>
