@@ -344,21 +344,27 @@ void audio_tick(int delta_time) {
 	for (int i = 0; i < n_staged_note_on_events; ++i) {
 		// Find free channel
 		int channel_id = -1;
+		int last_resort = -1;
 		int max_release_stage_time = -1;
+		int max_decay_stage_time = -1;
 		for (int j = 0; j < N_SPU_CHANNELS; ++j) {
 			if (note_on & (1 << j)) continue;
 			if (note_off & (1 << j)) continue;
+			if (vol_envs[j].stage == ENV_STAGE_IDLE || SPU_CH_ADSR_VOL(j) == 0) {
+				channel_id = j;
+				break;
+			}
 			if (vol_envs[j].stage == ENV_STAGE_RELEASE && vol_envs[j].stage_time > max_release_stage_time) {
 				max_release_stage_time = vol_envs[j].stage_time;
 				channel_id = j;
 				continue;
 			}
-			if (vol_envs[j].stage == ENV_STAGE_IDLE || SPU_CH_ADSR_VOL(j) == 0) {
-				channel_id = j;
-				break;
+			if (vol_envs[j].stage == ENV_STAGE_DECAY && vol_envs[j].stage_time > max_decay_stage_time) {
+				last_resort = j;
 			}
 		}
 
+		if (channel_id < 0 && last_resort >= 0) channel_id = last_resort;
 		if (channel_id < 0) break;
 		if (channel_id >= N_SPU_CHANNELS) break;
 
@@ -453,7 +459,7 @@ void audio_tick(int delta_time) {
 		}
 		if (vol_envs[i].stage == ENV_STAGE_SUSTAIN) {
 			adsr_volume = region->sustain >> 4;
-			if (note_off & (1 << i)) {
+			if (note_off & (1 << i) || region->sustain == 0) {
 				vol_envs[i].stage_time = 0;
 				vol_envs[i].stage = ENV_STAGE_RELEASE;
 			} 
@@ -478,6 +484,7 @@ void audio_tick(int delta_time) {
 		}
 
 		if (adsr_volume > ONE) adsr_volume = ONE;
+		adsr_volume = scalar_mul(adsr_volume, adsr_volume); // todo: should this be done for s_velocity, s_channel_volume, etc as well, or just here?
 
 		// Volume 
 		scalar_t s_velocity = ((scalar_t)spu_ch->velocity) * ONE;
