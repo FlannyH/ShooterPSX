@@ -31,3 +31,6 @@
 [submodule "tools/fsfa-builder"]
 	path = tools/fsfa-builder
 	url = https://github.com/FlannyH/fsfa-builder
+[submodule "external/portaudio"]
+	path = external/portaudio
+	url = https://github.com/PortAudio/portaudio
