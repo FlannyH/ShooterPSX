@@ -8,6 +8,7 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
     (void)path;
     (void)type;
 }
+
 int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffer, const PaStreamCallbackTimeInfo*, PaStreamCallbackFlags, void* user_data) {
     printf("pa: %i frames\n", frames_per_buffer);
     return paContinue;
@@ -49,13 +50,21 @@ void audio_init(void) {
         &pa_callback,
         NULL // todo: userdata?
     );
-    if (error != paNoError) {
+    if (error != paNoError || stream == NULL) {
         printf("Failed to open audio stream!\n");
         return;
     }
 
     //Set stream finished callback
     error = Pa_SetStreamFinishedCallback(stream, &pa_stream_finished);
+    if (error != paNoError) {
+        printf("Error setting up audio stream!\n");
+        Pa_CloseStream(stream);
+        stream = NULL;
+        return;
+    }
+    
+    error = Pa_StartStream(stream);
     if (error != paNoError) {
         printf("Error setting up audio stream!\n");
         Pa_CloseStream(stream);
