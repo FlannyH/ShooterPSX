@@ -93,7 +93,7 @@ void state_update_debug_menu_music(int dt) {
 		state.debug_menu_music.sfx_id++;
 	}
 	if (input_pressed(PAD_SQUARE, 0)) {
-		audio_play_sound(state.debug_menu_music.sfx_id, ONE, 1, (vec3_t){0, 0, 0}, ONE * 16);
+		audio_play_sound(state.debug_menu_music.sfx_id, 0, 1, (vec3_t){0, 0, 0}, ONE * 16);
 	}
 
 	renderer_begin_frame(&id_transform);

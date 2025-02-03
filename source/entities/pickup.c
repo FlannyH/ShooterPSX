@@ -74,7 +74,7 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
             case PICKUP_TYPE_KEY_BLUE:      sfx_to_play = sfx_key; player->has_key_blue = 1; break;   
             case PICKUP_TYPE_KEY_YELLOW:    sfx_to_play = sfx_key; player->has_key_yellow = 1; break; 
         }
-        audio_play_sound(sfx_to_play, ONE, 0, (vec3_t){}, 1); 
+        audio_play_sound(sfx_to_play, 0, 0, (vec3_t){}, 1); 
         entity_kill(slot);
     }
 }

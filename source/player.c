@@ -254,9 +254,9 @@ int was_grounded = 0;
 void handle_jump(player_t* self) {
     if (self->is_grounded && input_pressed(PAD_CROSS, 0)) {
         self->velocity.y = initial_jump_velocity;
-        audio_play_sound(sfx_jump_land1, ONE, 0, (vec3_t){}, 1);
+        audio_play_sound(sfx_jump_land1, 0, 0, (vec3_t){}, 1);
     }
-    if (!was_grounded && self->is_grounded) audio_play_sound(sfx_jump_land2, ONE, 0, (vec3_t){}, 1);
+    if (!was_grounded && self->is_grounded) audio_play_sound(sfx_jump_land2, 0, 0, (vec3_t){}, 1);
     was_grounded = self->is_grounded;
 }
 
@@ -358,7 +358,7 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
     if (self->footstep_timer >= FOOTSTEP_TIMER_MAX) {
         self->footstep_timer -= FOOTSTEP_TIMER_MAX;
         if (self->is_grounded && (speed_1d > ONE / 16)) {
-            audio_play_sound(random_range(sfx_footstep1, sfx_footstep7 + 1), ONE, 0, (vec3_t){}, 1);
+            audio_play_sound(random_range(sfx_footstep1, sfx_footstep7 + 1), 0, 0, (vec3_t){}, 1);
         }
     }
 #endif

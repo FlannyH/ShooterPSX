@@ -81,13 +81,13 @@ void entity_door_update(int slot, player_t* player, int dt) {
 			door->is_locked = 0;
 			player->has_key_blue = 0;
 			door->state_changed = 1;
-			audio_play_sound(sfx_door_unlock, ONE, 1, door_pos, 3600 * ONE); 
+			audio_play_sound(sfx_door_unlock, 0, 1, door_pos, 3600 * ONE); 
 		}
 		else if (door->is_big_door && player->has_key_yellow) {
 			door->is_locked = 0;
 			player->has_key_yellow = 0;
 			door->state_changed = 1;
-			audio_play_sound(sfx_door_unlock, ONE, 1, door_pos, 3600 * ONE); 
+			audio_play_sound(sfx_door_unlock, 0, 1, door_pos, 3600 * ONE); 
 		}
 	}
 
@@ -95,13 +95,13 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	if (door->is_locked && door->open_by_signal && entity_get_signal(door->signal_id) > 0) {
 		door->is_locked = 0;
 		door->state_changed = 1;
-		audio_play_sound(sfx_door_unlock, ONE, 1, door_pos, 3600 * ONE); 
+		audio_play_sound(sfx_door_unlock, 0, 1, door_pos, 3600 * ONE); 
 	}
 
 	const int prev = door->is_open;
 	door->is_open = player_close_enough && !door->is_locked;
-	if (door->is_open && !prev) audio_play_sound(sfx_door_open, ONE, 1, door_pos, 3600 * ONE); 
-	else if (!door->is_open && prev) audio_play_sound(sfx_door_close, ONE, 1, door_pos, 3600 * ONE); 
+	if (door->is_open && !prev) audio_play_sound(sfx_door_open, 0, 1, door_pos, 3600 * ONE); 
+	else if (!door->is_open && prev) audio_play_sound(sfx_door_close, 0, 1, door_pos, 3600 * ONE); 
 
 	// todo: implement delta time
 	door->curr_interpolation_value = scalar_lerp(door->curr_interpolation_value, door->is_open ? ONE : 0, ONE / 8);
