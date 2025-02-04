@@ -172,8 +172,8 @@ level_editor: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20 -g
 level_editor: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PC)) -std=c++20
 level_editor: INCLUDE_DIRS = source \
 			   external/portaudio/include \
+			   external/cglm/include \
 			   external/gl3w/include \
-			   external/glfw/include \
 			   external/glfw/include \
 			   external/imgui \
 			   external/imguizmo \
