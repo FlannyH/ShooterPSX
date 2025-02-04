@@ -1,12 +1,31 @@
 #include "mixer.h"
+#include "music.h"
+#include <hwregs_c.h>
+#include <psxetc.h>
+#include <psxapi.h>
 #include <psxspu.h>
 
 #define SBK_MUSIC_SIZE (333 * KiB)
 #define SBK_MUSIC_OFFSET 0x01000
 #define SBK_SFX_OFFSET (SBK_MUSIC_OFFSET + SBK_MUSIC_SIZE)
 
+static void timer2_handler(void) {
+    audio_tick(1);
+}
+
 void mixer_init(void) {
     SpuInit();
+
+	TIMER_CTRL(2) = 
+		(2 << 8) | // Use "System Clock / 8" source
+		(1 << 4) | // Interrupt when hitting target value
+		(1 << 6) | // Repeat this interrupt every time the timer reaches target
+		(1 << 3);  // Reset counter to 0 after hitting target value
+	TIMER_RELOAD(2) = 22050;
+
+	EnterCriticalSection();
+	InterruptCallback(IRQ_TIMER2, &timer2_handler);
+	ExitCriticalSection();
 }
 
 void mixer_upload_sample_data(const void* const sample_data, size_t n_bytes, soundbank_type_t soundbank_type) {
