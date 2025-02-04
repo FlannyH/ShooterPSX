@@ -12,7 +12,6 @@
 #include "memory.h"
 #include "entity.h"
 #include "random.h"
-#include "timer.h"
 #include "input.h"
 #include "music.h"
 #include "file.h"
@@ -72,7 +71,6 @@ int main(void) {
 	input_init();
 	input_set_stick_deadzone(36);
 	audio_init();
-	setup_timers();
 
 	// Init state variables
 	memset(&state, 0, sizeof(state));

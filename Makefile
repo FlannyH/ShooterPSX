@@ -86,8 +86,7 @@ CODE_ENGINE_PSX_C = psx/file.c \
 				    psx/input.c \
 				    psx/mesh.c \
 				    psx/mixer.c \
-				    psx/renderer.c \
-				    psx/timer.c 
+				    psx/renderer.c 
 
 # Source files specific to Windows
 CODE_ENGINE_PC_C =   pc/file.c \
@@ -104,8 +103,7 @@ CODE_ENGINE_NDS_C = nds/psx.c \
 				    nds/input.c \
 				    nds/mesh.c \
 				    nds/mixer.c \
-				    nds/renderer.c \
-				    nds/timer.c 
+				    nds/renderer.c 
 
 # Where the object files go
 PATH_OBJ_PSX = $(PATH_TEMP_PSX)/obj
