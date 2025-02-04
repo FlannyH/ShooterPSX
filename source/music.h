@@ -9,11 +9,12 @@
 #define MAGIC_FSBK 0x4B425346
 typedef struct {
     uint32_t file_magic;                // File magic: "FSBK"
-    uint32_t n_samples;                 // Number of samples
+    uint32_t n_samples;                 // Number of samples and regions (every region is linked to a unique sample)
     uint32_t offset_instrument_descs;   // Offset (bytes) to instrument description table, relative to the end of the header
     uint32_t offset_instrument_regions; // Offset (bytes) to instrument region table, relative to the end of the header
-    uint32_t offset_sample_data;        // Offset (bytes) to raw SPU-ADPCM data chunk
-    uint32_t length_sample_data;        // Number of bytes in the SPU-ADPCM data chunk
+    uint32_t offset_sample_headers;     // Offset (bytes) to sample header table, relative to the end of the header
+    uint32_t offset_sample_data;        // Offset (bytes) to raw sample data chunk.
+    uint32_t length_sample_data;        // Number of bytes in the sample data chunk
 } soundbank_header_t;
 
 // Instrument description
@@ -24,8 +25,7 @@ typedef struct {
 
 // Instrument Region header
 typedef struct {
-    uint32_t sample_start;  // Offset (bytes) into sample data chunk. Can be written to SPU Sample Start Address |
-    uint32_t sample_rate;   // Sample rate (Hz) at MIDI key 60 (C5)                                              |
+    uint16_t sample_index;  // Index into sample header array
     uint16_t delay;         // Delay stage length in milliseconds                                                |
     uint16_t attack;        // Attack stage length in milliseconds                                               |
     uint16_t hold;          // Hold stage length in milliseconds                                                 |
@@ -37,6 +37,14 @@ typedef struct {
     uint8_t key_min;        // Minimum MIDI key for this instrument region                                       |
     uint8_t key_max;        // Maximum MIDI key for this instrument region         
 } instrument_region_header_t;
+
+typedef struct {
+    uint32_t sample_start;  // Offset (bytes) into sample data chunk. Can be written to SPU Sample Start Address
+    uint32_t sample_rate;   // Sample rate (Hz) at MIDI key 60 (C5)
+    uint32_t loop_start;    // Offset (bytes) relative to sample start to return to after the end of a sample
+    uint16_t format;        // 0 = PSX SPU-ADPCM, 1 = Signed little-endian 16-bit PCM
+    uint16_t reserved;      // (unused padding for now)
+} sample_header_t;
 
 // Dynamic Song Sequence header
 #define MAGIC_FDSS 0x53534446
