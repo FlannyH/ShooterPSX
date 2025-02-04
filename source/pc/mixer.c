@@ -4,27 +4,22 @@
 PaStream* stream = NULL;
 #define SAMPLE_RATE 44100
 
-void audio_load_soundbank(const char* path, soundbank_type_t type) {
-    (void)path;
-    (void)type;
-}
-
-int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffer, const PaStreamCallbackTimeInfo*, PaStreamCallbackFlags, void* user_data) {
+int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffer, const PaStreamCallbackTimeInfo* time_info, PaStreamCallbackFlags flags, void* user_data) {
     const double sample_length = (float)1.0 / (float)SAMPLE_RATE;
     float* output = (float*)output_buffer;
 
     for (int i = 0; i < frames_per_buffer; ++i) {
-        output[i] = (i % 576/4 == 0) ? (0.0f) : (1.0f);
+        // output[i] = something;
     } 
-    
+
     return paContinue;
 }
 
-void pa_stream_finished(void*){
+void pa_stream_finished(void* user_data) {
     return;
 }
 
-void audio_init(void) {
+void mixer_init(void) {
     Pa_Initialize();
 
     const int device_index = Pa_GetDefaultOutputDevice();
@@ -69,7 +64,7 @@ void audio_init(void) {
         stream = NULL;
         return;
     }
-    
+
     error = Pa_StartStream(stream);
     if (error != paNoError) {
         printf("Error setting up audio stream!\n");
@@ -79,33 +74,39 @@ void audio_init(void) {
     }
 }
 
-void audio_play_sound(int instrument, int pitch_wheel, int in_3d_space, vec3_t position, scalar_t max_distance) {
-    (void)instrument;
-    (void)pitch_wheel;
-    (void)in_3d_space;
-    (void)position;
-    (void)max_distance;
+void mixer_upload_sample_data(const void* const sample_data, size_t n_bytes, soundbank_type_t soundbank_type) {
+    // todo
 }
 
-void music_load_sequence(const char* path) {
-    (void)path;
+void mixer_global_set_volume(scalar_t left, scalar_t right) {
+    // todo
 }
 
-void music_play_sequence(uint32_t section) {
-    (void)section;
+void mixer_set_music_tempo(uint32_t raw_tempo) {
+    // todo
 }
 
-void audio_tick(int delta_time) {
-    (void)delta_time;
+void mixer_channel_set_sample_rate(size_t channel_index, scalar_t sample_rate) {
+    // todo
 }
 
-void music_set_volume(int volume) {
-    (void)volume;
+void mixer_channel_set_volume(size_t channel_index, scalar_t left, scalar_t right) {
+    // todo
 }
 
-void music_stop(void) {}
+void mixer_channel_set_sample(size_t channel_index, size_t sample_offset, soundbank_type_t soundbank_type) {
+    // todo
+}
 
-void audio_update_listener(const vec3_t position, const vec3_t right) {
-    (void)position;
-    (void)right;
+void mixer_channel_key_on(uint32_t channel_bits) {
+    // todo
+}
+
+void mixer_channel_key_off(uint32_t channel_bits) {
+    // todo
+}
+
+int mixer_channel_is_idle(size_t channel_index) {
+    // todo
+    return 0;
 }
