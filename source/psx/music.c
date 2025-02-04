@@ -30,9 +30,11 @@ vec3_t sfx_origins[N_SPU_CHANNELS];
 scalar_t sfx_max_distances[N_SPU_CHANNELS];
 
 // Instruments
+sample_header_t* music_sample_headers = NULL;
 instrument_description_t* music_instruments = NULL;
 instrument_region_header_t* music_instrument_regions = NULL;
 size_t n_music_instrument_regions = 0;
+sample_header_t* sfx_sample_headers = NULL;
 instrument_description_t* sfx_instruments = NULL;
 instrument_region_header_t* sfx_instrument_regions = NULL;
 size_t n_sfx_instrument_regions = 0;
@@ -72,21 +74,27 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
 	SpuWrite(sample_data, sbk_header->length_sample_data);
 
 	// Copy the instruments and regions to another part in memory
+	const uint8_t* sample_header_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_sample_headers;
 	const uint8_t* inst_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_descs;
 	const uint8_t* region_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_regions;
 	const size_t inst_size = sizeof(instrument_description_t) * 256;
+	const size_t sample_header_size = sizeof(sample_header_t) * sbk_header->n_samples;
 	const size_t region_size = sizeof(instrument_region_header_t) * sbk_header->n_samples;
 	if (type == SOUNDBANK_TYPE_MUSIC) {
+		music_sample_headers = (sample_header_t*)mem_stack_alloc(sample_header_size, STACK_MUSIC);
 		music_instruments = (instrument_description_t*)mem_stack_alloc(inst_size, STACK_MUSIC);
 		music_instrument_regions = (instrument_region_header_t*)mem_stack_alloc(region_size, STACK_MUSIC);
 		n_music_instrument_regions = sbk_header->n_samples;
+		memcpy(music_sample_headers, sample_header_data, sample_header_size);
 		memcpy(music_instruments, inst_data, inst_size);
 		memcpy(music_instrument_regions, region_data, region_size);
 	}
 	else {
+		sfx_sample_headers = (sample_header_t*)mem_stack_alloc(sample_header_size, STACK_MUSIC);
 		sfx_instruments = (instrument_description_t*)mem_stack_alloc(inst_size, STACK_MUSIC);
 		sfx_instrument_regions = (instrument_region_header_t*)mem_stack_alloc(region_size, STACK_MUSIC);
 		n_sfx_instrument_regions = sbk_header->n_samples;
+		memcpy(sfx_sample_headers, sample_header_data, sample_header_size);
 		memcpy(sfx_instruments, inst_data, inst_size);
 		memcpy(sfx_instrument_regions, region_data, region_size);
 	}
@@ -133,14 +141,17 @@ void audio_stage_on(int instrument, int key, int pan, int velocity, int pitch_wh
 	if (is_sfx) PANIC_IF("region id will go out of bounds!", (region_id_start >= n_sfx_instrument_regions) || ((region_id_start + n_regions) > n_sfx_instrument_regions));
 	else        PANIC_IF("region id will go out of bounds!", (region_id_start >= n_music_instrument_regions) || ((region_id_start + n_regions) > n_music_instrument_regions));
 	const instrument_region_header_t* regions = (is_sfx) ? &sfx_instrument_regions[region_id_start] : &music_instrument_regions[region_id_start];
+	const sample_header_t* samples = (is_sfx) ? &sfx_sample_headers[0] : &music_sample_headers[0];
 
 	for (size_t i = 0; i < n_regions; ++i) {
 		if (key >= regions[i].key_min 
 		&& key <= regions[i].key_max) {
+			const uint16_t sample_index = regions[i].sample_index;
+
 			// Stage a note on event					
 			staged_note_on_events[n_staged_note_on_events] = (spu_stage_on_t){
-				.voice_start = (is_sfx ? SBK_SFX_OFFSET : SBK_MUSIC_OFFSET) + regions[i].sample_start,
-				.sample_rate = calculate_channel_pitch(regions[i].sample_rate, key, pitch_wheel) / 44100,
+				.voice_start = (is_sfx ? SBK_SFX_OFFSET : SBK_MUSIC_OFFSET) + samples[sample_index].sample_start,
+				.sample_rate = calculate_channel_pitch(samples[sample_index].sample_rate, key, pitch_wheel) / 44100,
 				.midi_channel = midi_channel,
 				.key = key,
 				.region = i + instr->region_start_index,
@@ -513,8 +524,10 @@ void audio_tick(int delta_time) {
 
 		// Handle channel pitch
 		if (spu_ch->key < 128 && spu_ch->midi_channel < N_MIDI_CHANNELS && vol_envs[i].stage != ENV_STAGE_IDLE) {
+			
+			const uint16_t sample_index = music_instrument_regions[spu_ch->region].sample_index;
+			const uint32_t inst_sample_rate = music_sample_headers[sample_index].sample_rate;
 			const midi_channel_t* midi_ch = &midi_channel[spu_ch->midi_channel];
-			uint32_t inst_sample_rate = music_instrument_regions[spu_ch->region].sample_rate;
 			SpuSetVoicePitch(i, calculate_channel_pitch(inst_sample_rate, spu_ch->key, midi_ch->pitch_wheel) / 44100);
 		}
 	}
