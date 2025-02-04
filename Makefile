@@ -64,6 +64,7 @@ CODE_ENGINE_SHARED_C = collision.c \
 			  	  	   level.c \
 			  	  	   memory.c \
 			  	  	   mesh.c \
+			  	  	   music.c \
 			  	  	   player.c \
 			  	  	   renderer_shared.c \
 					   title_screen.c \
@@ -84,7 +85,7 @@ CODE_ENGINE_SHARED_C = collision.c \
 CODE_ENGINE_PSX_C = psx/file.c \
 				    psx/input.c \
 				    psx/mesh.c \
-				    psx/music.c \
+				    psx/mixer.c \
 				    psx/renderer.c \
 				    psx/timer.c 
 
@@ -92,7 +93,7 @@ CODE_ENGINE_PSX_C = psx/file.c \
 CODE_ENGINE_PC_C =   pc/file.c \
 				     pc/input.c \
 				     pc/mesh.c \
-				     pc/music.c \
+				     pc/mixer.c \
 				     pc/psx.c \
 				     pc/renderer.c 
 CODE_ENGINE_PC_CPP = pc/debug_layer.cpp
@@ -102,7 +103,7 @@ CODE_ENGINE_NDS_C = nds/psx.c \
 				    nds/file.c \
 				    nds/input.c \
 				    nds/mesh.c \
-				    nds/music.c \
+				    nds/mixer.c \
 				    nds/renderer.c \
 				    nds/timer.c 
 

@@ -2,18 +2,15 @@
 
 #include "fixed_point.h"
 #include "memory.h"
+#include "mixer.h"
 #include "file.h"
 #include "vec2.h"
 #include "lut.h"
 
 #include <stdio.h>
-#include <psxspu.h>
 #include <string.h>
 
 // Sample allocation
-#define SBK_MUSIC_SIZE (333 * KiB) // splatoon 3 reference??/???
-#define SBK_MUSIC_OFFSET 0x01000
-#define SBK_SFX_OFFSET (SBK_MUSIC_OFFSET + SBK_MUSIC_SIZE)
 #define MAX_STAGED_NOTE_EVENTS 24
 spu_stage_on_t staged_note_on_events[MAX_STAGED_NOTE_EVENTS] = {0};
 spu_stage_off_t staged_note_off_events[MAX_STAGED_NOTE_EVENTS] = {0};
@@ -69,9 +66,7 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
 
 	// First upload all the samples to audio RAM
 	const uint32_t* sample_data = ((uint32_t*)(sbk_header+1)) + sbk_header->offset_sample_data / 4;
-	if (type == SOUNDBANK_TYPE_MUSIC) 	SpuSetTransferStartAddr(SBK_MUSIC_OFFSET);
-	if (type == SOUNDBANK_TYPE_SFX) 	SpuSetTransferStartAddr(SBK_SFX_OFFSET);
-	SpuWrite(sample_data, sbk_header->length_sample_data);
+    mixer_upload_sample_data(sample_data, sbk_header->length_sample_data, type);
 
 	// Copy the instruments and regions to another part in memory
 	const uint8_t* sample_header_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_sample_headers;
@@ -101,7 +96,7 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
 }
 
 void audio_init(void) {
-	SpuInit();
+	mixer_init();
 	listener_pos = (vec3_t){0, 0, 0};
 	listener_right = (vec3_t){ONE, 0, 0};
 }
@@ -150,14 +145,15 @@ void audio_stage_on(int instrument, int key, int pan, int velocity, int pitch_wh
 
 			// Stage a note on event					
 			staged_note_on_events[n_staged_note_on_events] = (spu_stage_on_t){
-				.voice_start = (is_sfx ? SBK_SFX_OFFSET : SBK_MUSIC_OFFSET) + samples[sample_index].sample_start,
-				.sample_rate = calculate_channel_pitch(samples[sample_index].sample_rate, key, pitch_wheel) / 44100,
+				.voice_start = samples[sample_index].sample_start,
+				.sample_rate = calculate_channel_pitch(samples[sample_index].sample_rate, key, pitch_wheel),
 				.midi_channel = midi_channel,
 				.key = key,
 				.region = i + instr->region_start_index,
 				.velocity = velocity,
 				.position = position,
-				.max_distance = max_distance
+				.max_distance = max_distance,
+                .soundbank_type = (is_sfx) ? (SOUNDBANK_TYPE_SFX) : (SOUNDBANK_TYPE_MUSIC)
 			};
 			n_staged_note_on_events++;
 		}
@@ -303,9 +299,8 @@ void audio_tick(int delta_time) {
 			// Set tempo
 			else if ((command & 0xF0) == 0x80) {
 				uint32_t value = ((((uint32_t)command) << 8) + ((int32_t)(*sequence_pointer++))) & 0xFFF; // Raw value from song data
+				mixer_set_music_tempo(value);
 				ms_per_tick = (value * ONE * 1000) / 49152;
-				value = (value * 44100) / 512; // Convert from raw value to sysclock
-				TIMER_RELOAD(2) = (uint16_t)value;
 			}
 
 			// Wait a number of ticks
@@ -363,10 +358,11 @@ void audio_tick(int delta_time) {
 		for (int j = 0; j < N_SPU_CHANNELS; ++j) {
 			if (note_on & (1 << j)) continue;
 			if (note_off & (1 << j)) continue;
-			if (vol_envs[j].stage == ENV_STAGE_IDLE || SPU_CH_ADSR_VOL(j) == 0) {
+			if (vol_envs[j].stage == ENV_STAGE_IDLE || mixer_channel_is_idle(j)) {
 				channel_id = j;
 				break;
 			}
+            // todo: maybe select based on volume, since an envelope in decay or release at like 2% volume you wont hear that
 			if (vol_envs[j].stage == ENV_STAGE_RELEASE && vol_envs[j].stage_time > max_release_stage_time) {
 				max_release_stage_time = vol_envs[j].stage_time;
 				channel_id = j;
@@ -382,12 +378,8 @@ void audio_tick(int delta_time) {
 		if (channel_id >= N_SPU_CHANNELS) break;
 
 		// Trigger note on that channel
-		SpuSetVoiceStartAddr(channel_id, staged_note_on_events[i].voice_start);
-		SpuSetVoicePitch(channel_id, staged_note_on_events[i].sample_rate);
-		SPU_CH_ADSR1(channel_id) = 0x00FF; // constant sustain
-		SPU_CH_ADSR2(channel_id) = 0x0000;
-		SPU_CH_VOL_L(channel_id) = 8000;
-		SPU_CH_VOL_R(channel_id) = 8000;
+		mixer_channel_set_sample(channel_id, staged_note_on_events[i].voice_start, staged_note_on_events[i].soundbank_type);
+		mixer_channel_set_sample_rate(channel_id, staged_note_on_events[i].sample_rate);
 		note_on |= 1 << channel_id;
 
 		// Store some metadata
@@ -519,8 +511,7 @@ void audio_tick(int delta_time) {
 			}
 		);
 
-		SPU_CH_VOL_L(i) = stereo_volume.x >> 12;
-		SPU_CH_VOL_R(i) = stereo_volume.y >> 12;
+        mixer_channel_set_volume(i, stereo_volume.x >> 15, stereo_volume.y >> 15);
 
 		// Handle channel pitch
 		if (spu_ch->key < 128 && spu_ch->midi_channel < N_MIDI_CHANNELS && vol_envs[i].stage != ENV_STAGE_IDLE) {
@@ -528,13 +519,13 @@ void audio_tick(int delta_time) {
 			const uint16_t sample_index = music_instrument_regions[spu_ch->region].sample_index;
 			const uint32_t inst_sample_rate = music_sample_headers[sample_index].sample_rate;
 			const midi_channel_t* midi_ch = &midi_channel[spu_ch->midi_channel];
-			SpuSetVoicePitch(i, calculate_channel_pitch(inst_sample_rate, spu_ch->key, midi_ch->pitch_wheel) / 44100);
+			mixer_channel_set_sample_rate(i, calculate_channel_pitch(inst_sample_rate, spu_ch->key, midi_ch->pitch_wheel));
 		}
 	}
 
 	WARN_IF("note_off and note_on staged on same channel!", (note_off & note_on) != 0);
-	SpuSetKey(0, note_cut);
-	SpuSetKey(1, note_on);
+	mixer_channel_key_off(note_cut);
+	mixer_channel_key_on(note_on);
 
 	n_staged_note_on_events = 0;
 	n_staged_note_off_events = 0;
@@ -544,8 +535,8 @@ void audio_tick(int delta_time) {
 void music_set_volume(int volume) {
 	if (volume < 0) volume = 0;
 	if (volume > 255) volume = 255;
-	volume = (volume * volume) / 4;
-	SpuSetCommonMasterVolume(volume, volume);
+	volume = (volume * volume) / (65536/ONE);
+	mixer_global_set_volume(volume, volume);
 }
 
 // We get a warning from the way the PSn00bSDK made this header. We can safely ignore it
@@ -553,7 +544,7 @@ void music_set_volume(int volume) {
 #pragma GCC diagnostic ignored "-Wunused-value"
 void music_stop(void) {
 	music_playing = 0;
-	SpuSetKey(0, 0xFFFFFF); // release all keys
+	mixer_channel_key_off(0xFFFFFF); // release all keys
 	while (audio_ticking) {}
 }
 #pragma GCC diagnostic pop

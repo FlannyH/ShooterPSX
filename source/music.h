@@ -1,6 +1,7 @@
 #ifndef MUSIC_H
 #define MUSIC_H
 
+#include "mixer.h"
 #include "vec3.h"
 
 #include <stdint.h>
@@ -81,12 +82,13 @@ typedef struct {
     vec3_t position; // only if midi_channel == MIDI_CHANNEL_SFX_*
     scalar_t max_distance; // only if midi_channel == MIDI_CHANNEL_SFX_*
     uint32_t voice_start;
-    uint16_t sample_rate;
+    uint32_t sample_rate;
     uint8_t key;
     uint8_t midi_channel;
     uint8_t region;
     uint8_t velocity;
     uint8_t panning;
+    uint8_t soundbank_type; // soundbank_type_t
 } spu_stage_on_t;
 
 typedef struct {
@@ -100,11 +102,6 @@ typedef struct {
     uint8_t instrument;  // channel instrument
     int16_t pitch_wheel; // channel pitch, 10 = 1 cent
 } midi_channel_t;
-
-typedef enum {
-    SOUNDBANK_TYPE_MUSIC,
-    SOUNDBANK_TYPE_SFX,
-} soundbank_type_t;
 
 typedef enum {
     ENV_STAGE_IDLE,
