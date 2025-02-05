@@ -551,15 +551,11 @@ void music_set_volume(int volume) {
 	mixer_global_set_volume(volume, volume);
 }
 
-// We get a warning from the way the PSn00bSDK made this header. We can safely ignore it
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-value"
 void music_stop(void) {
 	music_playing = 0;
 	mixer_channel_key_off(0xFFFFFF); // release all keys
 	while (audio_ticking) {}
 }
-#pragma GCC diagnostic pop
 
 void audio_update_listener(const vec3_t position, const vec3_t right) {
 	listener_pos = position;
