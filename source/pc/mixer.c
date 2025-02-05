@@ -22,7 +22,7 @@ int16_t* sfx_samples = NULL;
 float global_volume_left = 0.0f;
 float global_volume_right = 0.0f;
 
-mixer_channel_t mixer_channel[24];
+mixer_channel_t mixer_channel[N_SPU_CHANNELS];
 
 int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffer, const PaStreamCallbackTimeInfo* time_info, PaStreamCallbackFlags flags, void* user_data) {
     const double sample_length = (float)1.0 / (float)SAMPLE_RATE;
@@ -121,10 +121,18 @@ void mixer_set_music_tempo(uint32_t raw_tempo) {
 }
 
 void mixer_channel_set_sample_rate(size_t channel_index, scalar_t sample_rate) {
+    if (channel_index >= N_SPU_CHANNELS) {
+        printf("channel_index out of bounds!\n");
+        return;
+    }
     mixer_channel[channel_index].sample_rate = (double)sample_rate / (double)ONE;
 }
 
 void mixer_channel_set_volume(size_t channel_index, scalar_t left, scalar_t right) {
+    if (channel_index >= N_SPU_CHANNELS) {
+        printf("channel_index out of bounds!\n");
+        return;
+    }
     mixer_channel[channel_index].volume_left  = (float)left  / (float)ONE;
     mixer_channel[channel_index].volume_right = (float)right / (float)ONE;
 }
@@ -151,5 +159,9 @@ void mixer_channel_key_off(uint32_t channel_bits) {
 }
 
 int mixer_channel_is_idle(size_t channel_index) {
+    if (channel_index >= N_SPU_CHANNELS) {
+        printf("channel_index out of bounds!\n");
+        return;
+    }
     return (mixer_channel[channel_index].is_playing == 0);
 }
