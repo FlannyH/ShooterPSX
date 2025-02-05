@@ -83,6 +83,8 @@ typedef struct {
     scalar_t max_distance; // only if midi_channel == MIDI_CHANNEL_SFX_*
     uint32_t voice_start;
     uint32_t sample_rate;
+    uint32_t loop_start; // UINT32_MAX if no loop
+    uint32_t sample_length;
     uint8_t key;
     uint8_t midi_channel;
     uint8_t region;

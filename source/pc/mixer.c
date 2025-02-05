@@ -2,10 +2,12 @@
 #include "memory.h"
 #include <portaudio.h>
 #include <string.h>
+#include <math.h>
 
 typedef struct {
     double sample_rate; // how much to increment `sample_offset` every audio frame
-    double sample_offset; // sample index into either `music_samples` or `sfx_samples`, depending on `type`
+    double sample_source; // sample index into either `music_samples` or `sfx_samples`, depending on `type`
+    double sample_offset; // to be added to sample_source when sampling
     float loop_start; // sample index into either `music_samples` or `sfx_samples`, depending on `type`
     float sample_length; // sample index into either `music_samples` or `sfx_samples`, depending on `type`
     float volume_left;
@@ -32,7 +34,6 @@ int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffe
     (void)flags;
     (void)time_info;
     
-
     const double sample_length = (float)1.0 / (float)MIXER_SAMPLE_RATE;
     float* output = (float*)output_buffer;
 
@@ -57,24 +58,29 @@ int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffe
             }
 
             mixer_ch->sample_offset += mixer_ch->sample_rate;
-            if (mixer_ch->sample_offset > mixer_ch->sample_length) {
-                if (mixer_ch->loop_start == UINT32_MAX) {
+            if (mixer_ch->sample_offset >= mixer_ch->sample_length) {
+                if (mixer_ch->loop_start < 0.0f) {
                     mixer_ch->is_playing = 0;
                     continue;
                 }
                 else {
-                    mixer_ch->sample_offset -= (mixer_ch->sample_length - mixer_ch->loop_start) / sizeof(int16_t);
+                    mixer_ch->sample_offset -= (mixer_ch->sample_length - mixer_ch->loop_start);
                 }
             }
 
-            size_t sample_offset = (size_t)mixer_ch->sample_offset;
+            size_t sample_index = (size_t)(mixer_ch->sample_source + mixer_ch->sample_offset);
             float sample = 0.0f;
             if (mixer_ch->type == SOUNDBANK_TYPE_MUSIC) {
-                sample = ((float)music_samples[sample_offset]) / INT16_MAX;
+                sample = ((float)music_samples[sample_index]) / INT16_MAX;
             }
             else if (mixer_ch->type == SOUNDBANK_TYPE_SFX) {
-                sample = ((float)sfx_samples[sample_offset]) / INT16_MAX;
+                sample = ((float)sfx_samples[sample_index]) / INT16_MAX;
             }
+
+            // printf("s_o=%8.3f\t", mixer_ch->sample_offset);
+            // printf("s_l=%8.3f\t", mixer_ch->sample_length);
+            // printf("l_sta=%8.3f\n", mixer_ch->loop_start);
+            // printf("l_str=%8.3f\n", mixer_ch->sample_length - mixer_ch->loop_start);
             vol_l += sample * mixer_ch->volume_left;
             vol_r += sample * mixer_ch->volume_right;
         }
@@ -189,9 +195,24 @@ void mixer_channel_set_volume(size_t channel_index, scalar_t left, scalar_t righ
     mixer_channel[channel_index].volume_right = (float)right / (float)ONE;
 }
 
-void mixer_channel_set_sample(size_t channel_index, size_t sample_offset, soundbank_type_t soundbank_type) {
-    mixer_channel[channel_index].sample_offset = (double)sample_offset / sizeof(int16_t);
+void mixer_channel_set_sample(size_t channel_index, size_t sample_source, size_t loop_start, size_t sample_length, soundbank_type_t soundbank_type) {
+    mixer_channel[channel_index].sample_source = ((double)sample_source) / sizeof(int16_t);
+    mixer_channel[channel_index].sample_offset = 0.0;
     mixer_channel[channel_index].type = soundbank_type;
+    if (loop_start < 0xF0000000) {
+        mixer_channel[channel_index].loop_start = (float)loop_start / sizeof(int16_t);
+    }
+    else {
+        mixer_channel[channel_index].loop_start = -1.0f;
+    }
+    mixer_channel[channel_index].sample_length = (float)sample_length / sizeof(int16_t);
+
+    printf("sh sample_offset = %8i\t", sample_source);
+    printf("sh loop_start    = %8i\t", loop_start);
+    printf("sh sample_length = %8i\t", sample_length);
+    printf("mx sample_source = %8.3f\t", mixer_channel[channel_index].sample_source);
+    printf("mx loop_start    = %8.3f\t", mixer_channel[channel_index].loop_start);
+    printf("mx sample_length = %8.3f\n", mixer_channel[channel_index].sample_length);
 }
 
 void mixer_channel_key_on(uint32_t channel_bits) {

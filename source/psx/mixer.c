@@ -53,7 +53,11 @@ void mixer_channel_set_volume(size_t channel_index, scalar_t left, scalar_t righ
     SPU_CH_VOL_R(channel_index) = right * 4;
 }
 
-void mixer_channel_set_sample(size_t channel_index, size_t sample_offset, soundbank_type_t soundbank_type) {
+void mixer_channel_set_sample(size_t channel_index, size_t sample_source, size_t loop_start, size_t sample_length, soundbank_type_t soundbank_type) {
+    // (encoded into sample data on psx)
+    (void)loop_start;
+    (void)sample_length;
+
     uint32_t corrected_sample_offset = sample_offset;
     if (soundbank_type == SOUNDBANK_TYPE_SFX)   corrected_sample_offset += SBK_SFX_OFFSET;
     if (soundbank_type == SOUNDBANK_TYPE_MUSIC) corrected_sample_offset += SBK_MUSIC_OFFSET;

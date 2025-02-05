@@ -43,8 +43,9 @@ void state_update_pause_menu(int dt) {
 		state.cheats.doom_mode = 1;
 		music_stop();
 		mem_stack_release(STACK_MUSIC);
-		music_load_sequence("audio/music/justice.dss");
 		audio_load_soundbank("audio/instr.sbk", SOUNDBANK_TYPE_MUSIC);
+		audio_load_soundbank("audio/sfx.sbk", SOUNDBANK_TYPE_SFX);
+		music_load_sequence("audio/music/justice.dss");
 		music_play_sequence(0);
 	}
 
