@@ -10,6 +10,7 @@ typedef struct {
     float volume_left;
     float volume_right;
     uint8_t type; // 0 = music, 1 = sfx
+    uint8_t is_playing;
 } mixer_channel_t;
 
 PaStream* stream = NULL;
@@ -111,7 +112,8 @@ void mixer_upload_sample_data(const void* const sample_data, size_t n_bytes, sou
 }
 
 void mixer_global_set_volume(scalar_t left, scalar_t right) {
-    // todo
+    global_volume_left  = (float)left  / (float)ONE;
+    global_volume_right = (float)right / (float)ONE;
 }
 
 void mixer_set_music_tempo(uint32_t raw_tempo) {
@@ -119,26 +121,35 @@ void mixer_set_music_tempo(uint32_t raw_tempo) {
 }
 
 void mixer_channel_set_sample_rate(size_t channel_index, scalar_t sample_rate) {
-    // todo
+    mixer_channel[channel_index].sample_rate = (double)sample_rate / (double)ONE;
 }
 
 void mixer_channel_set_volume(size_t channel_index, scalar_t left, scalar_t right) {
-    // todo
+    mixer_channel[channel_index].volume_left  = (float)left  / (float)ONE;
+    mixer_channel[channel_index].volume_right = (float)right / (float)ONE;
 }
 
 void mixer_channel_set_sample(size_t channel_index, size_t sample_offset, soundbank_type_t soundbank_type) {
-    // todo
+    mixer_channel[channel_index].sample_offset = (double)sample_offset;
+    mixer_channel[channel_index].type = soundbank_type;
 }
 
 void mixer_channel_key_on(uint32_t channel_bits) {
-    // todo
+    for (int i = 0; i < N_SPU_CHANNELS; ++i) {
+        if (channel_bits & (1 << i) != 0) {
+            mixer_channel[i].is_playing = 1;
+        }
+    }
 }
 
 void mixer_channel_key_off(uint32_t channel_bits) {
-    // todo
+    for (int i = 0; i < N_SPU_CHANNELS; ++i) {
+        if (channel_bits & (1 << i) != 0) {
+            mixer_channel[i].is_playing = 0;
+        }
+    }
 }
 
 int mixer_channel_is_idle(size_t channel_index) {
-    // todo
-    return 0;
+    return (mixer_channel[channel_index].is_playing == 0);
 }
