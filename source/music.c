@@ -11,14 +11,13 @@
 #include <string.h>
 
 // Sample allocation
-#define MAX_STAGED_NOTE_EVENTS 24
+#define MAX_STAGED_NOTE_EVENTS (N_SPU_CHANNELS)
 spu_stage_on_t staged_note_on_events[MAX_STAGED_NOTE_EVENTS] = {0};
 spu_stage_off_t staged_note_off_events[MAX_STAGED_NOTE_EVENTS] = {0};
 int n_staged_note_on_events = 0;
 int n_staged_note_off_events = 0;
 
 // Channels
-#define N_SPU_CHANNELS 24
 #define N_MIDI_CHANNELS 16
 spu_channel_t spu_channel[N_SPU_CHANNELS];
 midi_channel_t midi_channel[N_MIDI_CHANNELS];

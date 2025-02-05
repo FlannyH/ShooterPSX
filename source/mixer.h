@@ -4,6 +4,14 @@
 #include <stdint.h>
 #include "fixed_point.h"
 
+#if defined(_PC)
+#define N_SPU_CHANNELS 32
+#elif defined(_PSX)
+#define N_SPU_CHANNELS 24
+#elif defined(_NDS)
+#define N_SPU_CHANNELS 16
+#endif
+
 typedef enum {
     SOUNDBANK_TYPE_MUSIC,
     SOUNDBANK_TYPE_SFX,
