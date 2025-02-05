@@ -32,10 +32,10 @@
 | u8   | key_max      | Maximum MIDI key for this instrument region                  |
 
 # Sample header
-| Type | Name         | Description                                                                    |
-| ---- | ------------ | ------------------------------------------------------------------------------ |
-| u32  | sample_start | Offset (bytes) into sample data chunk.                                         |
-| u32  | sample_rate  | Sample rate (Hz) at MIDI key 60 (C5)                                           |
-| u32  | loop_start   | Offset (bytes) relative to sample start to return to after the end of a sample |
-| u16  | format       | 0 = PSX SPU-ADPCM, 1 = Signed little-endian 16-bit PCM                         |
-| u16  | reserved     | (unused padding for now)                                                       |
+| Type | Name          | Description                                                                    |
+| ---- | ------------- | ------------------------------------------------------------------------------ |
+| u32  | sample_start  | Offset (bytes) into sample data chunk. Can be written to SPU Sample Start Address |
+| u32  | sample_length | Number of bytes in this sample. If `loop_start` is not equal to UINT32_MAX, this determines when to jump back to loop_start. |
+| u32  | sample_rate   | Sample rate (Hz) at MIDI key 60 (C5) |
+| u32  | loop_start    | Offset (bytes) relative to sample start to return to after the end of a sample.  |
+| u32  | format        | 0 = PSX SPU-ADPCM, 1 = Signed little-endian 16-bit PCM |
