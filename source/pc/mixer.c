@@ -29,6 +29,30 @@ double sec_per_tick = 0.0f;
 
 mixer_channel_t mixer_channel[N_SPU_CHANNELS];
 
+float sample_from_index(const int16_t* const samples, size_t sample_index, size_t loop_stride, size_t sample_end) {
+    size_t sample_index_corrected = sample_index;
+
+    if (loop_stride > 0.0 && sample_index_corrected >= sample_end) {
+        sample_index_corrected -= loop_stride;
+    }
+
+    return ((float)samples[(size_t)sample_index_corrected]) / INT16_MAX;
+}
+
+float interpolate_sample(const int16_t* const samples, double sample_index, size_t loop_stride, size_t sample_end) {
+#if 0 // nearest neighbor sampling
+    return ((float)samples[(size_t)sample_index]) / INT16_MAX;
+    
+#elif 1 // linear sampling
+    const size_t sample_index1 = (size_t)sample_index;
+    const size_t sample_index2 = sample_index1 + 1;
+    const float sample1 = sample_from_index(samples, sample_index1, loop_stride, sample_end);
+    const float sample2 = sample_from_index(samples, sample_index2, loop_stride, sample_end);
+    const float t = (float)(sample_index - floor(sample_index));
+    return sample1 + (sample2 - sample1) * t;
+#endif
+}
+
 int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffer, const PaStreamCallbackTimeInfo* time_info, PaStreamCallbackFlags flags, void* user_data) {
     (void)user_data;
     (void)flags;
@@ -68,13 +92,13 @@ int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffe
                 }
             }
 
-            size_t sample_index = (size_t)(mixer_ch->sample_source + mixer_ch->sample_offset);
+            double sample_index = mixer_ch->sample_source + mixer_ch->sample_offset;
             float sample = 0.0f;
             if (mixer_ch->type == SOUNDBANK_TYPE_MUSIC) {
-                sample = ((float)music_samples[sample_index]) / INT16_MAX;
+                sample = interpolate_sample(music_samples, sample_index, (mixer_ch->sample_length - mixer_ch->loop_start), mixer_ch->sample_source + mixer_ch->sample_length);
             }
             else if (mixer_ch->type == SOUNDBANK_TYPE_SFX) {
-                sample = ((float)sfx_samples[sample_index]) / INT16_MAX;
+                sample = interpolate_sample(sfx_samples, sample_index, (mixer_ch->sample_length - mixer_ch->loop_start), mixer_ch->sample_source + mixer_ch->sample_length);
             }
 
             vol_l += sample * mixer_ch->volume_left;
