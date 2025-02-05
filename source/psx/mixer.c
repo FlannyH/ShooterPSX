@@ -58,7 +58,7 @@ void mixer_channel_set_sample(size_t channel_index, size_t sample_source, size_t
     (void)loop_start;
     (void)sample_length;
 
-    uint32_t corrected_sample_offset = sample_offset;
+    uint32_t corrected_sample_offset = sample_source;
     if (soundbank_type == SOUNDBANK_TYPE_SFX)   corrected_sample_offset += SBK_SFX_OFFSET;
     if (soundbank_type == SOUNDBANK_TYPE_MUSIC) corrected_sample_offset += SBK_MUSIC_OFFSET;
 
