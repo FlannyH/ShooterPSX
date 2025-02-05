@@ -77,10 +77,6 @@ int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffe
                 sample = ((float)sfx_samples[sample_index]) / INT16_MAX;
             }
 
-            // printf("s_o=%8.3f\t", mixer_ch->sample_offset);
-            // printf("s_l=%8.3f\t", mixer_ch->sample_length);
-            // printf("l_sta=%8.3f\n", mixer_ch->loop_start);
-            // printf("l_str=%8.3f\n", mixer_ch->sample_length - mixer_ch->loop_start);
             vol_l += sample * mixer_ch->volume_left;
             vol_r += sample * mixer_ch->volume_right;
         }
@@ -206,13 +202,6 @@ void mixer_channel_set_sample(size_t channel_index, size_t sample_source, size_t
         mixer_channel[channel_index].loop_start = -1.0f;
     }
     mixer_channel[channel_index].sample_length = (float)sample_length / sizeof(int16_t);
-
-    printf("sh sample_offset = %8i\t", sample_source);
-    printf("sh loop_start    = %8i\t", loop_start);
-    printf("sh sample_length = %8i\t", sample_length);
-    printf("mx sample_source = %8.3f\t", mixer_channel[channel_index].sample_source);
-    printf("mx loop_start    = %8.3f\t", mixer_channel[channel_index].loop_start);
-    printf("mx sample_length = %8.3f\n", mixer_channel[channel_index].sample_length);
 }
 
 void mixer_channel_key_on(uint32_t channel_bits) {
