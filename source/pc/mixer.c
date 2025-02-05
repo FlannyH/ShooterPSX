@@ -75,7 +75,18 @@ void mixer_init(void) {
 }
 
 void mixer_upload_sample_data(const void* const sample_data, size_t n_bytes, soundbank_type_t soundbank_type) {
-    // todo
+    if (soundbank_type == SOUNDBANK_TYPE_MUSIC) {
+        if (music_samples) mem_free(music_samples);
+        music_samples = mem_alloc(n_bytes, MEM_CAT_AUDIO);
+        memcpy(music_samples, sample_data, n_bytes);
+        return;
+    }    
+    if (soundbank_type == SOUNDBANK_TYPE_SFX) {
+        if (sfx_samples) mem_free(sfx_samples);
+        sfx_samples = mem_alloc(n_bytes, MEM_CAT_AUDIO);
+        memcpy(sfx_samples, sample_data, n_bytes);
+        return;
+    }
 }
 
 void mixer_global_set_volume(scalar_t left, scalar_t right) {
