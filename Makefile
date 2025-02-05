@@ -146,6 +146,8 @@ pc: DEFINES = _PC
 pc: LIBRARIES = glfw3 portaudio stdc++
 ifeq ($(OS),Windows_NT)
 pc: LIBRARIES += gdi32 opengl32 winmm ole32 SetupAPI 
+else
+pc: LIBRARIES += asound
 endif
 pc: CC = gcc
 pc: CXX = g++
