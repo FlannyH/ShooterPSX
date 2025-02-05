@@ -24,7 +24,7 @@ void mixer_channel_set_volume(size_t channel_index, scalar_t left, scalar_t righ
     // todo
 }
 
-void mixer_channel_set_sample(size_t channel_index, size_t sample_offset, soundbank_type_t soundbank_type) {
+void mixer_channel_set_sample(size_t channel_index, size_t sample_source, size_t loop_start, size_t sample_length, soundbank_type_t soundbank_type) {
     // todo
 }
 

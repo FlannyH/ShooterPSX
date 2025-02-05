@@ -148,6 +148,8 @@ void audio_stage_on(int instrument, int key, int pan, int velocity, int pitch_wh
 			staged_note_on_events[n_staged_note_on_events] = (spu_stage_on_t){
 				.voice_start = samples[sample_index].sample_start,
 				.sample_rate = calculate_channel_pitch(samples[sample_index].sample_rate, key, pitch_wheel),
+				.loop_start = samples[sample_index].loop_start,
+				.sample_length = samples[sample_index].sample_length,
 				.midi_channel = midi_channel,
 				.key = key,
 				.region = i + instr->region_start_index,
@@ -358,6 +360,8 @@ void audio_tick(int delta_time) {
 	}
 
 	for (int i = 0; i < n_staged_note_on_events; ++i) {
+		const spu_stage_on_t* const stage_on = &staged_note_on_events[i];
+
 		// Find free channel
 		int channel_id = -1;
 		int last_resort = -1;
@@ -386,8 +390,8 @@ void audio_tick(int delta_time) {
 		if (channel_id >= N_SPU_CHANNELS) break;
 
 		// Trigger note on that channel
-		mixer_channel_set_sample(channel_id, staged_note_on_events[i].voice_start, staged_note_on_events[i].soundbank_type);
-		mixer_channel_set_sample_rate(channel_id, staged_note_on_events[i].sample_rate);
+		mixer_channel_set_sample(channel_id, stage_on->voice_start, stage_on->loop_start, stage_on->sample_length, stage_on->soundbank_type);
+		mixer_channel_set_sample_rate(channel_id, stage_on->sample_rate);
 		note_on |= 1 << channel_id;
 
 		// Store some metadata
