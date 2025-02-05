@@ -8,7 +8,7 @@
 #if defined(_PSX)
 #define size_stack_temp (333  * KiB)
 #elif defined(_PC) 
-#define size_stack_temp (1024 * KiB)
+#define size_stack_temp (8 * MiB)
 #elif defined(_NDS) 
 #define size_stack_temp (333 * KiB)
 #endif
