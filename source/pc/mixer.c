@@ -1,8 +1,27 @@
 #include "music.h"
+#include "memory.h"
 #include <portaudio.h>
+#include <string.h>
+
+typedef struct {
+    double sample_rate; // in Hz
+    double sample_offset; // sample index into either `music_samples` or `sfx_samples`, depending on `type`
+    double loop_start;
+    float volume_left;
+    float volume_right;
+    uint8_t type; // 0 = music, 1 = sfx
+} mixer_channel_t;
 
 PaStream* stream = NULL;
 #define SAMPLE_RATE 44100
+
+int16_t* music_samples = NULL;
+int16_t* sfx_samples = NULL;
+
+float global_volume_left = 0.0f;
+float global_volume_right = 0.0f;
+
+mixer_channel_t mixer_channel[24];
 
 int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffer, const PaStreamCallbackTimeInfo* time_info, PaStreamCallbackFlags flags, void* user_data) {
     const double sample_length = (float)1.0 / (float)SAMPLE_RATE;
@@ -72,6 +91,8 @@ void mixer_init(void) {
         stream = NULL;
         return;
     }
+
+    memset(mixer_channel, 0, sizeof(mixer_channel));
 }
 
 void mixer_upload_sample_data(const void* const sample_data, size_t n_bytes, soundbank_type_t soundbank_type) {
