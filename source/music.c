@@ -37,6 +37,7 @@ instrument_region_header_t* sfx_instrument_regions = NULL;
 size_t n_sfx_instrument_regions = 0;
 
 // Sequence
+size_t music_stack_seq_offset = 0;
 dyn_song_seq_header_t* curr_loaded_seq = NULL;
 uint8_t* sequence_pointer = NULL;
 uint8_t* loop_start = NULL;
@@ -93,6 +94,7 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
 		memcpy(sfx_instruments, inst_data, inst_size);
 		memcpy(sfx_instrument_regions, region_data, region_size);
 	}
+	music_stack_seq_offset = mem_stack_get_marker(STACK_MUSIC);
 }
 
 void audio_init(void) {
@@ -168,6 +170,8 @@ void audio_play_sound(int instrument, int pitch_wheel, int in_3d_space, vec3_t p
 };
 
 void music_load_sequence(const char* path) {
+	mem_stack_reset_to_marker(STACK_MUSIC, music_stack_seq_offset);
+
 	// Load the DSS file
 	uint32_t* data;
 	size_t size;
@@ -181,11 +185,16 @@ void music_load_sequence(const char* path) {
         return;
 	}
 
-	if (curr_loaded_seq) mem_free(curr_loaded_seq);
-	curr_loaded_seq = (dyn_song_seq_header_t*)data; // curr_loaded_seq now owns this memory
+	curr_loaded_seq = (dyn_song_seq_header_t*)data;
 }
 
 void music_play_sequence(uint32_t section) {
+	if (curr_loaded_seq == NULL) {
+		printf("[ERROR] Attempt to play with no sequence loaded!");
+		sequence_pointer = NULL;
+		return;
+	}
+
 	// Is the section index valid?
 	if (section >= curr_loaded_seq->n_sections) {
 		printf("[ERROR] Attempt to play non-existent section!");

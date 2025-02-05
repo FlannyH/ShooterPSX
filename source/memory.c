@@ -5,7 +5,13 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#if defined(_PSX)
 #define size_stack_temp (333  * KiB)
+#elif defined(_PC) 
+#define size_stack_temp (1024 * KiB)
+#elif defined(_NDS) 
+#define size_stack_temp (333 * KiB)
+#endif
 #define size_stack_level (1024 * KiB)
 #define size_stack_music (100 * KiB)
 #define size_stack_entity (112 * KiB)
@@ -103,6 +109,7 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 	// Make sure there is enough space
 	if (size > mem_stack_get_free(stack)) {
 		printf("turns out we don't have that.\n");
+		while(1);
 		return NULL;
 	}
 	printf("which we have! move on :D\n");
