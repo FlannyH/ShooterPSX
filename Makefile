@@ -286,11 +286,13 @@ $(PATH_BUILD_LEVEL_EDITOR)/assets/imgui.ini:
 
 $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor: mkdir_output_pc pc_dependencies $(OBJ_LEVEL_EDITOR) $(PATH_BUILD_LEVEL_EDITOR)/assets/imgui.ini
 	@mkdir -p $(dir $@)
+	@mkdir -p $(PATH_ASSETS)/shared
+	@mkdir -p $(PATH_ASSETS)/pc
 	@echo Linking $@
-	$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
+	@$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
 	@echo Copying assets
-	@cp -r $(PATH_ASSETS)/pc/* $(dir $@)/assets
 	@cp -r $(PATH_ASSETS)/shared/* $(dir $@)/assets
+	@cp -r $(PATH_ASSETS)/pc/* $(dir $@)/assets
 
 $(PATH_OBJ_PC)/%.o: $(PATH_SOURCE)/%.c
 	@mkdir -p $(dir $@)
@@ -397,10 +399,13 @@ $(PATH_TEMP_NDS)/$(PROJECT_NAME).elf: $(OBJ_NDS)
 
 $(PATH_BUILD_NDS)/$(PROJECT_NAME).nds: $(PATH_TEMP_NDS)/$(PROJECT_NAME).elf
 	@mkdir -p $(dir $@)
+	@mkdir -p $(PATH_ASSETS)/shared
+	@mkdir -p $(PATH_ASSETS)/nds
 	@echo Building $@
 	@mkdir -p $(PATH_TEMP_NDS)/nitrofs
-	@cp -r $(PATH_ASSETS) $(PATH_TEMP_NDS)/nitrofs
-	$(BLOCKSDS)/tools/ndstool/ndstool$(EXE_EXT) -c $@ -7 $(BLOCKSDS)/sys/default_arm7/arm7.elf -9 $< $(NDSTOOL_ARGS) -d $(PATH_TEMP_NDS)/nitrofs/assets -b $(PATH_ASSETS_TO_BUILD)/ds_icon.png "$(PROJECT_NAME)"
+	@cp -r $(PATH_ASSETS)/shared/* $(PATH_TEMP_NDS)/nitrofs
+	@cp -r $(PATH_ASSETS)/nds/* $(PATH_TEMP_NDS)/nitrofs
+	$(BLOCKSDS)/tools/ndstool/ndstool$(EXE_EXT) -c $@ -7 $(BLOCKSDS)/sys/default_arm7/arm7.elf -9 $< $(NDSTOOL_ARGS) -d $(PATH_TEMP_NDS)/nitrofs -b $(PATH_ASSETS_TO_BUILD)/ds_icon.png "$(PROJECT_NAME)"
 
 nds: tools assets $(PATH_BUILD_NDS)/$(PROJECT_NAME).nds
 
@@ -465,7 +470,7 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/pc/GOURAUD.FSH \
 					  $(PATH_ASSETS)/shared/models/weapons.txc \
 					  $(PATH_ASSETS)/shared/models/ui_tex/menu1.txc \
 					  $(PATH_ASSETS)/shared/models/ui_tex/menu2.txc \
-					  $(PATH_ASSETS)/shared/models/ui_tex/menu_ds.txc \
+					  $(PATH_ASSETS)/nds/models/ui_tex/menu_ds.txc \
 					  $(PATH_ASSETS)/shared/models/ui_tex/ui.txc \
 					  $(PATH_ASSETS)/pc/audio/instr.sbk \
 					  $(PATH_ASSETS)/pc/audio/sfx.sbk \
@@ -526,6 +531,10 @@ $(PATH_ASSETS)/shared/models/ui_tex/%.txc: $(PATH_ASSETS_TO_BUILD)/models/ui_tex
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $@
+$(PATH_ASSETS)/nds/models/ui_tex/%.txc: $(PATH_ASSETS_TO_BUILD)/models/ui_tex/%.png
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $@
 
 # Soundbank
 $(PATH_ASSETS)/pc/audio/%.sbk: $(PATH_ASSETS_TO_BUILD)/audio/%.csv
@@ -546,6 +555,8 @@ $(PATH_ASSETS)/shared/audio/music/%.dss: $(PATH_ASSETS_TO_BUILD)/audio/music/%.m
 
 $(PATH_TEMP)/pc/assets.sfa: $(COMPILED_ASSET_LIST)
 	@mkdir -p $(dir $@)
+	@mkdir -p $(PATH_ASSETS)/shared
+	@mkdir -p $(PATH_ASSETS)/pc
 	@mkdir -p $(PATH_TEMP)/pc/assets/
 	@echo Compiling $<
 	@cp -r $(PATH_ASSETS)/shared/* $(PATH_TEMP)/pc/assets/
@@ -554,6 +565,8 @@ $(PATH_TEMP)/pc/assets.sfa: $(COMPILED_ASSET_LIST)
 
 $(PATH_TEMP)/psx/assets.sfa: $(COMPILED_ASSET_LIST)
 	@mkdir -p $(dir $@)
+	@mkdir -p $(PATH_ASSETS)/shared
+	@mkdir -p $(PATH_ASSETS)/psx
 	@mkdir -p $(PATH_TEMP)/psx/assets/
 	@echo Compiling $<
 	@cp -r $(PATH_ASSETS)/shared/* $(PATH_TEMP)/psx/assets/
