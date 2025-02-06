@@ -181,10 +181,10 @@ void update_delta_time_ms(void) {
 	do {
 		new_dt = clock();
 		dt = new_dt - dt_clock;
-	} while (dt < 1);
-	dt_clock = new_dt; 
+		dt_clock = new_dt; 
+		dt_ms_float += ((float)dt * 1000.0f) / (float)CLOCKS_PER_SEC;
+	} while (dt_ms_float < 1);
 
-	dt_ms_float += ((float)dt * 1000.0f) / (float)CLOCKS_PER_SEC;
 	dt_ms_int = (int)dt_ms_float;
 	dt_ms_float -= (float)dt_ms_int;
 }
