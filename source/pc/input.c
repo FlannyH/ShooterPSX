@@ -96,9 +96,10 @@ void input_update(void) {
         button_curr[0] |= (PAD_CROSS)*      state1.buttons[GLFW_GAMEPAD_BUTTON_CROSS];
         button_curr[0] |= (PAD_SQUARE)*     state1.buttons[GLFW_GAMEPAD_BUTTON_SQUARE];
         if (button_curr[0]) keyboard_focus = 0;
-    }
-    else {
-        keyboard_focus = 1;
+        if (abs(left_stick_x[0]) > deadzone) keyboard_focus = 0;
+        if (abs(left_stick_y[0]) > deadzone) keyboard_focus = 0;
+        if (abs(right_stick_x[0]) > deadzone) keyboard_focus = 0;
+        if (abs(right_stick_y[0]) > deadzone) keyboard_focus = 0;
     }
     if (glfwGetGamepadState(player2_index, &state2)) {
         left_stick_x[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_LEFT_X] * 127.f);
@@ -127,8 +128,6 @@ void input_update(void) {
     mouse_scroll_prev = mouse_scroll_curr;
     mouse_scroll_curr = mouse_scroll_incoming;
     glfwGetCursorPos(window, &cursor_pos_x, &cursor_pos_y);
-    right_stick_x[0] = (int8_t)(cursor_pos_prev_x - cursor_pos_x);
-    right_stick_y[0] = (int8_t)(cursor_pos_prev_y - cursor_pos_y);
 
     if (mouse_lock) {
         int w, h;
@@ -171,6 +170,12 @@ void input_update(void) {
     button_curr[0] |= (PAD_CIRCLE)*glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL);
     button_curr[0] |= (PAD_CROSS)*glfwGetKey(window, GLFW_KEY_SPACE);
     button_curr[0] |= (PAD_SQUARE)*glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
+
+    if (button_curr[0]) keyboard_focus = 1;
+    if (abs(left_stick_x[0]) > deadzone) keyboard_focus = 1;
+    if (abs(left_stick_y[0]) > deadzone) keyboard_focus = 1;
+    if (abs(right_stick_x[0]) > deadzone) keyboard_focus = 1;
+    if (abs(right_stick_y[0]) > deadzone) keyboard_focus = 1;
 
     currently_active_deadzone = keyboard_focus ? 0 : deadzone;
 
