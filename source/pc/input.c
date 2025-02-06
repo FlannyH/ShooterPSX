@@ -75,10 +75,10 @@ void input_update(void) {
     
     // Gamepad
     if (glfwGetGamepadState(player1_index, &state1)) {
-        left_stick_x[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_LEFT_X] * 127.f);
-        left_stick_y[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] * 127.f);
-        right_stick_x[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_RIGHT_X] * 127.f);
-        right_stick_y[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y] * 127.f);
+        left_stick_x[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_LEFT_X] * -127.f);
+        left_stick_y[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] * -127.f);
+        right_stick_x[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_RIGHT_X] * -127.f);
+        right_stick_y[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y] * -127.f);
         button_curr[0] |= (PAD_L2)*(state1.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] > 0.0f ? 1 : 0);
         button_curr[0] |= (PAD_R2)*(state1.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] > 0.0f ? 1 : 0);
         button_curr[0] |= (PAD_SELECT)*     state1.buttons[GLFW_GAMEPAD_BUTTON_BACK];
@@ -102,10 +102,10 @@ void input_update(void) {
         if (abs(right_stick_y[0]) > deadzone) keyboard_focus = 0;
     }
     if (glfwGetGamepadState(player2_index, &state2)) {
-        left_stick_x[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_LEFT_X] * 127.f);
-        left_stick_y[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] * 127.f);
-        right_stick_x[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_RIGHT_X] * 127.f);
-        right_stick_y[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y] * 127.f);
+        left_stick_x[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_LEFT_X] * -127.f);
+        left_stick_y[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] * -127.f);
+        right_stick_x[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_RIGHT_X] * -127.f);
+        right_stick_y[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y] * -127.f);
         button_curr[1] |= (PAD_L2)*(state2.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] > 0.0f ? 1 : 0);
         button_curr[1] |= (PAD_R2)*(state2.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] > 0.0f ? 1 : 0);
         button_curr[1] |= (PAD_SELECT)*     state2.buttons[GLFW_GAMEPAD_BUTTON_BACK];
@@ -148,8 +148,6 @@ void input_update(void) {
     }
     mouse_lock_prev = mouse_lock;
 
-    left_stick_x[0] = 0;
-    left_stick_y[0] = 0;
     if (glfwGetKey(window, GLFW_KEY_W)) { left_stick_y[0] += 127; }
     if (glfwGetKey(window, GLFW_KEY_S)) { left_stick_y[0] -= 127; }
     if (glfwGetKey(window, GLFW_KEY_A)) { left_stick_x[0] += 127; }
