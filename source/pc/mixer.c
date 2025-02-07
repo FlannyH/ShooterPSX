@@ -6,11 +6,11 @@
 
 typedef struct {
     double sample_delta; // how much to increment `sample_offset` every audio frame
-    double sample_source; // sample index into either `music_samples` or `sfx_samples`, depending on `type`
-    double sample_offset; // to be added to sample_source when sampling
-    double sample_end; // to be added to sample_source when sampling
+    double sample_source; // sample index into either `music_samples` or `sfx_samples`, depending on `type`, of the start of the sample
+    double sample_offset; // value to be added to sample_source every audio tick when sampling
+    double sample_end; // sample index into either `music_samples` or `sfx_samples`, depending on `type`, of the end of the sample
     float loop_length; // number of samples between loop start and loop end
-    float sample_length; // sample index into either `music_samples` or `sfx_samples`, depending on `type`
+    float sample_length;
     float volume_left;
     float volume_right;
     uint8_t type; // 0 = music, 1 = sfx
