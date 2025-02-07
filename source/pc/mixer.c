@@ -5,7 +5,7 @@
 #include <math.h>
 
 typedef struct {
-    double sample_rate; // how much to increment `sample_offset` every audio frame
+    double sample_delta; // how much to increment `sample_offset` every audio frame
     double sample_source; // sample index into either `music_samples` or `sfx_samples`, depending on `type`
     double sample_offset; // to be added to sample_source when sampling
     double sample_end; // to be added to sample_source when sampling
@@ -97,7 +97,7 @@ int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffe
                 continue;
             }
 
-            mixer_ch->sample_offset += mixer_ch->sample_rate;
+            mixer_ch->sample_offset += mixer_ch->sample_delta;
             if (mixer_ch->sample_offset > mixer_ch->sample_length + 4) {
                 if (mixer_ch->loop_length < 0.0f) {
                     mixer_ch->is_playing = 0;
@@ -229,7 +229,7 @@ void mixer_channel_set_sample_rate(size_t channel_index, scalar_t sample_rate) {
         printf("channel_index out of bounds!\n");
         return;
     }
-    mixer_channel[channel_index].sample_rate = ((double)sample_rate / (double)ONE) / MIXER_SAMPLE_RATE;
+    mixer_channel[channel_index].sample_delta = ((double)sample_rate / (double)ONE) / MIXER_SAMPLE_RATE;
 }
 
 void mixer_channel_set_volume(size_t channel_index, scalar_t left, scalar_t right) {
