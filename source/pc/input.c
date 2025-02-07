@@ -68,6 +68,14 @@ void input_update(void) {
     button_curr[1] = 0;
 
     // Update analog sticks
+    left_stick_y[0] = 0;
+    left_stick_x[0] = 0;
+    right_stick_y[0] = 0;
+    right_stick_x[0] = 0;
+    left_stick_y[1] = 0;
+    left_stick_x[1] = 0;
+    right_stick_y[1] = 0;
+    right_stick_x[1] = 0;
     GLFWgamepadstate state1;
     GLFWgamepadstate state2;
     glfwGetGamepadState(player1_index, &state1);
