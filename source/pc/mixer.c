@@ -74,7 +74,7 @@ int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffe
     (void)flags;
     (void)time_info;
     
-    const double sample_length = (float)1.0 / (float)MIXER_SAMPLE_RATE;
+    const double sample_length = (double)1.0 / (double)MIXER_SAMPLE_RATE;
     float* output = (float*)output_buffer;
 
     for (size_t i = 0; i < frames_per_buffer; ++i) {
@@ -121,8 +121,8 @@ int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffe
             vol_r += sample * mixer_ch->volume_right;
         }
 
-        output[i * 2 + 0] = vol_l;
-        output[i * 2 + 1] = vol_r;
+        output[i * 2 + 0] = vol_l * global_volume_left;
+        output[i * 2 + 1] = vol_r * global_volume_right;
     } 
 
     return paContinue;
@@ -252,7 +252,7 @@ void mixer_channel_set_sample(size_t channel_index, size_t sample_source, size_t
         mixer_channel[channel_index].loop_length = -1.0f;
     }
     mixer_channel[channel_index].sample_length = (float)sample_length / sizeof(int16_t);
-    mixer_channel[channel_index].sample_end = (double)(sample_source + sample_length)/ sizeof(int16_t);
+    mixer_channel[channel_index].sample_end = (double)(sample_source + sample_length) / sizeof(int16_t);
 }
 
 void mixer_channel_key_on(uint32_t channel_bits) {
