@@ -8,7 +8,8 @@ typedef struct {
     double sample_rate; // how much to increment `sample_offset` every audio frame
     double sample_source; // sample index into either `music_samples` or `sfx_samples`, depending on `type`
     double sample_offset; // to be added to sample_source when sampling
-    float loop_start; // sample index into either `music_samples` or `sfx_samples`, depending on `type`
+    double sample_end; // to be added to sample_source when sampling
+    float loop_length; // number of samples between loop start and loop end
     float sample_length; // sample index into either `music_samples` or `sfx_samples`, depending on `type`
     float volume_left;
     float volume_right;
@@ -96,26 +97,24 @@ int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffe
                 continue;
             }
 
-            float loop_stride = (mixer_ch->sample_length - mixer_ch->loop_start + 1);
-
             mixer_ch->sample_offset += mixer_ch->sample_rate;
             if (mixer_ch->sample_offset > mixer_ch->sample_length + 4) {
-                if (mixer_ch->loop_start < 0.0f) {
+                if (mixer_ch->loop_length < 0.0f) {
                     mixer_ch->is_playing = 0;
                     continue;
                 }
                 else {
-                    mixer_ch->sample_offset -= loop_stride;
+                    mixer_ch->sample_offset -= mixer_ch->loop_length;
                 }
             }
 
             double sample_index = mixer_ch->sample_source + mixer_ch->sample_offset;
             float sample = 0.0f;
             if (mixer_ch->type == SOUNDBANK_TYPE_MUSIC) {
-                sample = interpolate_sample(music_samples, sample_index, (size_t)loop_stride, mixer_ch->sample_source + mixer_ch->sample_length);
+                sample = interpolate_sample(music_samples, sample_index, (size_t)mixer_ch->loop_length, mixer_ch->sample_end);
             }
             else if (mixer_ch->type == SOUNDBANK_TYPE_SFX) {
-                sample = interpolate_sample(sfx_samples, sample_index, (size_t)loop_stride, mixer_ch->sample_source + mixer_ch->sample_length);
+                sample = interpolate_sample(sfx_samples, sample_index, (size_t)mixer_ch->loop_length, mixer_ch->sample_end);
             }
 
             vol_l += sample * mixer_ch->volume_left;
@@ -247,12 +246,13 @@ void mixer_channel_set_sample(size_t channel_index, size_t sample_source, size_t
     mixer_channel[channel_index].sample_offset = 0.0;
     mixer_channel[channel_index].type = soundbank_type;
     if (loop_start < 0xF0000000) {
-        mixer_channel[channel_index].loop_start = (float)loop_start / sizeof(int16_t);
+        mixer_channel[channel_index].loop_length = (float)(sample_length - loop_start) / sizeof(int16_t) + 1.0f;
     }
     else {
-        mixer_channel[channel_index].loop_start = -1.0f;
+        mixer_channel[channel_index].loop_length = -1.0f;
     }
     mixer_channel[channel_index].sample_length = (float)sample_length / sizeof(int16_t);
+    mixer_channel[channel_index].sample_end = (double)(sample_source + sample_length)/ sizeof(int16_t);
 }
 
 void mixer_channel_key_on(uint32_t channel_bits) {
