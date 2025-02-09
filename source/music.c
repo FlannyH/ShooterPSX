@@ -104,7 +104,8 @@ void audio_init(void) {
 
 uint32_t calculate_channel_pitch(uint32_t base_sample_rate, int key, int pitch_wheel) {
 	// Handle channel pitch
-	int coarse_min, coarse_max, fine;
+	int coarse_min, coarse_max;
+	int64_t fine;
 	if (pitch_wheel >= 0) {
 		coarse_min = pitch_wheel / 1000;
 		coarse_max = coarse_min + 1;
@@ -117,9 +118,9 @@ uint32_t calculate_channel_pitch(uint32_t base_sample_rate, int key, int pitch_w
 	}
 
 	// Calculate A and B for lerp
-	const uint32_t sample_rate_a = (base_sample_rate * (uint32_t)lut_note_pitch[key + coarse_min]) >> 8;
-	const uint32_t sample_rate_b = (base_sample_rate * (uint32_t)lut_note_pitch[key + coarse_max]) >> 8;
-	return (uint32_t)(((sample_rate_a * (255-fine)) + (sample_rate_b * (fine)))) >> 4;
+	const uint64_t sample_rate_a = ((uint64_t)base_sample_rate * (uint64_t)lut_note_pitch[key + coarse_min]) >> 8;
+	const uint64_t sample_rate_b = ((uint64_t)base_sample_rate * (uint64_t)lut_note_pitch[key + coarse_max]) >> 8;
+	return (uint32_t)(((sample_rate_a * (255-fine)) + (sample_rate_b * (fine))) >> 4);
 } 
 
 void audio_stage_on(int instrument, int key, int pan, int velocity, int pitch_wheel, int midi_channel, vec3_t position, scalar_t max_distance) {
