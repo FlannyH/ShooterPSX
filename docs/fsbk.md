@@ -25,7 +25,7 @@
 | u16  | hold         | Hold stage length in milliseconds                            |
 | u16  | decay        | Decay stage length in milliseconds                           |
 | u16  | sustain      | Sustain volume where 0 = 0.0 and 65535 = 1.0                 |
-| u16  | release      | Release stage length in milliseconds                         |
+| u16  | release      | Release stage in Q8.8 volume units per second                |
 | u16  | volume       | Q8.8 volume multiplier applied after the volume envelope     |
 | u16  | panning      | Panning for this region, 0 = left, 127 = middle, 254 = right |
 | u8   | key_min      | Minimum MIDI key for this instrument region                  |

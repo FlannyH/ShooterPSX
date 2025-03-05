@@ -432,13 +432,17 @@ void audio_tick(int delta_time) {
 		
 		// Update volume envelope
 		vol_envs[i].stage_time += delta_stage_time;
-		scalar_t adsr_volume = 0; // 0 = 0.0, 255 = 1.0
 
 		if (vol_envs[i].stage == ENV_STAGE_IDLE) {
-			adsr_volume = 0;
+			vol_envs[i].adsr_volume = 0;
 		}
+
+		else if (note_off & (1 << i)) {
+			vol_envs[i].stage = ENV_STAGE_RELEASE;
+		}
+
 		if (vol_envs[i].stage == ENV_STAGE_DELAY) {
-			adsr_volume = 0;
+			vol_envs[i].adsr_volume = 0;
 			if (vol_envs[i].stage_time >= region->delay) {
 				vol_envs[i].stage_time -= region->delay;
 				vol_envs[i].stage = ENV_STAGE_ATTACK;
@@ -449,7 +453,7 @@ void audio_tick(int delta_time) {
 				vol_envs[i].stage = ENV_STAGE_HOLD;
 			}
 			else {
-				adsr_volume = scalar_lerp(0, ONE, (vol_envs[i].stage_time * ONE) / region->attack);
+				vol_envs[i].adsr_volume = scalar_lerp(0, ADSR_VOLUME_ONE, (vol_envs[i].stage_time * ONE) / region->attack);
 				if (vol_envs[i].stage_time >= region->attack) {
 					vol_envs[i].stage_time -= region->attack;
 					vol_envs[i].stage = ENV_STAGE_HOLD;
@@ -457,7 +461,7 @@ void audio_tick(int delta_time) {
 			}
 		}
 		if (vol_envs[i].stage == ENV_STAGE_HOLD) {
-			adsr_volume = 255;
+			vol_envs[i].adsr_volume = ADSR_VOLUME_ONE;
 			if (vol_envs[i].stage_time >= region->hold) {
 				vol_envs[i].stage_time -= region->hold;
 				vol_envs[i].stage = ENV_STAGE_DECAY;
@@ -468,7 +472,7 @@ void audio_tick(int delta_time) {
 				vol_envs[i].stage = ENV_STAGE_SUSTAIN;
 			}
 			else {
-				adsr_volume = scalar_lerp(ONE, region->sustain >> 4, (vol_envs[i].stage_time * ONE) / region->decay);
+				vol_envs[i].adsr_volume = scalar_lerp(ADSR_VOLUME_ONE, region->sustain, (vol_envs[i].stage_time * ONE) / region->decay);
 				if (vol_envs[i].stage_time >= region->decay) {
 					vol_envs[i].stage_time -= region->decay;
 					vol_envs[i].stage = ENV_STAGE_SUSTAIN;
@@ -476,8 +480,8 @@ void audio_tick(int delta_time) {
 			}
 		}
 		if (vol_envs[i].stage == ENV_STAGE_SUSTAIN) {
-			adsr_volume = region->sustain >> 4;
-			if (note_off & (1 << i) || region->sustain == 0) {
+			vol_envs[i].adsr_volume = region->sustain * (ADSR_VOLUME_ONE / ADSR_SUSTAIN_MAX);
+			if (region->sustain == 0) {
 				vol_envs[i].stage_time = 0;
 				vol_envs[i].stage = ENV_STAGE_RELEASE;
 			} 
@@ -486,14 +490,16 @@ void audio_tick(int delta_time) {
 			if (region->release == 0) {
 				vol_envs[i].stage = ENV_STAGE_IDLE;
 				note_cut |= (1 << i);
-				adsr_volume = 0;
+				vol_envs[i].adsr_volume = 0;
 			}
 			else {
-				adsr_volume = scalar_lerp(region->sustain >> 4, 0, (vol_envs[i].stage_time * ONE) / region->release);
-				if (vol_envs[i].stage_time >= region->release) {
+				const uint32_t n_ticks_from_one_to_zero = 256000 / region->release;
+				vol_envs[i].adsr_volume -= (INT32_MAX / n_ticks_from_one_to_zero) * delta_stage_time;
+
+				if (vol_envs[i].adsr_volume <= 0) {
 					vol_envs[i].stage = ENV_STAGE_IDLE;
 					note_cut |= (1 << i);
-					adsr_volume = 0;
+					vol_envs[i].adsr_volume = 0;
 				}
 			}
 		}
@@ -501,14 +507,12 @@ void audio_tick(int delta_time) {
 			vol_envs[i].stage = ENV_STAGE_IDLE;
 		}
 
-		if (adsr_volume > ONE) adsr_volume = ONE;
-		adsr_volume = scalar_mul(adsr_volume, adsr_volume); // todo: should this be done for s_velocity, s_channel_volume, etc as well, or just here?
-
 		// Volume 
-		scalar_t s_velocity = ((scalar_t)spu_ch->velocity) * ONE;
-		const scalar_t s_channel_volume = channel_volume * region->volume * (ONE / 256) ;
+		scalar_t s_velocity = (((scalar_t)spu_ch->velocity) * ONE) / 127;
+		const scalar_t s_channel_volume = (channel_volume * region->volume) / 8;
 		s_velocity = scalar_mul(s_velocity, s_channel_volume);
-		s_velocity = scalar_mul(s_velocity, adsr_volume);
+		s_velocity = scalar_mul(s_velocity, vol_envs[i].adsr_volume / (ADSR_VOLUME_ONE / ONE));
+		s_velocity = scalar_mul(s_velocity, s_velocity);
 
 		PANIC_IF("note panning out of bounds!", channel_panning < 0 || channel_panning > 255);
 		PANIC_IF("region panning out of bounds!", (region->panning < 0) || (region->panning > 255));
@@ -524,11 +528,10 @@ void audio_tick(int delta_time) {
 			}
 		);
 
-        mixer_channel_set_volume(i, stereo_volume.x >> 15, stereo_volume.y >> 15);
+		mixer_channel_set_volume(i, stereo_volume.x, stereo_volume.y);
 
 		// Handle channel pitch
 		if (spu_ch->key < 128 && spu_ch->midi_channel < N_MIDI_CHANNELS && vol_envs[i].stage != ENV_STAGE_IDLE) {
-			
 			const uint16_t sample_index = music_instrument_regions[spu_ch->region].sample_index;
 			const uint32_t inst_sample_rate = music_sample_headers[sample_index].sample_rate;
 			const midi_channel_t* midi_ch = &midi_channel[spu_ch->midi_channel];

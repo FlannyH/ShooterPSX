@@ -27,15 +27,15 @@ typedef struct {
 // Instrument Region header
 typedef struct {
     uint16_t sample_index;  // Index into sample header array
-    uint16_t delay;         // Delay stage length in milliseconds                                                |
-    uint16_t attack;        // Attack stage length in milliseconds                                               |
-    uint16_t hold;          // Hold stage length in milliseconds                                                 |
-    uint16_t decay;         // Decay stage length in milliseconds                                                |
-    uint16_t sustain;       // Sustain volume where 0 = 0.0 and 65535 = 1.0                                      |
-    uint16_t release;       // Release stage length in milliseconds                                              |
-    uint16_t volume;        // Q8.8 volume multiplier applied after the volume envelope                      |
-    uint16_t panning;       // Panning for this region, 0 = left, 127 = middle, 254 = right                      |
-    uint8_t key_min;        // Minimum MIDI key for this instrument region                                       |
+    uint16_t delay;         // Delay stage length in milliseconds
+    uint16_t attack;        // Attack stage length in milliseconds
+    uint16_t hold;          // Hold stage length in milliseconds
+    uint16_t decay;         // Decay stage length in milliseconds
+    uint16_t sustain;       // Sustain volume where 0 = 0.0 and 65535 = 1.0
+    uint16_t release;       // Release stage in Q8.8 volume units per second
+    uint16_t volume;        // Q8.8 volume multiplier applied after the volume envelope
+    uint16_t panning;       // Panning for this region, 0 = left, 127 = middle, 254 = right
+    uint8_t key_min;        // Minimum MIDI key for this instrument region
     uint8_t key_max;        // Maximum MIDI key for this instrument region         
 } instrument_region_header_t;
 
@@ -65,16 +65,19 @@ typedef struct {
 #define MIDI_CHANNEL_SFX_3D 254
 
 typedef struct {
-    uint8_t key;          // currently playing key
-    uint8_t velocity;     // currently playing velocity
-    uint8_t region;       // currently playing region
-    uint8_t midi_channel; // the midi channel that spawned this channel
+    uint8_t key;
+    uint8_t velocity;
+    uint8_t region;
+    uint8_t midi_channel;
 } spu_channel_t;
 
 typedef struct {
+    int32_t adsr_volume; // 0 = 0.0, 2147483647 = 1.0
     uint16_t stage_time; // Time in milliseconds how long we've been at this envelope stage
     uint16_t stage; // What stage we're at now
 } volume_env_t;
+#define ADSR_VOLUME_ONE 2147483647
+#define ADSR_SUSTAIN_MAX 65535
 
 #define SPU_STAGE_ON 1
 #define SPU_STAGE_OFF 0
