@@ -195,16 +195,19 @@ void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const
             goto end;
         }
 
-        // Get index in bitmap
-        int index_to_draw = (int)lut_font_letters[(size_t)*text];
-        
-        // Get UV coordinates
-        vec2_t top_left;
-        top_left.x = (font_x + (font_src_width * (index_to_draw % chars_per_row))) * ONE;
-        top_left.y = (font_y + ((index_to_draw / chars_per_row) * font_src_height)) * ONE;
-        vec2_t bottom_right = vec2_add(top_left, (vec2_t){(font_src_width-1)*ONE, (font_src_height-1)*ONE});
+        if (*text != ' ') {
+            // Get index in bitmap
+            int index_to_draw = (int)lut_font_letters[(size_t)*text];
 
-        renderer_draw_2d_quad_axis_aligned(pos, (vec2_t){(font_dst_width-1)*ONE, (font_dst_height-1)*ONE}, top_left, bottom_right, (pixel32_t){color.r/2, color.g/2, color.b/2, 255}, 1, 5, 1);
+            // Get UV coordinates
+            vec2_t top_left;
+            top_left.x = (font_x + (font_src_width * (index_to_draw % chars_per_row))) * ONE;
+            top_left.y = (font_y + ((index_to_draw / chars_per_row) * font_src_height)) * ONE;
+            vec2_t bottom_right = vec2_add(top_left, (vec2_t){(font_src_width-1)*ONE, (font_src_height-1)*ONE});
+
+            renderer_draw_2d_quad_axis_aligned(pos, (vec2_t){(font_dst_width-1)*ONE, (font_dst_height-1)*ONE}, top_left, bottom_right, (pixel32_t){color.r/2, color.g/2, color.b/2, 255}, 1, 5, 1);
+        }
+
         pos.x += font_dst_width * ONE;
         end:
         ++text;
