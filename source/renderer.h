@@ -27,6 +27,7 @@ extern "C" {
 #define RES_Y_PAL 256
 #define RES_Y_NTSC 240
 #define N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE 4
+#define NO_TEXTURE 255
 
 const static transform_t id_transform = { {0,0,0},{0,0,0}, {-4096, -4096, -4096} };
 extern int widescreen;

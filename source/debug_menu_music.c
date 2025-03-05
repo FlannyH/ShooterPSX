@@ -35,6 +35,8 @@ void state_enter_debug_menu_music(void) {
 	} 
 }
 
+extern volume_env_t vol_envs[N_SPU_CHANNELS];
+
 void state_update_debug_menu_music(int dt) {
 	(void)dt;
 	input_update();
@@ -117,13 +119,49 @@ void state_update_debug_menu_music(int dt) {
 				color.b = 255;
 			}
 		}
-		renderer_draw_text((vec2_t){64*ONE, (96 + (24 * i))*ONE}, text_debug_menu_music[i+1], 1, 0, white);
-		renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, (96 + (24 * i))*ONE}, (vec2_t){448*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, color, 2, 5, 1);
+		renderer_draw_text((vec2_t){40*ONE, (96 + (24 * i))*ONE}, text_debug_menu_music[i+1], 1, 0, white);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, (96 + (24 * i))*ONE}, (vec2_t){224*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, color, 2, 5, 1);
 	}
 
-	char text[16];
+	char text[32];
 	sprintf(text, "sfx: %i", state.debug_menu_music.sfx_id);
 	renderer_draw_text((vec2_t){32*ONE, 32*ONE}, text, 1, 0, white);
+
+	// Draw black background behind debug for readability sake
+	renderer_draw_2d_quad_axis_aligned((vec2_t){376*ONE, 156 * ONE}, (vec2_t){258*ONE, 160*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, black, 2, NO_TEXTURE, 0);
+	renderer_draw_text((vec2_t){256 * ONE, 80 * ONE}, "ADSR debug", 0, 0, white);
+
+	for (int i = 0; i < N_SPU_CHANNELS; ++i) {
+		const char* stage_names[] = {
+			"------",
+			"D-----",
+			"-A----",
+			"--H---",
+			"---D--",
+			"----S-",
+			"-----R",
+		};
+		// base text
+		sprintf(text, "%02i:", i);
+		renderer_draw_text((vec2_t){(256 + (128 * (i / (N_SPU_CHANNELS / 2))))*ONE, (96 + 9*(i % (N_SPU_CHANNELS / 2)))*ONE}, text, 0, 0, white);
+
+		// volume with color fade
+		scalar_t adsr_volume_visual = vol_envs[i].adsr_volume / (ADSR_VOLUME_ONE / ONE);
+		adsr_volume_visual = scalar_mul(adsr_volume_visual, adsr_volume_visual);
+
+		const pixel32_t color = {
+			.r = (uint8_t)scalar_clamp(adsr_volume_visual / (ONE / 255), 128, 255),
+			.g = (uint8_t)scalar_clamp(adsr_volume_visual / (ONE / 255), 128, 255),
+			.b = (uint8_t)scalar_clamp(255 - adsr_volume_visual / (ONE / 255), 128, 255),
+			.a = 255,
+		};
+		sprintf(text, "    %3i%%", vol_envs[i].adsr_volume / (ADSR_VOLUME_ONE / 100));
+		renderer_draw_text((vec2_t){(256 + (128 * (i / (N_SPU_CHANNELS / 2))))*ONE, (96 + 9*(i % (N_SPU_CHANNELS / 2)))*ONE}, text, 0, 0, color);
+
+		// volume with color fade
+		sprintf(text, "         (%s)", stage_names[vol_envs[i].stage]);
+		renderer_draw_text((vec2_t){(256 + (128 * (i / (N_SPU_CHANNELS / 2))))*ONE, (96 + 9*(i % (N_SPU_CHANNELS / 2)))*ONE}, text, 0, 0, white);
+	}
 
 	renderer_end_frame();
 	return;

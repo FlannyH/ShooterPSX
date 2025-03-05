@@ -21,6 +21,8 @@ typedef struct {
     uint8_t b;
     uint8_t a;
 } pixel32_t;
+
+static const pixel32_t black = { 0, 0, 0, 255 };
 static const pixel32_t red = { 255,0,0,255 };
 static const pixel32_t green = { 0,255,0,255 };
 static const pixel32_t blue = { 0,0,255,255 };
