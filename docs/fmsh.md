@@ -18,7 +18,7 @@ All offsets are relative to the start of this binary section.
 ## MeshDesc
 | Type | Name         | Description                         |
 | ---- | ------------ | ----------------------------------- |
-| u16  | vertex_start | First vertex index for this model   |
+| u16  | vertex_start | First vertex index for this model. Vertices are stored as groups of 3 for triangles, followed by groups of 4 for quads, in that order |
 | u16  | n_triangles  | Number of triangles for this model  |
 | u16  | n_quads      | Number of quads for this model      |
 | i16  | x_min        | Axis aligned bounding box minimum X |
