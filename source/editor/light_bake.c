@@ -83,13 +83,10 @@ int main(int argc, const char** argv) {
             vec3 v_axis; glm_vec3_sub(pos1, pos0, v_axis);
             const float u_length = glm_vec3_norm(u_axis);
             const float v_length = glm_vec3_norm(v_axis);
-            int u_pixels = (u_length / (float)lightmap_space_per_texel); // rounded up
+            int u_pixels = (u_length / (float)lightmap_space_per_texel);
             int v_pixels = (v_length / (float)lightmap_space_per_texel);
             if (u_pixels == 0) u_pixels = 1;
             if (v_pixels == 0) v_pixels = 1;
-            if (u_pixels < 0 || v_pixels < 0) {
-                printf("wtf\n");
-            }
             lm_meta[lm_meta_cursor] = (lightmap_polygon_metadata_t) {
                 .mesh_id = mesh_i,
                 .first_vertex_id = tri_i * 3,
@@ -117,13 +114,10 @@ int main(int argc, const char** argv) {
             vec3 v_axis; glm_vec3_sub(pos1, pos0, v_axis);
             const float u_length = glm_vec3_norm(u_axis);
             const float v_length = glm_vec3_norm(v_axis);
-            int u_pixels = (u_length / (float)lightmap_space_per_texel); // rounded up
-            int v_pixels = (v_length / (float)lightmap_space_per_texel);
+            int u_pixels = ceilf(u_length / (float)lightmap_space_per_texel);
+            int v_pixels = ceilf(v_length / (float)lightmap_space_per_texel);
             if (u_pixels == 0) u_pixels = 1;
             if (v_pixels == 0) v_pixels = 1;
-            if (u_pixels < 0 || v_pixels < 0) {
-                printf("wtf\n");
-            }
             lm_meta[lm_meta_cursor] = (lightmap_polygon_metadata_t) {
                 .mesh_id = mesh_i,
                 .first_vertex_id = (mesh->n_triangles * 3) + (quad_i * 4),
@@ -168,17 +162,17 @@ int main(int argc, const char** argv) {
             return 3;
         }
 
-        if (lm_meta[index].rect_height + 1 > curr_row_height) {
-            curr_row_height = lm_meta[index].rect_height + 1;
+        if (lm_meta[index].rect_height > curr_row_height) {
+            curr_row_height = lm_meta[index].rect_height;
         }
         
         lm_meta[index].rect_left = x_cursor;
         lm_meta[index].rect_top = y_cursor;
-        x_cursor += lm_meta[index].rect_width + 1;
+        x_cursor += lm_meta[index].rect_width;
 
-        if (x_cursor + lm_meta[index].rect_width + 1 >= lightmap_resolution) {
+        if (x_cursor + lm_meta[index].rect_width >= lightmap_resolution) {
             x_cursor = 0;
-            y_cursor += curr_row_height + 1;
+            y_cursor += curr_row_height;
             curr_row_height = 0;
 
             if (y_cursor >= lightmap_resolution) {
