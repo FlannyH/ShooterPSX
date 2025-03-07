@@ -109,8 +109,8 @@ CODE_ENGINE_NDS_C = nds/psx.c \
 					
 # Source files used the light baker
 CODE_LIGHT_BAKE = editor/light_bake.c \
+				  nds/mesh.c \
 				  pc/file.c \
-				  pc/mesh.c \
 				  memory.c \
 				  mesh.c
 

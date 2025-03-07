@@ -56,7 +56,7 @@ void file_init(const char* path) {
     fread(item_table, sizeof(fsfa_item_t), archive_header.n_items, file_archive);
 }
 
-#ifdef _LEVEL_EDITOR
+#if defined(_LEVEL_EDITOR) || defined(_LIGHT_BAKE)
 int file_read(const char* path, uint32_t** destination, size_t* size, int on_stack, stack_t stack) {
     // Modify file name to not be CD based
     const size_t length = strlen(path) + 2; // Include the null terminator
