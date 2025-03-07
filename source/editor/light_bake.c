@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-
+#include <cglm/types.h>
+#include <cglm/vec3.h>
 #include "../structs.h"
 #include "../mesh.h"
 #include "../vec2.h"
@@ -28,9 +29,9 @@ int main(int argc, const char** argv) {
     }
 
     // const char* path = argv[1];
-    const char* path = "D:/Projects/Git/ShooterPSX/assets/shared/models/weapons.msh";
+    const char* path = "D:/Projects/Git/ShooterPSX/assets/shared/models/level.msh";
     int lightmap_resolution = 1024;
-    int lightmap_space_per_texel = 8 * ONE;
+    float lightmap_space_per_texel = 32;
     bool store_to_vertex_colors = true;
 
     if (argc >= 3) {
@@ -44,10 +45,11 @@ int main(int argc, const char** argv) {
     }
 
     if (argc == 5) {
-        lightmap_space_per_texel = strtol(argv[4], NULL, 10) * ONE;
+        lightmap_space_per_texel = strtof(argv[4], NULL);
     }
 
     pixel32_t* lightmap = mem_alloc(lightmap_resolution * lightmap_resolution * sizeof(pixel32_t), MEM_CAT_TEXTURE);
+    memset(lightmap, 0xFF, lightmap_resolution * lightmap_resolution * sizeof(pixel32_t));
     const model_t* const model = model_load(path, 0, 0, 0, 0);
 
     // How many polygons do we have? We need to know this for some helper arrays
@@ -74,15 +76,20 @@ int main(int argc, const char** argv) {
             const vertex_3d_t* const vtx0 = &triangles[(tri_i * 3) + 0];
             const vertex_3d_t* const vtx1 = &triangles[(tri_i * 3) + 1];
             const vertex_3d_t* const vtx2 = &triangles[(tri_i * 3) + 2];
-            const vec3_t pos0 = { vtx0->x * ONE, vtx0->y * ONE, vtx0->z * ONE };
-            const vec3_t pos1 = { vtx1->x * ONE, vtx1->y * ONE, vtx1->z * ONE };
-            const vec3_t pos2 = { vtx2->x * ONE, vtx2->y * ONE, vtx2->z * ONE };
-            const vec3_t u_axis = vec3_sub(pos2, pos0);
-            const vec3_t v_axis = vec3_sub(pos1, pos0);
-            const scalar_t u_length = scalar_sqrt(vec3_magnitude_squared(u_axis));
-            const scalar_t v_length = scalar_sqrt(vec3_magnitude_squared(v_axis));
-            const int u_pixels = (u_length + lightmap_space_per_texel - 1) / (lightmap_space_per_texel); // rounded up
-            const int v_pixels = (v_length + lightmap_space_per_texel - 1) / (lightmap_space_per_texel);
+            const vec3 pos0 = { vtx0->x, vtx0->y, vtx0->z };
+            const vec3 pos1 = { vtx1->x, vtx1->y, vtx1->z };
+            const vec3 pos2 = { vtx2->x, vtx2->y, vtx2->z };
+            vec3 u_axis; glm_vec3_sub(pos2, pos0, u_axis);
+            vec3 v_axis; glm_vec3_sub(pos1, pos0, v_axis);
+            const float u_length = glm_vec3_norm(u_axis);
+            const float v_length = glm_vec3_norm(v_axis);
+            int u_pixels = (u_length / (float)lightmap_space_per_texel); // rounded up
+            int v_pixels = (v_length / (float)lightmap_space_per_texel);
+            if (u_pixels == 0) u_pixels = 1;
+            if (v_pixels == 0) v_pixels = 1;
+            if (u_pixels < 0 || v_pixels < 0) {
+                printf("wtf\n");
+            }
             lm_meta[lm_meta_cursor] = (lightmap_polygon_metadata_t) {
                 .mesh_id = mesh_i,
                 .first_vertex_id = tri_i * 3,
@@ -102,18 +109,21 @@ int main(int argc, const char** argv) {
             const vertex_3d_t* const vtx1 = &quads[(quad_i * 4) + 1];
             const vertex_3d_t* const vtx2 = &quads[(quad_i * 4) + 2];
             const vertex_3d_t* const vtx3 = &quads[(quad_i * 4) + 3];
-            const vec3_t pos0 = { vtx0->x * ONE, vtx0->y * ONE, vtx0->z * ONE };
-            const vec3_t pos1 = { vtx1->x * ONE, vtx1->y * ONE, vtx1->z * ONE };
-            const vec3_t pos2 = { vtx2->x * ONE, vtx2->y * ONE, vtx2->z * ONE };
-            const vec3_t pos3 = { vtx3->x * ONE, vtx3->y * ONE, vtx3->z * ONE };
-            const vec3_t u_axis = vec3_sub(pos2, pos0);
-            const vec3_t v_axis = vec3_sub(pos1, pos0);
-            const scalar_t u_length = scalar_sqrt(vec3_magnitude_squared(u_axis));
-            const scalar_t v_length = scalar_sqrt(vec3_magnitude_squared(v_axis));
-            int u_pixels = (u_length + lightmap_space_per_texel - 1) / (lightmap_space_per_texel); // rounded up
-            int v_pixels = (v_length + lightmap_space_per_texel - 1) / (lightmap_space_per_texel);
+            const vec3 pos0 = { vtx0->x, vtx0->y, vtx0->z };
+            const vec3 pos1 = { vtx1->x, vtx1->y, vtx1->z };
+            const vec3 pos2 = { vtx2->x, vtx2->y, vtx2->z };
+            const vec3 pos3 = { vtx3->x, vtx3->y, vtx3->z };
+            vec3 u_axis; glm_vec3_sub(pos2, pos0, u_axis);
+            vec3 v_axis; glm_vec3_sub(pos1, pos0, v_axis);
+            const float u_length = glm_vec3_norm(u_axis);
+            const float v_length = glm_vec3_norm(v_axis);
+            int u_pixels = (u_length / (float)lightmap_space_per_texel); // rounded up
+            int v_pixels = (v_length / (float)lightmap_space_per_texel);
             if (u_pixels == 0) u_pixels = 1;
             if (v_pixels == 0) v_pixels = 1;
+            if (u_pixels < 0 || v_pixels < 0) {
+                printf("wtf\n");
+            }
             lm_meta[lm_meta_cursor] = (lightmap_polygon_metadata_t) {
                 .mesh_id = mesh_i,
                 .first_vertex_id = (mesh->n_triangles * 3) + (quad_i * 4),
@@ -127,6 +137,7 @@ int main(int argc, const char** argv) {
 
     // Create index buffer
     int* lm_meta_indices = mem_alloc(n_polygons_total * sizeof(int), MEM_CAT_UNDEFINED);
+
     for (int i = 0; i < n_polygons_total; ++i) {
         lm_meta_indices[i] = i;
     }
@@ -143,6 +154,40 @@ int main(int argc, const char** argv) {
             }
         }
     }
+
+    // Place the polygon rectangles in the lightmap texture
+    int x_cursor = 0;
+    int y_cursor = 0;
+    int curr_row_height = 0;
+
+    for (int i = 0; i < n_polygons_total; ++i) {
+        const int index = lm_meta_indices[i];
+
+        if (lm_meta[index].rect_width > lightmap_resolution) {
+            printf("One of the polygons' width exceeds the lightmap resolution!");
+            return 3;
+        }
+
+        if (lm_meta[index].rect_height + 1 > curr_row_height) {
+            curr_row_height = lm_meta[index].rect_height + 1;
+        }
+        
+        lm_meta[index].rect_left = x_cursor;
+        lm_meta[index].rect_top = y_cursor;
+        x_cursor += lm_meta[index].rect_width + 1;
+
+        if (x_cursor + lm_meta[index].rect_width + 1 >= lightmap_resolution) {
+            x_cursor = 0;
+            y_cursor += curr_row_height + 1;
+            curr_row_height = 0;
+
+            if (y_cursor >= lightmap_resolution) {
+                printf("Ran out of lightmap space after %i polygons!\n", i);
+                return 4;
+            }
+        }
+    }
+
 }
 
 /*
