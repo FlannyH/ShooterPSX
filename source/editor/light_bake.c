@@ -13,7 +13,10 @@ typedef struct {
     int mesh_id;
     int first_vertex_id;
     bool is_quad; // false if triangle, true if quad
-    svec2_t rect_size;
+    int16_t rect_width;
+    int16_t rect_height;
+    int16_t rect_left;
+    int16_t rect_top;
 } lightmap_polygon_metadata_t;
 
 int main(int argc, const char** argv) {
@@ -54,9 +57,10 @@ int main(int argc, const char** argv) {
         n_triangles_total += model->meshes[mesh_i].n_triangles;
         n_quads_total += model->meshes[mesh_i].n_quads;
     }
+    const int n_polygons_total = n_triangles_total + n_quads_total;
 
     // Figure out rectangle sizes in lightmap for each polygon
-    lightmap_polygon_metadata_t* lm_meta = mem_alloc((n_triangles_total + n_quads_total) * sizeof(lightmap_polygon_metadata_t), MEM_CAT_UNDEFINED);
+    lightmap_polygon_metadata_t* lm_meta = mem_alloc(n_polygons_total * sizeof(lightmap_polygon_metadata_t), MEM_CAT_UNDEFINED);
     size_t lm_meta_cursor = 0;
 
     for (int mesh_i = 0; mesh_i < model->n_meshes; ++mesh_i) {
@@ -67,9 +71,9 @@ int main(int argc, const char** argv) {
         // Allocate space in the lightmap for all triangles (they waste space but eh tough luck)
         // This is done by creating a UV coordinate space and projecting it onto a rectangle
         for (int tri_i = 0; tri_i < mesh->n_triangles; ++tri_i) {
-            const vertex_3d_t* const vtx0 = &triangles[tri_i + 0];
-            const vertex_3d_t* const vtx1 = &triangles[tri_i + 1];
-            const vertex_3d_t* const vtx2 = &triangles[tri_i + 2];
+            const vertex_3d_t* const vtx0 = &triangles[(tri_i * 3) + 0];
+            const vertex_3d_t* const vtx1 = &triangles[(tri_i * 3) + 1];
+            const vertex_3d_t* const vtx2 = &triangles[(tri_i * 3) + 2];
             const vec3_t pos0 = { vtx0->x * ONE, vtx0->y * ONE, vtx0->z * ONE };
             const vec3_t pos1 = { vtx1->x * ONE, vtx1->y * ONE, vtx1->z * ONE };
             const vec3_t pos2 = { vtx2->x * ONE, vtx2->y * ONE, vtx2->z * ONE };
@@ -83,7 +87,8 @@ int main(int argc, const char** argv) {
                 .mesh_id = mesh_i,
                 .first_vertex_id = tri_i * 3,
                 .is_quad = false,
-                .rect_size = { u_pixels, v_pixels }
+                .rect_width = u_pixels,
+                .rect_height = v_pixels,
             };
             ++lm_meta_cursor;
         }
@@ -93,10 +98,10 @@ int main(int argc, const char** argv) {
         // for unusually shaped quads, but we should accept all shapes of quads.
         // The size of the rectangle is based on the 2 edges connected to vertex 0
         for (int quad_i = 0; quad_i < mesh->n_quads; ++quad_i) {
-            const vertex_3d_t* const vtx0 = &quads[quad_i + 0];
-            const vertex_3d_t* const vtx1 = &quads[quad_i + 1];
-            const vertex_3d_t* const vtx2 = &quads[quad_i + 2];
-            const vertex_3d_t* const vtx3 = &quads[quad_i + 3];
+            const vertex_3d_t* const vtx0 = &quads[(quad_i * 4) + 0];
+            const vertex_3d_t* const vtx1 = &quads[(quad_i * 4) + 1];
+            const vertex_3d_t* const vtx2 = &quads[(quad_i * 4) + 2];
+            const vertex_3d_t* const vtx3 = &quads[(quad_i * 4) + 3];
             const vec3_t pos0 = { vtx0->x * ONE, vtx0->y * ONE, vtx0->z * ONE };
             const vec3_t pos1 = { vtx1->x * ONE, vtx1->y * ONE, vtx1->z * ONE };
             const vec3_t pos2 = { vtx2->x * ONE, vtx2->y * ONE, vtx2->z * ONE };
@@ -105,14 +110,37 @@ int main(int argc, const char** argv) {
             const vec3_t v_axis = vec3_sub(pos1, pos0);
             const scalar_t u_length = scalar_sqrt(vec3_magnitude_squared(u_axis));
             const scalar_t v_length = scalar_sqrt(vec3_magnitude_squared(v_axis));
-            const int u_pixels = (u_length + lightmap_space_per_texel - 1) / (lightmap_space_per_texel); // rounded up
-            const int v_pixels = (v_length + lightmap_space_per_texel - 1) / (lightmap_space_per_texel);
+            int u_pixels = (u_length + lightmap_space_per_texel - 1) / (lightmap_space_per_texel); // rounded up
+            int v_pixels = (v_length + lightmap_space_per_texel - 1) / (lightmap_space_per_texel);
+            if (u_pixels == 0) u_pixels = 1;
+            if (v_pixels == 0) v_pixels = 1;
             lm_meta[lm_meta_cursor] = (lightmap_polygon_metadata_t) {
                 .mesh_id = mesh_i,
                 .first_vertex_id = (mesh->n_triangles * 3) + (quad_i * 4),
                 .is_quad = false,
-                .rect_size = { u_pixels, v_pixels }
+                .rect_width = u_pixels,
+                .rect_height = v_pixels,
             };
+            ++lm_meta_cursor;
+        }
+    }
+
+    // Create index buffer
+    int* lm_meta_indices = mem_alloc(n_polygons_total * sizeof(int), MEM_CAT_UNDEFINED);
+    for (int i = 0; i < n_polygons_total; ++i) {
+        lm_meta_indices[i] = i;
+    }
+
+    // Sort them based on height, this way we can get a tighter fit in the lightmap
+    for (int i = 0; i < n_polygons_total - 1; ++i) {
+        for (int j = 0; j < n_polygons_total - i - 1; ++j) {
+            int height_j = lm_meta[lm_meta_indices[j]].rect_height;
+            int height_j1 = lm_meta[lm_meta_indices[j + 1]].rect_height;
+            if (height_j < height_j1) {
+                int temp = lm_meta_indices[j];
+                lm_meta_indices[j] = lm_meta_indices[j + 1];
+                lm_meta_indices[j + 1] = temp;
+            }
         }
     }
 }
