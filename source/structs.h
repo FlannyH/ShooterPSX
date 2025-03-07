@@ -93,11 +93,13 @@ typedef struct {
 
 #define MAGIC_FMSH 0x48534D46
 typedef struct {
-    uint32_t file_magic;         // File identifier magic, always "FMSH"
-    uint32_t n_submeshes;        // Number of submeshes in this model.
-    uint32_t offset_mesh_desc;   // Offset into the binary section to the start of the array of MeshDesc structs.
-    uint32_t offset_vertex_data; // Offset into the binary section to the start of the raw VertexPSX data.
-    uint32_t offset_mesh_names;  // Offset into the binary section to the start of the mesh names
+    uint32_t file_magic;          // File identifier magic, always "FMSH"
+    uint32_t n_submeshes;         // Number of submeshes in this model.
+    uint32_t offset_mesh_desc;    // Offset into the binary section to the start of the array of MeshDesc structs.
+    uint32_t offset_vertex_data;  // Offset into the binary section to the start of the raw VertexPSX data.
+    uint32_t offset_mesh_names;   // Offset into the binary section to the start of the mesh names
+    uint32_t offset_lightmap_uv;  // Offset into the binary section to the start of the lightmap UV data. Vertices correspond directly to the VertexPSX array. If this offset is 0xFFFFFFFF, there is no lightmap
+    uint32_t offset_lightmap_tex; // Offset into the binary section to the start of the lightmap texture data
 } model_header_t;
 
 typedef struct {

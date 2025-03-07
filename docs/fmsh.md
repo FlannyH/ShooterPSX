@@ -3,13 +3,15 @@
 
 ## Model File (.msh)
 This file contains a model with a certain amount of submeshes. Submeshes could be used for things like level sections, or different variations of models
-| Type    | Name               | Description                                                                   |
-| ------- | ------------------ | ----------------------------------------------------------------------------- |
-| char[4] | file_magic         | File identifier magic, always "FMSH"                                          |
-| u32     | n_submeshes        | Number of submeshes in this model.                                            |
-| u32     | offset_mesh_desc   | Offset into the binary section to the start of the array of MeshDesc structs. |
-| u32     | offset_vertex_data | Offset into the binary section to the start of the raw VertexPSX data.        |
-| u32     | offset_mesh_names  | Offset into the binary section to the start of the mesh name table.           |
+| Type    | Name                | Description                                                                   |
+| ------- | ------------------- | ----------------------------------------------------------------------------- |
+| char[4] | file_magic          | File identifier magic, always "FMSH"                                          |
+| u32     | n_submeshes         | Number of submeshes in this model.                                            |
+| u32     | offset_mesh_desc    | Offset into the binary section to the start of the array of MeshDesc structs. |
+| u32     | offset_vertex_data  | Offset into the binary section to the start of the raw VertexPSX data.        |
+| u32     | offset_mesh_names   | Offset into the binary section to the start of the mesh name table.           |
+| u32     | offset_lightmap_uv  | Offset into the binary section to the start of the lightmap UV data. Vertices correspond directly to the VertexPSX array. If this offset is 0xFFFFFFFF, there are no lightmaps |
+| u32     | offset_lightmap_tex | Offset into the binary section to the string containing the path of the lightmap texture file. |
 
 All offsets are relative to the start of this binary section.
 
@@ -44,3 +46,9 @@ All offsets are relative to the start of this binary section.
 |------|--------|-------------------------------------------|
 | u32  | length | String length in bytes                    |
 | u8[] | data   | String data, padded to 32 bits at the end |
+
+## Lightmap UV data
+| Type | Name          | Description                              |
+| ---- | ------------- | ---------------------------------------- |
+| u16  | u             | Lightmap texture U coordinate in pixels  |
+| u16  | v             | Lightmap texture V coordinate in pixels  |
