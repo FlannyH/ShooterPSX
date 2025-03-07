@@ -11,13 +11,17 @@
 #include "../vec3.h"
 
 typedef struct {
+    int16_t width;
+    int16_t height;
+    int16_t left;
+    int16_t top;
+} rect16_t;
+
+typedef struct {
     int mesh_id;
     int first_vertex_id;
     bool is_quad; // false if triangle, true if quad
-    int16_t rect_width;
-    int16_t rect_height;
-    int16_t rect_left;
-    int16_t rect_top;
+    rect16_t rect;
 } lightmap_polygon_metadata_t;
 
 int main(int argc, const char** argv) {
@@ -91,8 +95,8 @@ int main(int argc, const char** argv) {
                 .mesh_id = mesh_i,
                 .first_vertex_id = tri_i * 3,
                 .is_quad = false,
-                .rect_width = u_pixels,
-                .rect_height = v_pixels,
+                .rect.width = u_pixels,
+                .rect.height = v_pixels,
             };
             ++lm_meta_cursor;
         }
@@ -122,8 +126,8 @@ int main(int argc, const char** argv) {
                 .mesh_id = mesh_i,
                 .first_vertex_id = (mesh->n_triangles * 3) + (quad_i * 4),
                 .is_quad = false,
-                .rect_width = u_pixels,
-                .rect_height = v_pixels,
+                .rect.width = u_pixels,
+                .rect.height = v_pixels,
             };
             ++lm_meta_cursor;
         }
@@ -139,8 +143,8 @@ int main(int argc, const char** argv) {
     // Sort them based on height, this way we can get a tighter fit in the lightmap
     for (int i = 0; i < n_polygons_total - 1; ++i) {
         for (int j = 0; j < n_polygons_total - i - 1; ++j) {
-            int height_j = lm_meta[lm_meta_indices[j]].rect_height;
-            int height_j1 = lm_meta[lm_meta_indices[j + 1]].rect_height;
+            int height_j = lm_meta[lm_meta_indices[j]].rect.height;
+            int height_j1 = lm_meta[lm_meta_indices[j + 1]].rect.height;
             if (height_j < height_j1) {
                 int temp = lm_meta_indices[j];
                 lm_meta_indices[j] = lm_meta_indices[j + 1];
@@ -157,20 +161,21 @@ int main(int argc, const char** argv) {
     for (int i = 0; i < n_polygons_total; ++i) {
         const int index = lm_meta_indices[i];
 
-        if (lm_meta[index].rect_width > lightmap_resolution) {
+        if (lm_meta[index].rect.width > lightmap_resolution) {
             printf("One of the polygons' width exceeds the lightmap resolution!");
             return 3;
         }
 
-        if (lm_meta[index].rect_height > curr_row_height) {
-            curr_row_height = lm_meta[index].rect_height;
+        if (lm_meta[index].rect.height > curr_row_height) {
+            curr_row_height = lm_meta[index].rect.height;
         }
         
-        lm_meta[index].rect_left = x_cursor;
-        lm_meta[index].rect_top = y_cursor;
-        x_cursor += lm_meta[index].rect_width;
+        lm_meta[index].rect.left = x_cursor;
+        lm_meta[index].rect.top = y_cursor;
 
-        if (x_cursor + lm_meta[index].rect_width >= lightmap_resolution) {
+        x_cursor += lm_meta[index].rect.width;
+
+        if (x_cursor + lm_meta[index].rect.width >= lightmap_resolution) {
             x_cursor = 0;
             y_cursor += curr_row_height;
             curr_row_height = 0;
