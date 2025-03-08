@@ -235,7 +235,7 @@ int main(int argc, const char** argv) {
                         }
                     }
 
-                    if (best_candidate_i == -1) break; // should be impossible but just to be sure
+                    if (best_candidate_i == -1) break;
                     lm_meta[lm_meta_indices[best_candidate_i]].rect.top = free_rect.top;
                     lm_meta[lm_meta_indices[best_candidate_i]].rect.left = free_rect.left;
                     lm_meta[lm_meta_indices[best_candidate_i]].is_allocated = true;
