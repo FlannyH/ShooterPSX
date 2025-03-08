@@ -21,6 +21,8 @@ typedef struct {
     int mesh_id;
     int first_vertex_id;
     bool is_quad; // false if triangle, true if quad
+    bool is_allocated;
+    bool in_extra_free_space;
     rect16_t rect;
 } lightmap_polygon_metadata_t;
 
@@ -157,9 +159,12 @@ int main(int argc, const char** argv) {
     int x_cursor = 0;
     int y_cursor = 0;
     int curr_row_height = 0;
+    int curr_row_start_index = 0;
 
     for (int i = 0; i < n_polygons_total; ++i) {
         const int index = lm_meta_indices[i];
+
+        if (lm_meta[index].is_allocated) continue;
 
         if (lm_meta[index].rect.width > lightmap_resolution) {
             printf("One of the polygons' width exceeds the lightmap resolution!");
@@ -172,17 +177,87 @@ int main(int argc, const char** argv) {
         
         lm_meta[index].rect.left = x_cursor;
         lm_meta[index].rect.top = y_cursor;
+        lm_meta[index].is_allocated = true;
+        lm_meta[index].in_extra_free_space = false;
 
         x_cursor += lm_meta[index].rect.width;
 
         if (x_cursor + lm_meta[index].rect.width >= lightmap_resolution) {
+            for (int free_i = 0; free_i < n_polygons_total; ++free_i) {
+                if (lm_meta[lm_meta_indices[free_i]].is_allocated == false) continue;
+                if (lm_meta[lm_meta_indices[free_i]].in_extra_free_space == true) continue;
+
+                const rect16_t curr_rect = lm_meta[lm_meta_indices[free_i]].rect;
+
+                // todo: repeat until no more candidates exist
+                rect16_t free_rect = (rect16_t) {
+                    .width = curr_rect.width,
+                    .height = curr_row_height - curr_rect.height,
+                    .left = curr_rect.left,
+                    .top = y_cursor + curr_rect.height,
+                };
+
+                if (free_rect.height == 0) continue;
+
+                while (free_rect.width > 0) {
+                    int best_candidate_i = -1;
+                    int best_candidate_width_error = INT32_MAX;
+                    int best_candidate_height_error = INT32_MAX;
+
+                    for (int small_i = 0; small_i < n_polygons_total; ++small_i) {
+                        if (lm_meta[lm_meta_indices[small_i]].is_allocated) continue;
+                        
+                        const rect16_t small_rect = lm_meta[lm_meta_indices[small_i]].rect;
+                        if (small_rect.height > free_rect.height) continue;
+                        if (small_rect.width > free_rect.width) continue;
+                        int height_error = (free_rect.height - small_rect.height);
+                        int width_error = (free_rect.width - small_rect.width);
+
+                        if (height_error < best_candidate_height_error) {
+                            best_candidate_i = small_i;
+                            best_candidate_height_error = height_error;
+                        }
+                        else if (height_error == best_candidate_height_error) {
+                            if (width_error < best_candidate_width_error) {
+                                best_candidate_i = small_i;
+                                best_candidate_width_error = width_error;
+                            }
+                        }
+                    }
+
+                    if (best_candidate_i == -1) break; // should be impossible but just to be sure
+                    lm_meta[lm_meta_indices[best_candidate_i]].rect.top = free_rect.top;
+                    lm_meta[lm_meta_indices[best_candidate_i]].rect.left = free_rect.left;
+                    lm_meta[lm_meta_indices[best_candidate_i]].is_allocated = true;
+                    lm_meta[lm_meta_indices[best_candidate_i]].in_extra_free_space = true;
+                    free_rect.left += lm_meta[lm_meta_indices[best_candidate_i]].rect.width;
+                    free_rect.width -= lm_meta[lm_meta_indices[best_candidate_i]].rect.width;
+                }
+            }
+
             x_cursor = 0;
             y_cursor += curr_row_height;
             curr_row_height = 0;
+            curr_row_start_index = i + 1;
 
             if (y_cursor >= lightmap_resolution) {
                 printf("Ran out of lightmap space after %i polygons!\n", i);
                 return 4;
+            }
+        }
+    }
+
+    // Check for overlap
+    for (int i = 0; i < n_polygons_total; ++i) {
+        for (int j = 0; j < n_polygons_total; ++j) {
+            if (i == j) continue;
+
+            const rect16_t a = lm_meta[i].rect;
+            const rect16_t b = lm_meta[j].rect;
+            if (a.left < b.left + b.width && a.left + a.width > b.left &&
+                a.top < b.top + b.height && a.top + a.height > b.top) {
+                printf("error: overlap between polygon %d and %d\n", i, j);
+                return 5;
             }
         }
     }
