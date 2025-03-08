@@ -183,19 +183,27 @@ int main(int argc, const char** argv) {
         x_cursor += lm_meta[index].rect.width;
 
         if (x_cursor + lm_meta[index].rect.width >= lightmap_resolution) {
-            for (int free_i = 0; free_i < n_polygons_total; ++free_i) {
-                if (lm_meta[lm_meta_indices[free_i]].is_allocated == false) continue;
-                if (lm_meta[lm_meta_indices[free_i]].in_extra_free_space == true) continue;
+            for (int free_i = -1; free_i < n_polygons_total; ++free_i) {
+                rect16_t free_rect = {};
 
-                const rect16_t curr_rect = lm_meta[lm_meta_indices[free_i]].rect;
-
-                // todo: repeat until no more candidates exist
-                rect16_t free_rect = (rect16_t) {
-                    .width = curr_rect.width,
-                    .height = curr_row_height - curr_rect.height,
-                    .left = curr_rect.left,
-                    .top = y_cursor + curr_rect.height,
-                };
+                if (free_i != -1) {
+                    if (lm_meta[lm_meta_indices[free_i]].is_allocated == false) continue;
+                    if (lm_meta[lm_meta_indices[free_i]].in_extra_free_space == true) continue;
+                    const rect16_t curr_rect = lm_meta[lm_meta_indices[free_i]].rect;
+                    free_rect = (rect16_t) {
+                        .width = curr_rect.width,
+                        .height = curr_row_height - curr_rect.height,
+                        .left = curr_rect.left,
+                        .top = y_cursor + curr_rect.height,
+                    };
+                } else {
+                    free_rect = (rect16_t) {
+                        .width = lightmap_resolution - x_cursor,
+                        .height = curr_row_height,
+                        .left = x_cursor,
+                        .top = y_cursor,
+                    };
+                }
 
                 if (free_rect.height == 0) continue;
 
