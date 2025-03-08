@@ -202,6 +202,18 @@ int main(int argc, const char** argv) {
                         .left = curr_rect.left,
                         .top = y_cursor + curr_rect.height,
                     };
+
+                    // Stitch together multiple free rectangles with the same height
+                    while (true) {
+                        if (free_i >= n_polygons_total - 1) break;
+                        if (lm_meta[lm_meta_indices[free_i + 1]].is_allocated == false) goto skip;
+                        if (lm_meta[lm_meta_indices[free_i + 1]].in_extra_free_space == true) goto skip;
+                        const rect16_t next_rect = lm_meta[lm_meta_indices[free_i+1]].rect;
+                        if (next_rect.height != curr_rect.height) break;
+                        free_rect.width += next_rect.width;
+                    skip:
+                        ++free_i;
+                    }
                 } else {
                     free_rect = (rect16_t) {
                         .width = lightmap_resolution - x_cursor,
