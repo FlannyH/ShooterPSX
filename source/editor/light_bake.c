@@ -124,6 +124,8 @@ int main(int argc, const char** argv) {
             int v_pixels = ceilf(v_length / (float)lightmap_space_per_texel);
             if (u_pixels == 0) u_pixels = 1;
             if (v_pixels == 0) v_pixels = 1;
+            u_pixels += 1; // extra padding since we use half a pixel on each side to
+            v_pixels += 1; // mitigate filtering artifacts and seams between polygons
             lm_meta[lm_meta_cursor] = (lightmap_polygon_metadata_t) {
                 .mesh_id = mesh_i,
                 .first_vertex_id = (mesh->n_triangles * 3) + (quad_i * 4),
