@@ -185,9 +185,13 @@ int main(int argc, const char** argv) {
         x_cursor += lm_meta[index].rect.width;
 
         if (x_cursor + lm_meta[index].rect.width >= lightmap_resolution) {
+            // There's a good chance there's free space between allocated rows
+            // Let's make the most of that space!
             for (int free_i = -1; free_i < n_polygons_total; ++free_i) {
                 rect16_t free_rect = {};
 
+                // The first rectangle we try to fill is the one at the right side of the
+                // row, which isn't linked to any previously allocated rectangle on this row
                 if (free_i != -1) {
                     if (lm_meta[lm_meta_indices[free_i]].is_allocated == false) continue;
                     if (lm_meta[lm_meta_indices[free_i]].in_extra_free_space == true) continue;
@@ -209,6 +213,8 @@ int main(int argc, const char** argv) {
 
                 if (free_rect.height == 0) continue;
 
+                // Keep filling up the free space with whatever subsequent candidates fit
+                // best in that spot, until no more candidates fit
                 while (free_rect.width > 0) {
                     int best_candidate_i = -1;
                     int best_candidate_width_error = INT32_MAX;
@@ -245,6 +251,7 @@ int main(int argc, const char** argv) {
                 }
             }
 
+            // Next row
             x_cursor = 0;
             y_cursor += curr_row_height;
             curr_row_height = 0;
