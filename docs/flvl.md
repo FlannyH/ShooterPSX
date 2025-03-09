@@ -13,6 +13,7 @@
 | u32 | path_model_lod_offset | Optional offset to string containing the path to the level model file (.msh) to load in this level. Set to 0 if not using LODs. |
 | u32 | entity_types_offset | Offset to the u8 array of entity types  |
 | u32 | entity_pool_offset | Offset to the entity pool, which contains all the entity data, ready to be copied into RAM as is | 
+| u32 | light_data_offset | Offset to an array of lights | 
 | u32 | level_name_offset     | Offset to string containing display name of the level as shown in game to the player         |
 | u32 | text_offset     | Offset to text data for entities.         |
 | u32 | n_text_entries     | How many text entries there are.         |
@@ -37,4 +38,13 @@ Entity data is stored in 2 arrays: an entity type array, and an entity data arra
 | i16[3] | position | Spawn position of the entity, in model space                      |
 | i32[3] | rotation | Spawn rotation of the entity, 0x20000 = 360 degrees               |
 | i32[3] | scale    | Spawn scale of the entity, 4096 = 1.0                             |
+
 After this entry header, the raw entity data after the header as defined in `/source/entities/*.h` follows. Each entity is aligned to a grid where each grid cell is the size of the biggest entity struct
+
+### Light array entry
+| Type   | Name      | Description                                                       |
+| ------ | --------- | ----------------------------------------------------------------- |
+| i16[3] | direction_position | If this is a directional light, this is the direction vector, where the -32767 = -1.0 and +32767 = 1.0. If this is a point light, this is the position in model space |
+| i16    | intensity | 8.8 fixed point number representing the brightness of the light   |
+| u8[3]  | color     | 8-bit RGB values, which are then multiplied by the intensity when applying the light |
+| u8     | type      | What type of light this is. 0 = directional light, 1 = point light | 
