@@ -585,8 +585,8 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 #endif
 
 	// Draw
-	glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
-    glDrawArrays(GL_QUADS, mesh->n_triangles * 3, mesh->n_quads * 4);
+	if (mesh->n_triangles) glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
+	if (mesh->n_quads) glDrawArrays(GL_QUADS, mesh->n_triangles * 3, mesh->n_quads * 4);
 
 	n_total_triangles += mesh->n_triangles;
     tex_id_start = 0;
