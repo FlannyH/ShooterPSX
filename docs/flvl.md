@@ -10,10 +10,10 @@
 | u32 | path_collision_offset | Offset to string containing the path to the collision model file (.col) to load in this level    |
 | u32 | path_vislist_offset   | Offset to string containing the path to the visibility list file (.col) to load in this level    |
 | u32 | path_model_offset     | Offset to string containing the path to the level model file (.msh) to load in this level    |
-| u32 | path_model_lod_offset | Optional offset to string containing the path to the level model file (.msh) to load in this level. Set to 0 if not using LODs. |
+| u32 | path_model_lod_offset | Optional offset to string containing the path to the lower detail level model file (.msh) to load in this level. Used for level sections further from the camera. Set to 0xFFFFFFFF if not using LODs. |
 | u32 | entity_types_offset | Offset to the u8 array of entity types  |
 | u32 | entity_pool_offset | Offset to the entity pool, which contains all the entity data, ready to be copied into RAM as is | 
-| u32 | light_data_offset | Offset to an array of lights | 
+| u32 | light_data_offset | Optional offset to an array of lights. Set to 0xFFFFFFFF if there are no lights | 
 | u32 | level_name_offset     | Offset to string containing display name of the level as shown in game to the player         |
 | u32 | text_offset     | Offset to text data for entities.         |
 | u32 | n_text_entries     | How many text entries there are.         |

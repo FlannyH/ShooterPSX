@@ -423,6 +423,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 .path_model_lod_offset = (uint32_t)write_text_and_get_offset(binary_section, path_model_lod),
                 .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_types, (n_entities + 3) & ~0x03), // 4-byte padding
                 .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_data_serialized.data(), entity_data_serialized.size() * sizeof(entity_data_serialized[0])),
+                .light_data_offset = 0xFFFFFFFF,
                 .level_name_offset = (uint32_t)write_text_and_get_offset(binary_section, level_name),
                 .text_offset = (uint32_t)write_data_and_get_offset(binary_section, text_data_serialized.data(), text_data_serialized.size()),
                 .n_text_entries = (uint32_t)curr_level->n_text_entries,

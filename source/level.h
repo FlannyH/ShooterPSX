@@ -23,6 +23,7 @@ typedef struct {
     uint32_t path_model_lod_offset; // Offset to string containing the path to the level model file (.msh) to load in this level. Set to 0 if not using LODs.
     uint32_t entity_types_offset;   // Offset to entity_types data, which gets copied into `entity_types`
     uint32_t entity_pool_offset;    // Offset to entity_pool data, which gets copied into `entity_pool`
+    uint32_t light_data_offset;     // Optional offset to an array of lights. Set to 0xFFFFFFFF if there are no lights
     uint32_t level_name_offset;     // Offset to string containing display name of the level as shown in game to the player
     uint32_t text_offset;           // Offset to text data for entities
     uint32_t n_text_entries;        // How many text entries there are

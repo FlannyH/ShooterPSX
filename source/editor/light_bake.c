@@ -10,6 +10,37 @@
 #include "../vec2.h"
 #include "../vec3.h"
 
+#pragma pack(push, 1)
+typedef struct {
+    uint16_t bf_type;      // Magic identifier: "BM" (0x4D42)
+    uint32_t bf_size;      // Size of the file in bytes
+    uint16_t bf_reserved1; // Reserved, must be zero
+    uint16_t bf_reserved2; // Reserved, must be zero
+    uint32_t bf_off_bits;  // Offset to start of pixel data
+} bmp_file_header_t;
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+typedef struct {
+    uint32_t bi_size;          // Size of this header (40 bytes)
+    int32_t  bi_width;         // Image width in pixels
+    int32_t  bi_height;        // Image height in pixels
+    uint16_t bi_planes;        // Number of color planes (must be 1)
+    uint16_t bi_bit_count;     // Bits per pixel (e.g., 24)
+    uint32_t bi_compression;   // Compression type (0 = uncompressed)
+    uint32_t bi_size_image;    // Image size (may be 0 for uncompressed)
+    int32_t  bi_x_pels_per_meter; // Horizontal resolution (pixels per meter)
+    int32_t  bi_y_pels_per_meter; // Vertical resolution (pixels per meter)
+    uint32_t bi_clr_used;         // Number of colors in the color palette
+    uint32_t bi_clr_important;    // Important colors (0 = all)
+} bmp_info_header_t;
+#pragma pack(pop)
+
+typedef struct  {
+    bmp_file_header_t file_header;
+    bmp_info_header_t info_header;
+} bmp_header_t;
+
 typedef struct {
     int16_t width;
     int16_t height;
@@ -37,7 +68,7 @@ int main(int argc, const char** argv) {
     // const char* path = argv[1];
     const char* path = "D:/Projects/Git/ShooterPSX/assets/shared/models/level.msh";
     int lightmap_resolution = 1024;
-    float lightmap_space_per_texel = 32;
+    float lightmap_space_per_texel = 25.93775;
     bool store_to_vertex_colors = true;
 
     if (argc >= 3) {
@@ -291,6 +322,48 @@ int main(int argc, const char** argv) {
         }
     }
 
+    // debug
+    for (int i = 0; i < n_polygons_total; ++i) {
+        const int index = lm_meta_indices[i];
+        printf("(%4i, %4i) -> (%4i, %4i)\n", 
+            lm_meta[index].rect.left, 
+            lm_meta[index].rect.top, 
+            lm_meta[index].rect.left + lm_meta[index].rect.width - 1, 
+            lm_meta[index].rect.top + lm_meta[index].rect.height - 1
+        );
+
+        for (int y = lm_meta[index].rect.top; y < lm_meta[index].rect.top + lm_meta[index].rect.height; ++y) {
+            for (int x = lm_meta[index].rect.left; x < lm_meta[index].rect.left + lm_meta[index].rect.width; ++x) {   
+                lightmap[x + (y * lightmap_resolution)].b = (index) % 256;
+                lightmap[x + (y * lightmap_resolution)].g = (index / 256) % 256;
+                lightmap[x + (y * lightmap_resolution)].r += 1; // overflows to 0. if the red channel has any values above 0 we're fucked
+                lightmap[x + (y * lightmap_resolution)].a = 255;
+            }   
+        }
+    }
+
+    bmp_header_t bmp_header = {0};
+    bmp_header.file_header.bf_type = 0x4D42;
+    bmp_header.file_header.bf_size = sizeof(bmp_header_t) + (lightmap_resolution * lightmap_resolution * sizeof(pixel32_t));
+    bmp_header.file_header.bf_off_bits = sizeof(bmp_header_t);
+    bmp_header.info_header.bi_size = 40;
+    bmp_header.info_header.bi_width = lightmap_resolution;
+    bmp_header.info_header.bi_height = lightmap_resolution;
+    bmp_header.info_header.bi_planes = 1;
+    bmp_header.info_header.bi_bit_count = 24;
+    bmp_header.info_header.bi_compression = 0;
+    bmp_header.info_header.bi_size_image = 0;
+
+    FILE* image_debug = fopen("test.bmp", "wb");
+    fwrite(&bmp_header, sizeof(bmp_header), 1, image_debug);
+
+    for (int y = lightmap_resolution-1; y >= 0; --y) {
+        for (int x = 0; x < lightmap_resolution; ++x) {
+            fwrite(&lightmap[x + (y * lightmap_resolution)].b, 1, 1, image_debug);
+            fwrite(&lightmap[x + (y * lightmap_resolution)].g, 1, 1, image_debug);
+            fwrite(&lightmap[x + (y * lightmap_resolution)].r, 1, 1, image_debug);
+        }
+    }
 }
 
 /*
