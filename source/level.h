@@ -30,6 +30,7 @@ typedef struct {
     svec3_t player_spawn_position;  // Where in the map the player spawns, in model space units
     vec3_t player_spawn_rotation;   // Player spawn rotation, 0x20000 = 360 degrees
     uint16_t n_entities;            // Number of predefined entities in this map
+    uint16_t n_lights;              // Number of lights in this map's light array
 } level_header_t;
 
 typedef struct {
@@ -46,8 +47,16 @@ typedef struct {
     int n_level_textures;
 } level_t;
 
-level_t level_load(const char* level_path); // Load level from path, including .LVL;1 extension.
+typedef struct {
+    svec3_t direction_position; // If this is a directional light, this is the direction vector, where -32767 = -1.0 and +32767 = 1.0. If this is a point light, this is the position in model space
+    int16_t intensity;          // 8.8 fixed point number representing the brightness of the light
+    uint8_t color_r;            // 8-bit RGB values, which are then multiplied by the intensity when applying the light
+    uint8_t color_g;            // 8-bit RGB values, which are then multiplied by the intensity when applying the light
+    uint8_t color_b;            // 8-bit RGB values, which are then multiplied by the intensity when applying the light
+    uint8_t type;               // What type of light this is. 0 = directional light, 1 = point light
+} light_t;
 
+level_t level_load(const char* level_path);
 
 #ifdef __cplusplus
 }

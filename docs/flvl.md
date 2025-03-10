@@ -20,6 +20,7 @@
 | i16[3] | player_spawn_position       | Where in the map the player spawns, in model space units                                     |
 | i32[3] | player_spawn_rotation       | Player spawn rotation, 0x20000 = 360 degrees                                   |
 | u16 | n_entities            | Number of predefined entities in this map                                                    |
+| u16 | n_lights              | Number of lights in this map's light array                                                    |
 
 All offsets are relative to the start of the binary section, which is located right after the header.
 
@@ -41,10 +42,10 @@ Entity data is stored in 2 arrays: an entity type array, and an entity data arra
 
 After this entry header, the raw entity data after the header as defined in `/source/entities/*.h` follows. Each entity is aligned to a grid where each grid cell is the size of the biggest entity struct
 
-### Light array entry
+### Light data
 | Type   | Name      | Description                                                       |
 | ------ | --------- | ----------------------------------------------------------------- |
-| i16[3] | direction_position | If this is a directional light, this is the direction vector, where the -32767 = -1.0 and +32767 = 1.0. If this is a point light, this is the position in model space |
+| i16[3] | direction_position | If this is a directional light, this is the direction vector, where -32767 = -1.0 and +32767 = 1.0. If this is a point light, this is the position in model space |
 | i16    | intensity | 8.8 fixed point number representing the brightness of the light   |
 | u8[3]  | color     | 8-bit RGB values, which are then multiplied by the intensity when applying the light |
 | u8     | type      | What type of light this is. 0 = directional light, 1 = point light | 
