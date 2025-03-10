@@ -6,8 +6,8 @@ https://github.com/FlannyH/ShooterPSX/assets/60531875/5cb85d24-7a6c-44a8-9a6b-af
 ## Building the project
 ### Windows & Linux
 1. Install Rust compiler, a C/C++ compiler like `gcc`, and install `make`
-2. Open command line and type `make windows` (note: this is also the Linux target, I just didn't feel like changing the name)
-4. Navigate to folder `build/windows/` and open SubNivis executable
+2. Open command line and type `make pc`
+4. Navigate to folder `build/pc/` and open SubNivis executable
 
 ### PlayStation 1
 1. Install Rust compiler and install `make`
