@@ -24,10 +24,7 @@ void main() {
             (mod(floor(out_texture + 0.1), 4.0) * 64.0)
         );
         texture_size = 64.0;
-        pixel_coord = (out_texcoord / vec2(255.0) * vec2(64.0));
-        if (interpolation_mode != 0) { // interpolated solutions need a half pixel offset
-            pixel_coord += vec2(0.5, 0.5);
-        }
+        pixel_coord = (out_texcoord / vec2(256.0) * vec2(64.0));
     } 
     else {
         texture_offset = vec2(
@@ -36,6 +33,8 @@ void main() {
         );
         texture_size = 255.0;
         pixel_coord = out_texcoord;
+    }
+    if (interpolation_mode != 0) { // interpolated solutions need a half pixel offset
         pixel_coord += vec2(0.5, 0.5);
     }
     frag_color = vec4(out_color, alpha);
@@ -46,21 +45,34 @@ void main() {
         float u2 = ceil(pixel_coord.x);
         float v1 = floor(pixel_coord.y);
         float v2 = ceil(pixel_coord.y);
-        float u1_edged, u2_edged, v1_edged, v2_edged;
+        float u_edged, v_edged, u1_edged, u2_edged, v1_edged, v2_edged;
 
         if (edge_behavior == 0) { // wrap
+            u_edged = mod(u, texture_size);
+            v_edged = mod(v, texture_size);
             u1_edged = mod(u1, texture_size);
             u2_edged = mod(u2, texture_size);
             v1_edged = mod(v1, texture_size);
             v2_edged = mod(v2, texture_size);
             pixel_coord = mod(pixel_coord, texture_size);
         }
-        else { // clamp - default
+        else if (interpolation_mode != 0) { // clamp for interpolated
+            u_edged = clamp(u, -0.5, texture_size - 0.5);
+            v_edged = clamp(v, -0.5, texture_size - 0.5);
             u1_edged = clamp(u1, -0.5, texture_size - 0.5);
             u2_edged = clamp(u2, -0.5, texture_size - 0.5);
             v1_edged = clamp(v1, -0.5, texture_size - 0.5);
             v2_edged = clamp(v2, -0.5, texture_size - 0.5);
             pixel_coord = clamp(pixel_coord, -0.5, texture_size - 0.5);
+        }
+        else { // clamp for point sampled
+            u_edged = clamp(u, 0.0, texture_size);
+            v_edged = clamp(v, 0.0, texture_size);
+            u1_edged = clamp(u1, 0.0, texture_size);
+            u2_edged = clamp(u2, 0.0, texture_size);
+            v1_edged = clamp(v1, 0.0, texture_size);
+            v2_edged = clamp(v2, 0.0, texture_size);
+            pixel_coord = clamp(pixel_coord, 0.0, texture_size);
         }
 
         if (interpolation_mode == 2) { // bilinear sampling
