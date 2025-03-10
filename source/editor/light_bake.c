@@ -270,7 +270,7 @@ int main(int argc, const char** argv) {
             curr_row_start_index = i + 1;
 
             if (y_cursor >= lightmap_resolution) {
-                printf("Ran out of lightmap space after %i polygons!\n", i);
+                printf("Ran out of lightmap space after %i / %i polygons!\n", i, n_polygons_total);
                 return 4;
             }
         }
