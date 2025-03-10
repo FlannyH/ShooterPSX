@@ -38,8 +38,8 @@ clock_t dt = 0;
 float dt_ms_float = 0;
 int dt_ms_int = 0;
 uint32_t n_total_triangles = 0;
-int render_w = 512;
-int render_h = 240;
+int render_w = 4*512;
+int render_h = 4*240;
 int prev_render_w = 0;
 int prev_render_h = 0;
 int window_w = 32;
@@ -561,6 +561,8 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
     glUniform1i(glGetUniformLocation(shader_gouraud, "texture_offset"), tex_id_start);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "texture_is_page"), 0);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "curr_depth_bias"), curr_depth_bias);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "interpolation_mode"), 0);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "edge_behavior"), 0);
 	glUniform1f(glGetUniformLocation(shader_gouraud, "alpha"), 1.0f);
     
 	// Copy data into it
@@ -646,6 +648,8 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
     glUniform1i(glGetUniformLocation(shader_gouraud, "texture_is_page"), 0);
     glUniform1i(glGetUniformLocation(shader_gouraud, "curr_depth_bias"), curr_depth_bias - 16);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "interpolation_mode"), 0);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "edge_behavior"), 0);
     glUniform1f(glGetUniformLocation(shader_gouraud, "alpha"), 1.0f);
 
     // Copy data into it
@@ -818,6 +822,8 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 	glUniform1i(glGetUniformLocation(shader_gouraud, "texture_offset"), 0);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "texture_is_page"), is_page);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "curr_depth_bias"), curr_depth_bias);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "interpolation_mode"), 0);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "edge_behavior"), 0);
 	glUniform1f(glGetUniformLocation(shader_gouraud, "alpha"), ((float)color.a) / 255.0f);
 
 	// Copy data into it
