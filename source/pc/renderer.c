@@ -276,7 +276,8 @@ void renderer_init(void) {
 	}
 	glfwMakeContextCurrent(window);
 	gl3wInit();
-    glEnable(GL_DEBUG_OUTPUT);
+	glEnable(GL_DEBUG_OUTPUT);
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(DebugCallbackFunc, NULL);
 	glfwSwapInterval(0);
 
