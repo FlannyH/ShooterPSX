@@ -283,7 +283,7 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 	render_transform.scale.y = chaser->entity_header.scale.x;
 	render_transform.scale.z = chaser->entity_header.scale.x;
 #ifdef _LEVEL_EDITOR
-	renderer_set_drawing_entity_id(slot);
+	renderer_set_drawing_id(slot, 1);
 #endif
 	if (chaser->entity_header.mesh == NULL) {
 		chaser->entity_header.mesh = model_find_mesh(entity_get_models(), "19_enemy_chaser_idle");

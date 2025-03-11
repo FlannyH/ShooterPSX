@@ -732,7 +732,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         }
 
         if (ImGui::Button("Defragment")) {
-            // light_defragment();
+            // todo: light_defragment();
         }
     }
     ImGui::End();
@@ -774,9 +774,17 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 .rotation = vec3_from_scalar(0),
                 .scale = vec3_from_scalar(ONE),
             };
+            if ((int)i == *selected_light_slot) {
+                aabb_t aabb = {
+                    .min = vec3_sub(trans.position, vec3_from_scalar(6*ONE)),
+                    .max = vec3_add(trans.position, vec3_from_scalar(6*ONE)),
+                };
+                renderer_debug_draw_aabb(&aabb, red, &id_transform);
+            }
             trans.position.x /= -COL_SCALE;
             trans.position.y /= -COL_SCALE;
             trans.position.z /= -COL_SCALE;
+            renderer_set_drawing_id(i, 2);
             renderer_draw_mesh_shaded(&gizmos->meshes[(size_t)curr_level->lights[i].type-1], &trans, 0, 1, GIZMO_TEXTURE_OFFSET);
         }
     }
@@ -909,15 +917,28 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
             if (input_pressed(PAD_L2, 0)) {
                 // Read stencil buffer
-                uint8_t entity_index = 255;
-                glReadPixels((GLint)rel_mouse_pos.x, (GLint)(renderer_height() - rel_mouse_pos.y), 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &entity_index);
+                struct {
+                    uint8_t index;
+                    uint8_t what;
+                    uint16_t padding;
+                } pick_info;
+                glReadBuffer(GL_COLOR_ATTACHMENT1);  
+                glReadPixels((GLint)rel_mouse_pos.x, (GLint)(renderer_height() - rel_mouse_pos.y), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pick_info);
                 
+                printf("index: %3i, %3i", pick_info.index, pick_info.what);
+
                 if (!ImGuizmo::IsOver() && !ImGuizmo::IsUsingAny()) {
-                    if (entity_index != 255) {
-                        *selected_entity_slot = entity_index;
+                    if (pick_info.what == 1) {
+                        *selected_entity_slot = pick_info.index;
+                        *selected_light_slot = -1;
+                    }
+                    else if (pick_info.what == 2) {
+                        *selected_entity_slot = -1;
+                        *selected_light_slot = pick_info.index;
                     }
                     else {
                         *selected_entity_slot = -1;
+                        *selected_light_slot = -1;
                     }
                 }
             }

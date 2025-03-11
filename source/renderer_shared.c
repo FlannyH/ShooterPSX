@@ -106,7 +106,7 @@ void renderer_draw_model_shaded(const model_t* model, const transform_t* model_t
     tex_id_start = tex_id_offset;
 
 #ifdef _LEVEL_EDITOR
-	renderer_set_drawing_entity_id(255);
+	renderer_set_drawing_id(0, 0);
 #endif
 
     if (vislist == NULL || n_sections == 0) {

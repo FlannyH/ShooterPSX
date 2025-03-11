@@ -52,7 +52,7 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 	render_transform.scale.y = crate->entity_header.scale.x;
 	render_transform.scale.z = crate->entity_header.scale.x;
 #ifdef _LEVEL_EDITOR
-	renderer_set_drawing_entity_id(slot);
+	renderer_set_drawing_id(slot, 1);
 #endif
 	if (crate->entity_header.mesh == NULL) {
 		crate->entity_header.mesh = model_find_mesh(entity_get_models(), "28_crate");

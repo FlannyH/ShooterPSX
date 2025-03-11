@@ -4,6 +4,7 @@ in vec3 out_color;
 in vec2 out_texcoord;
 in float out_texture;
 varying out vec4 frag_color;
+varying out vec2 object_picking;
 
 uniform sampler2D tex;
 uniform int texture_bound;
@@ -12,6 +13,9 @@ uniform int texture_blend_mode;
 uniform int interpolation_mode; // 0 = point, 1 = tri-point filtering, 2 = bilinear filtering
 uniform int edge_behavior; // 0 = wrap, 1 = clamp
 uniform float alpha;
+
+uniform int drawing_id;
+uniform int drawing_what;
 
 void main() {
     vec2 pixel_coord;
@@ -118,4 +122,6 @@ void main() {
         discard;
     }
     frag_color.xyz = pow(frag_color.xyz, vec3(2.8 / 2.2)); // closer to how it looks on my ps1
+    object_picking.x = float(drawing_id) / 255.0;
+    object_picking.y = float(drawing_what) / 255.0;
 }

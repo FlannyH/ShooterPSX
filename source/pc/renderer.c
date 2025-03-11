@@ -67,8 +67,10 @@ int res_x = 512; // Pretend it's the same as PSX
 GLuint fbo;
 GLuint fb_texture;
 GLuint fb_depth;
+GLuint picking_fb_texture;
 #ifdef _LEVEL_EDITOR
-int drawing_entity_id = 255;
+int drawing_id = 255;
+int drawing_what = 0; // 0 = nothing, 1 = entity, 2 = light
 #endif
 
 typedef enum { vertex, pixel, geometry, compute } ShaderType;
@@ -350,6 +352,18 @@ void renderer_init(void) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+	// Generate object picking framebuffer data
+	glGenTextures(1, &picking_fb_texture);
+	glBindTexture(GL_TEXTURE_2D, picking_fb_texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, 0, GL_RG, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 	
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, fb_texture, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+	GLenum draw_buffers[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glDrawBuffers(2, draw_buffers);
+
 	glfwGetWindowSize(window, &window_w, &window_h);
 }
 double lasttime = 0.0;
@@ -389,6 +403,14 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 	
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		// Resize object picking attachment
+		glBindTexture(GL_TEXTURE_2D, picking_fb_texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, render_w, render_h, 0, GL_RG, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 	
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, picking_fb_texture, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
@@ -436,10 +458,9 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 
 	// Clear screen
 	glStencilMask(0xFF);
-	glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
-	glClearDepth(1.0);
-	glClearStencil(255);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	float clear_color0[] = { 0.1f, 0.1f, 0.2f, 1.0f}; glClearBufferfv(GL_COLOR, 0, clear_color0);
+	float clear_color1[] = { 0.0f, 0.0f, 0.0f, 0.0f}; glClearBufferfv(GL_COLOR, 1, clear_color1);
+	glClearDepth(1.0); glClear(GL_DEPTH_BUFFER_BIT);
 
 #ifndef _LEVEL_EDITOR
     if (input_held(PAD_SQUARE, 0)) {
@@ -566,6 +587,8 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 	glUniform1i(glGetUniformLocation(shader_gouraud, "curr_depth_bias"), curr_depth_bias);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "interpolation_mode"), 0);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "edge_behavior"), 0);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "drawing_id"), drawing_id);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "drawing_what"), drawing_what);
 	glUniform1f(glGetUniformLocation(shader_gouraud, "alpha"), 1.0f);
     
 	// Copy data into it
@@ -576,13 +599,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 
-#ifdef _LEVEL_EDITOR
-	// Enable stencil, which we use to detect clicking on entities in the level editor
-	glEnable(GL_STENCIL_TEST);
-	glStencilMask(0xFF);
-	glStencilFunc(GL_ALWAYS, drawing_entity_id, 0xFF);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-#endif
+	// Bind the two framebuffers, one for color, one for object picking in the level editor
 
 	// Draw
 	if (mesh->n_triangles) glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
@@ -592,13 +609,15 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
     tex_id_start = 0;
 
 #ifdef _LEVEL_EDITOR
-	drawing_entity_id = 255;
+	drawing_id = 0;
+	drawing_what = 0;
 #endif
 }
 
 #ifdef _LEVEL_EDITOR
-void renderer_set_drawing_entity_id(int id) {
-	drawing_entity_id = id;
+void renderer_set_drawing_id(int id, int what) {
+	drawing_id = id;
+	drawing_what = what;
 }
 
 void renderer_update_window_res(int width, int height) {

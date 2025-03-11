@@ -66,7 +66,7 @@ int renderer_height(void);
 #ifdef _LEVEL_EDITOR
 float* renderer_debug_perspective_matrix(void);
 float* renderer_debug_view_matrix(void);
-void renderer_set_drawing_entity_id(int id);
+void renderer_set_drawing_id(int id, int what); // what: 0 = none, 1 = entity, 2 = light
 void renderer_update_window_res(int width, int height);
 #endif
 

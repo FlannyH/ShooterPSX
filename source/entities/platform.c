@@ -94,7 +94,7 @@ void entity_platform_update(int slot, player_t* player, int dt) {
 	render_transform.scale.y = platform->entity_header.scale.x;
 	render_transform.scale.z = platform->entity_header.scale.x;
 #ifdef _LEVEL_EDITOR
-	renderer_set_drawing_entity_id(slot);
+	renderer_set_drawing_id(slot, 1);
 #endif
 	renderer_draw_mesh_shaded(platform->entity_header.mesh, &render_transform, 0, 0, tex_entity_start);
 }
