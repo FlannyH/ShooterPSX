@@ -43,6 +43,7 @@ level_t level_load(const char* level_path) {
     const char* path_graphics = (const char*)((binary_section + level_header->path_model_offset));
     const char* level_entity_pool = (const char*)((binary_section + level_header->entity_pool_offset));
     const uint8_t* level_entity_types = (const uint8_t*)((binary_section + level_header->entity_types_offset));
+    const light_t* lights = (const light_t*)((binary_section + level_header->light_data_offset));
     const char* text = (const char*)((binary_section + level_header->text_offset));
 
     // We gotta do some specific memory management if we want to fit as much into the temporary stack as we can
@@ -114,6 +115,16 @@ level_t level_load(const char* level_path) {
             }
         }
     }
+
+    // Load lights
+    level.n_lights = level_header->n_lights;
+#ifdef _LEVEL_EDITOR
+    level.lights = malloc(MAX_LIGHT_COUNT * sizeof(light_t));
+    memset(level.lights, 0, MAX_LIGHT_COUNT * sizeof(light_t));
+#else
+    level.lights = mem_stack_alloc(level.lights * sizeof(light_t));
+#endif
+    memcpy(level.lights, lights, level.n_lights * sizeof(light_t));
 
     // Start new music and load sfx data
     music_stop();
