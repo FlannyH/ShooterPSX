@@ -925,8 +925,6 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 glReadBuffer(GL_COLOR_ATTACHMENT1);  
                 glReadPixels((GLint)rel_mouse_pos.x, (GLint)(renderer_height() - rel_mouse_pos.y), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pick_info);
                 
-                printf("index: %3i, %3i", pick_info.index, pick_info.what);
-
                 if (!ImGuizmo::IsOver() && !ImGuizmo::IsUsingAny()) {
                     if (pick_info.what == 1) {
                         *selected_entity_slot = pick_info.index;
