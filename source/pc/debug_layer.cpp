@@ -24,6 +24,12 @@
 #endif
 
 extern const char* entity_names[];
+const char* light_type_names[] = {
+    "None",
+    "Directional light",
+    "Point light",
+    NULL
+};
 
 void debug_layer_init(GLFWwindow* window) {
     ImGui::CreateContext();
@@ -328,6 +334,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 }
                 mem_free(curr_level->collision_mesh_debug->meshes);
                 mem_free(curr_level->collision_mesh_debug);
+                mem_free(curr_level->lights);
             }
             tex_alloc_cursor = 0;
             mem_debug();
@@ -675,7 +682,53 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     }
     ImGui::End();
 
-    // Entity inspector menu
+    // Light spawn menu
+    ImGui::Begin("Light spawning");
+    {
+        int light_count = 0;
+        for (size_t i = 0; i < MAX_LIGHT_COUNT; ++i) {
+            if (curr_level->lights[i].type != LIGHT_NONE) {
+                ++light_count;
+            }
+        }
+
+        ImGui::Text("Lights: %i / %i", light_count, MAX_LIGHT_COUNT);
+
+        // Light select dropdown
+        static size_t curr_selected_light_type = 1;
+        curr_selected_light_type = inspect_enum(curr_selected_light_type, light_type_names, "Light type");
+
+        if (ImGui::Button("Spawn")) {
+            // Figure out where to spawn - in front of the camera
+            const vec3_t forward = renderer_get_forward_vector();
+            const vec3_t spawn_pos = vec3_add(vec3_muls(camera->position, -COL_SCALE), vec3_muls(forward, -80 * ONE));
+
+            for (size_t i = 0; i < MAX_LIGHT_COUNT; ++i) {
+                if (curr_level->lights[i].type == LIGHT_NONE) {
+                    if (curr_selected_light_type == LIGHT_DIRECTIONAL) {
+                        curr_level->lights[i].direction_position = { (int16_t)forward.x, (int16_t)forward.y, (int16_t)forward.z };
+                    }
+                    else if (curr_selected_light_type == LIGHT_POINT) {
+                        curr_level->lights[i].direction_position = svec3_from_vec3(spawn_pos);
+                    }
+
+                    curr_level->lights[i].intensity = 1 << 8; // 1.0
+                    curr_level->lights[i].color_r = 255;
+                    curr_level->lights[i].color_g = 255;
+                    curr_level->lights[i].color_b = 255;
+                    curr_level->lights[i].type = (uint8_t)curr_selected_light_type;
+                    break;
+                }
+            }
+        }
+
+        if (ImGui::Button("Defragment")) {
+            // light_defragment();
+        }
+    }
+    ImGui::End();
+
+    // Light inspector menu
     ImGui::Begin("Light Inspector", NULL, ImGuiWindowFlags_None);
     {
         if (ImGui::TreeNode("All lights")) {

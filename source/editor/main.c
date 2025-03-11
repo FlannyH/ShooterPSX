@@ -39,6 +39,9 @@ int main(int argc, char** argv) {
     
     level_t level = (level_t){0}; // start with empty level
     memset(&level, 0, sizeof(level));
+    level.lights = mem_alloc(MAX_LIGHT_COUNT * sizeof(light_t), MEM_CAT_UNDEFINED);
+    memset(level.lights, 0, MAX_LIGHT_COUNT * sizeof(light_t));
+    
     player_t player; player_init(&player, vec3_from_scalar(0), vec3_from_scalar(0), 40, 0, 0);
     player_update(&player, &level.collision_bvh, 0, 0);
     debug_camera_t camera = debug_camera_new();
@@ -70,7 +73,6 @@ int main(int argc, char** argv) {
             input_unlock_mouse();
         }
 
-        // Update camera
         input_update();
         debug_camera_update(&camera, dt, mouse_lock);
         

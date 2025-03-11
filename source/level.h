@@ -34,7 +34,7 @@ typedef struct {
 } level_header_t;
 
 typedef struct {
-    svec3_t direction_position; // If this is a directional light, this is the direction vector, where -32767 = -1.0 and +32767 = 1.0. If this is a point light, this is the position in model space
+    svec3_t direction_position; // If this is a directional light, this is a 4.12 fixed point direction vector. If this is a point light, this is the position in model space
     int16_t intensity;          // 8.8 fixed point number representing the brightness of the light
     uint8_t color_r;            // 8-bit RGB values, which are then multiplied by the intensity when applying the light
     uint8_t color_g;            // 8-bit RGB values, which are then multiplied by the intensity when applying the light
