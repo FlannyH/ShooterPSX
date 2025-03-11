@@ -34,9 +34,25 @@ typedef struct {
 } level_header_t;
 
 typedef struct {
+    svec3_t direction_position; // If this is a directional light, this is the direction vector, where -32767 = -1.0 and +32767 = 1.0. If this is a point light, this is the position in model space
+    int16_t intensity;          // 8.8 fixed point number representing the brightness of the light
+    uint8_t color_r;            // 8-bit RGB values, which are then multiplied by the intensity when applying the light
+    uint8_t color_g;            // 8-bit RGB values, which are then multiplied by the intensity when applying the light
+    uint8_t color_b;            // 8-bit RGB values, which are then multiplied by the intensity when applying the light
+    uint8_t type;               // What type of light this is. 0 = none, 1 = directional light, 2 = point light
+} light_t;
+
+typedef enum {
+    LIGHT_NONE = 0,
+    LIGHT_DIRECTIONAL = 1,
+    LIGHT_POINT = 2,
+} light_type_t;
+
+typedef struct {
     model_t* graphics;
     model_t* collision_mesh_debug;
     collision_mesh_t* collision_mesh;
+    light_t* lights;
     transform_t transform;
     vislist_t vislist;
     level_collision_t collision_bvh;
@@ -45,16 +61,10 @@ typedef struct {
     char** text_entries;
     int n_text_entries;
     int n_level_textures;
+    int n_lights;
 } level_t;
 
-typedef struct {
-    svec3_t direction_position; // If this is a directional light, this is the direction vector, where -32767 = -1.0 and +32767 = 1.0. If this is a point light, this is the position in model space
-    int16_t intensity;          // 8.8 fixed point number representing the brightness of the light
-    uint8_t color_r;            // 8-bit RGB values, which are then multiplied by the intensity when applying the light
-    uint8_t color_g;            // 8-bit RGB values, which are then multiplied by the intensity when applying the light
-    uint8_t color_b;            // 8-bit RGB values, which are then multiplied by the intensity when applying the light
-    uint8_t type;               // What type of light this is. 0 = directional light, 1 = point light
-} light_t;
+#define MAX_LIGHT_COUNT 256
 
 level_t level_load(const char* level_path);
 

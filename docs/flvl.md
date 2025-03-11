@@ -48,4 +48,4 @@ After this entry header, the raw entity data after the header as defined in `/so
 | i16[3] | direction_position | If this is a directional light, this is the direction vector, where -32767 = -1.0 and +32767 = 1.0. If this is a point light, this is the position in model space |
 | i16    | intensity | 8.8 fixed point number representing the brightness of the light   |
 | u8[3]  | color     | 8-bit RGB values, which are then multiplied by the intensity when applying the light |
-| u8     | type      | What type of light this is. 0 = directional light, 1 = point light | 
+| u8     | type      | What type of light this is. 0 = none, 1 = directional light, 2 = point light | 
