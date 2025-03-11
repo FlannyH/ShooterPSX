@@ -16,7 +16,7 @@ void debug_layer_begin(void);
 void debug_layer_end(void);
 void debug_layer_update_gameplay(void);
 void debug_layer_close(void);
-void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slot, int* mouse_over_viewport, level_t* curr_level, player_t* player);
+void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slot, int* selected_light_slot, int* mouse_over_viewport, level_t* curr_level, player_t* player);
 
 #ifdef __cplusplus
 }

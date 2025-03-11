@@ -229,8 +229,17 @@ void inspect_entity(size_t entity_id) {
     }
 }
 
+void inspect_light(level_t* curr_level, size_t light_id) {
+    const uint8_t light_type = entity_get_type(light_id);
+    if (light_type == LIGHT_NONE) return;
+
+    if (ImGui::Button("Delete")) {
+        curr_level->lights[light_id].type = LIGHT_NONE;
+    }
+}
+
 #define PI 3.14159265358979f
-void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slot, int* mouse_over_viewport, level_t* curr_level, player_t* player) {
+void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slot, int* selected_light_slot, int* mouse_over_viewport, level_t* curr_level, player_t* player) {
     ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
     static ImGui::FileBrowser file_dialog(ImGuiFileBrowserFlags_EnterNewFilename);
 
@@ -430,6 +439,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 .player_spawn_position = svec3_from_vec3(player_spawn_position),
                 .player_spawn_rotation = player_spawn_rotation,
                 .n_entities = (uint16_t)n_entities,
+                .n_lights = (uint16_t)0,
             };
 
             FILE* file = fopen(level_path, "wb");
@@ -637,7 +647,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     ImGui::End();
 
     // Entity inspector menu
-    ImGui::Begin("Inspector", NULL, ImGuiWindowFlags_None);
+    ImGui::Begin("Entity Inspector", NULL, ImGuiWindowFlags_None);
     {
         if (ImGui::TreeNode("All entities")) {
             for (size_t i = 0; i < ENTITY_LIST_LENGTH; ++i) {
@@ -660,6 +670,35 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             // If deleted, deselect it
             if (entity_get_type(*selected_entity_slot) == ENTITY_NONE) {
                 *selected_entity_slot = -1;
+            }
+        }
+    }
+    ImGui::End();
+
+    // Entity inspector menu
+    ImGui::Begin("Light Inspector", NULL, ImGuiWindowFlags_None);
+    {
+        if (ImGui::TreeNode("All lights")) {
+            for (size_t i = 0; i < MAX_LIGHT_COUNT && curr_level->lights; ++i) {
+                if (curr_level->lights[i].type != LIGHT_NONE) {
+                    static std::string tree_nodes[MAX_LIGHT_COUNT];
+                    tree_nodes[i] = std::format("Light {}", i);
+                    if (ImGui::TreeNode(tree_nodes[i].c_str())) {
+                        inspect_light(curr_level, i);
+                        ImGui::TreePop();
+                    }
+                }
+            }
+            ImGui::TreePop();
+        }
+        if (selected_light_slot != NULL && *selected_light_slot >= 0) {
+            ImGui::Text("Selected light");
+            ImGui::Spacing();
+            inspect_light(curr_level, *selected_light_slot);
+            
+            // If deleted, deselect it
+            if (curr_level->lights[*selected_light_slot].type == LIGHT_NONE) {
+                *selected_light_slot = -1;
             }
         }
     }
