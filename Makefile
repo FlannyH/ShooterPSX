@@ -323,11 +323,13 @@ $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor: mkdir_output_pc pc_dependencies $(OBJ_LE
 	@mkdir -p $(dir $@)
 	@mkdir -p $(PATH_ASSETS)/shared
 	@mkdir -p $(PATH_ASSETS)/pc
+	@mkdir -p $(PATH_ASSETS)/level_editor
 	@echo Linking $@
 	@$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
 	@echo Copying assets
 	@cp -r $(PATH_ASSETS)/shared/* $(dir $@)/assets
 	@cp -r $(PATH_ASSETS)/pc/* $(dir $@)/assets
+	@cp -r $(PATH_ASSETS)/level_editor/* $(dir $@)/assets
 
 $(PATH_BUILD_LIGHT_BAKE)/LightBake: mkdir_output_pc pc_dependencies $(OBJ_LIGHT_BAKE)
 	@mkdir -p $(dir $@)
@@ -539,7 +541,9 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/pc/GOURAUD.FSH \
 					  $(PATH_ASSETS)/shared/audio/music/level2.dss \
 					  $(PATH_ASSETS)/shared/audio/music/level3.dss \
 					  $(PATH_ASSETS)/shared/audio/music/pitchtst.dss \
-					  $(PATH_ASSETS)/shared/audio/music/subnivis.dss
+					  $(PATH_ASSETS)/shared/audio/music/subnivis.dss \
+					  $(PATH_ASSETS)/level_editor/editor/gizmos.msh \
+					  $(PATH_ASSETS)/level_editor/editor/gizmos.txc
 
 # Shaders for Windows and Level Editor build
 $(PATH_ASSETS)/pc/%.FSH: $(PATH_ASSETS_TO_BUILD)/%.FSH
@@ -605,6 +609,12 @@ $(PATH_ASSETS)/shared/audio/music/%.dss: $(PATH_ASSETS_TO_BUILD)/audio/music/%.m
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/midi2psx$(EXE_EXT) $< $@
+
+# Level editor assets
+$(PATH_ASSETS)/level_editor/%.msh: $(PATH_ASSETS_TO_BUILD)/level_editor/%.obj
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $(basename $@)
 
 $(PATH_TEMP)/pc/assets.sfa: $(COMPILED_ASSET_LIST)
 	@mkdir -p $(dir $@)

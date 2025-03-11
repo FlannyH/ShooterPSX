@@ -23,6 +23,8 @@
 #include <format>
 #endif
 
+#define GIZMO_TEXTURE_OFFSET 120
+
 extern const char* entity_names[];
 const char* light_type_names[] = {
     "None",
@@ -261,6 +263,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     static char* path_model = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
     static char* path_model_lod = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
     static char* level_name = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static model_t* gizmos = nullptr;
+    static texture_cpu_t* gizmo_textures = nullptr;
     static bool initialized = false;
 
     // Debug state
@@ -318,6 +322,11 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         path_model[0] = 0;
         path_model_lod[0] = 0;
         level_name[0] = 0;
+        gizmos = model_load("editor/gizmos.msh", 0, (stack_t)0, GIZMO_TEXTURE_OFFSET, 0);
+        uint32_t n_tex = texture_collection_load("editor/gizmos.txc", &gizmo_textures, 1, STACK_TEMP);
+        for (uint32_t i = 0; i < n_tex; ++i) {
+            renderer_upload_texture(&gizmo_textures[i], GIZMO_TEXTURE_OFFSET + i);
+        }
         initialized = true;
     }
     ImGui::Begin("Level Metadata");
@@ -735,7 +744,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             for (size_t i = 0; i < MAX_LIGHT_COUNT && curr_level->lights; ++i) {
                 if (curr_level->lights[i].type != LIGHT_NONE) {
                     static std::string tree_nodes[MAX_LIGHT_COUNT];
-                    tree_nodes[i] = std::format("Light {}", i);
+                    tree_nodes[i] = std::format("{} - {}", i, light_type_names[curr_level->lights[i].type]);
                     if (ImGui::TreeNode(tree_nodes[i].c_str())) {
                         inspect_light(curr_level, i);
                         ImGui::TreePop();
@@ -756,6 +765,21 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         }
     }
     ImGui::End();
+
+    for (size_t i = 0; i < MAX_LIGHT_COUNT && curr_level->lights; ++i) {
+        if (curr_level->lights[i].type != LIGHT_NONE
+        && curr_level->lights[i].type != LIGHT_DIRECTIONAL) {
+            transform_t trans = {
+                .position = vec3_from_svec3(curr_level->lights[i].direction_position),
+                .rotation = vec3_from_scalar(0),
+                .scale = vec3_from_scalar(ONE),
+            };
+            trans.position.x /= -COL_SCALE;
+            trans.position.y /= -COL_SCALE;
+            trans.position.z /= -COL_SCALE;
+            renderer_draw_mesh_shaded(&gizmos->meshes[(size_t)curr_level->lights[i].type-1], &trans, 0, 1, GIZMO_TEXTURE_OFFSET);
+        }
+    }
 
     // Text editor window
     ImGui::Begin("Text editor", NULL, ImGuiWindowFlags_None);
