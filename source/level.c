@@ -122,7 +122,7 @@ level_t level_load(const char* level_path) {
     level.lights = malloc(MAX_LIGHT_COUNT * sizeof(light_t));
     memset(level.lights, 0, MAX_LIGHT_COUNT * sizeof(light_t));
 #else
-    level.lights = mem_stack_alloc(level.lights * sizeof(light_t));
+    level.lights = mem_stack_alloc(level.n_lights * sizeof(light_t), STACK_LEVEL);
 #endif
     memcpy(level.lights, lights, level.n_lights * sizeof(light_t));
 
