@@ -7,8 +7,8 @@
 #include <psxgte.h>
 #include <psxgpu.h>
 
-#define TRI_THRESHOLD_MUL_SUB2_30 4
-#define TRI_THRESHOLD_MUL_SUB1_30 9
+#define TRI_THRESHOLD_MUL_SUB2_30 3
+#define TRI_THRESHOLD_MUL_SUB1_30 7
 #define TRI_THRESHOLD_MUL_SUB2_60 2
 #define TRI_THRESHOLD_MUL_SUB1_60 4
 #define TRI_THRESHOLD_NORMAL 500
