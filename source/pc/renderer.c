@@ -68,10 +68,8 @@ GLuint fbo;
 GLuint fb_texture;
 GLuint fb_depth;
 GLuint picking_fb_texture;
-#ifdef _LEVEL_EDITOR
 int drawing_id = 255;
 int drawing_what = 0; // 0 = nothing, 1 = entity, 2 = light
-#endif
 
 typedef enum { vertex, pixel, geometry, compute } ShaderType;
 
