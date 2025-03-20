@@ -89,6 +89,7 @@ void entity_init(void) {
 	if (entity_models) {
 		for (uint32_t i = 0; i < entity_models->n_meshes; ++i) {
 			mem_free(entity_models->meshes[i].vertices);
+			mem_free(entity_models->meshes[i].normals);
 		}
 	}
 #endif

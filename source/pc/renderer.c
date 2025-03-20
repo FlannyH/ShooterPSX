@@ -555,15 +555,33 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 		glm_rotate_z(model_matrix, (float)model_transform->rotation.z * 2 * PI / 131072.0f, model_matrix);
 	}
 
-	// Bind shader
 	glUseProgram(shader_gouraud);
-
-	// Bind texture
 	glBindTexture(GL_TEXTURE_2D, textures);
+	glBindVertexArray(mesh->vao);
 
-	// Bind vertex buffers
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	if (mesh->vbo_vertices == 0) {
+		glGenVertexArrays(1, &mesh->vao);
+		glBindVertexArray(mesh->vao);
+		glGenBuffers(1, &mesh->vbo_vertices);
+		glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_vertices);
+		glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(vertex_3d_t), mesh->vertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glEnableVertexAttribArray(2);
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(vertex_3d_t), (const void*)offsetof(vertex_3d_t, x));
+		glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(vertex_3d_t), (const void*)offsetof(vertex_3d_t, r));
+		glVertexAttribPointer(2, 2, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(vertex_3d_t), (const void*)offsetof(vertex_3d_t, u));
+		glVertexAttribPointer(3, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(vertex_3d_t), (const void*)offsetof(vertex_3d_t, tex_id));
+		
+		if (mesh->vbo_normals == 0 && mesh->normals) {
+			glGenBuffers(1, &mesh->vbo_normals);
+			glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_normals);
+			glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(normal_t), mesh->normals, GL_STATIC_DRAW);
+			glEnableVertexAttribArray(4);
+			glVertexAttribPointer(4, 3, GL_BYTE, GL_TRUE, sizeof(normal_t), 0);
+		}
+	}
 
 	// Set matrices
 	glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "proj_matrix"), 1, GL_FALSE, &perspective_matrix[0][0]);
@@ -588,9 +606,6 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 	glUniform1i(glGetUniformLocation(shader_gouraud, "drawing_id"), drawing_id);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "drawing_what"), drawing_what);
 	glUniform1f(glGetUniformLocation(shader_gouraud, "alpha"), 1.0f);
-    
-	// Copy data into it
-	glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(vertex_3d_t), mesh->vertices, GL_STATIC_DRAW);
 
 	// Enable depth, culling
 	glEnable(GL_DEPTH_TEST);

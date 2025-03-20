@@ -3,6 +3,7 @@
 in vec3 out_color;
 in vec2 out_texcoord;
 in float out_texture;
+in vec3 out_normal;
 varying out vec4 frag_color;
 varying out vec2 object_picking;
 

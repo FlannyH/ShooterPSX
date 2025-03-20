@@ -27,6 +27,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
     const void* binary_section = &model_header[1];
     const mesh_desc_t* mesh_descriptions = (mesh_desc_t*)((intptr_t)binary_section + model_header->offset_mesh_desc);
     vertex_3d_t* vertex_data = (vertex_3d_t*)((intptr_t)binary_section + model_header->offset_vertex_data);
+    normal_t* normal_data = (normal_t*)((intptr_t)binary_section + model_header->offset_vertex_normals);
 
     // Create a model
 	model_t* model;
@@ -70,6 +71,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
         model->meshes[i].n_triangles = mesh_descriptions[i].n_triangles;
         model->meshes[i].n_quads = mesh_descriptions[i].n_quads;
         model->meshes[i].vertices = &vertex_data[mesh_descriptions[i].vertex_start];
+        model->meshes[i].normals = &normal_data[mesh_descriptions[i].vertex_start];
         model->meshes[i].bounds.min.x = mesh_descriptions[i].x_min;
         model->meshes[i].bounds.max.x = mesh_descriptions[i].x_max;
         model->meshes[i].bounds.min.y = mesh_descriptions[i].y_min;
@@ -81,7 +83,9 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
         // Convert quads to triangles
         mesh_t* mesh = &model->meshes[i];
         vertex_3d_t* new_verts = mem_alloc(((mesh->n_triangles * 3) + (mesh->n_quads * 6)) * sizeof(vertex_3d_t), MEM_CAT_MODEL);
+        normal_t* new_normals = mem_alloc(((mesh->n_triangles * 3) + (mesh->n_quads * 6)) * sizeof(normal_t), MEM_CAT_MODEL);
 
+        // todo: generate normals
         // Copy the vertex texture ids to each vertex instead of just the first. OpenGL is annoying about this.
         size_t k = 0;
         size_t l = 0;
@@ -91,6 +95,9 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
             new_verts[l + 0] = mesh->vertices[k + 0];
             new_verts[l + 1] = mesh->vertices[k + 1];
             new_verts[l + 2] = mesh->vertices[k + 2];
+            if (model_header->offset_vertex_normals != 0xFFFFFFFF) new_normals[l + 0] = mesh->normals[k + 0];
+            if (model_header->offset_vertex_normals != 0xFFFFFFFF) new_normals[l + 1] = mesh->normals[k + 1];
+            if (model_header->offset_vertex_normals != 0xFFFFFFFF) new_normals[l + 2] = mesh->normals[k + 2];
             k += 3;
             l += 3;
         }
@@ -101,17 +108,26 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
             new_verts[l + 0] = mesh->vertices[k + 0];
             new_verts[l + 1] = mesh->vertices[k + 1];
             new_verts[l + 2] = mesh->vertices[k + 2];
+            if (model_header->offset_vertex_normals != 0xFFFFFFFF) new_normals[l + 0] = mesh->normals[k + 0];
+            if (model_header->offset_vertex_normals != 0xFFFFFFFF) new_normals[l + 1] = mesh->normals[k + 1];
+            if (model_header->offset_vertex_normals != 0xFFFFFFFF) new_normals[l + 2] = mesh->normals[k + 2];
             new_verts[l + 3] = mesh->vertices[k + 2];
             new_verts[l + 4] = mesh->vertices[k + 1];
             new_verts[l + 5] = mesh->vertices[k + 3];
+            if (model_header->offset_vertex_normals != 0xFFFFFFFF) new_normals[l + 3] = mesh->normals[k + 2];
+            if (model_header->offset_vertex_normals != 0xFFFFFFFF) new_normals[l + 4] = mesh->normals[k + 1];
+            if (model_header->offset_vertex_normals != 0xFFFFFFFF) new_normals[l + 5] = mesh->normals[k + 3];
             k += 4;
             l += 6;
         }
         mesh->vertices = new_verts;
+        mesh->normals = new_normals;
         mesh->n_triangles += mesh->n_quads * 2;
         mesh->n_quads = 0;
+        mesh->vbo_vertices = 0;
+        mesh->vbo_normals = 0;
+        mesh->vao = 0;
     }
-    printf("done with model %s\n", path);
     return model;
 }
 
