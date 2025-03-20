@@ -1,4 +1,4 @@
-# Blender 4.2.3 LTS MTL File: 'level.blend'
+# Blender 4.4.0 MTL File: 'level.blend'
 # www.blender.org
 
 newmtl blue_concrete
@@ -340,6 +340,16 @@ Ni 1.450000
 d 1.000000
 illum 2
 map_Kd level_tex/wall_with_bottom.png
+
+newmtl wall_with_sides
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd level_tex/wall_with_sides.png
 
 newmtl yellow_board
 Ns 0.000000
