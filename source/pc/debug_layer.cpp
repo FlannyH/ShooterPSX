@@ -788,6 +788,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             renderer_draw_mesh_shaded(&gizmos->meshes[(size_t)curr_level->lights[i].type-1], &trans, 0, 1, GIZMO_TEXTURE_OFFSET);
         }
     }
+    renderer_update_lights(curr_level->lights, curr_level->n_lights);
 
     // Text editor window
     ImGui::Begin("Text editor", NULL, ImGuiWindowFlags_None);

@@ -71,6 +71,13 @@ GLuint picking_fb_texture;
 int drawing_id = 255;
 int drawing_what = 0; // 0 = nothing, 1 = entity, 2 = light
 
+struct {
+	vec3 direction_position;
+	float intensity;
+	vec3 color;
+	float type;
+} converted_lights[MAX_LIGHT_COUNT];
+
 typedef enum { vertex, pixel, geometry, compute } ShaderType;
 
 static void DebugCallbackFunc(GLenum source, GLenum type, GLuint id,
@@ -639,6 +646,26 @@ void renderer_update_window_res(int width, int height) {
 	render_w = width;
 	render_h = height;
 	aspect = (float)width / (float)height;
+}
+
+void renderer_update_lights(const light_t* const lights, const size_t n_lights) {
+	size_t i = 0;
+	while (i < n_lights && i < MAX_LIGHT_COUNT) {
+		converted_lights[i].direction_position[0] = (float)lights[i].direction_position.x / ONE;
+		converted_lights[i].direction_position[1] = (float)lights[i].direction_position.y / ONE;
+		converted_lights[i].direction_position[2] = (float)lights[i].direction_position.z / ONE;
+		converted_lights[i].intensity = (float)lights[i].intensity / 256.0f;
+		converted_lights[i].color[0] = (float)lights[i].color_r / 255.0f;
+		converted_lights[i].color[1] = (float)lights[i].color_g / 255.0f;
+		converted_lights[i].color[2] = (float)lights[i].color_b / 255.0f;
+		converted_lights[i].type = (float)lights[i].type;
+		++i;
+	}
+
+	while (i < MAX_LIGHT_COUNT) {
+		converted_lights[i].type = 0.0f;
+		++i;
+	}
 }
 #endif
 
