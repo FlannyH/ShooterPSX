@@ -26,4 +26,4 @@ Nodes are stored contiguously as one big array. The array does not need to speci
 ## Visibility List
 | Type | Name             | Description                                                                           |
 | ---- | ---------------- | ------------------------------------------------------------------------------------- |
-| u128 | visible_sections | Bitfield of 128 sections, where 0 means not visible, and 1 means visible. Low Endian. |
+| u128 | visible_sections | Bitfield of 128 sections, where 0 means not visible, and 1 means visible. Little Endian. |

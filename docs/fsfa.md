@@ -27,7 +27,7 @@ The very first item in the list must be a folder named `root`. If the first item
 
 For files, `offset` is an offset into the binary section, pointing to the file contents. For folders, `offset` represents an index into the items array, pointing to the first item in the folder. Each item in the folder is stored consecutively. For example, if `offset` is 5 and `size` is 4, the items contained in the folder would be indices 5, 6, 7, and 8.
 
-For CD-based systems like the PS1, it may be worth aligning the start of the item's data to a multiple of the sector size in bytes (e.g. 2048 bytes) if the item is big enough, like with big files. For smaller files you might want to pack multiple together into one sector.
+For CD-based systems like the PS1, it may be worth aligning the start of the item's data to a multiple of the sector size in bytes (e.g. 2048 bytes) if the item is big enough. For smaller files you might want to pack multiple together into one sector.
 
 If an item's name is shorter than 12 characters, or the extension is shorter than 3 characters, its string should be null terminated. Any characters after the null terminator will be ignored. An example of a file name and extension could be `"document\0"`, `"txt"`.
 
