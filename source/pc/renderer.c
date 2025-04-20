@@ -77,6 +77,7 @@ struct {
 	vec3 color;
 	float type;
 } converted_lights[MAX_LIGHT_COUNT];
+GLuint light_buffer_gpu;
 
 typedef enum { vertex, pixel, geometry, compute } ShaderType;
 
@@ -333,6 +334,9 @@ void renderer_init(void) {
 	glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
     mem_free(random_data);
+
+	// Generate gpu light buffer
+	glGenBuffers(1, &light_buffer_gpu);
 
 	// Generate fbo
 	glGenFramebuffers(1, &fbo);
@@ -650,22 +654,30 @@ void renderer_update_window_res(int width, int height) {
 
 void renderer_update_lights(const light_t* const lights, const size_t n_lights) {
 	size_t i = 0;
-	while (i < n_lights && i < MAX_LIGHT_COUNT) {
-		converted_lights[i].direction_position[0] = (float)lights[i].direction_position.x / ONE;
-		converted_lights[i].direction_position[1] = (float)lights[i].direction_position.y / ONE;
-		converted_lights[i].direction_position[2] = (float)lights[i].direction_position.z / ONE;
-		converted_lights[i].intensity = (float)lights[i].intensity / 256.0f;
-		converted_lights[i].color[0] = (float)lights[i].color_r / 255.0f;
-		converted_lights[i].color[1] = (float)lights[i].color_g / 255.0f;
-		converted_lights[i].color[2] = (float)lights[i].color_b / 255.0f;
-		converted_lights[i].type = (float)lights[i].type;
-		++i;
+	while (i < MAX_LIGHT_COUNT) {
+		if (lights[i].type != LIGHT_NONE) {
+			converted_lights[i].direction_position[0] = (float)(lights[i].direction_position.x) / ONE;
+			converted_lights[i].direction_position[1] = (float)(lights[i].direction_position.y) / ONE;
+			converted_lights[i].direction_position[2] = (float)(lights[i].direction_position.z) / ONE;
+			converted_lights[i].intensity = (float)(lights[i].intensity) / 256.0f;
+			converted_lights[i].color[0] = (float)(lights[i].color_r) / 255.0f;
+			converted_lights[i].color[1] = (float)(lights[i].color_g) / 255.0f;
+			converted_lights[i].color[2] = (float)(lights[i].color_b) / 255.0f;
+			converted_lights[i].type = (float)lights[i].type;
+			++i;
+		}
+		else {
+			converted_lights[i].type = 0.0f;
+			++i;
+		}
 	}
 
 	while (i < MAX_LIGHT_COUNT) {
-		converted_lights[i].type = 0.0f;
-		++i;
 	}
+	
+	glBindBuffer(GL_UNIFORM_BUFFER, light_buffer_gpu);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(converted_lights), converted_lights, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 #endif
 
