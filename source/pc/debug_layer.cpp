@@ -94,6 +94,20 @@ void inspect_vec3(vec3_t* vec, const char* label) {
     }
 }
 
+void inspect_svec3_4_12(svec3_t* vec, const char* label) {
+    float vec_float[] =  {
+        vec->x,
+        vec->y,
+        vec->z,
+    };
+
+    if (ImGui::DragFloat3(label, vec_float)) {
+        vec->x = (int16_t)vec_float[0]; 
+        vec->y = (int16_t)vec_float[1]; 
+        vec->z = (int16_t)vec_float[2]; 
+    }
+}
+
 void inspect_scalar(scalar_t* scalar, const char* label) {
     float scalar_float = scalar_to_float(*scalar);
 
@@ -238,8 +252,24 @@ void inspect_entity(size_t entity_id) {
 }
 
 void inspect_light(level_t* curr_level, size_t light_id) {
-    const uint8_t light_type = entity_get_type(light_id);
+    const uint8_t light_type = curr_level->lights[light_id].type;
     if (light_type == LIGHT_NONE) return;
+
+    inspect_svec3_4_12(&curr_level->lights[light_id].direction_position, (light_type == LIGHT_DIRECTIONAL)? "Direction" : "Position");
+    float intensity = (curr_level->lights[light_id].intensity) / 256.0f;
+    if (ImGui::DragFloat("Intensity", &intensity, 0.05, 0.0f, 127.0f)) {
+        curr_level->lights[light_id].intensity = (int16_t)(intensity * 256.0);
+    }
+    float color[3] = {
+        ((float)curr_level->lights[light_id].color_r) / 255.0,
+        ((float)curr_level->lights[light_id].color_g) / 255.0,
+        ((float)curr_level->lights[light_id].color_b) / 255.0,
+    };
+    if (ImGui::ColorPicker3("Color", color)) {
+        curr_level->lights[light_id].color_r = (color[0] * 255.0);
+        curr_level->lights[light_id].color_g = (color[1] * 255.0);
+        curr_level->lights[light_id].color_b = (color[2] * 255.0);
+    }
 
     if (ImGui::Button("Delete")) {
         curr_level->lights[light_id].type = LIGHT_NONE;

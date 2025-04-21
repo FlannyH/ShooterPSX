@@ -567,6 +567,9 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 	}
 
 	glUseProgram(shader_gouraud);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, light_buffer_gpu);
+	unsigned int lights_index = glGetUniformBlockIndex(shader_gouraud, "Lights");   
+	glUniformBlockBinding(shader_gouraud, lights_index, 0);
 	glBindTexture(GL_TEXTURE_2D, textures);
 	glBindVertexArray(mesh->vao);
 
@@ -616,6 +619,7 @@ void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_tran
 	glUniform1i(glGetUniformLocation(shader_gouraud, "edge_behavior"), 0);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "drawing_id"), drawing_id);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "drawing_what"), drawing_what);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "vertex_lighting"), 0);
 	glUniform1f(glGetUniformLocation(shader_gouraud, "alpha"), 1.0f);
 
 	// Enable depth, culling
