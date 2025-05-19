@@ -471,18 +471,7 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 	float clear_color1[] = { 0.0f, 0.0f, 0.0f, 0.0f}; glClearBufferfv(GL_COLOR, 1, clear_color1);
 	glClearDepth(1.0); glClear(GL_DEPTH_BUFFER_BIT);
 
-#ifndef _LEVEL_EDITOR
-    if (input_held(PAD_SQUARE, 0)) {
-        memcpy(view_matrix, view_matrix_topdown, sizeof(view_matrix_topdown));
-    }
-    else if (input_held(PAD_TRIANGLE, 0)) {
-        memcpy(view_matrix, view_matrix_third_person, sizeof(view_matrix_third_person));
-    }
-    else 
-#endif
-	{
-        memcpy(view_matrix, view_matrix_normal, sizeof(view_matrix_normal));
-    }
+	memcpy(view_matrix, view_matrix_normal, sizeof(view_matrix_normal));
 
 	camera_dir.x = -view_matrix_normal[2][0] * 4096.f;
 	camera_dir.y = -view_matrix_normal[2][1] * 4096.f;
@@ -519,8 +508,9 @@ void renderer_end_frame(void) {
 }
 
 int32_t max_dot_value = 0;
-void renderer_draw_mesh_shaded(const mesh_t *mesh, const transform_t *model_transform, int local, int facing_camera, int tex_id_offset) {
+void renderer_draw_mesh_shaded(const mesh_t* mesh, const transform_t *model_transform, int local, int facing_camera, int tex_id_offset) {
 	++n_meshes_drawn;
+	printf("%s:%i - %08p\n",__FILE__, __LINE__, mesh);
 
 	// Calculate model matrix
 	mat4 model_matrix;

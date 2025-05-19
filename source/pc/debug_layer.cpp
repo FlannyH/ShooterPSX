@@ -261,14 +261,14 @@ void inspect_light(level_t* curr_level, size_t light_id) {
         curr_level->lights[light_id].intensity = (int16_t)(intensity * 256.0);
     }
     float color[3] = {
-        ((float)curr_level->lights[light_id].color_r) / 255.0,
-        ((float)curr_level->lights[light_id].color_g) / 255.0,
-        ((float)curr_level->lights[light_id].color_b) / 255.0,
+        ((float)curr_level->lights[light_id].color_r) / 255.0f,
+        ((float)curr_level->lights[light_id].color_g) / 255.0f,
+        ((float)curr_level->lights[light_id].color_b) / 255.0f,
     };
     if (ImGui::ColorPicker3("Color", color)) {
-        curr_level->lights[light_id].color_r = (color[0] * 255.0);
-        curr_level->lights[light_id].color_g = (color[1] * 255.0);
-        curr_level->lights[light_id].color_b = (color[2] * 255.0);
+        curr_level->lights[light_id].color_r = (color[0] * 255.0f);
+        curr_level->lights[light_id].color_g = (color[1] * 255.0f);
+        curr_level->lights[light_id].color_b = (color[2] * 255.0f);
     }
 
     if (ImGui::Button("Delete")) {
@@ -467,6 +467,14 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 entity_types[i] = entity_get_type(i);
             }
 
+            light_t lights[MAX_LIGHT_COUNT] = {0};
+            int n_lights = 0;
+            for (int i = 0; i < MAX_LIGHT_COUNT; ++i) {
+                if (curr_level->lights[i].type != LIGHT_NONE) {
+                    lights[n_lights++] = curr_level->lights[i];
+                }
+            }
+
             level_header_t header = {
                 .file_magic = MAGIC_FLVL,
                 .path_music_offset = (uint32_t)write_text_and_get_offset(binary_section, path_music),
@@ -478,14 +486,14 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 .path_model_lod_offset = (uint32_t)write_text_and_get_offset(binary_section, path_model_lod),
                 .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_types, (n_entities + 3) & ~0x03), // 4-byte padding
                 .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_data_serialized.data(), entity_data_serialized.size() * sizeof(entity_data_serialized[0])),
-                .light_data_offset = 0xFFFFFFFF,
+                .light_data_offset =  (uint32_t)write_data_and_get_offset(binary_section, lights, n_lights * sizeof(light_t)),
                 .level_name_offset = (uint32_t)write_text_and_get_offset(binary_section, level_name),
                 .text_offset = (uint32_t)write_data_and_get_offset(binary_section, text_data_serialized.data(), text_data_serialized.size()),
                 .n_text_entries = (uint32_t)curr_level->n_text_entries,
                 .player_spawn_position = svec3_from_vec3(player_spawn_position),
                 .player_spawn_rotation = player_spawn_rotation,
                 .n_entities = (uint16_t)n_entities,
-                .n_lights = (uint16_t)0,
+                .n_lights = (uint16_t)n_lights,
             };
 
             FILE* file = fopen(level_path, "wb");
@@ -796,7 +804,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     }
     ImGui::End();
 
-    for (size_t i = 0; i < MAX_LIGHT_COUNT && curr_level->lights; ++i) {
+    for (size_t i = 0; i < MAX_LIGHT_COUNT && curr_level->lights && i < curr_level->n_lights; ++i) {
         if (curr_level->lights[i].type != LIGHT_NONE
         && curr_level->lights[i].type != LIGHT_DIRECTIONAL) {
             transform_t trans = {
@@ -815,7 +823,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             trans.position.y /= -COL_SCALE;
             trans.position.z /= -COL_SCALE;
             renderer_set_drawing_id(i, 2);
-            renderer_draw_mesh_shaded(&gizmos->meshes[(size_t)curr_level->lights[i].type-1], &trans, 0, 1, GIZMO_TEXTURE_OFFSET);
+            renderer_draw_mesh_shaded(&gizmos->meshes[(size_t)(curr_level->lights[i].type-1)], &trans, 0, 1, GIZMO_TEXTURE_OFFSET);
         }
     }
     renderer_update_lights(curr_level->lights, curr_level->n_lights);

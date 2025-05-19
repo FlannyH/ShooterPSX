@@ -50,38 +50,39 @@ PATH_BUILD_PSX = 		  $(PATH_BUILD)/psx
 PATH_BUILD_PC = 		  $(PATH_BUILD)/pc
 PATH_BUILD_NDS = 		  $(PATH_BUILD)/nds
 PATH_BUILD_LEVEL_EDITOR = $(PATH_BUILD)/level_editor
-PATH_BUILD_LIGHT_BAKE = $(PATH_BUILD)/light_bake
+PATH_BUILD_LIGHT_BAKE   = $(PATH_BUILD)/light_bake
 PATH_LIB_PC  = $(PATH_TEMP_PC)/lib
 PATH_LIB_PSX = $(PSN00BSDK_LIBS)/release
 PATH_LIB_NDS = $(BLOCKSDS)/libs/libnds/lib
 
 # Source files shared by all targets
 CODE_ENGINE_SHARED_C = collision.c \
-					   credits.c \
-					   debug_menu_main.c \
-					   debug_menu_music.c \
-					   debug_menu_level.c \
-			  	  	   entity.c \
-					   in_game.c \
 			  	  	   level.c \
 			  	  	   memory.c \
 			  	  	   mesh.c \
 			  	  	   music.c \
-			  	  	   player.c \
 			  	  	   renderer_shared.c \
-					   title_screen.c \
-					   settings.c \
-					   pause_menu.c \
 					   texture.c \
 					   text.c \
 			  	  	   ui.c \
-			  	  	   vislist.c \
+			  	  	   entity.c \
+			  	  	   vislist.c
+
+CODE_GAME_C = 		   debug_menu_main.c \
+					   debug_menu_music.c \
+					   debug_menu_level.c \
+					   title_screen.c \
+					   pause_menu.c \
+					   settings.c \
+					   credits.c \
+					   in_game.c \
+			  	  	   player.c \
+				  	   entities/platform.c \
+				  	   entities/trigger.c \
+				  	   entities/pickup.c \
 				  	   entities/chaser.c \
 				  	   entities/crate.c \
-				  	   entities/door.c \
-				  	   entities/pickup.c \
-				  	   entities/platform.c \
-				  	   entities/trigger.c 
+				  	   entities/door.c
 
 # Source files specific to PSX
 CODE_ENGINE_PSX_C = psx/file.c \
@@ -108,11 +109,13 @@ CODE_ENGINE_NDS_C = nds/psx.c \
 				    nds/renderer.c 
 					
 # Source files used the light baker
-CODE_LIGHT_BAKE = editor/light_bake.c \
-				  nds/mesh.c \
-				  pc/file.c \
-				  memory.c \
-				  mesh.c
+CODE_ENGINE_LIGHT_BAKE_C =   editor/light_bake.c \
+				      		 nds/mesh.c \
+				      		 pc/mixer.c \
+				      		 pc/psx.c \
+				      		 pc/renderer.c \
+				      		 pc/file.c 
+CODE_ENGINE_LIGHT_BAKE_CPP = pc/debug_layer.cpp
 
 # Where the object files go
 PATH_OBJ_PSX = $(PATH_TEMP_PSX)/obj
@@ -126,16 +129,16 @@ CODE_GAME_MAIN = main.c
 CODE_LEVEL_EDITOR = editor/main.c editor/camera.c
 
 # Create code sets and object sets
-CODE_PSX_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PSX_C) 	$(CODE_GAME_MAIN)
+CODE_PSX_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PSX_C) 	$(CODE_GAME_MAIN) 		$(CODE_GAME_C)
 CODE_PSX_CPP			= $(CODE_ENGINE_SHARED_CPP) 	
-CODE_PC_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PC_C) 	$(CODE_GAME_MAIN)
+CODE_PC_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PC_C) 	$(CODE_GAME_MAIN) 		$(CODE_GAME_C)
 CODE_PC_CPP			    = $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_PC_CPP)
-CODE_NDS_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_NDS_C) 	$(CODE_GAME_MAIN)
+CODE_NDS_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_NDS_C) 	$(CODE_GAME_MAIN) 		$(CODE_GAME_C)
 CODE_NDS_CPP			= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_NDS_CPP)
-CODE_LEVEL_EDITOR_C		= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PC_C) 	$(CODE_LEVEL_EDITOR) 
+CODE_LEVEL_EDITOR_C		= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PC_C) 	$(CODE_LEVEL_EDITOR) 	$(CODE_GAME_C)
 CODE_LEVEL_EDITOR_CPP	= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_PC_CPP)
-CODE_LIGHT_BAKE_C		= $(CODE_LIGHT_BAKE) 
-CODE_LIGHT_BAKE_CPP	    = 
+CODE_LIGHT_BAKE_C		= $(CODE_ENGINE_LIGHT_BAKE_C)	$(CODE_ENGINE_SHARED_C)
+CODE_LIGHT_BAKE_CPP	    = $(CODE_ENGINE_LIGHT_BAKE_CPP)
 
 OBJ_PSX					= 	$(patsubst %.c, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_C))				\
 							$(patsubst %.cpp, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_CPP))				
@@ -225,7 +228,7 @@ mkdir_output_pc:
 	mkdir -p $(PATH_OBJ_PC)/pc
 
 submodules:
-	git submodule update --init --recursive
+	# git submodule update --init --recursive
 	
 pc_dependencies: submodules glfw gl3w imgui imguizmo portaudio
 
@@ -250,6 +253,7 @@ portaudio:
 
 OBJ_PC += $(PATH_LIB_PC)/gl3w.o
 OBJ_LEVEL_EDITOR += $(PATH_LIB_PC)/gl3w.o
+OBJ_LIGHT_BAKE += $(PATH_LIB_PC)/gl3w.o
 gl3w:
 	mkdir -p $(PATH_LIB_PC)/gl3w
 	@cmake -S external/gl3w -B $(PATH_LIB_PC)/gl3w -G "Unix Makefiles"
@@ -333,10 +337,18 @@ $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor: mkdir_output_pc pc_dependencies $(OBJ_LE
 
 $(PATH_BUILD_LIGHT_BAKE)/LightBake: mkdir_output_pc pc_dependencies $(OBJ_LIGHT_BAKE)
 	@mkdir -p $(dir $@)
+	@mkdir -p $(dir $@)/assets
 	@mkdir -p $(PATH_ASSETS)/shared
 	@mkdir -p $(PATH_ASSETS)/pc
+	@mkdir -p $(PATH_ASSETS)/light_bake
 	@echo Linking $@
 	@$(CXX) -o $@ $(OBJ_LIGHT_BAKE) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
+	@echo Copying assets
+	cp -r $(PATH_ASSETS)/shared/* $(dir $@)/assets
+	cp -r $(PATH_ASSETS)/pc/* $(dir $@)/assets
+	cp -r $(PATH_ASSETS)/level_editor/* $(dir $@)/assets
+	@echo Copying assets
+	@cp $(PATH_TEMP)/pc/assets.sfa $(dir $@)
 
 $(PATH_OBJ_PC)/%.o: $(PATH_SOURCE)/%.c
 	@mkdir -p $(dir $@)

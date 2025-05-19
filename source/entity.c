@@ -25,6 +25,7 @@ void entity_update_all(player_t* player, int dt) {
 	// Reset counters
 	entity_n_active_aabb = 0;
 
+#ifndef _LIGHT_BAKE
 	// Update all entities
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
 		switch (entity_types[i]) {
@@ -37,6 +38,7 @@ void entity_update_all(player_t* player, int dt) {
 			case ENTITY_TRIGGER: entity_trigger_update(i, player, dt); break;
 		}
 	}
+#endif
 }
 
 int entity_alloc(uint8_t entity_type) {
@@ -142,6 +144,7 @@ void entity_kill(int slot) {
 }
 
 void entity_send_player_intersect(int slot, player_t* player) {
+#ifndef _LIGHT_BAKE
 	switch (entity_types[slot]) {
 		case ENTITY_NONE: break;
 		case ENTITY_DOOR: entity_door_player_intersect(slot, player); break;
@@ -151,6 +154,7 @@ void entity_send_player_intersect(int slot, player_t* player) {
 		case ENTITY_PLATFORM: entity_platform_player_intersect(slot, player); break;
 		case ENTITY_TRIGGER: entity_trigger_player_intersect(slot, player); break;
 	}
+#endif
 }
 
 const char* entity_names[] = {

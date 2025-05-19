@@ -9,6 +9,8 @@
 #include "../mesh.h"
 #include "../vec2.h"
 #include "../vec3.h"
+#include <level.h>
+#include <main.h>
 
 #pragma pack(push, 1)
 typedef struct {
@@ -57,8 +59,12 @@ typedef struct {
     rect16_t rect;
 } lightmap_polygon_metadata_t;
 
+state_vars_t state;
+int widescreen = 0;
+
 int main(int argc, const char** argv) {
     mem_init();
+    renderer_init();
 
     if (argc < 2 || argc > 5) {
         printf("Usage: lightmap_generator.exe <path/to/mesh.msh> [lightmap resolution, default 1024] [store to vertex colors, default true] [lightmap space per texel, default 16]\n");
@@ -66,7 +72,7 @@ int main(int argc, const char** argv) {
     }
 
     // const char* path = argv[1];
-    const char* path = "D:/Projects/Git/ShooterPSX/assets/shared/models/level.msh";
+    const char* path = "D:/Projects/Git/ShooterPSX/assets/shared/levels/level1.lvl";
     int lightmap_resolution = 1024;
     float lightmap_space_per_texel = 25.93775;
     bool store_to_vertex_colors = true;
@@ -87,20 +93,30 @@ int main(int argc, const char** argv) {
 
     pixel32_t* lightmap = mem_alloc(lightmap_resolution * lightmap_resolution * sizeof(pixel32_t), MEM_CAT_TEXTURE);
     memset(lightmap, 0xFF, lightmap_resolution * lightmap_resolution * sizeof(pixel32_t));
-    const model_t* const model = model_load(path, 0, 0, 0, 0);
+    // const model_t* const model = model_load(path, 0, 0, 0, 0);
+    
+    printf("level\n");
+    state.in_game.level = level_load(path);
+    printf("level done\n");
+    const model_t* const model = state.in_game.level.graphics;
+    printf("%08p\n", model);
 
     // How many polygons do we have? We need to know this for some helper arrays
     int n_triangles_total = 0;
     int n_quads_total = 0;
+    printf("%s:%i\n", __FILE__, __LINE__);
     for (int mesh_i = 0; mesh_i < model->n_meshes; ++mesh_i) {
         n_triangles_total += model->meshes[mesh_i].n_triangles;
         n_quads_total += model->meshes[mesh_i].n_quads;
     }
+    printf("%s:%i\n", __FILE__, __LINE__);
     const int n_polygons_total = n_triangles_total + n_quads_total;
 
     // Figure out rectangle sizes in lightmap for each polygon
     lightmap_polygon_metadata_t* lm_meta = mem_alloc(n_polygons_total * sizeof(lightmap_polygon_metadata_t), MEM_CAT_UNDEFINED);
-    size_t lm_meta_cursor = 0;
+    size_t lm_meta_cursor = 0;    
+    printf("%s:%i\n", __FILE__, __LINE__);
+
 
     for (int mesh_i = 0; mesh_i < model->n_meshes; ++mesh_i) {
         const mesh_t* const mesh = &model->meshes[mesh_i];
@@ -113,6 +129,7 @@ int main(int argc, const char** argv) {
             const vertex_3d_t* const vtx0 = &triangles[(tri_i * 3) + 0];
             const vertex_3d_t* const vtx1 = &triangles[(tri_i * 3) + 1];
             const vertex_3d_t* const vtx2 = &triangles[(tri_i * 3) + 2];
+            if (vtx0->tex_id == 254) continue; // skip occluders
             const vec3 pos0 = { vtx0->x, vtx0->y, vtx0->z };
             const vec3 pos1 = { vtx1->x, vtx1->y, vtx1->z };
             const vec3 pos2 = { vtx2->x, vtx2->y, vtx2->z };
@@ -143,6 +160,7 @@ int main(int argc, const char** argv) {
             const vertex_3d_t* const vtx1 = &quads[(quad_i * 4) + 1];
             const vertex_3d_t* const vtx2 = &quads[(quad_i * 4) + 2];
             const vertex_3d_t* const vtx3 = &quads[(quad_i * 4) + 3];
+            if (vtx0->tex_id == 254) continue; // skip occluders
             const vec3 pos0 = { vtx0->x, vtx0->y, vtx0->z };
             const vec3 pos1 = { vtx1->x, vtx1->y, vtx1->z };
             const vec3 pos2 = { vtx2->x, vtx2->y, vtx2->z };
@@ -160,13 +178,14 @@ int main(int argc, const char** argv) {
             lm_meta[lm_meta_cursor] = (lightmap_polygon_metadata_t) {
                 .mesh_id = mesh_i,
                 .first_vertex_id = (mesh->n_triangles * 3) + (quad_i * 4),
-                .is_quad = false,
+                .is_quad = true,
                 .rect.width = u_pixels,
                 .rect.height = v_pixels,
             };
             ++lm_meta_cursor;
         }
     }
+    printf("%s:%i\n", __FILE__, __LINE__);
 
     // Create index buffer
     int* lm_meta_indices = mem_alloc(n_polygons_total * sizeof(int), MEM_CAT_UNDEFINED);
@@ -187,6 +206,8 @@ int main(int argc, const char** argv) {
             }
         }
     }
+
+    printf("before place\n");
 
     // Place the polygon rectangles in the lightmap texture
     int x_cursor = 0;
@@ -322,25 +343,167 @@ int main(int argc, const char** argv) {
         }
     }
 
-    // debug
+    // Direct light
+    const light_t* const lights = state.in_game.level.lights;
+    const model_t* const graphics = state.in_game.level.graphics;
+
+    printf("before lights\n");
+
     for (int i = 0; i < n_polygons_total; ++i) {
         const int index = lm_meta_indices[i];
-        printf("(%4i, %4i) -> (%4i, %4i)\n", 
-            lm_meta[index].rect.left, 
-            lm_meta[index].rect.top, 
-            lm_meta[index].rect.left + lm_meta[index].rect.width - 1, 
-            lm_meta[index].rect.top + lm_meta[index].rect.height - 1
-        );
+        // printf("(%4i, %4i) -> (%4i, %4i)\n", 
+            // lm_meta[index].rect.left, 
+            // lm_meta[index].rect.top, 
+            // lm_meta[index].rect.left + lm_meta[index].rect.width - 1, 
+            // lm_meta[index].rect.top + lm_meta[index].rect.height - 1
+        // );
 
         for (int y = lm_meta[index].rect.top; y < lm_meta[index].rect.top + lm_meta[index].rect.height; ++y) {
-            for (int x = lm_meta[index].rect.left; x < lm_meta[index].rect.left + lm_meta[index].rect.width; ++x) {   
-                lightmap[x + (y * lightmap_resolution)].b = (index) % 256;
-                lightmap[x + (y * lightmap_resolution)].g = (index / 256) % 256;
-                lightmap[x + (y * lightmap_resolution)].r += 1; // overflows to 0. if the red channel has any values above 0 we're fucked
+            for (int x = lm_meta[index].rect.left; x < lm_meta[index].rect.left + lm_meta[index].rect.width; ++x) {  
+                const vertex_3d_t* const vtx = &graphics->meshes[lm_meta[index].mesh_id].vertices[lm_meta[index].first_vertex_id];
+                const normal_t* const normal = &graphics->meshes[lm_meta[index].mesh_id].normals[lm_meta[index].first_vertex_id];
+
+                vec3 direct_light_contribution = {0.0f, 0.0f, 0.0f};
+                vec3 pos;
+                vec3 nrm;
+
+                if (lm_meta[index].is_quad) {
+                    printf("quad: ");
+                    // Fetch 4 vertices data
+                    const vec3 pos_v0 = {(float)vtx[0].x, (float)vtx[0].y, (float)vtx[0].z};
+                    const vec3 pos_v1 = {(float)vtx[1].x, (float)vtx[1].y, (float)vtx[1].z};
+                    const vec3 pos_v2 = {(float)vtx[2].x, (float)vtx[2].y, (float)vtx[2].z};
+                    const vec3 pos_v3 = {(float)vtx[3].x, (float)vtx[3].y, (float)vtx[3].z};
+                    const vec3 nrm_v0 = {(float)normal[0].x / 127.0f, (float)normal[0].y / 127.0f, (float)normal[0].z / 127.0f};
+                    const vec3 nrm_v1 = {(float)normal[1].x / 127.0f, (float)normal[1].y / 127.0f, (float)normal[1].z / 127.0f};
+                    const vec3 nrm_v2 = {(float)normal[2].x / 127.0f, (float)normal[2].y / 127.0f, (float)normal[2].z / 127.0f};
+                    const vec3 nrm_v3 = {(float)normal[3].x / 127.0f, (float)normal[3].y / 127.0f, (float)normal[3].z / 127.0f};
+
+                    // Bi-linear interpolation
+                    const float u = (float)(x - lm_meta->rect.left) / (float)lm_meta->rect.width;
+                    const float v = (float)(y - lm_meta->rect.top) / (float)lm_meta->rect.height;
+                    vec3 pos_v0v1;
+                    vec3 pos_v2v3;
+                    vec3 nrm_v0v1;
+                    vec3 nrm_v2v3;
+
+                    glm_vec3_sub(pos_v1, pos_v0, pos_v0v1); // pos_v0v1
+                    glm_vec3_mul(pos_v0v1, (vec3){v, v, v}, pos_v0v1);
+                    glm_vec3_add(pos_v0, pos_v0v1, pos_v0v1);
+                    glm_vec3_sub(pos_v3, pos_v2, pos_v2v3); // pos_v2v3
+                    glm_vec3_mul(pos_v2v3, (vec3){v, v, v}, pos_v2v3);
+                    glm_vec3_add(pos_v2, pos_v2v3, pos_v2v3);
+                    glm_vec3_sub(pos_v2v3, pos_v0v1, pos); // pos (v01->v23)
+                    glm_vec3_mul(pos, (vec3){u, u, u}, pos);
+                    glm_vec3_add(pos_v0v1, pos, pos);
+                    glm_vec3_divs(pos, 4096.0f, pos);
+                    
+                    glm_vec3_sub(nrm_v1, nrm_v0, nrm_v0v1); // nrm_v0v1
+                    glm_vec3_mul(nrm_v0v1, (vec3){v, v, v}, nrm_v0v1);
+                    glm_vec3_add(nrm_v0, nrm_v0v1, nrm_v0v1);
+                    glm_vec3_sub(nrm_v3, nrm_v2, nrm_v2v3); // nrm_v2v3
+                    glm_vec3_mul(nrm_v2v3, (vec3){v, v, v}, nrm_v2v3);
+                    glm_vec3_add(nrm_v2, nrm_v2v3, nrm_v2v3);
+                    glm_vec3_sub(nrm_v2v3, nrm_v0v1, nrm); // nrm
+                    glm_vec3_mul(nrm_v0v1, (vec3){u, u, u}, nrm);
+                    glm_vec3_add(nrm_v0v1, nrm, nrm);
+                    glm_vec3_normalize(nrm);
+                }
+                else {
+                    printf("tri:  ");
+                    // Fetch 3 vertices data
+                    const vec3 pos_v0 = {(float)vtx[0].x, (float)vtx[0].y, (float)vtx[0].z};
+                    const vec3 pos_v1 = {(float)vtx[1].x, (float)vtx[1].y, (float)vtx[1].z};
+                    const vec3 pos_v2 = {(float)vtx[2].x, (float)vtx[2].y, (float)vtx[2].z};
+                    const vec3 nrm_v0 = {(float)normal[0].x / 127.0f, (float)normal[0].y / 127.0f, (float)normal[0].z / 127.0f};
+                    const vec3 nrm_v1 = {(float)normal[1].x / 127.0f, (float)normal[1].y / 127.0f, (float)normal[1].z / 127.0f};
+                    const vec3 nrm_v2 = {(float)normal[2].x / 127.0f, (float)normal[2].y / 127.0f, (float)normal[2].z / 127.0f};
+                    const float u = (float)(x - lm_meta->rect.left) / (float)lm_meta->rect.width;
+                    const float v = (float)(y - lm_meta->rect.top) / (float)lm_meta->rect.height;
+                    vec3 pos_v0v2; // u
+                    vec3 pos_v0v1; // v
+                    vec3 nrm_v0v2; // u
+                    vec3 nrm_v0v1; // v
+                    glm_vec3_sub(pos_v2, pos_v0, pos_v0v2);
+                    glm_vec3_sub(pos_v1, pos_v0, pos_v0v1);
+                    glm_vec3_copy(pos_v0, pos);
+                    glm_vec3_muladds(pos_v0v2, u, pos);
+                    glm_vec3_muladds(pos_v0v1, v, pos);
+                    glm_vec3_divs(pos, 4096.0f, pos);
+                    glm_vec3_sub(nrm_v2, nrm_v0, nrm_v0v2);
+                    glm_vec3_sub(nrm_v1, nrm_v0, nrm_v0v1);
+                    glm_vec3_copy(nrm_v0, nrm);
+                    glm_vec3_muladds(nrm_v0v2, u, nrm);
+                    glm_vec3_muladds(nrm_v0v1, v, nrm);
+                }
+
+                // Direct lighting
+                for (int li = 0; li < state.in_game.level.n_lights; ++li) {
+                    const light_t* const light = &state.in_game.level.lights[li];
+                    if (light->type == LIGHT_DIRECTIONAL) {
+                        // direct_light_contribution += light_color * intensity * n_dot_l
+                        vec3 l = {
+                            (float)light->direction_position.x / 4096.0f,
+                            (float)light->direction_position.y / 4096.0f,
+                            (float)light->direction_position.z / 4096.0f,
+                        };
+                        glm_vec3_normalize(l);
+                        vec3 color = {
+                            ((float)light->color_r / 255.0f) * ((float)light->intensity / 256.0f),
+                            ((float)light->color_g / 255.0f) * ((float)light->intensity / 256.0f),
+                            ((float)light->color_b / 255.0f) * ((float)light->intensity / 256.0f),
+                        };
+                        const float n_dot_l = glm_clamp(glm_vec3_dot(nrm, l), 0.0f, 1.0f);
+                        vec3 v3_n_dot_l = { n_dot_l, n_dot_l, n_dot_l };
+                        vec3 light = {0};
+                        glm_vec3_mul(color, v3_n_dot_l, light);
+                        glm_vec3_add(light, direct_light_contribution, direct_light_contribution);
+                    }
+                    else if (light->type == LIGHT_POINT) {
+                        // direct_light_contribution += (light_color * intensity * n_dot_l) / distance^2
+                        vec3 light_pos = {
+                            (float)light->direction_position.x / -512.0f,
+                            (float)light->direction_position.y / -512.0f,
+                            (float)light->direction_position.z / -512.0f,
+                        };
+                        vec3 color = {
+                            ((float)light->color_r / 255.0f) * ((float)light->intensity / 256.0f),
+                            ((float)light->color_g / 255.0f) * ((float)light->intensity / 256.0f),
+                            ((float)light->color_b / 255.0f) * ((float)light->intensity / 256.0f),
+                        };
+                        vec3 l = {0};
+                        glm_vec3_sub(light_pos, pos, l);
+                        l[0] = -l[0];
+                        l[1] = -l[1];
+                        glm_vec3_normalize(l);
+                        const float distance_sq = glm_vec3_distance2(light_pos, pos);
+                        const float n_dot_l = glm_clamp(glm_vec3_dot(nrm, l), 0.0f, 1.0f);
+                        vec3 v3_n_dot_l = { n_dot_l, n_dot_l, n_dot_l };
+                        vec3 light = {0};
+                        glm_vec3_mul(color, v3_n_dot_l, light);
+                        glm_vec3_divs(light, distance_sq, light);
+                        glm_vec3_clamp(light, 0.0f, 255.f/128.f);
+                        glm_vec3_add(light, direct_light_contribution, direct_light_contribution);
+                        printf("light_pos: %.3f, %.3f. %.3f\t", light_pos[0], light_pos[1], light_pos[2]);
+                        printf("pos: %.3f, %.3f. %.3f\t", pos[0], pos[1], pos[2]);
+                        printf("(%s)\n", graphics->meshes[lm_meta[index].mesh_id].name);
+                    }
+                }
+
+                // printf("direct_light_contribution = {%.3f, %.3f, %.3f}\n",  direct_light_contribution[0], direct_light_contribution[1], direct_light_contribution[2]);
+
+                // lightmap[x + (y * lightmap_resolution)].b = (index) % 256;
+                // lightmap[x + (y * lightmap_resolution)].g = (index / 256) % 256;
+                // lightmap[x + (y * lightmap_resolution)].r += 1; // overflows to 0. if the red channel has any values above 0 we're fucked
+                lightmap[x + (y * lightmap_resolution)].r = (uint8_t)(direct_light_contribution[0] * 128.0f);
+                lightmap[x + (y * lightmap_resolution)].g = (uint8_t)(direct_light_contribution[1] * 128.0f);
+                lightmap[x + (y * lightmap_resolution)].b = (uint8_t)(direct_light_contribution[2] * 128.0f);
                 lightmap[x + (y * lightmap_resolution)].a = 255;
             }   
         }
     }
+
+    printf("writing bmp\n");
 
     bmp_header_t bmp_header = {0};
     bmp_header.file_header.bf_type = 0x4D42;

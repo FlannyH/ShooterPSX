@@ -28,6 +28,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
     void* binary_section = &model_header[1];
     const mesh_desc_t* mesh_descriptions = (mesh_desc_t*)((intptr_t)binary_section + model_header->offset_mesh_desc);
     vertex_3d_t* vertex_data = (vertex_3d_t*)((intptr_t)binary_section + model_header->offset_vertex_data);
+    normal_t* normals = (normal_t*)((intptr_t)binary_section + model_header->offset_vertex_normals);
 
     // Create a model object
 	model_t* model;
@@ -71,6 +72,11 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
         model->meshes[i].n_triangles = mesh_descriptions[i].n_triangles;
         model->meshes[i].n_quads = mesh_descriptions[i].n_quads;
         model->meshes[i].vertices = &vertex_data[mesh_descriptions[i].vertex_start];
+        if (normals) {
+            model->meshes[i].normals = &normals[mesh_descriptions[i].vertex_start];
+        } else {
+            model->meshes[i].normals = NULL;
+        }
         model->meshes[i].bounds.min.x = mesh_descriptions[i].x_min;
         model->meshes[i].bounds.max.x = mesh_descriptions[i].x_max;
         model->meshes[i].bounds.min.y = mesh_descriptions[i].y_min;
