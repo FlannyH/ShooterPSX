@@ -9,6 +9,7 @@
 #include "../mesh.h"
 #include "../vec2.h"
 #include "../vec3.h"
+#include "../file.h"
 #include <level.h>
 #include <main.h>
 
@@ -66,29 +67,31 @@ int main(int argc, const char** argv) {
     mem_init();
     renderer_init();
 
-    if (argc < 2 || argc > 5) {
-        printf("Usage: lightmap_generator.exe <path/to/mesh.msh> [lightmap resolution, default 1024] [store to vertex colors, default true] [lightmap space per texel, default 16]\n");
+    if (argc < 3 || argc > 6) {
+        printf("Usage: lightmap_generator.exe <path/to/level.lvl> <path/to/level_model.msh> [lightmap resolution, default 1024] [store to vertex colors, default true] [lightmap space per texel, default 16]\n");
         // return 1;
     }
 
-    // const char* path = argv[1];
-    const char* path = "D:/Projects/Git/ShooterPSX/assets/shared/levels/level1.lvl";
+    const char* path = argv[1];
+    const char* model_out_path = argv[2];
+    // const char* path = "D:/Projects/Git/ShooterPSX/assets/shared/levels/level1.lvl";
     int lightmap_resolution = 1024;
     float lightmap_space_per_texel = 25.93775;
     bool store_to_vertex_colors = true;
 
-    if (argc >= 3) {
-        lightmap_resolution = strtol(argv[2], NULL, 10);
-    }
-
     if (argc >= 4) {
-        if (strcmp(argv[3], "true") == 0) { store_to_vertex_colors = true; }
-        else if (strcmp(argv[3], "false") == 0) { store_to_vertex_colors = false; }
-        else { printf("Invalid argument \"%s\", expected \"true\" or \"false\"\n", argv[3]); return 2; }
+        lightmap_resolution = strtol(argv[3], NULL, 10);
+    }
+    printf("lightmap_resolution: %s\n", argv[3]);
+
+    if (argc >= 5) {
+        if (strcmp(argv[4], "true") == 0) { store_to_vertex_colors = true; }
+        else if (strcmp(argv[4], "false") == 0) { store_to_vertex_colors = false; }
+        else { printf("Invalid argument \"%s\", expected \"true\" or \"false\"\n", argv[4]); return 2; }
     }
 
-    if (argc == 5) {
-        lightmap_space_per_texel = strtof(argv[4], NULL);
+    if (argc == 6) {
+        lightmap_space_per_texel = strtof(argv[5], NULL);
     }
 
     pixel32_t* lightmap = mem_alloc(lightmap_resolution * lightmap_resolution * sizeof(pixel32_t), MEM_CAT_TEXTURE);
@@ -364,11 +367,10 @@ int main(int argc, const char** argv) {
                 const normal_t* const normal = &graphics->meshes[lm_meta[index].mesh_id].normals[lm_meta[index].first_vertex_id];
 
                 vec3 direct_light_contribution = {0.0f, 0.0f, 0.0f};
-                vec3 pos;
-                vec3 nrm;
+                vec3 pos = {0};
+                vec3 nrm = {0};
 
                 if (lm_meta[index].is_quad) {
-                    printf("quad: ");
                     // Fetch 4 vertices data
                     const vec3 pos_v0 = {(float)vtx[0].x, (float)vtx[0].y, (float)vtx[0].z};
                     const vec3 pos_v1 = {(float)vtx[1].x, (float)vtx[1].y, (float)vtx[1].z};
@@ -380,8 +382,8 @@ int main(int argc, const char** argv) {
                     const vec3 nrm_v3 = {(float)normal[3].x / 127.0f, (float)normal[3].y / 127.0f, (float)normal[3].z / 127.0f};
 
                     // Bi-linear interpolation
-                    const float u = (float)(x - lm_meta->rect.left) / (float)lm_meta->rect.width;
-                    const float v = (float)(y - lm_meta->rect.top) / (float)lm_meta->rect.height;
+                    const float u = (float)(x - lm_meta[index].rect.left) / (float)(lm_meta[index].rect.width - 1);
+                    const float v = (float)(y - lm_meta[index].rect.top) / (float)(lm_meta[index].rect.height - 1);
                     vec3 pos_v0v1;
                     vec3 pos_v2v3;
                     vec3 nrm_v0v1;
@@ -390,9 +392,11 @@ int main(int argc, const char** argv) {
                     glm_vec3_sub(pos_v1, pos_v0, pos_v0v1); // pos_v0v1
                     glm_vec3_mul(pos_v0v1, (vec3){v, v, v}, pos_v0v1);
                     glm_vec3_add(pos_v0, pos_v0v1, pos_v0v1);
+
                     glm_vec3_sub(pos_v3, pos_v2, pos_v2v3); // pos_v2v3
                     glm_vec3_mul(pos_v2v3, (vec3){v, v, v}, pos_v2v3);
                     glm_vec3_add(pos_v2, pos_v2v3, pos_v2v3);
+
                     glm_vec3_sub(pos_v2v3, pos_v0v1, pos); // pos (v01->v23)
                     glm_vec3_mul(pos, (vec3){u, u, u}, pos);
                     glm_vec3_add(pos_v0v1, pos, pos);
@@ -410,7 +414,6 @@ int main(int argc, const char** argv) {
                     glm_vec3_normalize(nrm);
                 }
                 else {
-                    printf("tri:  ");
                     // Fetch 3 vertices data
                     const vec3 pos_v0 = {(float)vtx[0].x, (float)vtx[0].y, (float)vtx[0].z};
                     const vec3 pos_v1 = {(float)vtx[1].x, (float)vtx[1].y, (float)vtx[1].z};
@@ -418,8 +421,9 @@ int main(int argc, const char** argv) {
                     const vec3 nrm_v0 = {(float)normal[0].x / 127.0f, (float)normal[0].y / 127.0f, (float)normal[0].z / 127.0f};
                     const vec3 nrm_v1 = {(float)normal[1].x / 127.0f, (float)normal[1].y / 127.0f, (float)normal[1].z / 127.0f};
                     const vec3 nrm_v2 = {(float)normal[2].x / 127.0f, (float)normal[2].y / 127.0f, (float)normal[2].z / 127.0f};
-                    const float u = (float)(x - lm_meta->rect.left) / (float)lm_meta->rect.width;
-                    const float v = (float)(y - lm_meta->rect.top) / (float)lm_meta->rect.height;
+                    const float u = (float)(x - lm_meta[index].rect.left) / (float)lm_meta[index].rect.width;
+                    const float v = (float)(y - lm_meta[index].rect.top) / (float)lm_meta[index].rect.height;
+                    if ((u + v) > 1.0f) continue;
                     vec3 pos_v0v2; // u
                     vec3 pos_v0v1; // v
                     vec3 nrm_v0v2; // u
@@ -435,6 +439,7 @@ int main(int argc, const char** argv) {
                     glm_vec3_copy(nrm_v0, nrm);
                     glm_vec3_muladds(nrm_v0v2, u, nrm);
                     glm_vec3_muladds(nrm_v0v1, v, nrm);
+                    glm_vec3_normalize(nrm);
                 }
 
                 // Direct lighting
@@ -443,9 +448,9 @@ int main(int argc, const char** argv) {
                     if (light->type == LIGHT_DIRECTIONAL) {
                         // direct_light_contribution += light_color * intensity * n_dot_l
                         vec3 l = {
-                            (float)light->direction_position.x / 4096.0f,
-                            (float)light->direction_position.y / 4096.0f,
-                            (float)light->direction_position.z / 4096.0f,
+                            (float)light->direction_position.x / -4096.0f,
+                            (float)light->direction_position.y / -4096.0f,
+                            (float)light->direction_position.z / -4096.0f,
                         };
                         glm_vec3_normalize(l);
                         vec3 color = {
@@ -457,6 +462,7 @@ int main(int argc, const char** argv) {
                         vec3 v3_n_dot_l = { n_dot_l, n_dot_l, n_dot_l };
                         vec3 light = {0};
                         glm_vec3_mul(color, v3_n_dot_l, light);
+                        glm_vec3_clamp(light, 0.0f, 255.f/128.f);
                         glm_vec3_add(light, direct_light_contribution, direct_light_contribution);
                     }
                     else if (light->type == LIGHT_POINT) {
@@ -484,9 +490,6 @@ int main(int argc, const char** argv) {
                         glm_vec3_divs(light, distance_sq, light);
                         glm_vec3_clamp(light, 0.0f, 255.f/128.f);
                         glm_vec3_add(light, direct_light_contribution, direct_light_contribution);
-                        printf("light_pos: %.3f, %.3f. %.3f\t", light_pos[0], light_pos[1], light_pos[2]);
-                        printf("pos: %.3f, %.3f. %.3f\t", pos[0], pos[1], pos[2]);
-                        printf("(%s)\n", graphics->meshes[lm_meta[index].mesh_id].name);
                     }
                 }
 
@@ -500,6 +503,56 @@ int main(int argc, const char** argv) {
                 lightmap[x + (y * lightmap_resolution)].b = (uint8_t)(direct_light_contribution[2] * 128.0f);
                 lightmap[x + (y * lightmap_resolution)].a = 255;
             }   
+        }
+    }
+
+    // Write vertex colors to mesh file
+    printf("%s:%i\n", __FILE__, __LINE__);
+    if (store_to_vertex_colors) {
+        // Bake lightmap texture to vertex color
+        for (int i = 0; i < n_polygons_total; ++i) {
+            if (lm_meta[i].is_allocated == false) continue;
+            vertex_3d_t* vtx = &graphics->meshes[lm_meta[i].mesh_id].vertices[lm_meta[i].first_vertex_id];
+            size_t x0 = lm_meta[i].rect.left;
+            size_t x1 = lm_meta[i].rect.left + lm_meta[i].rect.width - 1;
+            size_t y0 = lm_meta[i].rect.top;
+            size_t y1 = lm_meta[i].rect.top + lm_meta[i].rect.height - 1;
+    printf("%s:%i, %i: (%i) %i %i %i %i\n", __FILE__, __LINE__, i ,lm_meta[i].first_vertex_id, x0,x1,y0,y1);
+            uint32_t zero[3] = { 0, 0, 0} ;
+            memcpy(&vtx[3].r, &lightmap[x0 + (y1 * lightmap_resolution)].r, 3);
+            memcpy(&vtx[2].r, &lightmap[x0 + (y0 * lightmap_resolution)].r, 3);
+            memcpy(&vtx[1].r, &lightmap[x1 + (y1 * lightmap_resolution)].r, 3);
+            if (lm_meta[i].is_quad) {
+            memcpy(&vtx[0].r, &lightmap[x1 + (y0 * lightmap_resolution)].r, 3);
+            }
+    printf("%s:%i\n", __FILE__, __LINE__);
+        }
+    printf("%s:%i\n", __FILE__, __LINE__);
+
+        uint32_t* level_mesh = 0;
+        size_t size;
+        file_read(path, &level_mesh, &size, 0, 0);
+        level_header_t* header = (level_header_t*)level_mesh;
+        char* binary = (char*)(header+1);
+        printf("msh in  path: %s\n", binary + header->path_model_offset);
+        printf("msh out path: %s\n", model_out_path);
+        FILE* model_out = fopen(model_out_path, "r+b");
+        model_header_t model_header = {0};
+        mesh_desc_t* mesh_descs = mem_alloc(sizeof(mesh_desc_t) * graphics->n_meshes, MEM_CAT_UNDEFINED);
+        fread(&model_header, sizeof(model_header), 1, model_out);
+        fseek(model_out, sizeof(model_header) + model_header.offset_mesh_desc, SEEK_SET);
+        fread(mesh_descs, sizeof(mesh_desc_t), graphics->n_meshes, model_out);
+        for (int mi = 0; mi < graphics->n_meshes; ++mi) {
+            const vertex_3d_t* const verts = graphics->meshes[mi].vertices;
+            const size_t n_vertices = (((size_t)graphics->meshes[mi].n_quads * 4) + ((size_t)graphics->meshes[mi].n_triangles * 3));
+            const size_t vert_start = sizeof(model_header) + model_header.offset_vertex_data + (((size_t)mesh_descs[mi].vertex_start) * sizeof(vertex_3d_t));
+            // for (int vi = 0; vi < n_vertices; ++vi) {
+            //     graphics->meshes[mi].vertices[vi].r = 69;
+            //     graphics->meshes[mi].vertices[vi].g = 42;
+            //     graphics->meshes[mi].vertices[vi].b = 0;
+            // }
+            fseek(model_out, vert_start, SEEK_SET);
+            fwrite(graphics->meshes[mi].vertices, sizeof(vertex_3d_t), n_vertices, model_out);
         }
     }
 
