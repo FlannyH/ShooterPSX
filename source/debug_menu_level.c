@@ -47,6 +47,7 @@ void state_update_debug_menu_level(int dt) {
 	char* levels[] = {
 		"levels/test.lvl",
 		"levels/test2.lvl",
+		"levels/test3.lvl",
 		"levels/level1.lvl",
 		"levels/level2.lvl",
 	};
@@ -91,11 +92,12 @@ void state_update_debug_menu_level(int dt) {
 			case 1: 
 			case 2: 
 			case 3: 
+			case 4: 
 				mem_stack_release(STACK_TEMP);
 				state.in_game.level_load_path = levels[state.debug_menu_level.button_selected];
 				set_current_state(STATE_IN_GAME);
 				break;
-			case 4:
+			case 5:
 				set_current_state(STATE_DEBUG_MENU_MAIN);
 				break;
 		}

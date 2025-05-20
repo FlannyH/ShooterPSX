@@ -513,6 +513,7 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/pc/GOURAUD.FSH \
 					  $(PATH_ASSETS)/pc/BLIT.VSH \
 					  $(PATH_ASSETS)/shared/levels/test.lvl \
 					  $(PATH_ASSETS)/shared/levels/test2.lvl \
+					  $(PATH_ASSETS)/shared/levels/test3.lvl \
 					  $(PATH_ASSETS)/shared/levels/level1.lvl \
 					  $(PATH_ASSETS)/shared/levels/level2.lvl \
 					  $(PATH_ASSETS)/shared/models/entity.msh \
@@ -533,6 +534,10 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/pc/GOURAUD.FSH \
 					  $(PATH_ASSETS)/shared/models/test2.vis \
 					  $(PATH_ASSETS)/shared/models/test2.msh \
 					  $(PATH_ASSETS)/shared/models/test2.txc \
+					  $(PATH_ASSETS)/shared/models/test3.col \
+					  $(PATH_ASSETS)/shared/models/test3.vis \
+					  $(PATH_ASSETS)/shared/models/test3.msh \
+					  $(PATH_ASSETS)/shared/models/test3.txc \
 					  $(PATH_ASSETS)/shared/models/weapons.msh \
 					  $(PATH_ASSETS)/shared/models/weapons.txc \
 					  $(PATH_ASSETS)/shared/models/ui_tex/menu1.txc \

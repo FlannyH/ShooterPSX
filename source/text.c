@@ -119,6 +119,7 @@ const char* text_debug_menu_level[] = {
     "LEVEL SELECT",
     "test.lvl",
     "test2.lvl",
+    "test3.lvl",
     "level1.lvl",
     "level2.lvl",
     "EXIT"
