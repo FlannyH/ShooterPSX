@@ -409,7 +409,7 @@ int main(int argc, const char** argv) {
                     glm_vec3_mul(nrm_v2v3, (vec3){v, v, v}, nrm_v2v3);
                     glm_vec3_add(nrm_v2, nrm_v2v3, nrm_v2v3);
                     glm_vec3_sub(nrm_v2v3, nrm_v0v1, nrm); // nrm
-                    glm_vec3_mul(nrm_v0v1, (vec3){u, u, u}, nrm);
+                    glm_vec3_mul(nrm, (vec3){u, u, u}, nrm);
                     glm_vec3_add(nrm_v0v1, nrm, nrm);
                     glm_vec3_normalize(nrm);
                 }
@@ -519,11 +519,11 @@ int main(int argc, const char** argv) {
             size_t y1 = lm_meta[i].rect.top + lm_meta[i].rect.height - 1;
     printf("%s:%i, %i: (%i) %i %i %i %i\n", __FILE__, __LINE__, i ,lm_meta[i].first_vertex_id, x0,x1,y0,y1);
             uint32_t zero[3] = { 0, 0, 0} ;
-            memcpy(&vtx[3].r, &lightmap[x0 + (y1 * lightmap_resolution)].r, 3);
-            memcpy(&vtx[2].r, &lightmap[x0 + (y0 * lightmap_resolution)].r, 3);
-            memcpy(&vtx[1].r, &lightmap[x1 + (y1 * lightmap_resolution)].r, 3);
+            memcpy(&vtx[0].r, &lightmap[x0 + (y0 * lightmap_resolution)].r, 3);
+            memcpy(&vtx[1].r, &lightmap[x0 + (y1 * lightmap_resolution)].r, 3);
+            memcpy(&vtx[2].r, &lightmap[x1 + (y0 * lightmap_resolution)].r, 3);
             if (lm_meta[i].is_quad) {
-            memcpy(&vtx[0].r, &lightmap[x1 + (y0 * lightmap_resolution)].r, 3);
+            memcpy(&vtx[3].r, &lightmap[x1 + (y1 * lightmap_resolution)].r, 3);
             }
     printf("%s:%i\n", __FILE__, __LINE__);
         }
