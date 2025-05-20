@@ -24,6 +24,10 @@ level_t level_load(const char* level_path) {
     size_t size = 0;
     file_read(level_path, &file_data, &size, 1, STACK_TEMP);
 
+    if (!file_data) {
+        return (level_t) { 0 };
+    }
+
     // Get header data
     const level_header_t* level_header = (level_header_t*)file_data;
 
