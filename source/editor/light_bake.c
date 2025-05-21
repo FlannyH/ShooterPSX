@@ -82,7 +82,6 @@ int main(int argc, const char** argv) {
     if (argc >= 4) {
         lightmap_resolution = strtol(argv[3], NULL, 10);
     }
-    printf("lightmap_resolution: %s\n", argv[3]);
 
     if (argc >= 5) {
         if (strcmp(argv[4], "true") == 0) { store_to_vertex_colors = true; }
@@ -96,30 +95,23 @@ int main(int argc, const char** argv) {
 
     pixel32_t* lightmap = mem_alloc(lightmap_resolution * lightmap_resolution * sizeof(pixel32_t), MEM_CAT_TEXTURE);
     memset(lightmap, 0xFF, lightmap_resolution * lightmap_resolution * sizeof(pixel32_t));
-    // const model_t* const model = model_load(path, 0, 0, 0, 0);
     
-    printf("level\n");
     state.in_game.level = level_load(path);
-    printf("level done\n");
     const model_t* const model = state.in_game.level.graphics;
-    printf("%08p\n", model);
 
     // How many polygons do we have? We need to know this for some helper arrays
     int n_triangles_total = 0;
     int n_quads_total = 0;
-    printf("%s:%i\n", __FILE__, __LINE__);
     for (int mesh_i = 0; mesh_i < model->n_meshes; ++mesh_i) {
         n_triangles_total += model->meshes[mesh_i].n_triangles;
         n_quads_total += model->meshes[mesh_i].n_quads;
     }
-    printf("%s:%i\n", __FILE__, __LINE__);
     const int n_polygons_total = n_triangles_total + n_quads_total;
 
     // Figure out rectangle sizes in lightmap for each polygon
     lightmap_polygon_metadata_t* lm_meta = mem_alloc(n_polygons_total * sizeof(lightmap_polygon_metadata_t), MEM_CAT_UNDEFINED);
+    memset(lm_meta, 0xFF, n_polygons_total * sizeof(lightmap_polygon_metadata_t));
     size_t lm_meta_cursor = 0;    
-    printf("%s:%i\n", __FILE__, __LINE__);
-
 
     for (int mesh_i = 0; mesh_i < model->n_meshes; ++mesh_i) {
         const mesh_t* const mesh = &model->meshes[mesh_i];
@@ -188,7 +180,6 @@ int main(int argc, const char** argv) {
             ++lm_meta_cursor;
         }
     }
-    printf("%s:%i\n", __FILE__, __LINE__);
 
     // Create index buffer
     const int n_used_polygons = lm_meta_cursor;
@@ -198,11 +189,6 @@ int main(int argc, const char** argv) {
         lm_meta_indices[i] = i;
     }
     
-    printf("META INDICES 0:\n");
-    for (int k = 0; k < n_used_polygons; ++k) {
-        printf("    %i: *%i= %08x\n", k, lm_meta_indices[k], lm_meta[lm_meta_indices[k]].first_vertex_id);
-    }
-
     // Sort them based on height, this way we can get a tighter fit in the lightmap
     for (int i = 0; i < n_used_polygons - 1; ++i) {
         for (int j = 0; j < n_used_polygons - i - 1; ++j) {
@@ -216,13 +202,6 @@ int main(int argc, const char** argv) {
         }
     }
     
-    printf("META INDICES 1:\n");
-    for (int k = 0; k < n_used_polygons; ++k) {
-        printf("    %i: %i\n", k, lm_meta_indices[k]);
-    }
-
-    printf("before place\n");
-
     // Place the polygon rectangles in the lightmap texture
     int x_cursor = 0;
     int y_cursor = 0;
@@ -352,9 +331,6 @@ int main(int argc, const char** argv) {
             if (a.left < b.left + b.width && a.left + a.width > b.left &&
                 a.top < b.top + b.height && a.top + a.height > b.top) {
                 printf("error: overlap between polygon %d and %d\n", i, j);
-                for (int k = 0; k < n_used_polygons; ++k) {
-                    printf("%i: %i\n", k, lm_meta[lm_meta_indices[k]].first_vertex_id);
-                }
                 return 5;
             }
         }
@@ -364,16 +340,8 @@ int main(int argc, const char** argv) {
     const light_t* const lights = state.in_game.level.lights;
     const model_t* const graphics = state.in_game.level.graphics;
 
-    printf("before lights\n");
-
     for (int i = 0; i < n_used_polygons; ++i) {
         const int index = lm_meta_indices[i];
-        // printf("(%4i, %4i) -> (%4i, %4i)\n", 
-            // lm_meta[index].rect.left, 
-            // lm_meta[index].rect.top, 
-            // lm_meta[index].rect.left + lm_meta[index].rect.width - 1, 
-            // lm_meta[index].rect.top + lm_meta[index].rect.height - 1
-        // );
 
         for (int y = lm_meta[index].rect.top; y < lm_meta[index].rect.top + lm_meta[index].rect.height; ++y) {
             for (int x = lm_meta[index].rect.left; x < lm_meta[index].rect.left + lm_meta[index].rect.width; ++x) {  
@@ -516,7 +484,6 @@ int main(int argc, const char** argv) {
     }
 
     // Write vertex colors to mesh file
-    printf("%s:%i\n", __FILE__, __LINE__);
     if (store_to_vertex_colors) {
         // Bake lightmap texture to vertex color
         for (int i = 0; i < n_used_polygons; ++i) {
@@ -526,7 +493,6 @@ int main(int argc, const char** argv) {
             size_t x1 = lm_meta[i].rect.left + lm_meta[i].rect.width - 1;
             size_t y0 = lm_meta[i].rect.top;
             size_t y1 = lm_meta[i].rect.top + lm_meta[i].rect.height - 1;
-    printf("%s:%i, %i: (%i) %i %i %i %i\n", __FILE__, __LINE__, i ,lm_meta[i].first_vertex_id, x0,x1,y0,y1);
             uint32_t zero[3] = { 0, 0, 0} ;
             memcpy(&vtx[0].r, &lightmap[x0 + (y0 * lightmap_resolution)].r, 3);
             memcpy(&vtx[1].r, &lightmap[x0 + (y1 * lightmap_resolution)].r, 3);
@@ -534,17 +500,13 @@ int main(int argc, const char** argv) {
             if (lm_meta[i].is_quad) {
             memcpy(&vtx[3].r, &lightmap[x1 + (y1 * lightmap_resolution)].r, 3);
             }
-    printf("%s:%i\n", __FILE__, __LINE__);
         }
-    printf("%s:%i\n", __FILE__, __LINE__);
 
         uint32_t* level_mesh = 0;
         size_t size;
         file_read(path, &level_mesh, &size, 0, 0);
         level_header_t* header = (level_header_t*)level_mesh;
         char* binary = (char*)(header+1);
-        printf("msh in  path: %s\n", binary + header->path_model_offset);
-        printf("msh out path: %s\n", model_out_path);
         FILE* model_out = fopen(model_out_path, "r+b");
         model_header_t model_header = {0};
         mesh_desc_t* mesh_descs = mem_alloc(sizeof(mesh_desc_t) * graphics->n_meshes, MEM_CAT_UNDEFINED);
@@ -555,11 +517,6 @@ int main(int argc, const char** argv) {
             const vertex_3d_t* const verts = graphics->meshes[mi].vertices;
             const size_t n_vertices = (((size_t)graphics->meshes[mi].n_quads * 4) + ((size_t)graphics->meshes[mi].n_triangles * 3));
             const size_t vert_start = sizeof(model_header) + model_header.offset_vertex_data + (((size_t)mesh_descs[mi].vertex_start) * sizeof(vertex_3d_t));
-            // for (int vi = 0; vi < n_vertices; ++vi) {
-            //     graphics->meshes[mi].vertices[vi].r = 69;
-            //     graphics->meshes[mi].vertices[vi].g = 42;
-            //     graphics->meshes[mi].vertices[vi].b = 0;
-            // }
             fseek(model_out, vert_start, SEEK_SET);
             fwrite(graphics->meshes[mi].vertices, sizeof(vertex_3d_t), n_vertices, model_out);
         }
