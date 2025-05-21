@@ -191,15 +191,21 @@ int main(int argc, const char** argv) {
     printf("%s:%i\n", __FILE__, __LINE__);
 
     // Create index buffer
-    int* lm_meta_indices = mem_alloc(n_polygons_total * sizeof(int), MEM_CAT_UNDEFINED);
+    const int n_used_polygons = lm_meta_cursor;
+    int* lm_meta_indices = mem_alloc(n_used_polygons * sizeof(int), MEM_CAT_UNDEFINED);
 
-    for (int i = 0; i < n_polygons_total; ++i) {
+    for (int i = 0; i < n_used_polygons; ++i) {
         lm_meta_indices[i] = i;
+    }
+    
+    printf("META INDICES 0:\n");
+    for (int k = 0; k < n_used_polygons; ++k) {
+        printf("    %i: *%i= %08x\n", k, lm_meta_indices[k], lm_meta[lm_meta_indices[k]].first_vertex_id);
     }
 
     // Sort them based on height, this way we can get a tighter fit in the lightmap
-    for (int i = 0; i < n_polygons_total - 1; ++i) {
-        for (int j = 0; j < n_polygons_total - i - 1; ++j) {
+    for (int i = 0; i < n_used_polygons - 1; ++i) {
+        for (int j = 0; j < n_used_polygons - i - 1; ++j) {
             int height_j = lm_meta[lm_meta_indices[j]].rect.height;
             int height_j1 = lm_meta[lm_meta_indices[j + 1]].rect.height;
             if (height_j < height_j1) {
@@ -208,6 +214,11 @@ int main(int argc, const char** argv) {
                 lm_meta_indices[j + 1] = temp;
             }
         }
+    }
+    
+    printf("META INDICES 1:\n");
+    for (int k = 0; k < n_used_polygons; ++k) {
+        printf("    %i: %i\n", k, lm_meta_indices[k]);
     }
 
     printf("before place\n");
@@ -218,7 +229,7 @@ int main(int argc, const char** argv) {
     int curr_row_height = 0;
     int curr_row_start_index = 0;
 
-    for (int i = 0; i < n_polygons_total; ++i) {
+    for (int i = 0; i < n_used_polygons; ++i) {
         const int index = lm_meta_indices[i];
 
         if (lm_meta[index].is_allocated) continue;
@@ -242,7 +253,7 @@ int main(int argc, const char** argv) {
         if (x_cursor + lm_meta[index].rect.width >= lightmap_resolution) {
             // There's a good chance there's free space between allocated rows
             // Let's make the most of that space!
-            for (int free_i = -1; free_i < n_polygons_total; ++free_i) {
+            for (int free_i = -1; free_i < n_used_polygons; ++free_i) {
                 rect16_t free_rect = {};
 
                 // The first rectangle we try to fill is the one at the right side of the
@@ -260,7 +271,7 @@ int main(int argc, const char** argv) {
 
                     // Stitch together multiple free rectangles with the same height
                     while (true) {
-                        if (free_i >= n_polygons_total - 1) break;
+                        if (free_i >= n_used_polygons - 1) break;
                         if (lm_meta[lm_meta_indices[free_i + 1]].is_allocated == false) goto skip;
                         if (lm_meta[lm_meta_indices[free_i + 1]].in_extra_free_space == true) goto skip;
                         const rect16_t next_rect = lm_meta[lm_meta_indices[free_i+1]].rect;
@@ -287,7 +298,7 @@ int main(int argc, const char** argv) {
                     int best_candidate_width_error = INT32_MAX;
                     int best_candidate_height_error = INT32_MAX;
 
-                    for (int small_i = 0; small_i < n_polygons_total; ++small_i) {
+                    for (int small_i = 0; small_i < n_used_polygons; ++small_i) {
                         if (lm_meta[lm_meta_indices[small_i]].is_allocated) continue;
                         
                         const rect16_t small_rect = lm_meta[lm_meta_indices[small_i]].rect;
@@ -325,22 +336,25 @@ int main(int argc, const char** argv) {
             curr_row_start_index = i + 1;
 
             if (y_cursor >= lightmap_resolution) {
-                printf("Ran out of lightmap space after %i / %i polygons!\n", i, n_polygons_total);
+                printf("Ran out of lightmap space after %i / %i polygons!\n", i, n_used_polygons);
                 return 4;
             }
         }
     }
 
     // Check for overlap
-    for (int i = 0; i < n_polygons_total; ++i) {
-        for (int j = 0; j < n_polygons_total; ++j) {
+    for (int i = 0; i < n_used_polygons; ++i) {
+        for (int j = 0; j < n_used_polygons; ++j) {
             if (i == j) continue;
 
-            const rect16_t a = lm_meta[i].rect;
-            const rect16_t b = lm_meta[j].rect;
+            const rect16_t a = lm_meta[lm_meta_indices[i]].rect;
+            const rect16_t b = lm_meta[lm_meta_indices[j]].rect;
             if (a.left < b.left + b.width && a.left + a.width > b.left &&
                 a.top < b.top + b.height && a.top + a.height > b.top) {
                 printf("error: overlap between polygon %d and %d\n", i, j);
+                for (int k = 0; k < n_used_polygons; ++k) {
+                    printf("%i: %i\n", k, lm_meta[lm_meta_indices[k]].first_vertex_id);
+                }
                 return 5;
             }
         }
@@ -352,7 +366,7 @@ int main(int argc, const char** argv) {
 
     printf("before lights\n");
 
-    for (int i = 0; i < n_polygons_total; ++i) {
+    for (int i = 0; i < n_used_polygons; ++i) {
         const int index = lm_meta_indices[i];
         // printf("(%4i, %4i) -> (%4i, %4i)\n", 
             // lm_meta[index].rect.left, 
@@ -488,16 +502,11 @@ int main(int argc, const char** argv) {
                         vec3 light = {0};
                         glm_vec3_mul(color, v3_n_dot_l, light);
                         glm_vec3_divs(light, distance_sq, light);
-                        glm_vec3_clamp(light, 0.0f, 255.f/128.f);
                         glm_vec3_add(light, direct_light_contribution, direct_light_contribution);
                     }
                 }
 
-                // printf("direct_light_contribution = {%.3f, %.3f, %.3f}\n",  direct_light_contribution[0], direct_light_contribution[1], direct_light_contribution[2]);
-
-                // lightmap[x + (y * lightmap_resolution)].b = (index) % 256;
-                // lightmap[x + (y * lightmap_resolution)].g = (index / 256) % 256;
-                // lightmap[x + (y * lightmap_resolution)].r += 1; // overflows to 0. if the red channel has any values above 0 we're fucked
+                glm_vec3_clamp(direct_light_contribution, 0.0f, 255.f/128.f);
                 lightmap[x + (y * lightmap_resolution)].r = (uint8_t)(direct_light_contribution[0] * 128.0f);
                 lightmap[x + (y * lightmap_resolution)].g = (uint8_t)(direct_light_contribution[1] * 128.0f);
                 lightmap[x + (y * lightmap_resolution)].b = (uint8_t)(direct_light_contribution[2] * 128.0f);
@@ -510,7 +519,7 @@ int main(int argc, const char** argv) {
     printf("%s:%i\n", __FILE__, __LINE__);
     if (store_to_vertex_colors) {
         // Bake lightmap texture to vertex color
-        for (int i = 0; i < n_polygons_total; ++i) {
+        for (int i = 0; i < n_used_polygons; ++i) {
             if (lm_meta[i].is_allocated == false) continue;
             vertex_3d_t* vtx = &graphics->meshes[lm_meta[i].mesh_id].vertices[lm_meta[i].first_vertex_id];
             size_t x0 = lm_meta[i].rect.left;
