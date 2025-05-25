@@ -35,6 +35,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
     FILE* file = fopen(new_path, "rb");
     if (file == NULL) {
         printf("[ERROR] Failed to load file %s\n", new_path);
+        *destination = NULL;
         return 0;
     }
     

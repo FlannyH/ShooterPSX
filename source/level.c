@@ -25,6 +25,7 @@ level_t level_load(const char* level_path) {
     file_read(level_path, &file_data, &size, 1, STACK_TEMP);
 
     if (!file_data) {
+        printf("[ERROR] Error loading level '%s', file could not be read!\n", level_path);
         return (level_t) { 0 };
     }
 

@@ -83,6 +83,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
     FILE* file = fopen(new_path, "rb");
     if (file == NULL) {
         printf("[ERROR] Failed to load file %s\n", new_path);
+        *destination = NULL;
         return 0;
     }
     
@@ -106,6 +107,12 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
 int file_read(const char* path, uint32_t** destination, size_t* size, int on_stack, stack_t stack) {
     if (path[0] == '\0') {
         printf("[ERROR] Empty file path\n");
+    }
+
+    if (!file_archive) {
+        printf("[ERROR] Failed to read file archive: file read before calling init\n");
+        *destination = NULL;
+        return 0;
     }
 
     if (item_table[0].type != FSFA_ITEM_TYPE_FOLDER) {
@@ -183,7 +190,8 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
 
         return 1;
     }
-
+    
+    *destination = NULL;
     return 0;
 }
 #endif

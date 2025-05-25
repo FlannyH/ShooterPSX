@@ -19,7 +19,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
     model_header_t* model_header = (model_header_t*)file_data;
 
     // Ensure FMSH header is valid
-    if (model_header->file_magic != MAGIC_FMSH) { // "FMSH"
+    if (!file_data || model_header->file_magic != MAGIC_FMSH) { // "FMSH"
         printf("[ERROR] Error loading model '%s', file header is invalid!\n", path);
         return 0;
     }
