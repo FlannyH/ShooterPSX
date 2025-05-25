@@ -29,7 +29,7 @@ The first node in the BVH node pool is always the root.
 | i32[3] | bounds_min      | Axis aligned bounding box around all primitives inside this node, in collision space                                      |
 | i32[3] | bounds_max      | Axis aligned bounding box around all primitives inside this node, in collision space                                      |
 | u16    | left_first      | If this is a leaf, this is the index of the first primitive, otherwise, this is the index of the first of two child nodes |
-| u16    | primitive_count | If this value is above 0x8000, this is a leaf node                                                                        |
+| u16    | primitive_count | If this value is 0, this is a leaf node                                                                                   |
 
 ## Navigation Graph
 ### Header
