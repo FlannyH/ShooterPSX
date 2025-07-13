@@ -18,21 +18,17 @@ int n_vertical_cylinder_triangle_intersects = 0;
 
 void handle_node_intersection_ray(level_collision_t* self, const bvh_node_t* current_node, const ray_t ray, rayhit_t* hit, const int rec_depth) {
     // Intersect current node
-    if (ray_aabb_intersect(&current_node->bounds, ray))
-    {
+    if (ray_aabb_intersect(&current_node->bounds, ray)) {
         // If it's a leaf
-        if (current_node->primitive_count != 0)
-        {
+        if (current_node->primitive_count != 0) {
             // Intersect all triangles attached to it
             rayhit_t sub_hit = { 0 };
             sub_hit.distance = 0;
-            for (int i = current_node->left_first; i < current_node->left_first + current_node->primitive_count; i++)
-            {
+            for (int i = current_node->left_first; i < current_node->left_first + current_node->primitive_count; i++) {
                 // If hit
                 if (ray_triangle_intersect(&self->primitives[self->indices[i]], ray, &sub_hit)) {
                     // If lowest distance
-                    if (sub_hit.distance < hit->distance && sub_hit.distance >= 0)
-                    {
+                    if (sub_hit.distance < hit->distance && sub_hit.distance >= 0) {
                         // Copy the hit info into the output hit for the BVH traversal
                         memcpy(hit, &sub_hit, sizeof(rayhit_t));
                         hit->type = RAY_HIT_TYPE_TRIANGLE;
@@ -771,7 +767,7 @@ level_collision_t bvh_from_file(const char* path, int on_stack, stack_t stack) {
     const intptr_t binary = (intptr_t)(header + 1);
 
     // Verify file magic
-    if (header->file_magic != MAGIC_FCOL) {
+    if (!data || header->file_magic != MAGIC_FCOL) {
         printf("[ERROR] Error loading collision mesh '%s', file header is invalid!\n", path);
         return (level_collision_t){0};
     }
