@@ -64,9 +64,25 @@ typedef struct {
     int n_lights;
 } level_t;
 
+typedef enum {
+    // Individual flags
+    LEVEL_LOAD_NONE = 0,
+    LEVEL_LOAD_MUSIC = (1 << 0),
+    LEVEL_LOAD_TEXTURES = (1 << 1),
+    LEVEL_LOAD_COLLISION = (1 << 2),
+    LEVEL_LOAD_MODEL = (1 << 3),
+    LEVEL_LOAD_ENTITIES = (1 << 4),
+    LEVEL_LOAD_LIGHTS = (1 << 5),
+    LEVEL_LOAD_TEXT = (1 << 6),
+
+    // Combination style
+    LEVEL_LOAD_ALL = LEVEL_LOAD_MUSIC | LEVEL_LOAD_TEXTURES | LEVEL_LOAD_COLLISION | LEVEL_LOAD_MODEL | LEVEL_LOAD_ENTITIES | LEVEL_LOAD_LIGHTS | LEVEL_LOAD_TEXT,
+    LEVEL_LOAD_ALL_VISUAL = LEVEL_LOAD_TEXTURES | LEVEL_LOAD_MODEL | LEVEL_LOAD_LIGHTS
+} level_load_flags_t;
+
 #define MAX_LIGHT_COUNT 256
 
-level_t level_load(const char* level_path);
+level_t level_load(const char* level_path, const uint32_t flags);
 
 #ifdef __cplusplus
 }
