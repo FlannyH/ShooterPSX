@@ -45,12 +45,10 @@ PATH_TEMP_PSX = 		  $(PATH_TEMP)/psx
 PATH_TEMP_PC = 		      $(PATH_TEMP)/pc
 PATH_TEMP_NDS = 		  $(PATH_TEMP)/nds
 PATH_TEMP_LEVEL_EDITOR =  $(PATH_TEMP)/level_editor
-PATH_TEMP_LIGHT_BAKE   =  $(PATH_TEMP)/light_bake
 PATH_BUILD_PSX = 		  $(PATH_BUILD)/psx
 PATH_BUILD_PC = 		  $(PATH_BUILD)/pc
 PATH_BUILD_NDS = 		  $(PATH_BUILD)/nds
 PATH_BUILD_LEVEL_EDITOR = $(PATH_BUILD)/level_editor
-PATH_BUILD_LIGHT_BAKE   = $(PATH_BUILD)/light_bake
 PATH_LIB_PC  = $(PATH_TEMP_PC)/lib
 PATH_LIB_PSX = $(PSN00BSDK_LIBS)/release
 PATH_LIB_NDS = $(BLOCKSDS)/libs/libnds/lib
@@ -108,21 +106,11 @@ CODE_ENGINE_NDS_C = nds/psx.c \
 				    nds/mixer.c \
 				    nds/renderer.c 
 					
-# Source files used the light baker
-CODE_ENGINE_LIGHT_BAKE_C =   editor/light_bake.c \
-				      		 nds/mesh.c \
-				      		 pc/mixer.c \
-				      		 pc/psx.c \
-				      		 pc/renderer.c \
-				      		 pc/file.c 
-CODE_ENGINE_LIGHT_BAKE_CPP = pc/debug_layer.cpp
-
 # Where the object files go
 PATH_OBJ_PSX = $(PATH_TEMP_PSX)/obj
 PATH_OBJ_PC  = $(PATH_TEMP_PC)/obj
 PATH_OBJ_NDS = $(PATH_TEMP_NDS)/obj
 PATH_OBJ_LEVEL_EDITOR = $(PATH_TEMP_LEVEL_EDITOR)/obj
-PATH_OBJ_LIGHT_BAKE = $(PATH_TEMP_LIGHT_BAKE)/obj
 
 # Misc source file definitions
 CODE_GAME_MAIN = main.c
@@ -137,8 +125,6 @@ CODE_NDS_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_NDS_C) 	$(CODE_GAME_MAI
 CODE_NDS_CPP			= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_NDS_CPP)
 CODE_LEVEL_EDITOR_C		= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PC_C) 	$(CODE_LEVEL_EDITOR) 	$(CODE_GAME_C)
 CODE_LEVEL_EDITOR_CPP	= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_PC_CPP)
-CODE_LIGHT_BAKE_C		= $(CODE_ENGINE_LIGHT_BAKE_C)	$(CODE_ENGINE_SHARED_C)
-CODE_LIGHT_BAKE_CPP	    = $(CODE_ENGINE_LIGHT_BAKE_CPP)
 
 OBJ_PSX					= 	$(patsubst %.c, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_C))				\
 							$(patsubst %.cpp, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_CPP))				
@@ -148,15 +134,13 @@ OBJ_NDS					= 	$(patsubst %.c, 	$(PATH_OBJ_NDS)/%.o,	        $(CODE_NDS_C))				\
 							$(patsubst %.cpp, 	$(PATH_OBJ_NDS)/%.o,	        $(CODE_NDS_CPP))				
 OBJ_LEVEL_EDITOR		= 	$(patsubst %.c, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVEL_EDITOR_C))		\
 							$(patsubst %.cpp, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVEL_EDITOR_CPP))		
-OBJ_LIGHT_BAKE		    = 	$(patsubst %.c, 	$(PATH_OBJ_LIGHT_BAKE)/%.o, 	$(CODE_LIGHT_BAKE_C))		\
-							$(patsubst %.cpp, 	$(PATH_OBJ_LIGHT_BAKE)/%.o, 	$(CODE_LIGHT_BAKE_CPP))		
 
 CFLAGS = -Wall -Wextra -std=c11 -Wno-old-style-declaration -Wno-format 
 CXXFLAGS = -Wall -Wextra -std=c++20 -Wno-format
 LINKER_FLAGS = 
 
-.PHONY: all submodules tools assets pc level_editor psx nds clean mkdir_output_pc pc_dependencies glfw gl3w imgui imguizmo light_bake
-all: submodules tools assets pc level_editor psx nds light_bake
+.PHONY: all submodules tools assets pc level_editor psx nds clean mkdir_output_pc pc_dependencies glfw gl3w imgui imguizmo
+all: submodules tools assets pc level_editor psx nds
 
 # Windows target
 pc: DEFINES = _PC
@@ -200,27 +184,6 @@ level_editor: INCLUDE_DIRS = source \
 			   $(PATH_LIB_PC)/gl3w/include
 level_editor: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 
-light_bake: DEFINES = _PC _LIGHT_BAKE _DEBUG
-light_bake: LIBRARIES = glfw3 portaudio stdc++ 
-ifeq ($(OS),Windows_NT)
-light_bake: LIBRARIES += gdi32 opengl32 winmm ole32 SetupAPI 
-endif
-light_bake: CC = gcc
-light_bake: CXX = g++
-light_bake: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -g
-light_bake: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -std=c++20 -g
-light_bake: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PC)) -std=c++20
-light_bake: INCLUDE_DIRS = source \
-			   external/portaudio/include \
-			   external/cglm/include \
-			   external/gl3w/include \
-			   external/glfw/include \
-			   external/imgui \
-			   external/imguizmo \
-			   external/imgui-filebrowser \
-			   $(PATH_LIB_PC)/gl3w/include
-light_bake: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
-
 mkdir_output_pc:
 	mkdir -p $(PATH_TEMP_PC)
 	mkdir -p $(PATH_OBJ_PC)
@@ -253,7 +216,6 @@ portaudio:
 
 OBJ_PC += $(PATH_LIB_PC)/gl3w.o
 OBJ_LEVEL_EDITOR += $(PATH_LIB_PC)/gl3w.o
-OBJ_LIGHT_BAKE += $(PATH_LIB_PC)/gl3w.o
 gl3w:
 	mkdir -p $(PATH_LIB_PC)/gl3w
 	@cmake -S external/gl3w -B $(PATH_LIB_PC)/gl3w -G "Unix Makefiles"
@@ -335,21 +297,6 @@ $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor: mkdir_output_pc pc_dependencies $(OBJ_LE
 	@cp -r $(PATH_ASSETS)/pc/* $(dir $@)/assets
 	@cp -r $(PATH_ASSETS)/level_editor/* $(dir $@)/assets
 
-$(PATH_BUILD_LIGHT_BAKE)/LightBake: mkdir_output_pc pc_dependencies $(OBJ_LIGHT_BAKE)
-	@mkdir -p $(dir $@)
-	@mkdir -p $(dir $@)/assets
-	@mkdir -p $(PATH_ASSETS)/shared
-	@mkdir -p $(PATH_ASSETS)/pc
-	@mkdir -p $(PATH_ASSETS)/light_bake
-	@echo Linking $@
-	@$(CXX) -o $@ $(OBJ_LIGHT_BAKE) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
-	@echo Copying assets
-	cp -r $(PATH_ASSETS)/shared/* $(dir $@)/assets
-	cp -r $(PATH_ASSETS)/pc/* $(dir $@)/assets
-	cp -r $(PATH_ASSETS)/level_editor/* $(dir $@)/assets
-	@echo Copying assets
-	@cp $(PATH_TEMP)/pc/assets.sfa $(dir $@)
-
 $(PATH_OBJ_PC)/%.o: $(PATH_SOURCE)/%.c
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
@@ -370,19 +317,8 @@ $(PATH_OBJ_LEVEL_EDITOR)/%.o: $(PATH_SOURCE)/%.cpp
 	@echo Compiling $<
 	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
-$(PATH_OBJ_LIGHT_BAKE)/%.o: $(PATH_SOURCE)/%.c
-	@mkdir -p $(dir $@)
-	@echo Compiling $<
-	@$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
-
-$(PATH_OBJ_LIGHT_BAKE)/%.o: $(PATH_SOURCE)/%.cpp
-	@mkdir -p $(dir $@)
-	@echo Compiling $<
-	@$(CXX) $(CXXFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
-
 pc: tools assets $(PATH_BUILD_PC)/$(PROJECT_NAME)
 level_editor: tools assets $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor
-light_bake: tools assets $(PATH_BUILD_LIGHT_BAKE)/LightBake
 
 # PSX target
 psx: PSN00BSDK_PATH = $(PSN00BSDK_LIBS)/../..
