@@ -67,6 +67,8 @@ typedef struct {
 } entity_union;
 
 void entity_init(void) {
+	mem_stack_release(STACK_ENTITY);
+
 	// Zero initialize the entity list
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) entity_types[i] = ENTITY_NONE;
 

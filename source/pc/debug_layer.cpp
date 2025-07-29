@@ -392,7 +392,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             strcpy(path_model_lod, binary_section + header->path_model_lod_offset);
             strcpy(level_name, binary_section + header->level_name_offset);
 
-            *curr_level = level_load(level_path);
+            entity_init();
+            *curr_level = level_load(level_path, LEVEL_LOAD_ALL);
             player_spawn_position = vec3_from_svec3(curr_level->player_spawn_position);
             player_spawn_rotation = curr_level->player_spawn_rotation;
             player_init(player, player_spawn_position, player_spawn_rotation, 40, 0, 0);

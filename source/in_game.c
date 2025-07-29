@@ -58,7 +58,8 @@ void state_enter_in_game(void) {
 	state.title_screen.assets_in_memory = 0;
 	tex_alloc_cursor = 0;
 
-	state.in_game.level = level_load(state.in_game.level_load_path);
+	entity_init();
+	state.in_game.level = level_load(state.in_game.level_load_path, LEVEL_LOAD_ALL);
 	player_init(&state.in_game.player,
 		vec3_from_svec3(state.in_game.level.player_spawn_position),
 		state.in_game.level.player_spawn_rotation,

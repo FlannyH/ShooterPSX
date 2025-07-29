@@ -11,7 +11,7 @@ typedef struct {
 typedef struct {
     aabb_t bounds; // Axis aligned bounding box around all primitives inside this node
     uint16_t left_first; // If this is a leaf, this is the index of the first primitive, otherwise, this is the index of the first of two child nodes
-    uint16_t primitive_count; // Number of primitives in this leaf. If the primitive count is 0xFFFF, this node isn't a leaf, in which case ignore this value
+    uint16_t primitive_count; // Number of primitives in this leaf. If the primitive count is 0, this node isn't a leaf, in which case ignore this value
 } bvh_node_t;
 
 typedef struct {
