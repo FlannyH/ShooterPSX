@@ -47,9 +47,9 @@ char* stack_names[] = {
 };
 #endif
 
-void* allocated_memory_pointers[512] = {0};
-size_t allocated_memory_size[512] = {0};
-memory_category_t allocated_memory_category[512] = {0};
+static void* allocated_memory_pointers[512] = {0};
+static size_t allocated_memory_size[512] = {0};
+static memory_category_t allocated_memory_category[512] = {0};
 
 void* scheduled_frees[32];
 int n_scheduled_frees = 0;
