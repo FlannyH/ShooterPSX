@@ -15,17 +15,17 @@
 #define size_stack_level (1024 * KiB)
 #define size_stack_music (100 * KiB)
 #define size_stack_entity (112 * KiB)
-#define size_stack_vram_swap (4)
+#define size_stack_persistent (32 * KiB)
 uint32_t* mem_stack_temp = NULL;
 uint32_t* mem_stack_level = NULL;
 uint32_t* mem_stack_music = NULL;
 uint32_t* mem_stack_entity = NULL;
-uint32_t* mem_stack_vram_swap = NULL;
+uint32_t* mem_stack_persistent = NULL;
 size_t mem_stack_cursor_temp = 0;
 size_t mem_stack_cursor_level = 0;
 size_t mem_stack_cursor_music = 0;
 size_t mem_stack_cursor_entity = 0;
-size_t mem_stack_cursor_vram_swap = 0;
+size_t mem_stack_cursor_persistent = 0;
 
 #ifdef _DEBUG
 char* mem_cat_strings[] = {
@@ -43,7 +43,7 @@ char* stack_names[] = {
     "STACK_LEVEL",
     "STACK_MUSIC",
     "STACK_ENTITY",
-    "STACK_VRAM_SWAP",
+    "STACK_PERSISTENT",
 };
 
 static void* allocated_memory_pointers[512] = {0};
@@ -59,14 +59,14 @@ void mem_init(void) {
 	mem_stack_level = malloc(size_stack_level);
 	mem_stack_music = malloc(size_stack_music);
 	mem_stack_entity = malloc(size_stack_entity);
-	mem_stack_vram_swap = malloc(size_stack_vram_swap);
+	mem_stack_persistent = malloc(size_stack_persistent);
 
 #ifdef _DEBUG
 	printf("mem_stack_temp:      %p\n", mem_stack_temp);
 	printf("mem_stack_level:     %p\n", mem_stack_level);
 	printf("mem_stack_music:     %p\n", mem_stack_music);
 	printf("mem_stack_entity:    %p\n", mem_stack_entity);
-	printf("mem_stack_vram_swap: %p\n", mem_stack_vram_swap);
+	printf("mem_stack_persistent: %p\n", mem_stack_persistent);
 #endif
 }
 
@@ -96,9 +96,9 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 			base = mem_stack_entity;
 			cursor = &mem_stack_cursor_entity;
 			break;
-		case STACK_VRAM_SWAP:
-			base = mem_stack_vram_swap;
-			cursor = &mem_stack_cursor_vram_swap;
+		case STACK_PERSISTENT:
+			base = mem_stack_persistent;
+			cursor = &mem_stack_cursor_persistent;
 			break;
 		default:
 			printf("invalid stack allocation\n");
@@ -136,8 +136,8 @@ void mem_stack_release(stack_t stack) {
 		case STACK_ENTITY:
 			mem_stack_cursor_entity = 0;
 			break;
-		case STACK_VRAM_SWAP:
-			mem_stack_cursor_vram_swap = 0;
+		case STACK_PERSISTENT:
+			mem_stack_cursor_persistent = 0;
 			break;
 		default:
 			break;
@@ -158,8 +158,8 @@ size_t mem_stack_get_marker(stack_t stack) {
 		case STACK_ENTITY:
 			return mem_stack_cursor_entity;
 			break;
-		case STACK_VRAM_SWAP:
-			return mem_stack_cursor_vram_swap;
+		case STACK_PERSISTENT:
+			return mem_stack_cursor_persistent;
 			break;
 		default:
 			return 0;
@@ -180,8 +180,8 @@ void mem_stack_reset_to_marker(stack_t stack, size_t marker) {
 		case STACK_ENTITY:
 			mem_stack_cursor_entity = marker;
 			break;
-		case STACK_VRAM_SWAP:
-			mem_stack_cursor_vram_swap = marker;
+		case STACK_PERSISTENT:
+			mem_stack_cursor_persistent = marker;
 			break;
 		default:
 			break;
@@ -202,8 +202,8 @@ size_t mem_stack_get_size(stack_t stack) {
 		case STACK_ENTITY:
 			return size_stack_entity;
 			break;
-		case STACK_VRAM_SWAP:
-			return size_stack_vram_swap;
+		case STACK_PERSISTENT:
+			return size_stack_persistent;
 			break;
 		default:
 			return 0;
@@ -225,8 +225,8 @@ size_t mem_stack_get_occupied(stack_t stack) {
 		case STACK_ENTITY:
 			return mem_stack_cursor_entity << 2;
 			break;
-		case STACK_VRAM_SWAP:
-			return mem_stack_cursor_vram_swap << 2;
+		case STACK_PERSISTENT:
+			return mem_stack_cursor_persistent << 2;
 			break;
 		default:
 			return 0;
