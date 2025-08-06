@@ -50,6 +50,16 @@ int pc_lseek(int file_handle, int offset, int seek_mode) {
     return status < 0 ? -info : info;
 }
 
+int pc_close(int file_handle) { 
+    register int r_fn __asm__("a1") = file_handle;
+    register int status __asm__("v0");
+    register int info __asm__("v1");
+
+    __asm__ volatile("break 0, 0x104" : "=r"(status), "=r"(info) : "r"(r_fn) : "memory");
+    
+    return status < 0 ? -info : info;
+}
+
 int pc_file_size(int file_handle) { 
     const int end = pc_lseek(file_handle, 0, PC_SEEK_MODE_END);
     const int start = pc_lseek(file_handle, 0, PC_SEEK_MODE_START);
@@ -57,6 +67,7 @@ int pc_file_size(int file_handle) {
 }
 
 void file_init(const char* path) {
+    (void)path;
     pc_init();
 }
 
@@ -65,7 +76,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
     printf("QWERTYtest1\n");
     int file_handle = pc_open(path, PC_ACCESS_MODE_READ_ONLY);
     printf("QWERTYtest2\n");
-    if (file_handle <= 0) {
+    if (file_handle < 0) {
         printf("[ERROR] Error loading file \"%s\" via pcdrv!\n");
         return 0;
     }
@@ -82,6 +93,8 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
     // Read :D
     pc_read(file_handle, data_size, *destination);
     *size = data_size;
+
+    pc_close(file_handle);
     
     return 1;
 }
