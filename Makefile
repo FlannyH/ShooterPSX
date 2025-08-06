@@ -87,7 +87,8 @@ CODE_ENGINE_PSX_C = psx/file.c \
 				    psx/input.c \
 				    psx/mesh.c \
 				    psx/mixer.c \
-				    psx/renderer.c 
+				    psx/renderer.c \
+				    psx/texture_pool.c
 
 # Source files specific to Windows
 CODE_ENGINE_PC_C =   pc/file.c \
