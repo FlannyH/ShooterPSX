@@ -6,8 +6,11 @@
 #ifndef _NDS
 //#define PAL
 //#define _DEBUG_CAMERA
+#ifndef _DEBUG
 // #define _DEBUG
-//#define _DEBUG_VERBOSE
+#endif
+// #define _DEBUG_VERBOSE
+// #define _PCDRV
 #endif
 
 // #define BENCHMARK_MODE
