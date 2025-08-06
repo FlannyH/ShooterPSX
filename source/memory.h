@@ -17,8 +17,8 @@ typedef enum {
     STACK_LEVEL,
     STACK_MUSIC,
     STACK_ENTITY,
-    STACK_VRAM_SWAP,
-	N_STACK_TYPES,
+    STACK_PERSISTENT,
+    N_STACK_TYPES,
 } stack_t;
 
 void mem_init(void);
