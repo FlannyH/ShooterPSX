@@ -23,7 +23,7 @@ static texture_pool_t texture_pools[MAX_TEXTURE_POOL_COUNT] = {0};
 #define GET_BIT_ARR(a, bit) (( ((a)[((bit) >> 5)]) >> ((bit) & 31) ) & 1)
 #define SET_BIT_ARR(a, bit) ((a)[((bit) >> 5)]) |= (1 << ((bit) & 31));
 
-void texture_pool_init(uint32_t pool_index, uint16_t top, uint16_t left, uint32_t resolution) {
+void texture_pool_init(uint32_t pool_index, uint16_t left, uint16_t top, uint32_t resolution) {
     if (resolution > MAX_RES) {
         printf("[ERROR] Texture pool too big (%ix%i), should be max (%ix%i)\n", resolution, resolution, MAX_RES, MAX_RES);
         return;
@@ -54,7 +54,7 @@ void texture_pool_init(uint32_t pool_index, uint16_t top, uint16_t left, uint32_
     }
 }
 
-int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
+int texture_pool_alloc(uint32_t pool_index, int texture_id, uint32_t width, uint32_t height) {
     // find occupancy map
     uint32_t curr_res = texture_pools[pool_index].resolution;
     uint32_t block_size = 1;
@@ -136,14 +136,13 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
 #ifdef _DEBUG_VERBOSE
     printf("for pool index %i, allocated texture %i (%ix%i) at location (%i, %i)\n", pool_index, texture_pools[pool_index].n_textures, width, height, left, top);
 #endif
-    const uint32_t id = texture_pools[pool_index].n_textures++;
-    texture_pools[pool_index].textures[id] = (RECT){
+    texture_pools[pool_index].textures[texture_id] = (RECT){
         .x = (int16_t)left,
         .y = (int16_t)top,
         .w = (int16_t)width,
         .h = (int16_t)height,
     };
-    return (int)id;
+    return texture_id;
 }
 
 RECT texture_pool_rect(uint32_t pool_index, int texture_id) {
@@ -151,5 +150,10 @@ RECT texture_pool_rect(uint32_t pool_index, int texture_id) {
     assert(pool_index < MAX_TEXTURE_POOL_COUNT);
     assert(texture_id < MAX_TEXTURE_COUNT);
 #endif
-    return texture_pools[pool_index].textures[texture_id];
+    return (RECT) {
+        .x = texture_pools[pool_index].textures[texture_id].x + texture_pools[pool_index].left,
+        .y = texture_pools[pool_index].textures[texture_id].y + texture_pools[pool_index].top,
+        .w = texture_pools[pool_index].textures[texture_id].w,
+        .h = texture_pools[pool_index].textures[texture_id].h,
+    };
 }
