@@ -7,12 +7,13 @@
 // Texture Collection file header
 #define MAGIC_FTXC 0x43585446
 typedef struct {
-    uint32_t file_magic;               // File identifier magic, always "FTXC" or 0x46545843
-    uint32_t n_texture_cell;           // Number of texture cells in this file. This is also the number of palettes in the file, as we assume each texture has its own 16 color palette.
-    uint32_t offset_texture_cell_descs;// Offset into the binary section to the start of the array of TextureCellDesc structs.
-    uint32_t offset_palettes;          // Offset to the color palettes section, relative to the end of this header. Each color is a 16-bit depth color.
-    uint32_t offset_textures;          // Offset to the raw texture data section.
-    uint32_t offset_name_table;        // Offset to an array of offsets into the binary section. The offsets point to null-terminated strings. The names are stored in the same order as the texture cells, so the same index can be used for both arrays. Used for debugging, and this value should be 0xFFFFFFFF if the table is not included in the file.
+    uint32_t file_magic;                // File identifier magic, always "FTXC" or 0x46545843
+    uint32_t n_texture_cell;            // Number of texture cells in this file. This is also the number of palettes in the file, as we assume each texture has its own 16 color palette.
+    uint32_t offset_texture_cell_descs; // Offset into the binary section to the start of the array of TextureCellDesc structs.
+    uint32_t offset_palettes_offsets;   // Offset to the color palettes offsets array section, relative to the end of this header. Each color is a 16-bit depth color.
+    uint32_t offset_palettes;           // Offset to the color palettes section, relative to the end of this header. Each color is a 16-bit depth color.
+    uint32_t offset_textures;           // Offset to the raw texture data section.
+    uint32_t offset_name_table;         // Offset to an array of offsets into the binary section. The offsets point to null-terminated strings. The names are stored in the same order as the texture cells, so the same index can be used for both arrays. Used for debugging, and this value should be 0xFFFFFFFF if the table is not included in the file.
 } tex_col_header_t;
 
 typedef struct {
@@ -41,9 +42,12 @@ typedef struct {
 // TextureCellDesc
 typedef struct {
     uint8_t sector_offset_texture; // Offset (in bytes*2048) into raw texture data section.
-    uint8_t palette_index;         // Palette index.
+    uint8_t palette_index;         // Index into palette offset array
     uint8_t texture_width;         // Texture width in pixels.
     uint8_t texture_height;        // Texture height in pixels.
+    uint8_t bits_per_pixel;        // Valid values are 4, 8, or 16. In the case of 16bpp, palette will be ignored
+    uint8_t palette_count;         // How many palettes this texture has 
+    uint8_t reserved[2];
     pixel32_t avg_color;           // Average value of every pixel
 } texture_cell_desc_t;
 
@@ -52,6 +56,8 @@ typedef struct {
     uint8_t* data;
     uint8_t width;
     uint8_t height;
+    uint8_t bits_per_pixels;
+    uint8_t palette_count;
     pixel32_t avg_color;
 } texture_cpu_t;
 #pragma pack(pop)

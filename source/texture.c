@@ -30,6 +30,7 @@ uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures,
     const void* binary_section = &tex_col_hdr[1];
     const texture_cell_desc_t* texture_cell_descs = (texture_cell_desc_t*)((intptr_t)binary_section + tex_col_hdr->offset_texture_cell_descs);
     pixel16_t* palette_data = (pixel16_t*)((intptr_t)binary_section + tex_col_hdr->offset_palettes);
+    uint32_t* palette_offsets_data = (uint32_t*)((intptr_t)binary_section + tex_col_hdr->offset_palettes_offsets);
     uint8_t* texture_data = (uint8_t*)((intptr_t)binary_section + tex_col_hdr->offset_textures);
 
     // Create a TextureCPU object for each
@@ -38,11 +39,14 @@ uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures,
         texture_cpu_t* texture_cpu = &(*out_textures)[i];
 
         // Get data
-        texture_cpu->palette = &palette_data[(size_t)tex_cell_desc->palette_index * (16 * 16)];
+        const size_t palette_offset = (size_t)palette_offsets_data[(size_t)tex_cell_desc->palette_index];
+        texture_cpu->palette = &palette_data[palette_offset / sizeof(pixel16_t)];
         texture_cpu->data = &texture_data[(size_t)tex_cell_desc->sector_offset_texture * 2048];
         texture_cpu->width = tex_cell_desc->texture_width;
         texture_cpu->height = tex_cell_desc->texture_height;
         texture_cpu->avg_color = tex_cell_desc->avg_color;
+        texture_cpu->palette_count = tex_cell_desc->palette_count;
+        texture_cpu->bits_per_pixels = tex_cell_desc->bits_per_pixel;
     }
 
     if (!on_stack) {
