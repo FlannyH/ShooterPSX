@@ -6,7 +6,7 @@
 #include "../common.h"
 #include "../memory.h"
 
-#define MAX_RES_SHIFTS 8
+#define MAX_RES_SHIFTS 9
 #define MAX_RES (1<<MAX_RES_SHIFTS)
 #define MAX_TEXTURE_POOL_COUNT 8
 #define MAX_TEXTURE_COUNT 128
@@ -21,9 +21,9 @@ typedef struct {
 
 static texture_pool_t texture_pools[MAX_TEXTURE_POOL_COUNT] = {0};
 
-#define GET_BIT_INT(v, bit) ((v) & (1 << (bit)))
+#define GET_BIT_INT(v, bit) ((v) & (1u << (bit)))
 #define GET_BIT_ARR(a, bit) (( ((a)[((bit) >> 5)]) >> ((bit) & 31) ) & 1)
-#define SET_BIT_ARR(a, bit) ((a)[((bit) >> 5)]) |= (1 << ((bit) & 31));
+#define SET_BIT_ARR(a, bit) ((a)[((bit) >> 5)]) |= (1u << ((bit) & 31));
 
 void texture_pool_init(uint32_t pool_index, uint16_t left, uint16_t top, uint32_t resolution) {
     if (resolution > MAX_RES) {
@@ -31,7 +31,7 @@ void texture_pool_init(uint32_t pool_index, uint16_t left, uint16_t top, uint32_
         return;
     }
     
-    if (pool_index > MAX_TEXTURE_POOL_COUNT) {
+    if (pool_index >= MAX_TEXTURE_POOL_COUNT) {
         printf("[ERROR] Texture pool index (%i) out of bounds, should be between 0 and %i\n", pool_index, MAX_TEXTURE_POOL_COUNT - 1);
         return;
     }
@@ -40,23 +40,29 @@ void texture_pool_init(uint32_t pool_index, uint16_t left, uint16_t top, uint32_
     texture_pools[pool_index].left = left;
     texture_pools[pool_index].resolution = resolution;
     texture_pools[pool_index].occupancy_maps = mem_stack_alloc(sizeof(uint32_t*) * MAX_RES_SHIFTS, STACK_PERSISTENT);
-    texture_pools[pool_index].textures = mem_stack_alloc(sizeof(RECT) * 128, STACK_PERSISTENT);
+    texture_pools[pool_index].textures = mem_stack_alloc(sizeof(RECT) * MAX_TEXTURE_COUNT, STACK_PERSISTENT);
 
     size_t level_count = 0;
     for (uint32_t r = resolution; r > 0; r >>= 1) {
         // allocate occupancy map
-        const uint32_t n_bits = r * r;
-        const uint32_t bits_per_unit = sizeof(uint32_t) * 8;
-        const uint32_t alloc_size_ceil = (n_bits + bits_per_unit - 1) / 8;
-        uint32_t* data = mem_stack_alloc(alloc_size_ceil, STACK_PERSISTENT);
+        const uint32_t bit_count = r * r;
+        const uint32_t word_count = ((bit_count + 31) / 32);
+        uint32_t* data = mem_stack_alloc(word_count * sizeof(uint32_t), STACK_PERSISTENT);
         texture_pools[pool_index].occupancy_maps[level_count++] = data;
 
         // clear the memory to 0 (free block)
-        for (size_t i = 0; i < alloc_size_ceil / sizeof(uint32_t); ++i) data[i] = 0;
+        for (size_t i = 0; i < word_count; ++i) data[i] = 0;
     }
 }
 
 int texture_pool_alloc(uint32_t pool_index, int texture_id, uint32_t width, uint32_t height) {
+    if(pool_index >= MAX_TEXTURE_POOL_COUNT) return -2;
+    if(texture_id >= MAX_TEXTURE_COUNT) return -3;
+    if (texture_pools[pool_index].textures == NULL) return -4;
+    if (texture_pools[pool_index].occupancy_maps == NULL) return -5;
+    if (texture_pools[pool_index].resolution < width) return -6;
+    if (texture_pools[pool_index].resolution < height) return -7;
+
     // find occupancy map
     uint32_t curr_res = texture_pools[pool_index].resolution;
     uint32_t block_size = 1;
@@ -94,9 +100,11 @@ int texture_pool_alloc(uint32_t pool_index, int texture_id, uint32_t width, uint
                     }
 
                     // so does an occupied block
-                    const uint32_t index = (y * curr_res) + x;
-                    const uint32_t bit_set = GET_BIT_ARR(occ_map, index);
-                    if (bit_set) ++collisions;
+                    const uint32_t bit_index = (y * curr_res) + x;
+                    const uint32_t word_index = bit_index >> 5u;
+                    const uint32_t mask = 1u << (bit_index & 31u);
+                    const uint32_t bit_set = occ_map[word_index] & mask;
+                    if (bit_set != 0) ++collisions;
                 }
             }
             
@@ -144,6 +152,7 @@ int texture_pool_alloc(uint32_t pool_index, int texture_id, uint32_t width, uint
         .w = (int16_t)width,
         .h = (int16_t)height,
     };
+    texture_pools[pool_index].n_textures++;
     return texture_id;
 }
 
