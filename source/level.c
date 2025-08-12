@@ -1,8 +1,10 @@
 #include "level.h"
+#include "common.h"
 
 #include "renderer.h"
 #include "texture.h"
 #include "music.h"
+#include "mesh.h"
 #include "file.h"
 
 #include <entity.h>

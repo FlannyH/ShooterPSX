@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "../common.h"
 #include "debug_layer.h"
 #include "memory.h"
 #include "input.h"

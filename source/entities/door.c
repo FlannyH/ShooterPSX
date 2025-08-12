@@ -1,7 +1,9 @@
 #include "door.h"
 
 #include "../renderer.h"
+#include "../common.h"
 #include "../music.h"
+#include "../mesh.h"
 #include "../vec3.h"
 
 entity_door_t* entity_door_new(void) {

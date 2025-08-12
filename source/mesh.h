@@ -1,6 +1,7 @@
 #ifndef MESH_H
 #define MESH_H
 #include "collision.h"
+#include "renderer.h"
 
 #include <stdint.h>
 

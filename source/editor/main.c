@@ -6,6 +6,7 @@
 #include "../renderer.h"
 #include "../entity.h"
 #include "../player.h"
+#include "../common.h"
 #include "../input.h"
 #include "../level.h"
 #include "../file.h"

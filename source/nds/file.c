@@ -1,5 +1,6 @@
 #include "file.h"
 
+#include "../common.h"
 #include "memory.h"
 
 #include <filesystem.h>

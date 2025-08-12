@@ -1,9 +1,14 @@
 #include "renderer.h"
+#include "../renderer.h"
+#include "../common.h"
 
+#include "texture_pool.h"
+#include "collision.h"
 #include "particles.h"
 #include "lut.h"
 
 #include <string.h>
+#include <assert.h>
 #include <psxgte.h>
 #include <psxgpu.h>
 

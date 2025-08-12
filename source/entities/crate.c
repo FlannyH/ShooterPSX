@@ -1,6 +1,8 @@
 #include "crate.h"
 
 #include "pickup.h"
+#include "../common.h"
+#include "../mesh.h"
 
 entity_crate_t* entity_crate_new(void) {
 	// Allocate memory for the entity

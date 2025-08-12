@@ -1,5 +1,7 @@
 #include "music.h"
 
+#include "../common.h"
+
 void mixer_init(void) {
     // todo
 }

@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <psxgpu.h>
+#include <assert.h>
 
 #include "texture_pool.h"
+#include "../common.h"
 #include "../memory.h"
 
 #define MAX_RES_SHIFTS 8

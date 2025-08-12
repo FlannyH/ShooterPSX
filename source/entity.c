@@ -1,4 +1,5 @@
 #include "entity.h"
+#include "common.h"
 
 #include "entities/platform.h"
 #include "entities/trigger.h"

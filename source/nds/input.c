@@ -1,5 +1,6 @@
 #include "input.h"
 
+#include "../common.h"
 #include "nds/psx.h"
 
 #include <nds/arm9/input.h>

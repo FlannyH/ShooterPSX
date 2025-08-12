@@ -1,4 +1,5 @@
 #include "player.h"
+#include "common.h"
 
 #ifdef _PSX
 #include <psxpad.h>

@@ -1,4 +1,5 @@
 #include "music.h"
+#include "common.h"
 
 #include "fixed_point.h"
 #include "memory.h"

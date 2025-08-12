@@ -1,5 +1,7 @@
+#include "collision.h"
 #include "renderer.h"
 #include "lut.h"
+#include "common.h"
 
 #include <string.h>
 

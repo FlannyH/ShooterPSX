@@ -1,5 +1,6 @@
 #include "mesh.h"
 
+#include "../common.h"
 #include "memory.h"
 #include "file.h"
 

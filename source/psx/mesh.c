@@ -1,7 +1,9 @@
 #include "../mesh.h"
 
+#include "renderer.h"
 #include "../renderer.h"
 #include "../memory.h"
+#include "../common.h"
 #include "../file.h"
 
 #include <assert.h>
