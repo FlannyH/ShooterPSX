@@ -1,6 +1,7 @@
 #include "file.h"
 
 #include "memory.h"
+#include "../common.h"
 
 #include <string.h>
 #include <stdio.h>

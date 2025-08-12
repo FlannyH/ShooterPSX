@@ -1,4 +1,5 @@
 #include "text.h"
+#include "common.h"
 
 const char* text_main_menu[] = {
     "START",

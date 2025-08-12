@@ -1,5 +1,6 @@
 #include "mixer.h"
 #include "music.h"
+#include "../common.h"
 #include <hwregs_c.h>
 #include <psxetc.h>
 #include <psxapi.h>

@@ -2,6 +2,7 @@
 #define PSX_H
 #include "psx.h"
 
+#include "../common.h"
 #include <nds/arm9/trig_lut.h>
 
 // Angle value: -65536 to +65535

@@ -1,4 +1,5 @@
 #include "main.h"
+#include "common.h"
 
 #include "input.h"
 #include "music.h"

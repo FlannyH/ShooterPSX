@@ -15,6 +15,7 @@
 #include "../entities/crate.h"
 #include "../entities/door.h"
 #include "../renderer.h"
+#include "../common.h"
 #include "../input.h"
 #include "../file.h"
 

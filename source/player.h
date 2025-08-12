@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include "fixed_point.h"
+#include "collision.h"
 #include "renderer.h"
 #include "vec3.h"
 

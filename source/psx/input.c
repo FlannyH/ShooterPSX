@@ -1,4 +1,5 @@
 #include "input.h"
+#include "../common.h"
 
 #include "fixed_point.h"
 

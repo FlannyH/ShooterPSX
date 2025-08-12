@@ -1,4 +1,5 @@
 #include "main.h"
+#include "common.h"
 
 #include "renderer.h"
 #include "memory.h"

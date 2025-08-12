@@ -1,5 +1,8 @@
 #include "pickup.h"
 
+#include "../common.h"
+#include "../mesh.h"
+
 #include "music.h"
 
 entity_pickup_t* entity_pickup_new(void) {

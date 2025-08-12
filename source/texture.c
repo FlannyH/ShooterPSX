@@ -1,4 +1,5 @@
 #include "texture.h"
+#include "common.h"
 
 #include "file.h"
 #include "memory.h"

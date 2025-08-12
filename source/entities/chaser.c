@@ -1,6 +1,8 @@
 #include "chaser.h"
 
 #include "../random.h"
+#include "../common.h"
+#include "../mesh.h"
 #include "../main.h"
 
 extern state_vars_t state;

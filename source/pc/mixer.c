@@ -1,3 +1,4 @@
+#include "../common.h"
 #include "music.h"
 #include "memory.h"
 #include <portaudio.h>

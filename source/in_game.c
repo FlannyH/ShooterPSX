@@ -1,4 +1,5 @@
 #include "main.h"
+#include "common.h"
 
 #include "entities/platform.h"
 #include "entities/trigger.h"
@@ -6,13 +7,14 @@
 #include "entities/chaser.h"
 #include "entities/crate.h"
 #include "entities/door.h"
-#include "entity.h"
 #include "renderer.h"
+#include "entity.h"
 #include "random.h"
 #include "memory.h"
 #include "input.h"
 #include "level.h"
 #include "music.h"
+#include "mesh.h"
 #include "text.h"
 
 #ifdef _PSX

@@ -18,7 +18,6 @@ extern "C" {
 #include "texture.h"
 #include "common.h"
 #include "level.h"
-#include "mesh.h"
 #include "vec2.h"
 
 #include <stdint.h>

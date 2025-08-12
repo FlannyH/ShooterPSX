@@ -2,6 +2,7 @@
 #define PSX_H
 
 #include "psx.h"
+#include "../common.h"
 
 #include <math.h>
 

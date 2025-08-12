@@ -1,6 +1,7 @@
 #include "memory.h"
 #include "mesh.h"
 #include "file.h"
+#include "common.h"
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,4 +1,5 @@
 #include "collision.h"
+#include "common.h"
 
 #include "fixed_point.h"
 #include "renderer.h"

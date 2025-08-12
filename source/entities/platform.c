@@ -1,5 +1,8 @@
 #include "platform.h"
 
+#include "../common.h"
+#include "../mesh.h"
+
 entity_platform_t* entity_platform_new(void) {
 	// Allocate memory for the entity
 	entity_platform_t* entity = (entity_platform_t*)entity_get_header(entity_alloc(ENTITY_PICKUP));
