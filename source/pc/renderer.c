@@ -51,7 +51,6 @@ float aspect = 16.0f / 9.0f;
 transform_t cam_transform;
 vec3_t camera_pos;
 vec3_t camera_dir;
-extern uint8_t tex_id_start;
 int curr_depth_bias = 0;
 int n_meshes_drawn = 0;
 
@@ -509,7 +508,7 @@ void renderer_end_frame(void) {
 }
 
 int32_t max_dot_value = 0;
-void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform, int local, int facing_camera, int tex_id_offset) {
+void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform, int local, int facing_camera) {
 	++n_meshes_drawn;
 	printf("%s:%i - %08p\n",__FILE__, __LINE__, mesh);
 
@@ -517,7 +516,6 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	mat4 model_matrix;
 	glm_mat4_identity(model_matrix);
     glViewport(0, 0, render_w, render_h);
-    tex_id_start = tex_id_offset;
 
 	// Apply rotation
 	// Apply translation
@@ -603,7 +601,7 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	}
 
     glUniform1i(glGetUniformLocation(shader_gouraud, "texture_bound"), mesh->vertices[0].tex_id != 255);
-    glUniform1i(glGetUniformLocation(shader_gouraud, "texture_offset"), tex_id_start);
+    glUniform1i(glGetUniformLocation(shader_gouraud, "texture_offset"), 0);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "texture_is_page"), 0);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "curr_depth_bias"), curr_depth_bias);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "interpolation_mode"), 0);
@@ -625,7 +623,6 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	if (mesh->n_quads) glDrawArrays(GL_QUADS, mesh->n_triangles * 3, mesh->n_quads * 4);
 
 	n_total_triangles += mesh->n_triangles;
-    tex_id_start = 0;
 
 #ifdef _LEVEL_EDITOR
 	drawing_id = 0;
@@ -817,7 +814,7 @@ vec3_t renderer_get_forward_vector(void) {
 }
 
 void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color,
-    int depth, int texture_id, int is_page) {
+    int depth, int texture_id, texture_category_t category) {
 	vertex_3d_t verts[4];
 	// Top left
 	verts[0].x = tl.x / ONE;

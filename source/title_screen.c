@@ -41,22 +41,22 @@ void state_enter_title_screen(void) {
 		texture_cpu_t *tex_ui;
 		mem_stack_release(STACK_TEMP);
 		texture_collection_load("models/ui_tex/menu1.txc", &tex_menu1, 1, STACK_TEMP);
-		renderer_upload_8bit_texture_page(tex_menu1, 3);
+		renderer_upload_texture(tex_menu1, 3, TEX_CAT_MISC);
 		mem_stack_release(STACK_TEMP);
 		texture_collection_load("models/ui_tex/menu2.txc", &tex_menu2, 1, STACK_TEMP);
-		renderer_upload_8bit_texture_page(tex_menu2, 4);
+		renderer_upload_texture(tex_menu2, 4, TEX_CAT_MISC);
 		mem_stack_release(STACK_TEMP);
 		texture_collection_load("models/ui_tex/ui.txc", &tex_ui, 1, STACK_TEMP);
-		renderer_upload_8bit_texture_page(tex_ui, 5);
+		renderer_upload_texture(tex_ui, 5, TEX_CAT_MISC);
 #elif defined(_NDS)
 		texture_cpu_t *tex_menu;
 		texture_cpu_t *tex_ui;
 		mem_stack_release(STACK_TEMP);
 		texture_collection_load("models/ui_tex/menu_ds.txc", &tex_menu, 1, STACK_TEMP);
-		renderer_upload_8bit_texture_page(tex_menu, 4);
+		renderer_upload_texture(tex_menu, 4, TEX_CAT_MISC);
 		mem_stack_release(STACK_TEMP);
 		texture_collection_load("models/ui_tex/ui.txc", &tex_ui, 1, STACK_TEMP);
-		renderer_upload_8bit_texture_page(tex_ui, 5);
+		renderer_upload_texture(tex_ui, 5, TEX_CAT_MISC);
 #endif
 		music_stop();
 		mem_stack_release(STACK_TEMP);
@@ -94,9 +94,9 @@ void state_update_title_screen(int dt) {
 				color.b = 255;
 			}
 		}
-		renderer_draw_2d_quad_axis_aligned((vec2_t){145*ONE, (148 + (24 * y))*ONE}, (vec2_t){26*ONE, 20*ONE}, (vec2_t){129*ONE, 40*ONE}, (vec2_t){155*ONE, 60*ONE}, color, 2, 5, 1);
-		renderer_draw_2d_quad_axis_aligned((vec2_t){367*ONE, (148 + (24 * y))*ONE}, (vec2_t){26*ONE, 20*ONE}, (vec2_t){155*ONE, 40*ONE}, (vec2_t){129*ONE, 60*ONE}, color, 2, 5, 1);
-		renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, (148 + (24 * y))*ONE}, (vec2_t){192*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, color, 2, 5, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){145*ONE, (148 + (24 * y))*ONE}, (vec2_t){26*ONE, 20*ONE}, (vec2_t){129*ONE, 40*ONE}, (vec2_t){155*ONE, 60*ONE}, color, 2, 5, TEX_CAT_MISC);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){367*ONE, (148 + (24 * y))*ONE}, (vec2_t){26*ONE, 20*ONE}, (vec2_t){155*ONE, 40*ONE}, (vec2_t){129*ONE, 60*ONE}, color, 2, 5, TEX_CAT_MISC);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, (148 + (24 * y))*ONE}, (vec2_t){192*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, color, 2, 5, TEX_CAT_MISC);
 
 		renderer_draw_text((vec2_t){256*ONE, (148 + (24 * y))*ONE}, text_main_menu[y], 1, 1, white);
 	}

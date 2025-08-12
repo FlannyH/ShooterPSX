@@ -89,7 +89,7 @@ void renderer_end_frame(void) {
     }
 }
 
-void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform, int local, int facing_camera, int tex_id_offset) {
+void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform, int local, int facing_camera) {
     ++n_meshes_drawn; 
     
     // Set up model view matrix
@@ -201,7 +201,7 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform,
     glPopMatrix(1);
 }
 
-void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {
+void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, texture_category_t category) {
     // Reset all matrices
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();

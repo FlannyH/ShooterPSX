@@ -7,8 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_start, int optimize_for_single_render_per_frame) {
-    (void)tex_id_start;
+model_t* model_load(const char* path, int on_stack, stack_t stack, texture_category_t tex_category, int optimize_for_single_render_per_frame) {
     (void)optimize_for_single_render_per_frame;
     
     // Read the file

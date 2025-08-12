@@ -34,7 +34,6 @@ uint32_t ord_tbl[2][ORD_TBL_LENGTH];
 uint32_t* next_primitive;
 
 // Rendering parameters
-extern uint8_t tex_id_start;
 int curr_ot_bias = 0;
 
 // Camera info
@@ -55,17 +54,31 @@ int frame_counter = 0;
 int n_meshes_drawn = 0;
 int delta_time_raw_curr = 0;
 int delta_time_raw_prev = 0;
-int tex_level_start = 0;
-int tex_entity_start = 0;
-int tex_weapon_start = 0;
-int tex_alloc_cursor = 0;
+int tex_level_alloc_cursor = 0;
+int tex_entity_alloc_cursor = 0;
+int tex_misc_alloc_cursor = 0;
 int store_to_precomp_prims = 0;
 uint32_t sxy_storage = 0;
 
 // Textures
-pixel32_t textures_avg_colors[256];
-RECT textures[256];
-RECT palettes[256];
+texture_entry_t textures_level[128] = {0};
+texture_entry_t textures_entity[128] = {0};
+texture_entry_t textures_misc[128] = {0};
+texture_entry_t textures_weapon[128] = {0};
+texture_entry_t* renderer_psx_get_texture_entry(texture_category_t category, int texture_id) {
+    texture_entry_t* entry = NULL;
+    if (texture_id >= 0) {
+        switch (category) {
+            case TEX_CAT_NONE: return NULL;
+            case TEX_CAT_LEVEL: entry = &textures_level[texture_id]; break;
+            case TEX_CAT_ENTITY: entry = &textures_entity[texture_id]; break;
+            case TEX_CAT_WEAPON: entry = &textures_weapon[texture_id]; break;
+            case TEX_CAT_MISC: entry = &textures_misc[texture_id]; break;
+            default: printf("[ERROR] Invalid texture category %i\n", (int)category); return NULL;
+        }
+    }
+    return entry;
+}
 
 // Import inline helper functions
 #include "renderer_inline.c"
@@ -82,6 +95,11 @@ int renderer_height(void) {
 }
 
 void renderer_init(void) {
+    texture_pool_init(0, 0, 256, 256);
+    texture_pool_init(1, 256, 256, 256);
+    texture_pool_init(2, 512, 256, 256);
+    texture_pool_init(3, 768, 256, 256);
+
     SetVideoMode(MODE_NTSC);
 
     // Configures the pair of DISPENVs
@@ -188,13 +206,11 @@ void renderer_end_frame(void) {
     drawn_first_frame = 1;
 }
 
-void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform, int local, int facing_camera, int tex_id_offset) {
+void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform, int local, int facing_camera) {
     if (!mesh) {
         printf("renderer_draw_mesh_shaded: mesh was null!\n");
         return;
     }
-    tex_id_start = tex_id_offset;
-
     // Set rotation and translation matrix
     MATRIX model_matrix;
     if (facing_camera)  {
@@ -249,41 +265,38 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform,
 	PopMatrix();
 }
 
-void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page) {
-    const int y_offset = is_pal ? 0 : -16;
-    POLY_FT4* new_triangle = (POLY_FT4*)next_primitive;
+void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, texture_category_t category) {
+    // Fetch the right texture entry
+    texture_entry_t* entry = renderer_psx_get_texture_entry(category, texture_id);
+    if (entry == NULL) return;
+
+    // Allocate quad primitive
+    POLY_FT4* new_quad = (POLY_FT4*)next_primitive;
     next_primitive += sizeof(POLY_FT4) / sizeof(*next_primitive);
-    setPolyFT4(new_triangle); 
-    setXY4(new_triangle, 
-        (tl.x * res_x) / (512 * ONE), (tl.y / ONE) + y_offset,
-        (tr.x * res_x) / (512 * ONE), (tr.y / ONE) + y_offset,
-        (bl.x * res_x) / (512 * ONE), (bl.y / ONE) + y_offset,
-        (br.x * res_x) / (512 * ONE), (br.y / ONE) + y_offset
+    setPolyFT4(new_quad); 
+
+    // Position
+    const int y_offset = is_pal ? 0 : -16;
+    setXY4(new_quad,
+        (tl.x / ONE), (tl.y / ONE) + y_offset,
+        (tr.x / ONE), (tr.y / ONE) + y_offset,
+        (bl.x / ONE), (bl.y / ONE) + y_offset,
+        (br.x / ONE), (br.y / ONE) + y_offset
     );
-    setRGB0(new_triangle, color.r, color.g, color.b);\
-    if (is_page) {
-        new_triangle->clut = getClut(768, 256 + (32*(texture_id)));
-        new_triangle->tpage = getTPage(1, 0, 128 * texture_id, 256) & ~(1 << 9);
-        setUV4(new_triangle,
-            uv_tl.x / ONE, uv_tl.y / ONE, // top left
-            uv_br.x / ONE, uv_tl.y / ONE, // top right
-            uv_tl.x / ONE, uv_br.y / ONE, // bottom left
-            uv_br.x / ONE, uv_br.y / ONE // bottom right
-        );
-    }
-    else {
-        const uint8_t tex_offset_x = ((texture_id) & 0b00001100) << 4;
-        const uint8_t tex_offset_y = ((texture_id) & 0b00000011) << 6;
-        new_triangle->clut = getClut(palettes[texture_id].x, palettes[texture_id].y);
-        new_triangle->tpage = getTPage(0, 0, textures[texture_id].x, textures[texture_id].y) & ~(1 << 9);
-        setUV4(new_triangle,
-            uv_tl.x + tex_offset_x, uv_tl.y + tex_offset_y,
-            uv_br.x + tex_offset_x, uv_tl.y + tex_offset_y,
-            uv_tl.x + tex_offset_x, uv_br.y + tex_offset_y,
-            uv_br.x + tex_offset_x, uv_br.y + tex_offset_y
-        );
-    }
-    addPrim(ord_tbl[drawbuffer] + depth + curr_ot_bias, new_triangle);
+
+    // Color
+    setRGB0(new_quad, color.r, color.g, color.b);
+    
+    // Texture info
+    new_quad->clut = entry->clut;
+    new_quad->tpage = entry->tpage;
+    setUV4(new_quad,
+        (uv_tl.x / ONE) + entry->offset_u, (uv_tl.y / ONE) + entry->offset_v,
+        (uv_br.x / ONE) + entry->offset_u, (uv_tl.y / ONE) + entry->offset_v,
+        (uv_tl.x / ONE) + entry->offset_u, (uv_br.y / ONE) + entry->offset_v,
+        (uv_br.x / ONE) + entry->offset_u, (uv_br.y / ONE) + entry->offset_v
+    );
+    addPrim(ord_tbl[drawbuffer] + depth + curr_ot_bias, new_quad);
 }
 
 void renderer_apply_fade(int fade_level) {
@@ -348,54 +361,71 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     PopMatrix();
 }
 
-void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index) {
-    // Load texture pixels to VRAM - starting from 0,256, spanning 512x256 VRAM pixels, stored in 16x64 blocks (for 64x64 texture)
-    // This means that the grid consists of 32x4 textures
-    WARN_IF("texture is not 64x64!", texture->width != 64 || texture->height != 64);
-    const RECT rect_tex = {
-        0 + ((int16_t)index / 4) * 16,
-        256 + (((int16_t)index) % 4) * 64,
-        (int16_t)texture->width / 4,
-        (int16_t)texture->height
-    };
-    LoadImage(&rect_tex, (uint32_t*)texture->data);
-    DrawSync(0);
-    textures[index] = rect_tex;
-    textures_avg_colors[index] = texture->avg_color;
+void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index, texture_category_t category) {
+    // Calculate VRAM width based on bpp
+    assert(texture != NULL);
+    uint32_t width = (uint32_t)texture->width;
+    uint32_t height = (uint32_t)texture->height;
+    if (width == 0) width = 256;
+    if (height == 0) height = 256;
+    if (texture->bits_per_pixel == 8) width /= 2;
+    else if (texture->bits_per_pixel == 4) width /= 4;
 
-    // Load palette to VRAM - starting from 512,384, spanning 256x128 VRAM pixels, stored in 16x16 blocks (for 16 16-color palettes, with fades to the average texture color for distance blur)
-    const RECT rect_palette = {
-        768 + ((int16_t)index % 16) * 16,
-        256 + (((int16_t)index) / 16) * 16,
-        16,
-        16
-    };
-
-    LoadImage(&rect_palette, (uint32_t*)texture->palette);
+    // Allocate texture and palette in VRAM
+    int pool_id = -1;
+    int texture_id = -1;
+    while (texture_id < 0 && ++pool_id < 4) {
+        texture_id = texture_pool_alloc((uint32_t)pool_id, (int)index, width, height);
+    }
+#ifdef _DEBUG
+    if (texture_id < 0) {
+        printf("[ERROR] Failed to allocate %i bit texture with index %i and resolution (%ix%i)\n", texture->bits_per_pixel, index, texture->width ? texture->width : 256, height);
+        return;
+    }
+#endif
+    int palette_id = texture_pool_alloc(3, (int)index, (1 << texture->bits_per_pixel), texture->palette_count);
+#ifdef _DEBUG
+    if (palette_id < 0) {
+        printf("[ERROR] Failed to allocate palette\n");
+        return;
+    }
+#endif
+    
+    // Upload texture pixels to VRAM
+    const RECT texture_rect = texture_pool_rect(pool_id, texture_id);
+    const RECT palette_rect = texture_pool_rect(3, palette_id);
+    LoadImage(&texture_rect, (uint32_t*)texture->data);
+    LoadImage(&palette_rect, (uint32_t*)texture->palette);
     DrawSync(0);
-    palettes[index] = rect_palette;
-}
-
-void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {
-    WARN_IF("texture is not a full page!", texture->width != 0 || texture->height != 0); // 0 is interpreted as 256
-    const RECT rect_page = {
-        index * 256 / (16 / 8), // X: 256 pixels, 8bpp
-        256, // Y: fixed at 256, which is where textures are stored,
-        128,
-        256
-    };
-    LoadImage(&rect_page, (uint32_t*)texture->data);
-    DrawSync(0);
-
-    // Load palette to VRAM - starting from 512,384, spanning 256x128 VRAM pixels, stored in 256x16 blocks (for 16 256-color palettes, with fades to the average texture color for distance blur)
-    const RECT rect_palette = {
-        768,
-        256 + ((int16_t)index * 32),
-        256,
-        1
-    };
-    LoadImage(&rect_palette, (uint32_t*)texture->palette);
-    DrawSync(0);
+    
+    // Calculate texture metadata
+    /*if (texture->bits_per_pixel == 16)*/ uint16_t texture_mode = 2;
+    if (texture->bits_per_pixel == 8) texture_mode = 1;
+    else if (texture->bits_per_pixel == 4) texture_mode = 0;
+    #ifdef _DEBUG   
+    else printf("[WARN] texture->bits_per_pixel: got %i, expected 4, 8, or 16\n", texture->bits_per_pixel);
+    #endif
+    
+    // Store texture metadata
+    uint32_t offset_u = texture_rect.x;
+    if (texture->bits_per_pixel == 8) offset_u *= 2;
+    else if (texture->bits_per_pixel == 4) offset_u *= 4;
+    
+    texture_entry_t tex_entry;
+    tex_entry.tpage = getTPage(texture_mode, 0, texture_rect.x, texture_rect.y);
+    tex_entry.clut = getClut(palette_rect.x, palette_rect.y);
+    tex_entry.offset_u = (uint8_t)(offset_u & 0xFF);
+    tex_entry.offset_v = (uint8_t)(texture_rect.y & 0xFF);
+    tex_entry.pool_id = (uint8_t)pool_id;
+    tex_entry.texture_id = index;
+    tex_entry.average_color = texture->avg_color;
+    switch (category) {
+        case TEX_CAT_LEVEL: textures_level[index] = tex_entry; break;
+        case TEX_CAT_ENTITY: textures_entity[index] = tex_entry; break;
+        case TEX_CAT_WEAPON: textures_weapon[index] = tex_entry; break;
+        case TEX_CAT_MISC: textures_misc[index] = tex_entry; break;
+        default: break;
+    }
 }
 
 void renderer_set_video_mode(int is_pal) {
@@ -523,7 +553,7 @@ void renderer_draw_particle_system(particle_system_t* system, scalar_t dt) {
         };
 
         // Render quad
-        renderer_draw_2d_quad_axis_aligned(center, size, (vec2_t){0, 0}, (vec2_t){63, 63}, color, depth, system->params->texture_id + p->curr_frame / ONE, 0);
+        renderer_draw_2d_quad_axis_aligned(center, size, (vec2_t){0, 0}, (vec2_t){63, 63}, color, depth, system->params->texture_id + p->curr_frame / ONE, TEX_CAT_MISC);
     }
 }
 
