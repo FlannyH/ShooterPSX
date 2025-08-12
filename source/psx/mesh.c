@@ -10,16 +10,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-extern pixel32_t textures_avg_colors[];
-extern RECT textures[];
-extern RECT palettes[];
+void precompute_tex_triangle(POLY_GT3* prim, const vertex_3d_t* vertices, texture_category_t tex_category);
+void precompute_tex_quad(POLY_GT4* prim, const vertex_3d_t* vertices, texture_category_t tex_category);
+extern texture_entry_t* renderer_psx_get_texture_entry(texture_category_t category, int texture_id);
 
-void precompute_tex_triangle(POLY_GT3* prim, const vertex_3d_t* vertices, const int tex_id_start);
-void precompute_untex_triangle(POLY_G3* prim, const vertex_3d_t* vertices, const int tex_id_start);
-void precompute_tex_quad(POLY_GT4* prim, const vertex_3d_t* vertices, const int tex_id_start);
-void precompute_untex_quad(POLY_G4* prim, const vertex_3d_t* vertices, const int tex_id_start);
-
-model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_start, int optimize_for_single_render_per_frame) {
+model_t* model_load(const char* path, int on_stack, stack_t stack, texture_category_t tex_category, int optimize_for_single_render_per_frame) {
     // Read the file and store it in the temporary stack
     uint32_t* file_data;
     size_t size;
@@ -115,7 +110,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
             for (int i = 0; i < 2; ++i) {
                 if (vertices[0].tex_id == 254) continue;
                 POLY_GT3* tex_prim = &model->meshes[mesh_id].tex_tris[i][poly_index];
-                precompute_tex_triangle(tex_prim, vertices, tex_id_start);
+                precompute_tex_triangle(tex_prim, vertices, tex_category);
             }
             for (int i = 0; i < 3; ++i) {
                 model->meshes[mesh_id].vtx_pos_and_size[vert_index + i] = (aligned_position_t) {
@@ -123,7 +118,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
                     .y = vertices[i].y,
                     .z = vertices[i].z,
                     .poly_size = vertices[1].tex_id, // second vertex tex_id is polygon size, used for subdiv
-                    .tex_id = (verts[0].tex_id >= 254) ? (verts[0].tex_id) : (verts[0].tex_id + tex_id_start) // first vertex tex_id is texture index
+                    .tex_id = verts[0].tex_id // first vertex tex_id is texture index
                 };
             }
             vert_index += 3;
@@ -133,7 +128,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
             for (int i = 0; i < 2; ++i) {
                 if (vertices[0].tex_id == 254) continue;
                 POLY_GT4* tex_prim = &model->meshes[mesh_id].tex_quads[i][poly_index];
-                precompute_tex_quad(tex_prim, vertices, tex_id_start);
+                precompute_tex_quad(tex_prim, vertices, tex_category);
             }
             for (int i = 0; i < 4; ++i) {
                 model->meshes[mesh_id].vtx_pos_and_size[vert_index + i] = (aligned_position_t) {
@@ -141,7 +136,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, int tex_id_st
                     .y = vertices[i].y,
                     .z = vertices[i].z,
                     .poly_size = vertices[1].tex_id, // second vertex tex_id is polygon size, used for subdiv
-                    .tex_id = (verts[0].tex_id >= 254) ? (verts[0].tex_id) : (verts[0].tex_id + tex_id_start) // first vertex tex_id is texture index
+                    .tex_id = verts[0].tex_id // first vertex tex_id is texture index
                 };
             }
             vert_index += 4;
@@ -159,36 +154,33 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
     return NULL; // unimplemented on PS1
 }
 
-void precompute_tex_triangle(POLY_GT3* prim, const vertex_3d_t* vertices, const int tex_id_start) {
+void precompute_tex_triangle(POLY_GT3* prim, const vertex_3d_t* vertices, texture_category_t tex_category) {
     const vertex_3d_t v0 = vertices[0];
     const vertex_3d_t v1 = vertices[1];
     const vertex_3d_t v2 = vertices[2];
-    assert((palettes[v0.tex_id + tex_id_start].y & 0xF) == 0 && "Misaligned palette!");
+    const texture_entry_t* entry = renderer_psx_get_texture_entry(tex_category, (int)v0.tex_id);
 
     setPolyGT3(prim);
     setRGB0(prim, v0.r >> 1, v0.g >> 1, v0.b >> 1);
     setRGB1(prim, v1.r >> 1, v1.g >> 1, v1.b >> 1);
     setRGB2(prim, v2.r >> 1, v2.g >> 1, v2.b >> 1);
 
-    // todo: maybe unhardcode this
-    const uint8_t tex_offset_x = ((v0.tex_id + tex_id_start) & 0b00001100) << 4;
-    const uint8_t tex_offset_y = ((v0.tex_id + tex_id_start) & 0b00000011) << 6;
     setUV3(prim,
-        (v0.u >> 2) + tex_offset_x, (v0.v >> 2) + tex_offset_y,
-        (v1.u >> 2) + tex_offset_x, (v1.v >> 2) + tex_offset_y,
-        (v2.u >> 2) + tex_offset_x, (v2.v >> 2) + tex_offset_y
+        (v0.u >> 2) + entry->offset_u, (v0.v >> 2) + entry->offset_v,
+        (v1.u >> 2) + entry->offset_u, (v1.v >> 2) + entry->offset_v,
+        (v2.u >> 2) + entry->offset_u, (v2.v >> 2) + entry->offset_v
     );
 
-    prim->clut = getClut(palettes[v0.tex_id + tex_id_start].x, palettes[v0.tex_id + tex_id_start].y); // note: when rendering, palette_y = palette_y & 0xF + clut_fade
-    prim->tpage = getTPage(0, 0, textures[v0.tex_id + tex_id_start].x, textures[v0.tex_id + tex_id_start].y);
+    prim->clut = entry->clut; // note: when rendering, offset the Y coordinate by clut_fade for the distance fog effect
+    prim->tpage = entry->tpage;
 }
 
-void precompute_tex_quad(POLY_GT4* prim, const vertex_3d_t* vertices, const int tex_id_start) {
+void precompute_tex_quad(POLY_GT4* prim, const vertex_3d_t* vertices, texture_category_t tex_category) {
     const vertex_3d_t v0 = vertices[0];
     const vertex_3d_t v1 = vertices[1];
     const vertex_3d_t v2 = vertices[2];
     const vertex_3d_t v3 = vertices[3];
-    assert((palettes[v0.tex_id + tex_id_start].y & 0xF) == 0 && "Misaligned palette!");
+    const texture_entry_t* entry = renderer_psx_get_texture_entry(tex_category, (int)v0.tex_id);
 
     setPolyGT4(prim);
     setRGB0(prim, v0.r >> 1, v0.g >> 1, v0.b >> 1);
@@ -196,45 +188,13 @@ void precompute_tex_quad(POLY_GT4* prim, const vertex_3d_t* vertices, const int 
     setRGB2(prim, v2.r >> 1, v2.g >> 1, v2.b >> 1);
     setRGB3(prim, v3.r >> 1, v3.g >> 1, v3.b >> 1);
 
-    // todo: maybe unhardcode this
-    const uint8_t tex_offset_x = ((v0.tex_id + tex_id_start) & 0b00001100) << 4;
-    const uint8_t tex_offset_y = ((v0.tex_id + tex_id_start) & 0b00000011) << 6;
     setUV4(prim,
-        (v0.u >> 2) + tex_offset_x, (v0.v >> 2) + tex_offset_y,
-        (v1.u >> 2) + tex_offset_x, (v1.v >> 2) + tex_offset_y,
-        (v2.u >> 2) + tex_offset_x, (v2.v >> 2) + tex_offset_y,
-        (v3.u >> 2) + tex_offset_x, (v3.v >> 2) + tex_offset_y
+        (v0.u >> 2) + entry->offset_u, (v0.v >> 2) + entry->offset_v,
+        (v1.u >> 2) + entry->offset_u, (v1.v >> 2) + entry->offset_v,
+        (v2.u >> 2) + entry->offset_u, (v2.v >> 2) + entry->offset_v,
+        (v3.u >> 2) + entry->offset_u, (v3.v >> 2) + entry->offset_v
     );
 
-    prim->clut = getClut(palettes[v0.tex_id + tex_id_start].x, palettes[v0.tex_id + tex_id_start].y); // note: when rendering, palette_y = palette_y & 0xF + clut_fade
-    prim->tpage = getTPage(0, 0, textures[v0.tex_id + tex_id_start].x, textures[v0.tex_id + tex_id_start].y);
-}
-
-void precompute_untex_quad(POLY_G4* prim, const vertex_3d_t* vertices, const int tex_id_start) {
-    const vertex_3d_t v0 = vertices[0];
-    const vertex_3d_t v1 = vertices[1];
-    const vertex_3d_t v2 = vertices[2];
-    const vertex_3d_t v3 = vertices[3];
-
-    setPolyG4(prim);
-    setRGB0(prim,
-        mul_8x8(v0.r, textures_avg_colors[v0.tex_id + tex_id_start].r),
-        mul_8x8(v0.g, textures_avg_colors[v0.tex_id + tex_id_start].g),
-        mul_8x8(v0.b, textures_avg_colors[v0.tex_id + tex_id_start].b)
-    );
-    setRGB1(prim,
-        mul_8x8(v1.r, textures_avg_colors[v0.tex_id + tex_id_start].r),
-        mul_8x8(v1.g, textures_avg_colors[v0.tex_id + tex_id_start].g),
-        mul_8x8(v1.b, textures_avg_colors[v0.tex_id + tex_id_start].b)
-    );
-    setRGB2(prim,
-        mul_8x8(v2.r, textures_avg_colors[v0.tex_id + tex_id_start].r),
-        mul_8x8(v2.g, textures_avg_colors[v0.tex_id + tex_id_start].g),
-        mul_8x8(v2.b, textures_avg_colors[v0.tex_id + tex_id_start].b)
-    );
-    setRGB2(prim,
-        mul_8x8(v3.r, textures_avg_colors[v0.tex_id + tex_id_start].r),
-        mul_8x8(v3.g, textures_avg_colors[v0.tex_id + tex_id_start].g),
-        mul_8x8(v3.b, textures_avg_colors[v0.tex_id + tex_id_start].b)
-    );
+    prim->clut = entry->clut; // note: when rendering, offset the Y coordinate by clut_fade for the distance fog effect
+    prim->tpage = entry->tpage;
 }

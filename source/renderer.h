@@ -32,14 +32,22 @@ extern "C" {
 const static transform_t id_transform = { {0,0,0},{0,0,0}, {-4096, -4096, -4096} };
 extern int widescreen;
 
+typedef enum {
+    TEX_CAT_NONE = 0,
+    TEX_CAT_LEVEL,
+    TEX_CAT_ENTITY,
+    TEX_CAT_WEAPON,
+    TEX_CAT_MISC,
+} texture_category_t;
+
 // Functions
 void renderer_init(void); // Initializes the renderer by configuring the GPU, setting the video mode, and preparing the drawing environment
 void renderer_begin_frame(const transform_t* camera_transform); // Applies the camera transform to the renderer, preparing it for a new frame
 void renderer_end_frame(void); // Draws the render queue, swaps the drawbuffer, clears the render queue, and applies the display environments
-void renderer_draw_model_shaded(const model_t* model, const transform_t* model_transform, visfield_t* vislist, int tex_id_offset); // Draws a 3D model at a given transform using shaded triangle primitives
-void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform, int local, int facing_camera, int tex_id_offset); // Draws a 3D mesh at a given transform using shaded triangle primitives. Setting local to 1 draws it relative to the camera view.
-void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page);
-void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, int is_page);
+void renderer_draw_model_shaded(const model_t* model, const transform_t* model_transform, visfield_t* vislist); // Draws a 3D model at a given transform using shaded triangle primitives
+void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform, int local, int facing_camera); // Draws a 3D mesh at a given transform using shaded triangle primitives. Setting local to 1 draws it relative to the camera view.
+void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, texture_category_t category);
+void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, texture_category_t category);
 void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const int centered, const pixel32_t color);
 void renderer_apply_fade(int fade_level);
 void renderer_tick_fade(void);
@@ -50,8 +58,7 @@ int renderer_get_fade_level(void);
 void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const transform_t* model_transform);
 void renderer_debug_draw_aabb(const aabb_t* box, pixel32_t color, const transform_t* model_transform);
 void renderer_debug_draw_sphere(sphere_t sphere);
-void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index);
-void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index);
+void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index, texture_category_t category);
 void renderer_set_video_mode(int is_pal);
 int renderer_get_delta_time_raw(void);
 int renderer_get_delta_time_ms(void);
@@ -81,10 +88,6 @@ inline uint8_t mul_8x8(const uint8_t a, const uint8_t b) {
 vec3_t renderer_get_forward_vector(void); // Used in the level editor to determine where to spawn new entities
 #endif 
 
-extern int tex_level_start;
-extern int tex_entity_start;
-extern int tex_weapon_start;
-extern int tex_alloc_cursor;
 extern int vsync_enable;
 extern int is_pal;
 #ifdef __cplusplus

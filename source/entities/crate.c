@@ -59,7 +59,7 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 	if (crate->entity_header.mesh == NULL) {
 		crate->entity_header.mesh = model_find_mesh(entity_get_models(), "28_crate");
 	}
-	renderer_draw_mesh_shaded(crate->entity_header.mesh, &render_transform, 0, 0, tex_entity_start);
+	renderer_draw_mesh_shaded(crate->entity_header.mesh, &render_transform, 0, 0);
 }
 
 void entity_crate_on_hit(int slot, int hitbox_index) {

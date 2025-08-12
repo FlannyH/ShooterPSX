@@ -58,7 +58,6 @@ void state_enter_in_game(void) {
 	mem_stack_release(STACK_ENTITY);
 
 	state.title_screen.assets_in_memory = 0;
-	tex_alloc_cursor = 0;
 
 	entity_init();
 	state.in_game.level = level_load(state.in_game.level_load_path, LEVEL_LOAD_ALL);
@@ -73,7 +72,7 @@ void state_enter_in_game(void) {
     mem_stack_release(STACK_TEMP);
 	
 	// Load weapon models
-	state.in_game.m_weapons = model_load("models/weapons.msh", 1, STACK_LEVEL, tex_weapon_start, 1);
+	state.in_game.m_weapons = model_load("models/weapons.msh", 1, STACK_LEVEL, TEX_CAT_WEAPON, 1);
 
 	#if defined(_DEBUG) && defined(_PSX)
 		FntLoad(320,256);
@@ -84,13 +83,11 @@ void state_enter_in_game(void) {
 }
 
 void load_weapon_textures(void) {
-    tex_weapon_start = tex_alloc_cursor;
     texture_cpu_t *weapon_textures;
     const uint32_t n_weapon_textures = texture_collection_load("models/weapons.txc", &weapon_textures, 1, STACK_TEMP);
     for (uint8_t i = 0; i < n_weapon_textures; ++i) {
-        renderer_upload_texture(&weapon_textures[i], i + tex_weapon_start);
+        renderer_upload_texture(&weapon_textures[i], i, TEX_CAT_WEAPON);
     }
-    tex_alloc_cursor += n_weapon_textures;
 }
 
 void state_update_in_game(int dt) {
@@ -134,7 +131,7 @@ void state_update_in_game(int dt) {
 		input_update();
 #if defined(_PSX) && defined(FPS_COUNTER)
 		const uint32_t timer_value_before = TIMER_VALUE(1) & 0xFFFF; // Get start time
-		renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists, 0);
+		renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists);
 		uint32_t timer_value_after = TIMER_VALUE(1) & 0xFFFF; // Get end time
 
 		// Correct for int16_t overflow
@@ -145,7 +142,7 @@ void state_update_in_game(int dt) {
 		renderer_set_depth_bias(0);
 		renderer_draw_text((vec2_t){32 * ONE, 64 * ONE}, debug_text_buffer, 0, 0, (fps >= 30) ? green : red);	
 #else
-		renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists, 0);
+		renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists);
 #endif
 
 		entity_update_all(&state.in_game.player, dt);
@@ -209,7 +206,7 @@ void state_update_in_game(int dt) {
 		gun_transform.scale.y = ONE;
 		gun_transform.scale.z = ONE;
 
-		renderer_draw_mesh_shaded(&state.in_game.m_weapons->meshes[1], &gun_transform, 1, 0, tex_weapon_start);
+		renderer_draw_mesh_shaded(&state.in_game.m_weapons->meshes[1], &gun_transform, 1, 0);
         input_rumble(state.in_game.gun_animation_timer_sqrt > 0 * 255, 0);
 	}
 
@@ -225,7 +222,7 @@ void state_update_in_game(int dt) {
 		sword_transform.scale.x = ONE;
 		sword_transform.scale.y = ONE;
 		sword_transform.scale.z = ONE;
-		renderer_draw_mesh_shaded(&state.in_game.m_weapons->meshes[0], &sword_transform, 1, 0, tex_weapon_start);
+		renderer_draw_mesh_shaded(&state.in_game.m_weapons->meshes[0], &sword_transform, 1, 0);
 	} 
 
 	renderer_end_frame();
@@ -238,7 +235,7 @@ void draw_debug_info(int dt, const int n_sections) {
 #if defined(_DEBUG) && defined(_PSX)
     // Run the game logic within PROFILE calls, which prints the time (in hblanks) a function took to complete
     PROFILE("input", input_update(), 1);
-    PROFILE("lvl_gfx", renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists, 0), 1);
+    PROFILE("lvl_gfx", renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists), 1);
     PROFILE("entity", entity_update_all(&state.in_game.player, dt), 1);
     PROFILE("player", player_update(&state.in_game.player, &state.in_game.level.collision_bvh, dt, state.global.time_counter), 1);
 
@@ -281,17 +278,17 @@ void draw_debug_info(int dt, const int n_sections) {
 
 void draw_hud(void) {
     // Draw crosshair
-    renderer_draw_2d_quad_axis_aligned((vec2_t){256 * ONE, (128 + 8 * (!is_pal)) * ONE}, (vec2_t){32 * ONE, 20 * ONE}, (vec2_t){96 * ONE, 40 * ONE}, (vec2_t){127 * ONE, 59 * ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, 1);
+    renderer_draw_2d_quad_axis_aligned((vec2_t){256 * ONE, (128 + 8 * (!is_pal)) * ONE}, (vec2_t){32 * ONE, 20 * ONE}, (vec2_t){96 * ONE, 40 * ONE}, (vec2_t){127 * ONE, 59 * ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, TEX_CAT_MISC);
 
     // Draw HUD - background
-    renderer_draw_2d_quad_axis_aligned((vec2_t){(121 - 16) * ONE, 236 * ONE}, (vec2_t){50 * ONE, 40 * ONE}, (vec2_t){0 * ONE, 0 * ONE}, (vec2_t){50 * ONE, 40 * ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, 1);
-    renderer_draw_2d_quad_axis_aligned((vec2_t){(260 - 16) * ONE, 236 * ONE}, (vec2_t){228 * ONE, 40 * ONE}, (vec2_t){51 * ONE, 0 * ONE}, (vec2_t){51 * ONE, 40 * ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, 1);
-    renderer_draw_2d_quad_axis_aligned((vec2_t){(413 - 16) * ONE, 236 * ONE}, (vec2_t){80 * ONE, 40 * ONE}, (vec2_t){51 * ONE, 0 * ONE}, (vec2_t){129 * ONE, 40 * ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, 1);
+    renderer_draw_2d_quad_axis_aligned((vec2_t){(121 - 16) * ONE, 236 * ONE}, (vec2_t){50 * ONE, 40 * ONE}, (vec2_t){0 * ONE, 0 * ONE}, (vec2_t){50 * ONE, 40 * ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, TEX_CAT_MISC);
+    renderer_draw_2d_quad_axis_aligned((vec2_t){(260 - 16) * ONE, 236 * ONE}, (vec2_t){228 * ONE, 40 * ONE}, (vec2_t){51 * ONE, 0 * ONE}, (vec2_t){51 * ONE, 40 * ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, TEX_CAT_MISC);
+    renderer_draw_2d_quad_axis_aligned((vec2_t){(413 - 16) * ONE, 236 * ONE}, (vec2_t){80 * ONE, 40 * ONE}, (vec2_t){51 * ONE, 0 * ONE}, (vec2_t){129 * ONE, 40 * ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, TEX_CAT_MISC);
 
     // Draw HUD - gauges
-    renderer_draw_2d_quad_axis_aligned((vec2_t){(138 - 16) * ONE, 236 * ONE}, (vec2_t){32 * ONE, 20 * ONE}, (vec2_t){64 * ONE, 40 * ONE}, (vec2_t){96 * ONE, 60 * ONE}, (pixel32_t){128, 128, 128, 255}, 1, 5, 1);
-    renderer_draw_2d_quad_axis_aligned((vec2_t){(226 - 16) * ONE, 236 * ONE}, (vec2_t){32 * ONE, 20 * ONE}, (vec2_t){32 * ONE, 40 * ONE}, (vec2_t){64 * ONE, 60 * ONE}, (pixel32_t){128, 128, 128, 255}, 1, 5, 1);
-    renderer_draw_2d_quad_axis_aligned((vec2_t){(314 - 16) * ONE, 236 * ONE}, (vec2_t){32 * ONE, 20 * ONE}, (vec2_t){0 * ONE, 40 * ONE}, (vec2_t){32 * ONE, 60 * ONE}, (pixel32_t){128, 128, 128, 255}, 1, 5, 1);
+    renderer_draw_2d_quad_axis_aligned((vec2_t){(138 - 16) * ONE, 236 * ONE}, (vec2_t){32 * ONE, 20 * ONE}, (vec2_t){64 * ONE, 40 * ONE}, (vec2_t){96 * ONE, 60 * ONE}, (pixel32_t){128, 128, 128, 255}, 1, 5, TEX_CAT_MISC);
+    renderer_draw_2d_quad_axis_aligned((vec2_t){(226 - 16) * ONE, 236 * ONE}, (vec2_t){32 * ONE, 20 * ONE}, (vec2_t){32 * ONE, 40 * ONE}, (vec2_t){64 * ONE, 60 * ONE}, (pixel32_t){128, 128, 128, 255}, 1, 5, TEX_CAT_MISC);
+    renderer_draw_2d_quad_axis_aligned((vec2_t){(314 - 16) * ONE, 236 * ONE}, (vec2_t){32 * ONE, 20 * ONE}, (vec2_t){0 * ONE, 40 * ONE}, (vec2_t){32 * ONE, 60 * ONE}, (pixel32_t){128, 128, 128, 255}, 1, 5, TEX_CAT_MISC);
 
     // Draw HUD - gauge text
     char gauge_text_buffer[4];
@@ -304,9 +301,9 @@ void draw_hud(void) {
 
     // Draw HUD - keycards
     if (state.in_game.player.has_key_blue)
-        renderer_draw_2d_quad_axis_aligned((vec2_t){(256 - 80 - 40) * ONE, 210 * ONE}, (vec2_t){31 * ONE, 20 * ONE}, (vec2_t){194 * ONE, 0 * ONE}, (vec2_t){255 * ONE, 40 * ONE}, (pixel32_t){128, 128, 128, 255}, 3, 5, 1);
+        renderer_draw_2d_quad_axis_aligned((vec2_t){(256 - 80 - 40) * ONE, 210 * ONE}, (vec2_t){31 * ONE, 20 * ONE}, (vec2_t){194 * ONE, 0 * ONE}, (vec2_t){255 * ONE, 40 * ONE}, (pixel32_t){128, 128, 128, 255}, 3, 5, TEX_CAT_MISC);
     if (state.in_game.player.has_key_yellow)
-        renderer_draw_2d_quad_axis_aligned((vec2_t){(256 + 80) * ONE, 210 * ONE}, (vec2_t){31 * ONE, 20 * ONE}, (vec2_t){130 * ONE, 0 * ONE}, (vec2_t){193 * ONE, 40 * ONE}, (pixel32_t){128, 128, 128, 255}, 3, 5, 1);
+        renderer_draw_2d_quad_axis_aligned((vec2_t){(256 + 80) * ONE, 210 * ONE}, (vec2_t){31 * ONE, 20 * ONE}, (vec2_t){130 * ONE, 0 * ONE}, (vec2_t){193 * ONE, 40 * ONE}, (pixel32_t){128, 128, 128, 255}, 3, 5, TEX_CAT_MISC);
 }
 
 void fps_counter(int dt) {

@@ -53,10 +53,10 @@ typedef struct {
 
 typedef struct {
     pixel16_t* palette;
-    uint8_t* data;
+    uint32_t* data;
     uint8_t width;
     uint8_t height;
-    uint8_t bits_per_pixels;
+    uint8_t bits_per_pixel;
     uint8_t palette_count;
     pixel32_t avg_color;
 } texture_cpu_t;

@@ -121,7 +121,7 @@ void state_update_debug_menu_music(int dt) {
 			}
 		}
 		renderer_draw_text((vec2_t){40*ONE, (96 + (24 * i))*ONE}, text_debug_menu_music[i+1], 1, 0, white);
-		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, (96 + (24 * i))*ONE}, (vec2_t){224*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, color, 2, 5, 1);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, (96 + (24 * i))*ONE}, (vec2_t){224*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, color, 2, 5, TEX_CAT_MISC);
 	}
 
 	char text[32];

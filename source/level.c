@@ -58,12 +58,10 @@ level_t level_load(const char* level_path, const uint32_t flags) {
     if (flags & LEVEL_LOAD_TEXTURES) {
         // Load level textures
         texture_cpu_t *tex_level;
-        tex_level_start = tex_alloc_cursor;
         n_level_textures = texture_collection_load(path_textures, &tex_level, 1, STACK_TEMP);
         for (uint8_t i = 0; i < n_level_textures; ++i) {
-            renderer_upload_texture(&tex_level[i], i + tex_level_start);
+            renderer_upload_texture(&tex_level[i], i, TEX_CAT_LEVEL);
         }
-        tex_alloc_cursor += n_level_textures;
         mem_stack_reset_to_marker(STACK_TEMP, marker);
     }
     
@@ -82,7 +80,7 @@ level_t level_load(const char* level_path, const uint32_t flags) {
     };
     mem_stack_reset_to_marker(STACK_TEMP, marker);
 
-    level.graphics = model_load(path_graphics, 1, STACK_LEVEL, tex_level_start, 1);
+    level.graphics = model_load(path_graphics, 1, STACK_LEVEL, TEX_CAT_LEVEL, 1);
     mem_stack_reset_to_marker(STACK_TEMP, marker);
 
     if (flags & LEVEL_LOAD_ENTITIES) {

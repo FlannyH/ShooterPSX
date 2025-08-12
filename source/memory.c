@@ -15,7 +15,7 @@
 #define size_stack_level (1024 * KiB)
 #define size_stack_music (100 * KiB)
 #define size_stack_entity (112 * KiB)
-#define size_stack_persistent (32 * KiB)
+#define size_stack_persistent (64 * KiB)
 uint32_t* mem_stack_temp = NULL;
 uint32_t* mem_stack_level = NULL;
 uint32_t* mem_stack_music = NULL;

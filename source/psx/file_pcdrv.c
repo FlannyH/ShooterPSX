@@ -74,9 +74,7 @@ void file_init(const char* path) {
 
 int file_read(const char* path, uint32_t** destination, size_t* size, int on_stack, stack_t stack) {
     // Open file
-    printf("QWERTYtest1\n");
     int file_handle = pc_open(path, PC_ACCESS_MODE_READ_ONLY);
-    printf("QWERTYtest2\n");
     if (file_handle < 0) {
         printf("[ERROR] Error loading file \"%s\" via pcdrv!\n");
         return 0;

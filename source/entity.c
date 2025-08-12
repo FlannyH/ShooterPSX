@@ -80,13 +80,11 @@ void entity_init(void) {
 	entity_pool = mem_stack_alloc(ENTITY_LIST_LENGTH * sizeof(entity_union), STACK_ENTITY);
 
     // Load entity textures
-	texture_cpu_t *entity_textures;
-    tex_entity_start = tex_alloc_cursor;
+	texture_cpu_t* entity_textures;
 	n_entity_textures = texture_collection_load("models/entity.txc", &entity_textures, 1, STACK_TEMP);
 	for (uint8_t i = 0; i < n_entity_textures; ++i) {
-	    renderer_upload_texture(&entity_textures[i], i + tex_entity_start);
+		renderer_upload_texture(&entity_textures[(size_t)i], i, TEX_CAT_ENTITY);
 	}
-	tex_alloc_cursor += n_entity_textures;
 	mem_stack_release(STACK_TEMP);
 
 	// Load model collection
@@ -98,7 +96,7 @@ void entity_init(void) {
 		}
 	}
 #endif
-	entity_models = model_load("models/entity.msh", 1, STACK_ENTITY, tex_entity_start, 0);
+	entity_models = model_load("models/entity.msh", 1, STACK_ENTITY, TEX_CAT_ENTITY, 0);
 	mem_stack_release(STACK_TEMP);
 
 	memset(entity_signals, 0, sizeof(entity_signals));
