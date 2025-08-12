@@ -94,6 +94,16 @@ int renderer_height(void) {
     return curr_res_y;
 }
 
+void renderer_psx_clear_vram(svec2_t top_left, svec2_t size, pixel32_t color) {
+    FILL fill;
+    setFill(&fill);
+    setRGB0(&fill, color.r, color.g, color.b);
+    setXY0(&fill, top_left.x, top_left.y);
+    setWH(&fill, size.x, size.y);
+    DrawPrim((uint32_t*)&fill);
+    DrawSync(0);
+}
+
 void renderer_init(void) {
     texture_pool_init(0, 0, 256, 256);
     texture_pool_init(1, 256, 256, 256);
@@ -429,6 +439,40 @@ void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index, textur
         case TEX_CAT_MISC: textures_misc[index] = tex_entry; break;
         default: break;
     }
+}
+
+void renderer_free_texture(uint8_t index, texture_category_t category) {
+    texture_entry_t* entry = renderer_psx_get_texture_entry(category, index);
+    if (entry == NULL) return;
+    if (entry->allocated == 0) return;
+
+    RECT tex_rect = texture_pool_rect(entry->texture_pool_id, entry->texture_entry_id);
+    RECT pal_rect = texture_pool_rect(entry->palette_pool_id, entry->palette_entry_id);
+
+    // clear vram
+    if (tex_rect.w > 0 && tex_rect.h > 0) {
+#ifdef _DEBUG
+        renderer_psx_clear_vram((svec2_t){tex_rect.x, tex_rect.y}, (svec2_t){tex_rect.w, tex_rect.h}, (pixel32_t){255, 0, 255, 0});
+#endif
+        texture_pool_free((uint32_t)entry->texture_pool_id, (uint32_t)entry->texture_entry_id);
+    }
+    if (pal_rect.w > 0 && pal_rect.h > 0) {
+#ifdef _DEBUG
+        renderer_psx_clear_vram((svec2_t){pal_rect.x, pal_rect.y}, (svec2_t){pal_rect.w, pal_rect.h}, (pixel32_t){255, 0, 255, 0});
+#endif
+        texture_pool_free((uint32_t)entry->palette_pool_id, (uint32_t)entry->palette_entry_id);
+    }
+    entry->allocated = 0;
+}
+
+int renderer_texture_is_loaded(uint8_t index, texture_category_t category) {
+    texture_entry_t* entry = renderer_psx_get_texture_entry(category, index);
+    if (entry == NULL) return 0;
+
+    RECT rect = texture_pool_rect(entry->texture_pool_id, entry->texture_entry_id);
+    if (rect.w > 0 && rect.h > 0) return 1;
+
+    return 0;
 }
 
 void renderer_set_video_mode(int is_pal) {

@@ -3,26 +3,29 @@
 #include <assert.h>
 
 #include "texture_pool.h"
+#include "renderer.h"
+#include "../renderer.h"
 #include "../common.h"
 #include "../memory.h"
 
 #define MAX_RES_SHIFTS 9
 #define MAX_RES (1<<MAX_RES_SHIFTS)
 #define MAX_TEXTURE_POOL_COUNT 8
-#define MAX_TEXTURE_COUNT 128
 
 typedef struct {
     uint16_t top, left;
     uint32_t resolution;
+    RECT* textures; // if a texture's width or height are 0, it's unallocated
+    uint32_t n_occupancy_maps;
     uint32_t** occupancy_maps;
-    RECT* textures;
 } texture_pool_t;
 
 static texture_pool_t texture_pools[MAX_TEXTURE_POOL_COUNT] = {0};
 
 #define GET_BIT_INT(v, bit) ((v) & (1u << (bit)))
-#define GET_BIT_ARR(a, bit) (( ((a)[((bit) >> 5)]) >> ((bit) & 31) ) & 1)
 #define SET_BIT_ARR(a, bit) ((a)[((bit) >> 5)]) |= (1u << ((bit) & 31));
+#define GET_BIT_ARR(a, bit) (( ((a)[((bit) >> 5)]) >> ((bit) & 31) ) & 1)
+#define RESET_BIT_ARR(a, bit) ((a)[((bit) >> 5)]) &= ~(1u << ((bit) & 31));
 
 void texture_pool_init(uint32_t pool_index, uint16_t left, uint16_t top, uint32_t resolution) {
     if (resolution > MAX_RES) {
@@ -41,7 +44,7 @@ void texture_pool_init(uint32_t pool_index, uint16_t left, uint16_t top, uint32_
     texture_pools[pool_index].occupancy_maps = mem_stack_alloc(sizeof(uint32_t*) * MAX_RES_SHIFTS, STACK_PERSISTENT);
     texture_pools[pool_index].textures = mem_stack_alloc(sizeof(RECT) * MAX_TEXTURE_COUNT, STACK_PERSISTENT);
 
-    size_t level_count = 0;
+    uint32_t level_count = 0;
     for (uint32_t r = resolution; r > 0; r >>= 1) {
         // allocate occupancy map
         const uint32_t bit_count = r * r;
@@ -52,6 +55,16 @@ void texture_pool_init(uint32_t pool_index, uint16_t left, uint16_t top, uint32_
         // clear the memory to 0 (free block)
         for (size_t i = 0; i < word_count; ++i) data[i] = 0;
     }
+
+    for (uint32_t i = 0; i < MAX_TEXTURE_COUNT; ++i) {
+        texture_pools[pool_index].textures[i] = (RECT){-1, -1, -1, -1};
+    }
+
+    texture_pools[pool_index].n_occupancy_maps = level_count;
+
+#ifdef _DEBUG
+    renderer_psx_clear_vram((svec2_t){left, top}, (svec2_t){resolution, resolution}, (pixel32_t){255, 0, 0, 0});
+#endif
 }
 
 int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
@@ -127,7 +140,6 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
     }
 
     // if we get here, there's no space for this texture in this pool
-    printf("[ERROR] No free space for %ix%i texture in pool %i, not allocating\n", width, height, pool_index);
     return -1;
     
     done:
@@ -176,4 +188,59 @@ RECT texture_pool_rect(uint32_t pool_index, int texture_id) {
         .w = texture_pools[pool_index].textures[texture_id].w,
         .h = texture_pools[pool_index].textures[texture_id].h,
     };
+}
+
+void texture_pool_free(uint32_t pool_index, int texture_id) {
+    RECT* texture = &texture_pools[pool_index].textures[texture_id];
+
+    if (texture->w <= 0 || texture->h <= 0) {
+        return;
+    }
+
+    // Free in pixel map
+    uint32_t r = texture_pools[pool_index].resolution;
+    uint32_t start_x = texture->x;
+    uint32_t start_y = texture->y;
+    uint32_t end_x = texture->x + texture->w;
+    uint32_t end_y = texture->y + texture->h;
+
+    uint32_t* occ_map = texture_pools[pool_index].occupancy_maps[0];
+    for (uint32_t y = start_y; y < end_y; ++y){
+        for (uint32_t x = start_x; x < end_x; ++x){
+            RESET_BIT_ARR(occ_map, (y * r) + x);
+        }
+    }
+
+    // Downsample pixel map, marking as occupied if any of the 4 sampled pixels are occupied
+    uint32_t res_read = texture_pools[pool_index].resolution;
+    uint32_t res_write = res_read >> 1;
+    for (uint32_t occ_map_index = 0; occ_map_index < texture_pools[pool_index].n_occupancy_maps - 1; occ_map_index++) {
+        uint32_t* occ_map_read = texture_pools[pool_index].occupancy_maps[occ_map_index];
+        uint32_t* occ_map_write = texture_pools[pool_index].occupancy_maps[occ_map_index + 1];
+        r >>= 1;
+        for (uint32_t y = 0; y < res_write; ++y){
+            for (uint32_t x = 0; x < res_write; ++x){
+                uint32_t index1 = (((y*2)+0) * res_read) + (x*2)+0;
+                uint32_t index2 = (((y*2)+0) * res_read) + (x*2)+1;
+                uint32_t index3 = (((y*2)+1) * res_read) + (x*2)+0;
+                uint32_t index4 = (((y*2)+1) * res_read) + (x*2)+1;
+                uint32_t sample1 = GET_BIT_ARR(occ_map_read, index1);
+                uint32_t sample2 = GET_BIT_ARR(occ_map_read, index2);
+                uint32_t sample3 = GET_BIT_ARR(occ_map_read, index3);
+                uint32_t sample4 = GET_BIT_ARR(occ_map_read, index4);
+                if (sample1 | sample2 | sample3 | sample4) {
+                    SET_BIT_ARR(occ_map_write, (y * res_write) + x);
+                }
+                else {
+                    RESET_BIT_ARR(occ_map_write, (y * res_write) + x);
+                }
+            }
+        }
+        res_read = res_write;
+        res_write = res_read >> 1;
+    }
+
+    // Mark as free by setting resolution to 0x0
+    texture->w = 0;
+    texture->h = 0;
 }
