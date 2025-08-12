@@ -33,12 +33,17 @@ void state_enter_title_screen(void) {
 		// Wait for rendering to finish
 		renderer_begin_frame(&id_transform);
 		renderer_end_frame();
+		
+		for (uint8_t i = 0; i < MAX_TEXTURE_COUNT; ++i) {
+			renderer_free_texture(i, TEX_CAT_MISC);
+		}
 
 		// Load graphics data
 #if defined(_PSX) || defined(_PC)
 		texture_cpu_t *tex_menu1;
 		texture_cpu_t *tex_menu2;
 		texture_cpu_t *tex_ui;
+		for (int i = 0; i < MAX_TEXTURE_COUNT; ++i) renderer_free_texture(i, TEX_CAT_MISC);
 		mem_stack_release(STACK_TEMP);
 		texture_collection_load("models/ui_tex/menu1.txc", &tex_menu1, 1, STACK_TEMP);
 		renderer_upload_texture(tex_menu1, 3, TEX_CAT_MISC);

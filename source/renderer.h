@@ -28,6 +28,7 @@ extern "C" {
 #define RES_Y_NTSC 240
 #define N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE 4
 #define NO_TEXTURE 255
+#define MAX_TEXTURE_COUNT 128
 
 const static transform_t id_transform = { {0,0,0},{0,0,0}, {-4096, -4096, -4096} };
 extern int widescreen;
@@ -59,6 +60,8 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
 void renderer_debug_draw_aabb(const aabb_t* box, pixel32_t color, const transform_t* model_transform);
 void renderer_debug_draw_sphere(sphere_t sphere);
 void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index, texture_category_t category);
+void renderer_free_texture(uint8_t index, texture_category_t category);
+int renderer_texture_is_loaded(uint8_t index, texture_category_t category);
 void renderer_set_video_mode(int is_pal);
 int renderer_get_delta_time_raw(void);
 int renderer_get_delta_time_ms(void);

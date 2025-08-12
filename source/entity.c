@@ -82,6 +82,9 @@ void entity_init(void) {
     // Load entity textures
 	texture_cpu_t* entity_textures;
 	n_entity_textures = texture_collection_load("models/entity.txc", &entity_textures, 1, STACK_TEMP);
+	for (uint8_t i = 0; i < MAX_TEXTURE_COUNT; ++i) {
+		renderer_free_texture(i, TEX_CAT_ENTITY);
+	}
 	for (uint8_t i = 0; i < n_entity_textures; ++i) {
 		renderer_upload_texture(&entity_textures[(size_t)i], i, TEX_CAT_ENTITY);
 	}

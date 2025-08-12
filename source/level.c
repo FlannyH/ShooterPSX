@@ -19,6 +19,10 @@ level_t level_load(const char* level_path, const uint32_t flags) {
     mem_stack_release(STACK_TEMP);
     mem_stack_release(STACK_LEVEL);
 
+    for (size_t i = 0; i < MAX_TEXTURE_COUNT; ++i) {
+        renderer_free_texture(i, TEX_CAT_LEVEL);
+    }
+
     // Read the file 
     uint32_t* file_data = NULL;
     size_t size = 0;

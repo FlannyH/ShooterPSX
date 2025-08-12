@@ -142,8 +142,9 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
             vert_index += 4;
         }
     }
-
+#ifdef _DEBUG_VERBOSE
     printf("done with model %s\n", path);
+#endif
     return model;
 }
 
