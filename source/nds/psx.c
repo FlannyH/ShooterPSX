@@ -2,8 +2,8 @@
 #define PSX_H
 #include "psx.h"
 
-#include "../common.h"
 #include <nds/arm9/trig_lut.h>
+#include "../common.h"
 
 // Angle value: -65536 to +65535
 int hisin(const int a) {

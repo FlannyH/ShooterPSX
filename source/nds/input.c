@@ -1,9 +1,9 @@
+#include <nds/arm9/input.h>
+
 #include "input.h"
 
 #include "../common.h"
 #include "nds/psx.h"
-
-#include <nds/arm9/input.h>
 
 uint16_t button_prev = 0;
 uint16_t button_curr = 0;
