@@ -16,7 +16,6 @@ typedef struct {
     uint32_t resolution;
     uint32_t** occupancy_maps;
     RECT* textures;
-    uint32_t n_textures;
 } texture_pool_t;
 
 static texture_pool_t texture_pools[MAX_TEXTURE_POOL_COUNT] = {0};
@@ -55,13 +54,24 @@ void texture_pool_init(uint32_t pool_index, uint16_t left, uint16_t top, uint32_
     }
 }
 
-int texture_pool_alloc(uint32_t pool_index, int texture_id, uint32_t width, uint32_t height) {
+int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
     if(pool_index >= MAX_TEXTURE_POOL_COUNT) return -2;
-    if(texture_id >= MAX_TEXTURE_COUNT) return -3;
-    if (texture_pools[pool_index].textures == NULL) return -4;
-    if (texture_pools[pool_index].occupancy_maps == NULL) return -5;
-    if (texture_pools[pool_index].resolution < width) return -6;
-    if (texture_pools[pool_index].resolution < height) return -7;
+    if (texture_pools[pool_index].textures == NULL) return -3;
+    if (texture_pools[pool_index].occupancy_maps == NULL) return -4;
+    if (texture_pools[pool_index].resolution < width) return -5;
+    if (texture_pools[pool_index].resolution < height) return -6;
+    
+    int texture_id = -1;
+    for (uint32_t i = 0; i < MAX_TEXTURE_COUNT; ++i) {
+        if (texture_pools[pool_index].textures[i].w <= 0 || texture_pools[pool_index].textures[i].h <= 0) {
+            texture_id = i;
+            break;
+        }
+    }
+    if (texture_id == -1) { 
+        printf("could not find empty texture in pool %i\n", pool_index);
+        return -1;
+    }
 
     // find occupancy map
     uint32_t curr_res = texture_pools[pool_index].resolution;
@@ -144,7 +154,7 @@ int texture_pool_alloc(uint32_t pool_index, int texture_id, uint32_t width, uint
         ++i;
     }
 #ifdef _DEBUG_VERBOSE
-    printf("for pool index %i, allocated texture %i (%ix%i) at location (%i, %i)\n", pool_index, texture_pools[pool_index].n_textures, width, height, left, top);
+    printf("for pool index %i, allocated texture %i (%ix%i) at location (%i, %i)\n", pool_index, texture_id, width, height, left, top);
 #endif
     texture_pools[pool_index].textures[texture_id] = (RECT){
         .x = (int16_t)left,
@@ -152,7 +162,6 @@ int texture_pool_alloc(uint32_t pool_index, int texture_id, uint32_t width, uint
         .w = (int16_t)width,
         .h = (int16_t)height,
     };
-    texture_pools[pool_index].n_textures++;
     return texture_id;
 }
 

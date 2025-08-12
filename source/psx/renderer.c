@@ -375,7 +375,7 @@ void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index, textur
     int pool_id = -1;
     int texture_id = -1;
     while (texture_id < 0 && ++pool_id < 4) {
-        texture_id = texture_pool_alloc((uint32_t)pool_id, (int)index, width, height);
+        texture_id = texture_pool_alloc((uint32_t)pool_id, width, height);
     }
 #ifdef _DEBUG
     if (texture_id < 0) {
@@ -383,7 +383,7 @@ void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index, textur
         return;
     }
 #endif
-    int palette_id = texture_pool_alloc(3, (int)index, (1 << texture->bits_per_pixel), texture->palette_count);
+    int palette_id = texture_pool_alloc(3, (1 << texture->bits_per_pixel), texture->palette_count);
 #ifdef _DEBUG
     if (palette_id < 0) {
         printf("[ERROR] Failed to allocate palette\n");
@@ -416,8 +416,11 @@ void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index, textur
     tex_entry.clut = getClut(palette_rect.x, palette_rect.y);
     tex_entry.offset_u = (uint8_t)(offset_u & 0xFF);
     tex_entry.offset_v = (uint8_t)(texture_rect.y & 0xFF);
-    tex_entry.pool_id = (uint8_t)pool_id;
-    tex_entry.texture_id = index;
+    tex_entry.texture_pool_id = (uint8_t)pool_id;
+    tex_entry.texture_entry_id = texture_id;
+    tex_entry.palette_pool_id = 3;
+    tex_entry.palette_entry_id = palette_id;
+    tex_entry.allocated = 1;
     tex_entry.average_color = texture->avg_color;
     switch (category) {
         case TEX_CAT_LEVEL: textures_level[index] = tex_entry; break;
