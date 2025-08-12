@@ -42,7 +42,7 @@ uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures,
         // Get data
         const size_t palette_offset = (size_t)palette_offsets_data[(size_t)tex_cell_desc->palette_index];
         texture_cpu->palette = &palette_data[palette_offset / sizeof(pixel16_t)];
-        texture_cpu->data = &texture_data[(size_t)tex_cell_desc->sector_offset_texture * 2048];
+        texture_cpu->data = &texture_data[(size_t)tex_cell_desc->sector_offset_texture * (2048 / sizeof(uint32_t))];
         texture_cpu->width = tex_cell_desc->texture_width;
         texture_cpu->height = tex_cell_desc->texture_height;
         texture_cpu->avg_color = tex_cell_desc->avg_color;
