@@ -10,7 +10,6 @@
 
 #define MAX_RES_SHIFTS 9
 #define MAX_RES (1<<MAX_RES_SHIFTS)
-#define MAX_TEXTURE_POOL_COUNT 8
 
 typedef struct {
     uint16_t top, left;
@@ -190,26 +189,38 @@ RECT texture_pool_rect(uint32_t pool_index, int texture_id) {
     };
 }
 
-void texture_pool_free(uint32_t pool_index, int texture_id) {
-    RECT* texture = &texture_pools[pool_index].textures[texture_id];
-
-    if (texture->w <= 0 || texture->h <= 0) {
-        return;
-    }
+void texture_pool_free(uint32_t pool_index, int* texture_ids, int texture_count) {
+    uint32_t* occ_map = texture_pools[pool_index].occupancy_maps[0];
+    uint32_t r = texture_pools[pool_index].resolution;
 
     // Free in pixel map
-    uint32_t r = texture_pools[pool_index].resolution;
-    uint32_t start_x = texture->x;
-    uint32_t start_y = texture->y;
-    uint32_t end_x = texture->x + texture->w;
-    uint32_t end_y = texture->y + texture->h;
+    int changed = 0;
+    for (int i = 0; i < texture_count; ++i) {
+        RECT* texture = &texture_pools[pool_index].textures[texture_ids[i]];
 
-    uint32_t* occ_map = texture_pools[pool_index].occupancy_maps[0];
-    for (uint32_t y = start_y; y < end_y; ++y){
-        for (uint32_t x = start_x; x < end_x; ++x){
-            RESET_BIT_ARR(occ_map, (y * r) + x);
+        if (texture->w <= 0 || texture->h <= 0) {
+            continue;
+        }
+
+        changed = 1;
+        uint32_t start_x = texture->x;
+        uint32_t start_y = texture->y;
+        uint32_t end_x = texture->x + texture->w;
+        uint32_t end_y = texture->y + texture->h;
+
+        // Mark as free by setting resolution to 0x0
+        texture->w = 0;
+        texture->h = 0;
+
+        // todo: reset on a per-word basis for performance reasons
+        for (uint32_t y = start_y; y < end_y; ++y){
+            for (uint32_t x = start_x; x < end_x; ++x){
+                RESET_BIT_ARR(occ_map, (y * r) + x);
+            }
         }
     }
+
+    if (!changed) return;
 
     // Downsample pixel map, marking as occupied if any of the 4 sampled pixels are occupied
     uint32_t res_read = texture_pools[pool_index].resolution;
@@ -239,8 +250,4 @@ void texture_pool_free(uint32_t pool_index, int texture_id) {
         res_read = res_write;
         res_write = res_read >> 1;
     }
-
-    // Mark as free by setting resolution to 0x0
-    texture->w = 0;
-    texture->h = 0;
 }

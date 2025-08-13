@@ -74,20 +74,13 @@ void state_enter_in_game(void) {
 	// Load weapon models
 	state.in_game.m_weapons = model_load("models/weapons.msh", 1, STACK_LEVEL, TEX_CAT_WEAPON, 1);
 
-	#if defined(_DEBUG) && defined(_PSX)
-		FntLoad(320,256);
-		FntOpen(32, 32, 256, 192, 0, 512);
-	#endif
-
 	renderer_start_fade_in(FADE_SPEED);
 }
 
 void load_weapon_textures(void) {
     texture_cpu_t *weapon_textures;
     const uint32_t n_weapon_textures = texture_collection_load("models/weapons.txc", &weapon_textures, 1, STACK_TEMP);
-    for (uint8_t i = 0; i < MAX_TEXTURE_COUNT; ++i) {
-        renderer_free_texture(i, TEX_CAT_WEAPON);
-    }
+	renderer_free_texture_category(TEX_CAT_WEAPON);
     for (uint8_t i = 0; i < n_weapon_textures; ++i) {
         renderer_upload_texture(&weapon_textures[i], i, TEX_CAT_WEAPON);
     }
