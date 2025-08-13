@@ -142,6 +142,13 @@ void renderer_init(void) {
     gte_SetGeomOffset(res_x / 2, curr_res_y / 2);
     gte_SetGeomScreen(120);
 
+#ifdef _DEBUG
+    int fnt_alloc = texture_pool_alloc(3, 32, 32);
+    RECT fnt_rect = texture_pool_rect(3, fnt_alloc);
+    FntLoad(fnt_rect.x, fnt_rect.y);
+    FntOpen(32, 32, 256, 192, 0, 512);
+#endif
+
     drawn_first_frame = 0;
 }
 
@@ -371,7 +378,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     PopMatrix();
 }
 
-void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index, texture_category_t category) {
+void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_category_t category) {
     // Calculate VRAM width based on bpp
     assert(texture != NULL);
     uint32_t width = (uint32_t)texture->width;
@@ -441,7 +448,7 @@ void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index, textur
     }
 }
 
-void renderer_free_texture(uint8_t index, texture_category_t category) {
+void renderer_free_texture(int index, texture_category_t category) {
     texture_entry_t* entry = renderer_psx_get_texture_entry(category, index);
     if (entry == NULL) return;
     if (entry->allocated == 0) return;
@@ -454,18 +461,59 @@ void renderer_free_texture(uint8_t index, texture_category_t category) {
 #ifdef _DEBUG
         renderer_psx_clear_vram((svec2_t){tex_rect.x, tex_rect.y}, (svec2_t){tex_rect.w, tex_rect.h}, (pixel32_t){255, 0, 255, 0});
 #endif
-        texture_pool_free((uint32_t)entry->texture_pool_id, (uint32_t)entry->texture_entry_id);
+        int texture_entry_id = entry->texture_entry_id;
+        texture_pool_free((uint32_t)entry->texture_pool_id, &texture_entry_id, 1);
     }
     if (pal_rect.w > 0 && pal_rect.h > 0) {
 #ifdef _DEBUG
         renderer_psx_clear_vram((svec2_t){pal_rect.x, pal_rect.y}, (svec2_t){pal_rect.w, pal_rect.h}, (pixel32_t){255, 0, 255, 0});
 #endif
-        texture_pool_free((uint32_t)entry->palette_pool_id, (uint32_t)entry->palette_entry_id);
+        int palette_entry_id = entry->palette_entry_id;
+        texture_pool_free((uint32_t)entry->palette_pool_id, &palette_entry_id, 1);
     }
     entry->allocated = 0;
 }
 
-int renderer_texture_is_loaded(uint8_t index, texture_category_t category) {
+void renderer_free_texture_category(texture_category_t category) {
+    int n_textures[MAX_TEXTURE_POOL_COUNT] = {0};
+    int textures[MAX_TEXTURE_COUNT * MAX_TEXTURE_POOL_COUNT] = {0};
+
+    // Fetch lists of textures to free, separated by texture pool
+    for (int i = 0; i < MAX_TEXTURE_COUNT; ++i) {
+        texture_entry_t* entry = renderer_psx_get_texture_entry(category, i);
+        if (entry == NULL) continue;
+        if (entry->allocated == 0) continue;
+
+        RECT rect = texture_pool_rect(entry->texture_pool_id, entry->texture_entry_id);
+        if (rect.w <= 0 && rect.h <= 0) continue;
+
+        renderer_psx_clear_vram((svec2_t){rect.x, rect.y}, (svec2_t){rect.w, rect.h}, (pixel32_t){255, 0, 255, 0});
+
+        const size_t pool_id = entry->texture_pool_id;
+        const size_t textures_id = (pool_id * MAX_TEXTURE_COUNT) + (n_textures[entry->texture_pool_id]++);
+        textures[textures_id] = entry->texture_entry_id;
+
+        entry->allocated = 0;
+
+        rect = texture_pool_rect(entry->palette_pool_id, entry->palette_entry_id);
+        if (rect.w <= 0 && rect.h <= 0) continue;
+
+        renderer_psx_clear_vram((svec2_t){rect.x, rect.y}, (svec2_t){rect.w, rect.h}, (pixel32_t){255, 0, 255, 0});
+
+        const size_t pal_pool_id = entry->palette_pool_id;
+        const size_t pal_textures_id = (pal_pool_id * MAX_TEXTURE_COUNT) + (n_textures[entry->palette_pool_id]++);
+        textures[pal_textures_id] = entry->palette_entry_id;
+    }
+
+    for (int i = 0; i < MAX_TEXTURE_POOL_COUNT; ++i) {
+        assert(n_textures[i] >= 0);
+        if (n_textures[i] == 0) continue;
+
+        texture_pool_free(i, &textures[i * MAX_TEXTURE_COUNT], n_textures[i]);
+    }
+}
+
+int renderer_texture_is_loaded(int index, texture_category_t category) {
     texture_entry_t* entry = renderer_psx_get_texture_entry(category, index);
     if (entry == NULL) return 0;
 
