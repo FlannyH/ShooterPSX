@@ -212,11 +212,32 @@ void texture_pool_free(uint32_t pool_index, int* texture_ids, int texture_count)
         texture->w = 0;
         texture->h = 0;
 
-        // todo: reset on a per-word basis for performance reasons
-        for (uint32_t y = start_y; y < end_y; ++y){
-            for (uint32_t x = start_x; x < end_x; ++x){
-                RESET_BIT_ARR(occ_map, (y * r) + x);
+        // reset full words, writing 32 bits in one instruction is nice
+        for (uint32_t line = start_y; line < end_y; ++line){
+            const uint32_t bit_index = (line * r) + start_x;
+            uint32_t word_index = bit_index / 32;
+            int word_bit_counter = bit_index % 32;
+            
+            // if the starting position is not aligned to a 32-bit boundary, clear part of the first word and realign
+            if (word_bit_counter != 0) {
+                uint32_t and_mask = 0xFFFFFFFF;
+                and_mask <<= word_bit_counter;
+                and_mask = ~and_mask;
+                occ_map[word_index++] &= and_mask;
             }
+            
+            // write a bunch of words, should be faster than 32 individual single bit writes lol
+            word_bit_counter = 0;
+            const int number_of_bits_after_first_word = (end_x - ((start_x + 0x1F) & (~0X1F)));
+            const int num_words_to_fill_completely = number_of_bits_after_first_word / 32;
+            for (int full_word_i = 0; full_word_i < num_words_to_fill_completely; ++full_word_i) {
+                occ_map[word_index++] = 0;
+            }
+
+            if (number_of_bits_after_first_word == 0) continue;
+            
+            uint32_t and_mask = ~((1u << number_of_bits_after_first_word) - 1);
+            occ_map[word_index++] &= and_mask;
         }
     }
 
