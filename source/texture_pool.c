@@ -3,10 +3,12 @@
 #include <assert.h>
 
 #include "texture_pool.h"
+#ifdef _PSX
+#include "psx/renderer.h"
+#endif
 #include "renderer.h"
-#include "../renderer.h"
-#include "../common.h"
-#include "../memory.h"
+#include "common.h"
+#include "memory.h"
 
 #define MAX_RES_SHIFTS 9
 #define MAX_RES (1<<MAX_RES_SHIFTS)
@@ -21,19 +23,43 @@ typedef struct {
 
 static texture_pool_t texture_pools[MAX_TEXTURE_POOL_COUNT] = {0};
 
-#define GET_BIT_INT(v, bit) ((v) & (1u << (bit)))
-#define SET_BIT_ARR(a, bit) ((a)[((bit) >> 5)]) |= (1u << ((bit) & 31));
-#define GET_BIT_ARR(a, bit) (( ((a)[((bit) >> 5)]) >> ((bit) & 31) ) & 1)
-#define RESET_BIT_ARR(a, bit) ((a)[((bit) >> 5)]) &= ~(1u << ((bit) & 31));
+static inline uint32_t get_bit_int(uint32_t value, uint32_t bit) {
+    assert(bit < 32);
+    const uint32_t mask = 1u << bit;
+    return value & mask;
+}
+
+static inline uint32_t get_bit_arr(uint32_t* array, uint32_t bit) {
+    assert(bit < 32);
+    assert(v != NULL);
+    const size_t array_index = bit / 32u;
+    return (array[array_index] >> bit) & 1;
+}
+
+static inline void set_bit_arr(uint32_t* array, uint32_t bit) {
+    assert(bit < 32);
+    assert(v != NULL);
+    const size_t array_index = bit / 32u;
+    const uint32_t write_or_mask = (1u << bit);
+    array[array_index] |= write_or_mask;
+}
+
+static inline void reset_bit_arr(uint32_t* array, uint32_t bit) {
+    assert(bit < 32);
+    assert(v != NULL);
+    const size_t array_index = bit / 32u;
+    const uint32_t write_and_mask = ~(1u << bit);
+    array[array_index] &= write_and_mask;
+}
 
 void texture_pool_init(uint32_t pool_index, uint16_t left, uint16_t top, uint32_t resolution) {
     if (resolution > MAX_RES) {
-        printf("[ERROR] Texture pool too big (%ix%i), should be max (%ix%i)\n", resolution, resolution, MAX_RES, MAX_RES);
+        printf("[ERROR] Texture pool too big (%ux%u), should be max (%ux%u)\n", resolution, resolution, MAX_RES, MAX_RES);
         return;
     }
     
     if (pool_index >= MAX_TEXTURE_POOL_COUNT) {
-        printf("[ERROR] Texture pool index (%i) out of bounds, should be between 0 and %i\n", pool_index, MAX_TEXTURE_POOL_COUNT - 1);
+        printf("[ERROR] Texture pool index (%u) out of bounds, should be between 0 and %i\n", pool_index, MAX_TEXTURE_POOL_COUNT - 1);
         return;
     }
 
@@ -61,7 +87,7 @@ void texture_pool_init(uint32_t pool_index, uint16_t left, uint16_t top, uint32_
 
     texture_pools[pool_index].n_occupancy_maps = level_count;
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_PSX)
     renderer_psx_clear_vram((svec2_t){left, top}, (svec2_t){resolution, resolution}, (pixel32_t){255, 0, 0, 0});
 #endif
 }
@@ -81,7 +107,7 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
         }
     }
     if (texture_id == -1) { 
-        printf("could not find empty texture in pool %i\n", pool_index);
+        printf("could not find empty texture in pool %u\n", pool_index);
         return -1;
     }
 
@@ -155,7 +181,7 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
 
         for (uint32_t y = start_y; y <= end_y; ++y) {
             for (uint32_t x = start_x; x <= end_x; ++x) {
-                SET_BIT_ARR(curr_occ_map, (y * r) + x);
+                set_bit_arr(curr_occ_map, (y * r) + x);
             }
         }
         start_x >>= 1;
@@ -165,7 +191,7 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
         ++i;
     }
 #ifdef _DEBUG_VERBOSE
-    printf("for pool index %i, allocated texture %i (%ix%i) at location (%i, %i)\n", pool_index, texture_id, width, height, left, top);
+    printf("for pool index %u, allocated texture %i (%ux%u) at location (%u, %u)\n", pool_index, texture_id, width, height, left, top);
 #endif
     texture_pools[pool_index].textures[texture_id] = (RECT){
         .x = (int16_t)left,
@@ -256,15 +282,15 @@ void texture_pool_free(uint32_t pool_index, int* texture_ids, int texture_count)
                 uint32_t index2 = (((y*2)+0) * res_read) + (x*2)+1;
                 uint32_t index3 = (((y*2)+1) * res_read) + (x*2)+0;
                 uint32_t index4 = (((y*2)+1) * res_read) + (x*2)+1;
-                uint32_t sample1 = GET_BIT_ARR(occ_map_read, index1);
-                uint32_t sample2 = GET_BIT_ARR(occ_map_read, index2);
-                uint32_t sample3 = GET_BIT_ARR(occ_map_read, index3);
-                uint32_t sample4 = GET_BIT_ARR(occ_map_read, index4);
+                uint32_t sample1 = get_bit_arr(occ_map_read, index1);
+                uint32_t sample2 = get_bit_arr(occ_map_read, index2);
+                uint32_t sample3 = get_bit_arr(occ_map_read, index3);
+                uint32_t sample4 = get_bit_arr(occ_map_read, index4);
                 if (sample1 | sample2 | sample3 | sample4) {
-                    SET_BIT_ARR(occ_map_write, (y * res_write) + x);
+                    set_bit_arr(occ_map_write, (y * res_write) + x);
                 }
                 else {
-                    RESET_BIT_ARR(occ_map_write, (y * res_write) + x);
+                    reset_bit_arr(occ_map_write, (y * res_write) + x);
                 }
             }
         }
