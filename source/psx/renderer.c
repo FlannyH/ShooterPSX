@@ -66,18 +66,17 @@ texture_entry_t textures_entity[128] = {0};
 texture_entry_t textures_misc[128] = {0};
 texture_entry_t textures_weapon[128] = {0};
 texture_entry_t* renderer_psx_get_texture_entry(texture_category_t category, int texture_id) {
-    texture_entry_t* entry = NULL;
     if (texture_id >= 0) {
         switch (category) {
             case TEX_CAT_NONE: return NULL;
-            case TEX_CAT_LEVEL: entry = &textures_level[texture_id]; break;
-            case TEX_CAT_ENTITY: entry = &textures_entity[texture_id]; break;
-            case TEX_CAT_WEAPON: entry = &textures_weapon[texture_id]; break;
-            case TEX_CAT_MISC: entry = &textures_misc[texture_id]; break;
+            case TEX_CAT_LEVEL: return &textures_level[texture_id];
+            case TEX_CAT_ENTITY: return &textures_entity[texture_id];
+            case TEX_CAT_WEAPON: return &textures_weapon[texture_id];
+            case TEX_CAT_MISC: return &textures_misc[texture_id];
             default: printf("[ERROR] Invalid texture category %i\n", (int)category); return NULL;
         }
     }
-    return entry;
+    return NULL;
 }
 
 // Import inline helper functions
