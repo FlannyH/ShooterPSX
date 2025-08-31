@@ -222,7 +222,7 @@ void renderer_init(void) {
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-	window = glfwCreateWindow(320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, "ShooterPSX", NULL, NULL);
+	window = glfwCreateWindow(320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, "Sub Nivis", NULL, NULL);
 	if (window == NULL) {
 		printf("[ERROR] Could not open OpenGL window! Aborting.");
 		glfwTerminate();
