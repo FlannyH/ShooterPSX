@@ -61,6 +61,7 @@ CODE_ENGINE_SHARED_C = collision.c \
 			  	  	   music.c \
 			  	  	   renderer_shared.c \
 					   texture.c \
+					   texture_pool.c \
 					   text.c \
 			  	  	   ui.c \
 			  	  	   entity.c \
@@ -87,8 +88,7 @@ CODE_ENGINE_PSX_C = psx/file.c \
 				    psx/input.c \
 				    psx/mesh.c \
 				    psx/mixer.c \
-				    psx/renderer.c \
-				    psx/texture_pool.c
+				    psx/renderer.c
 
 # Source files specific to Windows
 CODE_ENGINE_PC_C =   pc/file.c \
