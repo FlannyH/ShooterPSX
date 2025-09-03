@@ -1,4 +1,4 @@
-#version 140
+#version 460
 
 in vec3 in_position;
 in vec3 in_color;
@@ -9,15 +9,19 @@ in vec3 in_normal;
 out vec3 out_position_ws;
 out vec3 out_color;
 out vec2 out_texcoord;
-out float out_texture;
 out vec3 out_normal;
+flat out float out_texture;
+flat out vec2 out_texture_offset;
+flat out vec2 out_texture_size;
 
+uniform sampler2D tex;
+uniform isampler2D tex_meta;
 uniform mat4 proj_matrix;
 uniform mat4 view_matrix;
 uniform mat4 model_matrix;
-uniform int texture_offset;
 uniform int curr_depth_bias;
 uniform int vertex_lighting;
+uniform int tex_category;
 
 struct Light {
 	vec3 direction_position;
@@ -31,6 +35,11 @@ uniform Lights {
 };
 
 void main() {
+	// find texture offset
+	ivec4 tex_meta_sample = texelFetch(tex_meta, ivec2(int(in_texture), tex_category), 0);
+	out_texture_offset = vec2(tex_meta_sample.x, tex_meta_sample.y);
+	out_texture_size = vec2(tex_meta_sample.z, tex_meta_sample.w);
+
 	vec4 world_pos = model_matrix * vec4(in_position, 1.0);
 	out_position_ws = world_pos.xyz;
 	gl_Position = proj_matrix * view_matrix * world_pos;
@@ -40,7 +49,8 @@ void main() {
 	out_color = in_color * 2.0;
 	out_texcoord = in_texcoord;
 	out_normal = in_normal;
-	out_texture = in_texture + float(texture_offset);
+	out_texture = in_texture;
+	
 	if (vertex_lighting != 0) {
 		for (int i = 0; i < 256; ++i) {
 			if (abs(lights[i].type - 0.0) < 0.5) continue;

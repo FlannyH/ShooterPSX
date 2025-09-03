@@ -1,17 +1,18 @@
-#version 140
+#version 460
 
 in vec3 out_position_ws;
 in vec3 out_color;
 in vec2 out_texcoord;
-in float out_texture;
 in vec3 out_normal;
+flat in float out_texture;
+flat in vec2 out_texture_offset;
+flat in vec2 out_texture_size;
+
 out vec4 frag_color;
 out vec2 object_picking;
 
 uniform sampler2D tex;
 uniform int texture_bound;
-uniform int texture_is_page;
-uniform int texture_blend_mode;
 uniform int interpolation_mode; // 0 = point, 1 = tri-point filtering, 2 = bilinear filtering
 uniform int edge_behavior; // 0 = wrap, 1 = clamp
 uniform int vertex_lighting;
@@ -32,108 +33,107 @@ uniform Lights {
 };
 
 void main() {
-    vec2 pixel_coord;
-    vec2 texture_offset;
-    float texture_size;
     vec4 vtx_color = vec4(out_color, alpha);
     vec4 tex_color = vec4(0.0);
     vec4 light_color = vec4(0.0);
 
-    if (texture_is_page == 0) {
-        texture_offset = vec2(
-            (floor((out_texture / 4.0) + 0.1) * 64.0), 
-            (mod(floor(out_texture + 0.1), 4.0) * 64.0)
-        );
-        texture_size = 64.0;
-        pixel_coord = (out_texcoord / vec2(256.0) * vec2(64.0));
-    } 
-    else {
-        texture_offset = vec2(
-            (float(out_texture) * 256.0),
-            256.0
-        );
-        texture_size = 255.0;
-        pixel_coord = out_texcoord;
-    }
-    if (interpolation_mode != 0) { // interpolated solutions need a half pixel offset
-        pixel_coord += vec2(0.5, 0.5);
-    }
+    // If a texture is bound to the shader, and if this polygon has a texture
     if (texture_bound == 1 && (abs(out_texture - 255.0) > 0.5)) {
-        float u = pixel_coord.x;
-        float v = pixel_coord.y;
-        float u1 = floor(pixel_coord.x);
-        float u2 = ceil(pixel_coord.x);
-        float v1 = floor(pixel_coord.y);
-        float v2 = ceil(pixel_coord.y);
-        float u_edged, v_edged, u1_edged, u2_edged, v1_edged, v2_edged;
+        // Get texture pixel coordinate on the texture atlas
+        const vec2 uv_normalized = out_texcoord / vec2(256.0);
+        vec2 pixel_coord_within_texture = (uv_normalized * out_texture_size);
 
+        // Find mip level, and make sure it's not too high as to keep individual textures 1x1
+        // the texture allocator guarantees that a texture will be at least the rounded up to
+        // a power of 2 based on its smallest axis
+        const vec2 dx = dFdx(pixel_coord_within_texture);
+        const vec2 dy = dFdy(pixel_coord_within_texture);
+        const float rho = max(length(dx), length(dy));
+        const float lod = max(0.0, log2(rho));
+        const int max_mip = int(floor(log2(min(out_texture_size.x, out_texture_size.y))));
+        const int curr_mip = int(clamp(floor(lod), 0.0, float(max_mip)));
+        const float res_mul = 1.0 / (1 << curr_mip);
+
+        pixel_coord_within_texture *= vec2(res_mul);
+
+        int curr_interpolation_mode = interpolation_mode;
+        if (lod > 1.5) curr_interpolation_mode = 2;
+        if (curr_interpolation_mode != 0) pixel_coord_within_texture -= 0.5;
+
+        // Get 4 integer sampling positions
+        const ivec2 texture_size = ivec2(out_texture_size * vec2(res_mul));
+        const ivec2 texture_offset = ivec2(out_texture_offset * vec2(res_mul));
+        const float fx = pixel_coord_within_texture.x;
+        const float fy = pixel_coord_within_texture.y;
+        const float fx1 = floor(fx);
+        const float fx2 = fx1 + 1.0;
+        const float fy1 = floor(fy);
+        const float fy2 = fy1 + 1.0;
+        int x1;
+        int x2;
+        int y1;
+        int y2;
+
+        // Apply edge correction (wrap, clamp)
         if (edge_behavior == 0) { // wrap
-            u_edged = mod(u, texture_size);
-            v_edged = mod(v, texture_size);
-            u1_edged = mod(u1, texture_size);
-            u2_edged = mod(u2, texture_size);
-            v1_edged = mod(v1, texture_size);
-            v2_edged = mod(v2, texture_size);
-            pixel_coord = mod(pixel_coord, texture_size);
-        }
-        else if (interpolation_mode != 0) { // clamp for interpolated
-            u_edged = clamp(u, -0.5, texture_size - 0.5);
-            v_edged = clamp(v, -0.5, texture_size - 0.5);
-            u1_edged = clamp(u1, -0.5, texture_size - 0.5);
-            u2_edged = clamp(u2, -0.5, texture_size - 0.5);
-            v1_edged = clamp(v1, -0.5, texture_size - 0.5);
-            v2_edged = clamp(v2, -0.5, texture_size - 0.5);
-            pixel_coord = clamp(pixel_coord, -0.5, texture_size - 0.5);
-        }
-        else { // clamp for point sampled
-            u_edged = clamp(u, 0.0, texture_size);
-            v_edged = clamp(v, 0.0, texture_size);
-            u1_edged = clamp(u1, 0.0, texture_size);
-            u2_edged = clamp(u2, 0.0, texture_size);
-            v1_edged = clamp(v1, 0.0, texture_size);
-            v2_edged = clamp(v2, 0.0, texture_size);
-            pixel_coord = clamp(pixel_coord, 0.0, texture_size);
+            x1 = texture_offset.x + (int(fx1) % texture_size.x);
+            x2 = texture_offset.x + (int(fx2) % texture_size.x);
+            y1 = texture_offset.y + (int(fy1) % texture_size.y);
+            y2 = texture_offset.y + (int(fy2) % texture_size.y);
         }
 
-        if (interpolation_mode == 2) { // bilinear sampling
-            float weight4 = ((u - u1) * (v - v1)) / ((u2 - u1) * (v2 - v1));
-            float weight3 = ((u2 - u) * (v - v1)) / ((u2 - u1) * (v2 - v1));
-            float weight2 = ((u - u1) * (v2 - v)) / ((u2 - u1) * (v2 - v1));
-            float weight1 = ((u2 - u) * (v2 - v)) / ((u2 - u1) * (v2 - v1));
-            vec4 sample1 = weight1 * texture2D(tex, (vec2(u1_edged, v1_edged) + texture_offset) / vec2(2048.0, 512.0));
-            vec4 sample2 = weight2 * texture2D(tex, (vec2(u2_edged, v1_edged) + texture_offset) / vec2(2048.0, 512.0));
-            vec4 sample3 = weight3 * texture2D(tex, (vec2(u1_edged, v2_edged) + texture_offset) / vec2(2048.0, 512.0));
-            vec4 sample4 = weight4 * texture2D(tex, (vec2(u2_edged, v2_edged) + texture_offset) / vec2(2048.0, 512.0));
-            tex_color = (sample1 + sample2 + sample3 + sample4);
+        else /*if (edge_behavior == 1)*/ { // clamp
+            x1 = texture_offset.x + (clamp(int(fx1), 0, texture_size.x - 1));
+            x2 = texture_offset.x + (clamp(int(fx2), 0, texture_size.x - 1));
+            y1 = texture_offset.y + (clamp(int(fy1), 0, texture_size.y - 1));
+            y2 = texture_offset.y + (clamp(int(fy2), 0, texture_size.y - 1));
         }
-        else if (interpolation_mode == 1) { // 3-point sampling
-            float fu = fract(pixel_coord.x);
-            float fv = fract(pixel_coord.y);
-            vec4 sample2 = texture2D(tex, (vec2(u2_edged, v1_edged) + texture_offset) / vec2(2048.0, 512.0));
-            vec4 sample3 = texture2D(tex, (vec2(u1_edged, v2_edged) + texture_offset) / vec2(2048.0, 512.0));
 
-            if (fu + fv < 1.0) {
-                vec4 sample1 = texture2D(tex, (vec2(u1_edged, v1_edged) + texture_offset) / vec2(2048.0, 512.0));
-                float weight3 = fv;
-                float weight2 = fu;
-                float weight1 = 1.0-fu-fv;
-                tex_color = (sample1 * weight1) + (sample2 * weight2) + (sample3 * weight3);
+        // Sample the texture (point, n64, bilinear)
+        if (curr_interpolation_mode == 0) { // point sample
+            tex_color = texelFetch(tex, ivec2(x1, y1), curr_mip);
+        }
+        else if (curr_interpolation_mode == 1) { // n64-style tri-point sample
+            const float frac_x = fx - fx1;
+            const float frac_y = fy - fy1;
+            const vec4 sample21 = texelFetch(tex, ivec2(x2, y1), curr_mip);
+            const vec4 sample12 = texelFetch(tex, ivec2(x1, y2), curr_mip);
+
+            // triangle 11, 21, 12
+            if (frac_x + frac_y <= 1.0) {
+                const vec4 sample11 = texelFetch(tex, ivec2(x1, y1), curr_mip);
+                tex_color = sample11 * (1.0 - frac_x - frac_y)
+                          + sample21 * (frac_x)
+                          + sample12 * (frac_y);
             }
+            // triangle 22, 21, 12
             else {
-                vec4 sample4 = texture2D(tex, (vec2(u2_edged, v2_edged) + texture_offset) / vec2(2048.0, 512.0));
-                float weight4 = 1.0 - ((1.0-fu) + (1.0-fv));
-                float weight3 = 1.0 - fu;
-                float weight2 = 1.0 - fv;
-                tex_color = (sample2 * weight2) + (sample3 * weight3) + (sample4 * weight4);
+                const vec4 sample22 = texelFetch(tex, ivec2(x2, y2), curr_mip);
+                tex_color = sample22 * (frac_x + frac_y - 1.0)
+                          + sample21 * (1.0 - frac_y)
+                          + sample12 * (1.0 - frac_x);
             }
         }
-        else { // point sampling - default
-            tex_color = texture2D(tex, (vec2(u, v) + texture_offset) / vec2(2048.0, 512.0));
+        else if (curr_interpolation_mode == 2) { // bilinear sample
+            const float frac_x = fx - fx1;
+            const float frac_y = fy - fy1;
+            const vec4 sample11 = texelFetch(tex, ivec2(x1, y1), curr_mip);
+            const vec4 sample21 = texelFetch(tex, ivec2(x2, y1), curr_mip);
+            const vec4 sample12 = texelFetch(tex, ivec2(x1, y2), curr_mip);
+            const vec4 sample22 = texelFetch(tex, ivec2(x2, y2), curr_mip);
+            const vec4 lerp_x_y1 = mix(sample11, sample21, frac_x);
+            const vec4 lerp_x_y2 = mix(sample12, sample22, frac_x);
+            const vec4 lerp_y = mix(lerp_x_y1, lerp_x_y2, frac_y);
+            tex_color = lerp_y;
         }
-    } 
-    if (tex_color.a < 0.001) {
+    }
+
+    // Alpha clipping
+    if (tex_color.a < 0.5) {
         discard;
     }
+
+    // Materials with id 254 are occluders; don't render them
     if (abs(out_texture - 254.0) < 0.5)  {
         discard;
     }
@@ -156,9 +156,14 @@ void main() {
         }
     }
 
+    // Apply lighting
     frag_color.xyz = (vtx_color.xyz + light_color.xyz) * tex_color.xyz;
-    frag_color.xyz = pow(frag_color.xyz, vec3(2.8 / 2.2)); // closer to how it looks on my ps1
+
+    // Gamma correction - roughly converts 2.2 gamma to 2.8 gamma, which is closer to how it looks on my ps1
+    frag_color.xyz = pow(frag_color.xyz, vec3(2.8 / 2.2));
     frag_color.w = 1.0;
+
+    // For editor
     object_picking.x = float(drawing_id) / 255.0;
     object_picking.y = float(drawing_what) / 255.0;
 }

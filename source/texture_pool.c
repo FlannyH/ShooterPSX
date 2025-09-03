@@ -1,22 +1,23 @@
 #include <stdio.h>
-#include <psxgpu.h>
 #include <assert.h>
 
 #include "texture_pool.h"
-#ifdef _PSX
-#include "psx/renderer.h"
-#endif
 #include "renderer.h"
 #include "common.h"
 #include "memory.h"
 
-#define MAX_RES_SHIFTS 9
+#ifdef _PSX
+#include <psxgpu.h>
+#include "psx/renderer.h"
+#endif
+
+#define MAX_RES_SHIFTS 12 // 12 makes the max texture pool resolution 4096x4096
 #define MAX_RES (1<<MAX_RES_SHIFTS)
 
 typedef struct {
     uint16_t top, left;
     uint32_t resolution;
-    RECT* textures; // if a texture's width or height are 0, it's unallocated
+    rect_t* textures; // if a texture's width or height are 0, it's unallocated
     uint32_t n_occupancy_maps;
     uint32_t** occupancy_maps;
 } texture_pool_t;
@@ -30,25 +31,25 @@ static inline uint32_t get_bit_int(uint32_t value, uint32_t bit) {
 }
 
 static inline uint32_t get_bit_arr(uint32_t* array, uint32_t bit) {
-    assert(bit < 32);
-    assert(v != NULL);
+    assert(array != NULL);
     const size_t array_index = bit / 32u;
-    return (array[array_index] >> bit) & 1;
+    const size_t bit_index = bit % 32u;
+    return (array[array_index] >> bit_index) & 1;
 }
 
 static inline void set_bit_arr(uint32_t* array, uint32_t bit) {
-    assert(bit < 32);
-    assert(v != NULL);
+    assert(array != NULL);
     const size_t array_index = bit / 32u;
-    const uint32_t write_or_mask = (1u << bit);
+    const size_t bit_index = bit % 32u;
+    const uint32_t write_or_mask = (1u << bit_index);
     array[array_index] |= write_or_mask;
 }
 
 static inline void reset_bit_arr(uint32_t* array, uint32_t bit) {
-    assert(bit < 32);
-    assert(v != NULL);
+    assert(array != NULL);
     const size_t array_index = bit / 32u;
-    const uint32_t write_and_mask = ~(1u << bit);
+    const size_t bit_index = bit % 32u;
+    const uint32_t write_and_mask = ~(1u << bit_index);
     array[array_index] &= write_and_mask;
 }
 
@@ -66,8 +67,8 @@ void texture_pool_init(uint32_t pool_index, uint16_t left, uint16_t top, uint32_
     texture_pools[pool_index].top = top;
     texture_pools[pool_index].left = left;
     texture_pools[pool_index].resolution = resolution;
-    texture_pools[pool_index].occupancy_maps = mem_stack_alloc(sizeof(uint32_t*) * MAX_RES_SHIFTS, STACK_PERSISTENT);
-    texture_pools[pool_index].textures = mem_stack_alloc(sizeof(RECT) * MAX_TEXTURE_COUNT, STACK_PERSISTENT);
+    texture_pools[pool_index].occupancy_maps = mem_stack_alloc(sizeof(uint32_t*) * (MAX_RES_SHIFTS + 1), STACK_PERSISTENT);
+    texture_pools[pool_index].textures = mem_stack_alloc(sizeof(rect_t) * MAX_TEXTURE_COUNT, STACK_PERSISTENT);
 
     uint32_t level_count = 0;
     for (uint32_t r = resolution; r > 0; r >>= 1) {
@@ -82,7 +83,7 @@ void texture_pool_init(uint32_t pool_index, uint16_t left, uint16_t top, uint32_
     }
 
     for (uint32_t i = 0; i < MAX_TEXTURE_COUNT; ++i) {
-        texture_pools[pool_index].textures[i] = (RECT){-1, -1, -1, -1};
+        texture_pools[pool_index].textures[i] = (rect_t){-1, -1, -1, -1};
     }
 
     texture_pools[pool_index].n_occupancy_maps = level_count;
@@ -115,6 +116,11 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
     uint32_t curr_res = texture_pools[pool_index].resolution;
     uint32_t block_size = 1;
     uint32_t occupancy_map_index = 0;
+
+    // todo: figure out a fast way to do this
+    // increase block size until we have a block size that can fully contain the smallest axis.
+    // this aligns the texture with the next power of 2, and we can use this to find the max 
+    // mipmap level to sample in the shader.
     while (block_size < width && block_size < height) {
         curr_res /= 2;
         block_size *= 2;
@@ -193,7 +199,7 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
 #ifdef _DEBUG_VERBOSE
     printf("for pool index %u, allocated texture %i (%ux%u) at location (%u, %u)\n", pool_index, texture_id, width, height, left, top);
 #endif
-    texture_pools[pool_index].textures[texture_id] = (RECT){
+    texture_pools[pool_index].textures[texture_id] = (rect_t){
         .x = (int16_t)left,
         .y = (int16_t)top,
         .w = (int16_t)width,
@@ -202,12 +208,16 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
     return texture_id;
 }
 
-RECT texture_pool_rect(uint32_t pool_index, int texture_id) {
+rect_t texture_pool_rect(uint32_t pool_index, int texture_id) {
 #ifdef _DEBUG
-    assert(pool_index < MAX_TEXTURE_POOL_COUNT);
-    assert(texture_id < MAX_TEXTURE_COUNT);
+    assert((pool_index < MAX_TEXTURE_POOL_COUNT) || (pool_index == 255));
+    assert((texture_id < MAX_TEXTURE_COUNT) || (texture_id == 255));
 #endif
-    return (RECT) {
+    if (pool_index == 255 || texture_id == 255) {
+        return (rect_t) {.x = 0, .y = 0, .w = 0, .h = 0};
+    }
+
+    return (rect_t) {
         .x = texture_pools[pool_index].textures[texture_id].x + texture_pools[pool_index].left,
         .y = texture_pools[pool_index].textures[texture_id].y + texture_pools[pool_index].top,
         .w = texture_pools[pool_index].textures[texture_id].w,
@@ -222,7 +232,7 @@ void texture_pool_free(uint32_t pool_index, int* texture_ids, int texture_count)
     // Free in pixel map
     int changed = 0;
     for (int i = 0; i < texture_count; ++i) {
-        RECT* texture = &texture_pools[pool_index].textures[texture_ids[i]];
+        rect_t* texture = &texture_pools[pool_index].textures[texture_ids[i]];
 
         if (texture->w <= 0 || texture->h <= 0) {
             continue;
@@ -254,7 +264,7 @@ void texture_pool_free(uint32_t pool_index, int* texture_ids, int texture_count)
             
             // write a bunch of words, should be faster than 32 individual single bit writes lol
             word_bit_counter = 0;
-            const int number_of_bits_after_first_word = (end_x - ((start_x + 0x1F) & (~0X1F)));
+            const int number_of_bits_after_first_word = (end_x - ((start_x + 0x1F) & (~0x1F)));
             const int num_words_to_fill_completely = number_of_bits_after_first_word / 32;
             for (int full_word_i = 0; full_word_i < num_words_to_fill_completely; ++full_word_i) {
                 occ_map[word_index++] = 0;
