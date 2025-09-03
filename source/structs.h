@@ -3,6 +3,15 @@
 #define STRUCTS_H
 #include "vec3.h"
 
+typedef enum {
+    TEX_CAT_NONE = 0,
+    TEX_CAT_LEVEL,
+    TEX_CAT_ENTITY,
+    TEX_CAT_WEAPON,
+    TEX_CAT_MISC,
+    N_TEX_CATS
+} texture_category_t;
+
 typedef struct {
     vec3_t min;
     vec3_t max;
@@ -95,6 +104,7 @@ typedef struct {
     vertex_3d_t* vertices;
     normal_t* normals;
     aabb_t bounds;
+    texture_category_t tex_category;
     char* name;
 } mesh_t;
 #endif
@@ -205,5 +215,10 @@ typedef struct {
     vec3_t rotation; // Angles in fixed-point format (131072 units = 360 degrees)
     vec3_t scale;    // Scale (4096 = 1.0)
 } transform_t;
+
+typedef struct {
+	int16_t x, y;
+    int16_t w, h;
+} rect_t;
 
 #endif // STRUCTS_H

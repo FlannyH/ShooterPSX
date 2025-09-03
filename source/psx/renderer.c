@@ -61,11 +61,11 @@ int store_to_precomp_prims = 0;
 uint32_t sxy_storage = 0;
 
 // Textures
-texture_entry_t textures_level[128] = {0};
-texture_entry_t textures_entity[128] = {0};
-texture_entry_t textures_misc[128] = {0};
-texture_entry_t textures_weapon[128] = {0};
-texture_entry_t* renderer_psx_get_texture_entry(texture_category_t category, int texture_id) {
+texture_entry_t textures_level[MAX_TEXTURE_COUNT] = {0};
+texture_entry_t textures_entity[MAX_TEXTURE_COUNT] = {0};
+texture_entry_t textures_misc[MAX_TEXTURE_COUNT] = {0};
+texture_entry_t textures_weapon[MAX_TEXTURE_COUNT] = {0};
+texture_entry_t* renderer_get_texture_entry(texture_category_t category, int texture_id) {
     if (texture_id >= 0) {
         switch (category) {
             case TEX_CAT_NONE: return NULL;
@@ -143,7 +143,7 @@ void renderer_init(void) {
 
 #ifdef _DEBUG
     int fnt_alloc = texture_pool_alloc(3, 32, 32);
-    RECT fnt_rect = texture_pool_rect(3, fnt_alloc);
+    rect_t fnt_rect = texture_pool_rect(3, fnt_alloc);
     FntLoad(fnt_rect.x, fnt_rect.y);
     FntOpen(32, 32, 256, 192, 0, 512);
 #endif
@@ -283,7 +283,7 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform,
 
 void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, texture_category_t category) {
     // Fetch the right texture entry
-    texture_entry_t* entry = renderer_psx_get_texture_entry(category, texture_id);
+    texture_entry_t* entry = renderer_get_texture_entry(category, texture_id);
     if (entry == NULL) return;
 
     // Allocate quad primitive
@@ -408,10 +408,10 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 #endif
     
     // Upload texture pixels to VRAM
-    const RECT texture_rect = texture_pool_rect(pool_id, texture_id);
-    const RECT palette_rect = texture_pool_rect(3, palette_id);
-    LoadImage(&texture_rect, (uint32_t*)texture->data);
-    LoadImage(&palette_rect, (uint32_t*)texture->palette);
+    const rect_t texture_rect = texture_pool_rect(pool_id, texture_id);
+    const rect_t palette_rect = texture_pool_rect(3, palette_id);
+    LoadImage((RECT*)&texture_rect, (uint32_t*)texture->data);
+    LoadImage((RECT*)&palette_rect, (uint32_t*)texture->palette);
     DrawSync(0);
     
     // Calculate texture metadata
@@ -445,81 +445,6 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
         case TEX_CAT_MISC: textures_misc[index] = tex_entry; break;
         default: break;
     }
-}
-
-void renderer_free_texture(int index, texture_category_t category) {
-    texture_entry_t* entry = renderer_psx_get_texture_entry(category, index);
-    if (entry == NULL) return;
-    if (entry->allocated == 0) return;
-
-    RECT tex_rect = texture_pool_rect(entry->texture_pool_id, entry->texture_entry_id);
-    RECT pal_rect = texture_pool_rect(entry->palette_pool_id, entry->palette_entry_id);
-
-    // clear vram
-    if (tex_rect.w > 0 && tex_rect.h > 0) {
-#ifdef _DEBUG
-        renderer_psx_clear_vram((svec2_t){tex_rect.x, tex_rect.y}, (svec2_t){tex_rect.w, tex_rect.h}, (pixel32_t){255, 0, 255, 0});
-#endif
-        int texture_entry_id = entry->texture_entry_id;
-        texture_pool_free((uint32_t)entry->texture_pool_id, &texture_entry_id, 1);
-    }
-    if (pal_rect.w > 0 && pal_rect.h > 0) {
-#ifdef _DEBUG
-        renderer_psx_clear_vram((svec2_t){pal_rect.x, pal_rect.y}, (svec2_t){pal_rect.w, pal_rect.h}, (pixel32_t){255, 0, 255, 0});
-#endif
-        int palette_entry_id = entry->palette_entry_id;
-        texture_pool_free((uint32_t)entry->palette_pool_id, &palette_entry_id, 1);
-    }
-    entry->allocated = 0;
-}
-
-void renderer_free_texture_category(texture_category_t category) {
-    int n_textures[MAX_TEXTURE_POOL_COUNT] = {0};
-    int textures[MAX_TEXTURE_COUNT * MAX_TEXTURE_POOL_COUNT] = {0};
-
-    // Fetch lists of textures to free, separated by texture pool
-    for (int i = 0; i < MAX_TEXTURE_COUNT; ++i) {
-        texture_entry_t* entry = renderer_psx_get_texture_entry(category, i);
-        if (entry == NULL) continue;
-        if (entry->allocated == 0) continue;
-
-        RECT rect = texture_pool_rect(entry->texture_pool_id, entry->texture_entry_id);
-        if (rect.w <= 0 && rect.h <= 0) continue;
-
-        renderer_psx_clear_vram((svec2_t){rect.x, rect.y}, (svec2_t){rect.w, rect.h}, (pixel32_t){255, 0, 255, 0});
-
-        const size_t pool_id = entry->texture_pool_id;
-        const size_t textures_id = (pool_id * MAX_TEXTURE_COUNT) + (n_textures[entry->texture_pool_id]++);
-        textures[textures_id] = entry->texture_entry_id;
-
-        entry->allocated = 0;
-
-        rect = texture_pool_rect(entry->palette_pool_id, entry->palette_entry_id);
-        if (rect.w <= 0 && rect.h <= 0) continue;
-
-        renderer_psx_clear_vram((svec2_t){rect.x, rect.y}, (svec2_t){rect.w, rect.h}, (pixel32_t){255, 0, 255, 0});
-
-        const size_t pal_pool_id = entry->palette_pool_id;
-        const size_t pal_textures_id = (pal_pool_id * MAX_TEXTURE_COUNT) + (n_textures[entry->palette_pool_id]++);
-        textures[pal_textures_id] = entry->palette_entry_id;
-    }
-
-    for (int i = 0; i < MAX_TEXTURE_POOL_COUNT; ++i) {
-        assert(n_textures[i] >= 0);
-        if (n_textures[i] == 0) continue;
-
-        texture_pool_free(i, &textures[i * MAX_TEXTURE_COUNT], n_textures[i]);
-    }
-}
-
-int renderer_texture_is_loaded(int index, texture_category_t category) {
-    texture_entry_t* entry = renderer_psx_get_texture_entry(category, index);
-    if (entry == NULL) return 0;
-
-    RECT rect = texture_pool_rect(entry->texture_pool_id, entry->texture_entry_id);
-    if (rect.w > 0 && rect.h > 0) return 1;
-
-    return 0;
 }
 
 void renderer_set_video_mode(int is_pal) {

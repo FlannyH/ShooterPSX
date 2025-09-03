@@ -83,12 +83,7 @@ int main(void) {
 	current_state = STATE_DEBUG_MENU_MAIN;
 
     while (!renderer_should_close()) {
-#ifndef _PC
-        int delta_time_raw = renderer_get_delta_time_raw();
-        int delta_time = renderer_convert_dt_raw_to_ms(delta_time_raw);
-#else
         int delta_time = renderer_get_delta_time_ms();
-#endif
 #ifndef BENCHMARK_MODE
         delta_time = scalar_min(delta_time, 40);
 #endif

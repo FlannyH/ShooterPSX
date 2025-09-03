@@ -78,6 +78,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
         model->meshes[i].bounds.min.z = mesh_descriptions[i].z_min;
         model->meshes[i].bounds.max.z = mesh_descriptions[i].z_max;
         model->meshes[i].name = string;
+        model->meshes[i].tex_category = tex_category;
 
         // Convert quads to triangles
         mesh_t* mesh = &model->meshes[i];

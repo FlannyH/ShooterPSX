@@ -12,7 +12,6 @@
 
 void precompute_tex_triangle(POLY_GT3* prim, const vertex_3d_t* vertices, texture_category_t tex_category);
 void precompute_tex_quad(POLY_GT4* prim, const vertex_3d_t* vertices, texture_category_t tex_category);
-extern texture_entry_t* renderer_psx_get_texture_entry(texture_category_t category, int texture_id);
 
 model_t* model_load(const char* path, int on_stack, stack_t stack, texture_category_t tex_category, int optimize_for_single_render_per_frame) {
     // Read the file and store it in the temporary stack
@@ -159,7 +158,7 @@ void precompute_tex_triangle(POLY_GT3* prim, const vertex_3d_t* vertices, textur
     const vertex_3d_t v0 = vertices[0];
     const vertex_3d_t v1 = vertices[1];
     const vertex_3d_t v2 = vertices[2];
-    const texture_entry_t* entry = renderer_psx_get_texture_entry(tex_category, (int)v0.tex_id);
+    const texture_entry_t* entry = renderer_get_texture_entry(tex_category, (int)v0.tex_id);
 
     setPolyGT3(prim);
     setRGB0(prim, v0.r >> 1, v0.g >> 1, v0.b >> 1);
@@ -181,7 +180,7 @@ void precompute_tex_quad(POLY_GT4* prim, const vertex_3d_t* vertices, texture_ca
     const vertex_3d_t v1 = vertices[1];
     const vertex_3d_t v2 = vertices[2];
     const vertex_3d_t v3 = vertices[3];
-    const texture_entry_t* entry = renderer_psx_get_texture_entry(tex_category, (int)v0.tex_id);
+    const texture_entry_t* entry = renderer_get_texture_entry(tex_category, (int)v0.tex_id);
 
     setPolyGT4(prim);
     setRGB0(prim, v0.r >> 1, v0.g >> 1, v0.b >> 1);

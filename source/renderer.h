@@ -23,7 +23,6 @@ extern "C" {
 #include <stdint.h>
     
 #define ORD_TBL_LENGTH 4096
-#define RES_X 384
 #define RES_Y_PAL 256
 #define RES_Y_NTSC 240
 #define N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE 4
@@ -33,13 +32,20 @@ extern "C" {
 const static transform_t id_transform = { {0,0,0},{0,0,0}, {-4096, -4096, -4096} };
 extern int widescreen;
 
-typedef enum {
-    TEX_CAT_NONE = 0,
-    TEX_CAT_LEVEL,
-    TEX_CAT_ENTITY,
-    TEX_CAT_WEAPON,
-    TEX_CAT_MISC,
-} texture_category_t;
+typedef struct ALIGN(4) {
+#ifdef _PSX
+    uint16_t tpage;
+    uint16_t clut;
+#endif
+    uint8_t offset_u;
+    uint8_t offset_v;
+    uint8_t texture_pool_id; // invalid if set to 255
+    uint8_t texture_entry_id; // invalid if set to 255
+    uint8_t palette_pool_id; // invalid if set to 255
+    uint8_t palette_entry_id; // invalid if set to 255
+    uint8_t allocated; // unallocated if 0, allocated otherwise
+    pixel32_t average_color;
+} texture_entry_t;
 
 // Functions
 void renderer_init(void); // Initializes the renderer by configuring the GPU, setting the video mode, and preparing the drawing environment
@@ -64,7 +70,6 @@ void renderer_free_texture(int index, texture_category_t category);
 void renderer_free_texture_category(texture_category_t category);
 int renderer_texture_is_loaded(int index, texture_category_t category);
 void renderer_set_video_mode(int is_pal);
-int renderer_get_delta_time_raw(void);
 int renderer_get_delta_time_ms(void);
 int renderer_convert_dt_raw_to_ms(int dt_raw);
 int renderer_should_close(void);
@@ -73,6 +78,7 @@ int renderer_n_meshes_drawn(void);
 int renderer_get_camera_level_section(vec3_t pos, const vislist_t vis);
 int renderer_width(void);
 int renderer_height(void);
+texture_entry_t* renderer_get_texture_entry(texture_category_t category, int texture_id);
 
 #ifdef _LEVEL_EDITOR
 float* renderer_debug_perspective_matrix(void);
