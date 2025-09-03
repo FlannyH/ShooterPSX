@@ -40,9 +40,9 @@ void state_enter_title_screen(void) {
 
 		// Load graphics data
 #if defined(_PSX) || defined(_PC)
-		texture_cpu_t *tex_menu1;
-		texture_cpu_t *tex_menu2;
-		texture_cpu_t *tex_ui;
+		texture_cpu_t *tex_menu1 = NULL;
+		texture_cpu_t *tex_menu2 = NULL;
+		texture_cpu_t *tex_ui = NULL;
 		for (int i = 0; i < MAX_TEXTURE_COUNT; ++i) renderer_free_texture(i, TEX_CAT_MISC);
 		mem_stack_release(STACK_TEMP);
 		texture_collection_load("models/ui_tex/menu1.txc", &tex_menu1, 1, STACK_TEMP);
@@ -54,8 +54,8 @@ void state_enter_title_screen(void) {
 		texture_collection_load("models/ui_tex/ui.txc", &tex_ui, 1, STACK_TEMP);
 		renderer_upload_texture(tex_ui, 5, TEX_CAT_MISC);
 #elif defined(_NDS)
-		texture_cpu_t *tex_menu;
-		texture_cpu_t *tex_ui;
+		texture_cpu_t *tex_menu = NULL;
+		texture_cpu_t *tex_ui = NULL;
 		mem_stack_release(STACK_TEMP);
 		texture_collection_load("models/ui_tex/menu_ds.txc", &tex_menu, 1, STACK_TEMP);
 		renderer_upload_texture(tex_menu, 4, TEX_CAT_MISC);
