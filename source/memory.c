@@ -7,15 +7,25 @@
 
 #if defined(_PSX)
 #define size_stack_temp (333  * KiB)
-#elif defined(_NDS) 
-#define size_stack_temp (333 * KiB)
-#else
-#define size_stack_temp (8 * MiB)
-#endif
 #define size_stack_level (1024 * KiB)
 #define size_stack_music (100 * KiB)
 #define size_stack_entity (112 * KiB)
 #define size_stack_persistent (64 * KiB)
+#elif defined(_NDS) 
+#define size_stack_temp (333 * KiB)
+#define size_stack_level (1024 * KiB)
+#define size_stack_music (100 * KiB)
+#define size_stack_entity (112 * KiB)
+#define size_stack_persistent (64 * KiB)
+#else
+#define size_stack_temp (8 * MiB)
+#define size_stack_level (1024 * KiB)
+#define size_stack_music (100 * KiB)
+#define size_stack_entity (112 * KiB)
+#define size_stack_persistent (2 * MiB)
+#endif
+
+
 uint32_t* mem_stack_temp = NULL;
 uint32_t* mem_stack_level = NULL;
 uint32_t* mem_stack_music = NULL;
