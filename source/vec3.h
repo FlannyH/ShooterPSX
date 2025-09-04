@@ -3,6 +3,8 @@
 
 #include "fixed_point.h"
 
+// todo: psx gte-accelerated svec3_t math
+
 typedef struct {
     fixed20_12_t x, y, z;
 } vec3_t;

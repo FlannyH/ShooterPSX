@@ -29,7 +29,7 @@ void file_init(const char* path) {
         strcpy(new_path, path);
     }
 
-    // Convert slashes to forward slashes, Linux build will cry otherwise
+    // Convert backslashes to forward slashes, Linux build will cry otherwise
     for (size_t x = 0; x < length - 2; ++x) {
         if (new_path[x] == '\\') {
             new_path[x] = '/';
