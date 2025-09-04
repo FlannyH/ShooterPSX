@@ -22,7 +22,7 @@
 
 #define PI 3.14159265358979f
 #define RESOLUTION_SCALING 4
-GLFWwindow *window;
+GLFWwindow* window;
 mat4 perspective_matrix;
 mat4 view_matrix;
 mat4 view_matrix_topdown;

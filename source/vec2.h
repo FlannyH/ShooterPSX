@@ -6,6 +6,8 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 
+// todo: psx gte-accelerated svec2_t math
+
 typedef struct {
     fixed20_12_t x, y;
 } vec2_t;

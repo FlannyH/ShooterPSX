@@ -9,6 +9,8 @@
 
 #define COL_SCALE 512 // 4096 = 1.0, 512 = 0.125. Need lower scale for less overflows
 
+// todo: implement GJK
+
 // BVH construction
 level_collision_t bvh_from_file(const char* path, int on_stack, stack_t stack);
 void bvh_debug_draw(const level_collision_t* bvh, int min_depth, int max_depth, pixel32_t color);

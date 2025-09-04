@@ -39,6 +39,7 @@ void state_enter_title_screen(void) {
 		}
 
 		// Load graphics data
+		// todo: clean this up, maybe make platform specific ui functions this
 #if defined(_PSX) || defined(_PC)
 		texture_cpu_t *tex_menu1 = NULL;
 		texture_cpu_t *tex_menu2 = NULL;

@@ -36,6 +36,8 @@
 #include <filesystem.h>
 #endif
 
+// todo: separate big functions into multiple smaller ones to make it easier to read
+
 void update_screen_shake_intensity(int dt);
 void load_weapon_textures(void);
 void benchmark_mode(void);

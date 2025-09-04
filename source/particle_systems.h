@@ -1,5 +1,5 @@
-#ifndef PARTICLE_SYSTEMS
-#define PARTICLE_SYSTEMS
+#ifndef PARTICLE_SYSTEMS_H
+#define PARTICLE_SYSTEMS_H
 
 #include "particles.h"
 

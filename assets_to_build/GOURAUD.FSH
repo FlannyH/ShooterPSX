@@ -1,4 +1,4 @@
-#version 460
+#version 140
 
 in vec3 out_position_ws;
 in vec3 out_color;
@@ -40,19 +40,19 @@ void main() {
     // If a texture is bound to the shader, and if this polygon has a texture
     if (texture_bound == 1 && (abs(out_texture - 255.0) > 0.5)) {
         // Get texture pixel coordinate on the texture atlas
-        const vec2 uv_normalized = out_texcoord / vec2(256.0);
+        vec2 uv_normalized = out_texcoord / vec2(256.0);
         vec2 pixel_coord_within_texture = (uv_normalized * out_texture_size);
 
         // Find mip level, and make sure it's not too high as to keep individual textures 1x1
         // the texture allocator guarantees that a texture will be at least the rounded up to
         // a power of 2 based on its smallest axis
-        const vec2 dx = dFdx(pixel_coord_within_texture);
-        const vec2 dy = dFdy(pixel_coord_within_texture);
-        const float rho = max(length(dx), length(dy));
-        const float lod = max(0.0, log2(rho));
-        const int max_mip = int(floor(log2(min(out_texture_size.x, out_texture_size.y))));
-        const int curr_mip = int(clamp(floor(lod), 0.0, float(max_mip)));
-        const float res_mul = 1.0 / (1 << curr_mip);
+        vec2 dx = dFdx(pixel_coord_within_texture);
+        vec2 dy = dFdy(pixel_coord_within_texture);
+        float rho = max(length(dx), length(dy));
+        float lod = max(0.0, log2(rho));
+        int max_mip = int(floor(log2(min(out_texture_size.x, out_texture_size.y))));
+        int curr_mip = int(clamp(floor(lod), 0.0, float(max_mip)));
+        float res_mul = 1.0 / (1 << curr_mip);
 
         pixel_coord_within_texture *= vec2(res_mul);
 
@@ -61,14 +61,14 @@ void main() {
         if (curr_interpolation_mode != 0) pixel_coord_within_texture -= 0.5;
 
         // Get 4 integer sampling positions
-        const ivec2 texture_size = ivec2(out_texture_size * vec2(res_mul));
-        const ivec2 texture_offset = ivec2(out_texture_offset * vec2(res_mul));
-        const float fx = pixel_coord_within_texture.x;
-        const float fy = pixel_coord_within_texture.y;
-        const float fx1 = floor(fx);
-        const float fx2 = fx1 + 1.0;
-        const float fy1 = floor(fy);
-        const float fy2 = fy1 + 1.0;
+        ivec2 texture_size = ivec2(out_texture_size * vec2(res_mul));
+        ivec2 texture_offset = ivec2(out_texture_offset * vec2(res_mul));
+        float fx = pixel_coord_within_texture.x;
+        float fy = pixel_coord_within_texture.y;
+        float fx1 = floor(fx);
+        float fx2 = fx1 + 1.0;
+        float fy1 = floor(fy);
+        float fy2 = fy1 + 1.0;
         int x1;
         int x2;
         int y1;
@@ -94,36 +94,36 @@ void main() {
             tex_color = texelFetch(tex, ivec2(x1, y1), curr_mip);
         }
         else if (curr_interpolation_mode == 1) { // n64-style tri-point sample
-            const float frac_x = fx - fx1;
-            const float frac_y = fy - fy1;
-            const vec4 sample21 = texelFetch(tex, ivec2(x2, y1), curr_mip);
-            const vec4 sample12 = texelFetch(tex, ivec2(x1, y2), curr_mip);
+            float frac_x = fx - fx1;
+            float frac_y = fy - fy1;
+            vec4 sample21 = texelFetch(tex, ivec2(x2, y1), curr_mip);
+            vec4 sample12 = texelFetch(tex, ivec2(x1, y2), curr_mip);
 
             // triangle 11, 21, 12
             if (frac_x + frac_y <= 1.0) {
-                const vec4 sample11 = texelFetch(tex, ivec2(x1, y1), curr_mip);
+                vec4 sample11 = texelFetch(tex, ivec2(x1, y1), curr_mip);
                 tex_color = sample11 * (1.0 - frac_x - frac_y)
                           + sample21 * (frac_x)
                           + sample12 * (frac_y);
             }
             // triangle 22, 21, 12
             else {
-                const vec4 sample22 = texelFetch(tex, ivec2(x2, y2), curr_mip);
+                vec4 sample22 = texelFetch(tex, ivec2(x2, y2), curr_mip);
                 tex_color = sample22 * (frac_x + frac_y - 1.0)
                           + sample21 * (1.0 - frac_y)
                           + sample12 * (1.0 - frac_x);
             }
         }
         else if (curr_interpolation_mode == 2) { // bilinear sample
-            const float frac_x = fx - fx1;
-            const float frac_y = fy - fy1;
-            const vec4 sample11 = texelFetch(tex, ivec2(x1, y1), curr_mip);
-            const vec4 sample21 = texelFetch(tex, ivec2(x2, y1), curr_mip);
-            const vec4 sample12 = texelFetch(tex, ivec2(x1, y2), curr_mip);
-            const vec4 sample22 = texelFetch(tex, ivec2(x2, y2), curr_mip);
-            const vec4 lerp_x_y1 = mix(sample11, sample21, frac_x);
-            const vec4 lerp_x_y2 = mix(sample12, sample22, frac_x);
-            const vec4 lerp_y = mix(lerp_x_y1, lerp_x_y2, frac_y);
+            float frac_x = fx - fx1;
+            float frac_y = fy - fy1;
+            vec4 sample11 = texelFetch(tex, ivec2(x1, y1), curr_mip);
+            vec4 sample21 = texelFetch(tex, ivec2(x2, y1), curr_mip);
+            vec4 sample12 = texelFetch(tex, ivec2(x1, y2), curr_mip);
+            vec4 sample22 = texelFetch(tex, ivec2(x2, y2), curr_mip);
+            vec4 lerp_x_y1 = mix(sample11, sample21, frac_x);
+            vec4 lerp_x_y2 = mix(sample12, sample22, frac_x);
+            vec4 lerp_y = mix(lerp_x_y1, lerp_x_y2, frac_y);
             tex_color = lerp_y;
         }
     }
@@ -164,6 +164,7 @@ void main() {
     frag_color.w = 1.0;
 
     // For editor
+    // todo: fix this
     object_picking.x = float(drawing_id) / 255.0;
     object_picking.y = float(drawing_what) / 255.0;
 }

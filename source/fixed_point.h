@@ -52,7 +52,6 @@ ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20
     register fixed20_12_t temp, result;
     __asm__ volatile (
         // shift the bits into the right place
-        // ? = unknown
         // s = sign bit
         // o = high bits to discard
         // . low bits to discard
@@ -97,6 +96,7 @@ ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20
 }
 #endif
 
+// todo: should this be optimized with assembly on ps1?
 ALWAYS_INLINE fixed20_12_t scalar_div(const fixed20_12_t a, const fixed20_12_t b) {
     int64_t result32 = (int64_t)a * 4096;
     if (b != 0) {

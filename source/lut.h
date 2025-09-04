@@ -1,5 +1,5 @@
-#ifndef LUT
-#define LUT
+#ifndef LUT_H
+#define LUT_H
 #include <stdint.h>
 
 // Q20.12 fixed point multiplier for panning. 

@@ -9,6 +9,10 @@
 
 model_t* model_load(const char* path, int on_stack, stack_t stack, texture_category_t tex_category, int optimize_for_single_render_per_frame) {
     (void)optimize_for_single_render_per_frame;
+
+    // todo: fix nds renderer
+    (void)tex_category;
+    TODO();
     
     // Read the file
     uint32_t* file_data;

@@ -47,6 +47,8 @@ typedef struct ALIGN(4) {
     pixel32_t average_color;
 } texture_entry_t;
 
+// todo: pick one coordinate system and make it consistent across graphics, physics, and model spaces, and then make it correct with a view matrix
+
 // Functions
 void renderer_init(void); // Initializes the renderer by configuring the GPU, setting the video mode, and preparing the drawing environment
 void renderer_begin_frame(const transform_t* camera_transform); // Applies the camera transform to the renderer, preparing it for a new frame
