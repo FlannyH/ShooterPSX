@@ -17,9 +17,7 @@
 #define FPS_COUNTER
 
 #define ALWAYS_INLINE __attribute__((always_inline)) inline
-#ifndef ALIGN
-#define ALIGN(a)      __attribute__((aligned((a))))
-#endif
+#define ALIGNED(a)      __attribute__((aligned((a))))
 
 #define TODO()  printf("%s:%i: todo!\n", __FILE__, __LINE__); \
                 while(1) {;;}
