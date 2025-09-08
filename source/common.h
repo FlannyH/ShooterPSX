@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #ifndef _NDS
+#define _USE_TEXTURE_POOLS
 //#define PAL
 //#define _DEBUG_CAMERA
 #ifndef _DEBUG

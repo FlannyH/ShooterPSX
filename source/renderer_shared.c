@@ -253,6 +253,7 @@ int renderer_get_fade_level(void) {
     return fade_level;
 }
 
+#ifdef _USE_TEXTURE_POOLS
 void renderer_free_texture(int index, texture_category_t category) {
     texture_entry_t* entry = renderer_get_texture_entry(category, index);
     if (entry == NULL) return;
@@ -322,12 +323,4 @@ void renderer_free_texture_category(texture_category_t category) {
     }
 }
 
-int renderer_texture_is_loaded(int index, texture_category_t category) {
-    texture_entry_t* entry = renderer_get_texture_entry(category, index);
-    if (entry == NULL) return 0;
-
-    rect_t rect = texture_pool_rect(entry->texture_pool_id, entry->texture_entry_id);
-    if (rect.w > 0 && rect.h > 0) return 1;
-
-    return 0;
-}
+#endif
