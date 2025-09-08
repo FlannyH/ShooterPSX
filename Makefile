@@ -140,7 +140,7 @@ CFLAGS = -Wall -Wextra -Werror -std=c11 -Wno-old-style-declaration -Wno-format
 CXXFLAGS = -Wall -Wextra -Werror -std=c++20 -Wno-format
 LINKER_FLAGS = 
 
-.PHONY: all submodules tools assets pc level_editor psx nds clean mkdir_output_pc pc_dependencies glfw gl3w imgui imguizmo
+# .PHONY: all submodules pc level_editor psx nds clean mkdir_output_pc pc_dependencies glfw gl3w imgui imguizmo
 .NOTPARALLEL: assets tools pc psx level_editor nds clean
 all: submodules tools assets pc level_editor psx nds
 
@@ -414,35 +414,42 @@ $(PATH_BUILD_NDS)/$(PROJECT_NAME).nds: $(PATH_TEMP_NDS)/$(PROJECT_NAME).elf
 
 nds: tools assets $(PATH_BUILD_NDS)/$(PROJECT_NAME).nds
 
-obj2psx:
+$(TOOLS_BIN)/obj2psx$(EXE_EXT):
 	@mkdir -p $(PATH_TOOLS_BIN)
 	@echo Building $@
 	@cargo build --release --manifest-path=tools/obj2psx/Cargo.toml
 	@cp tools/obj2psx/target/release/obj2psx$(EXE_EXT) $(PATH_TOOLS_BIN)
 
-midi2psx:
+$(TOOLS_BIN)/midi2psx$(EXE_EXT):
 	@mkdir -p $(PATH_TOOLS_BIN)
 	@echo Building $@
 	@cargo build --release --manifest-path=tools/midi2psx/Cargo.toml
 	@cp tools/midi2psx/target/release/midi2psx$(EXE_EXT) $(PATH_TOOLS_BIN)
 
-psx_vislist_generator:
+$(TOOLS_BIN)/psx_vislist_generator$(EXE_EXT):
 	@mkdir -p $(PATH_TOOLS_BIN)
 	@echo Building $@
 	@cargo build --release --manifest-path=tools/psx_vislist_generator/Cargo.toml
 	@cp tools/psx_vislist_generator/target/release/psx_vislist_generator$(EXE_EXT) $(PATH_TOOLS_BIN)
 
-psx_soundfont_generator:
+$(TOOLS_BIN)/psx_soundfont_generator$(EXE_EXT):
 	@mkdir -p $(PATH_TOOLS_BIN)
 	@echo Building $@
 	@make -C tools/psx_soundfont_generator TARGET_DIR=../../$(PATH_TOOLS_BIN)
 
-fsfa_builder:
+$(TOOLS_BIN)/fsfa_builder$(EXE_EXT):
 	@mkdir -p $(PATH_TOOLS_BIN)
 	@echo Building $@
 	@make -C tools/fsfa-builder TARGET_DIR=../../$(PATH_TOOLS_BIN)
 
-tools: obj2psx midi2psx psx_vislist_generator psx_soundfont_generator fsfa_builder
+COMPILED_TOOLS_LIST = $(TOOLS_BIN)/obj2psx$(EXE_EXT) \
+                      $(TOOLS_BIN)/midi2psx$(EXE_EXT) \
+                      $(TOOLS_BIN)/psx_vislist_generator$(EXE_EXT) \
+                      $(TOOLS_BIN)/psx_soundfont_generator$(EXE_EXT) \
+                      $(TOOLS_BIN)/fsfa_builder$(EXE_EXT)
+
+# tools: obj2psx midi2psx psx_vislist_generator psx_soundfont_generator fsfa_builder
+tools: $(COMPILED_TOOLS_LIST)
 
 # For levels, make the first 2 art .col, .vis, and then the rest. this way everything can be built in the right order
 COMPILED_ASSET_LIST = $(PATH_ASSETS)/pc/GOURAUD.FSH \
@@ -521,7 +528,7 @@ $(PATH_ASSETS)/shared/levels/%.lvl: $(PATH_ASSETS_TO_BUILD)/levels/%.lvl
 	@cp $< $@
 
 # If we encounter a vislist, we need to compile the model slightly differently. So do that before creating the vislist
-$(PATH_ASSETS)/shared/models/%.vis: $(PATH_ASSETS_TO_BUILD)/models/%.obj obj2psx psx_vislist_generator
+$(PATH_ASSETS)/shared/models/%.vis: $(PATH_ASSETS_TO_BUILD)/models/%.obj tools
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $(basename $@) --split
@@ -529,52 +536,52 @@ $(PATH_ASSETS)/shared/models/%.vis: $(PATH_ASSETS_TO_BUILD)/models/%.obj obj2psx
 	@$(PATH_TOOLS_BIN)/psx_vislist_generator$(EXE_EXT) $(basename $@).msh $(basename $@).col $@
 
 # Collision model
-$(PATH_ASSETS)/shared/models/%.col: $(PATH_ASSETS_TO_BUILD)/models/%_col.obj obj2psx
+$(PATH_ASSETS)/shared/models/%.col: $(PATH_ASSETS_TO_BUILD)/models/%_col.obj tools
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $(basename $@) --collision
 
 # Any other model, like weapon models or entity models
-$(PATH_ASSETS)/shared/models/%.msh: $(PATH_ASSETS_TO_BUILD)/models/%.obj obj2psx
+$(PATH_ASSETS)/shared/models/%.msh: $(PATH_ASSETS_TO_BUILD)/models/%.obj  tools
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $(basename $@)
 $(PATH_ASSETS)/shared/models/%.txc: $(PATH_ASSETS)/models/%.msh
 
 # UI textures
-$(PATH_ASSETS)/shared/models/ui_tex/%.txc: $(PATH_ASSETS_TO_BUILD)/models/ui_tex/%.png obj2psx
+$(PATH_ASSETS)/shared/models/ui_tex/%.txc: $(PATH_ASSETS_TO_BUILD)/models/ui_tex/%.png tools
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $@
-$(PATH_ASSETS)/nds/models/ui_tex/%.txc: $(PATH_ASSETS_TO_BUILD)/models/ui_tex/%.png obj2psx
+$(PATH_ASSETS)/nds/models/ui_tex/%.txc: $(PATH_ASSETS_TO_BUILD)/models/ui_tex/%.png  tools
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $@
 
 # Soundbank
-$(PATH_ASSETS)/pc/audio/%.sbk: $(PATH_ASSETS_TO_BUILD)/audio/%.csv psx_soundfont_generator
+$(PATH_ASSETS)/pc/audio/%.sbk: $(PATH_ASSETS_TO_BUILD)/audio/%.csv tools
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/psx_soundfont_generator$(EXE_EXT) $< $@ pcm16
 
-$(PATH_ASSETS)/psx/audio/%.sbk: $(PATH_ASSETS_TO_BUILD)/audio/%.csv psx_soundfont_generator
+$(PATH_ASSETS)/psx/audio/%.sbk: $(PATH_ASSETS_TO_BUILD)/audio/%.csv tools
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/psx_soundfont_generator$(EXE_EXT) $< $@ psx
 
 # Music sequences
-$(PATH_ASSETS)/shared/audio/music/%.dss: $(PATH_ASSETS_TO_BUILD)/audio/music/%.mid midi2psx
+$(PATH_ASSETS)/shared/audio/music/%.dss: $(PATH_ASSETS_TO_BUILD)/audio/music/%.mid tools
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/midi2psx$(EXE_EXT) $< $@
 
 # Level editor assets
-$(PATH_ASSETS)/level_editor/%.msh: $(PATH_ASSETS_TO_BUILD)/level_editor/%.obj obj2psx
+$(PATH_ASSETS)/level_editor/%.msh: $(PATH_ASSETS_TO_BUILD)/level_editor/%.obj tools
 	@mkdir -p $(dir $@)
 	@echo Compiling $<
 	@$(PATH_TOOLS_BIN)/obj2psx$(EXE_EXT) --input $< --output $(basename $@)
 
-$(PATH_TEMP)/pc/assets.sfa: $(COMPILED_ASSET_LIST) fsfa_builder
+$(PATH_TEMP)/pc/assets.sfa: $(COMPILED_ASSET_LIST) tools
 	@mkdir -p $(dir $@)
 	@mkdir -p $(PATH_ASSETS)/shared
 	@mkdir -p $(PATH_ASSETS)/pc
@@ -584,7 +591,7 @@ $(PATH_TEMP)/pc/assets.sfa: $(COMPILED_ASSET_LIST) fsfa_builder
 	@cp -r $(PATH_ASSETS)/pc/* $(PATH_TEMP)/pc/assets/
 	@$(PATH_TOOLS_BIN)/fsfa_builder$(EXE_EXT) $(PATH_TEMP)/pc/assets/ $@ --align 2048
 
-$(PATH_TEMP)/psx/assets.sfa: $(COMPILED_ASSET_LIST) fsfa_builder
+$(PATH_TEMP)/psx/assets.sfa: $(COMPILED_ASSET_LIST) tools
 	@mkdir -p $(dir $@)
 	@mkdir -p $(PATH_ASSETS)/shared
 	@mkdir -p $(PATH_ASSETS)/psx
