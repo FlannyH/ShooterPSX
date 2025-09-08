@@ -32,7 +32,7 @@ extern "C" {
 const static transform_t id_transform = { {0,0,0},{0,0,0}, {-4096, -4096, -4096} };
 extern int widescreen;
 
-typedef struct ALIGN(4) {
+typedef struct ALIGNED(4) {
 #ifdef _PSX
     uint16_t tpage;
     uint16_t clut;
