@@ -37,12 +37,16 @@ typedef struct ALIGNED(4) {
     uint16_t tpage;
     uint16_t clut;
 #endif
+#ifndef _NDS
     uint8_t offset_u;
     uint8_t offset_v;
     uint8_t texture_pool_id; // invalid if set to 255
+#endif
     uint8_t texture_entry_id; // invalid if set to 255
+#ifndef _NDS
     uint8_t palette_pool_id; // invalid if set to 255
     uint8_t palette_entry_id; // invalid if set to 255
+#endif
     uint8_t allocated; // unallocated if 0, allocated otherwise
     pixel32_t average_color;
 } texture_entry_t;
@@ -70,7 +74,6 @@ void renderer_debug_draw_sphere(sphere_t sphere);
 void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_category_t category);
 void renderer_free_texture(int index, texture_category_t category);
 void renderer_free_texture_category(texture_category_t category);
-int renderer_texture_is_loaded(int index, texture_category_t category);
 void renderer_set_video_mode(int is_pal);
 int renderer_get_delta_time_ms(void);
 int renderer_convert_dt_raw_to_ms(int dt_raw);

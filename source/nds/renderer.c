@@ -16,11 +16,18 @@ int tex_alloc_cursor = 0;
 int res_x = 256;
 int vsync_enable = 1;
 int is_pal = 0;
-int textures[256] = {0};
-int texture_pages[8] = {0};
 int n_rendered_quads = 0;
 int vblank_counter = 0;
 int n_meshes_drawn = 0;
+
+texture_entry_t textures[MAX_TEXTURE_COUNT * N_TEX_CATS] = {0};
+
+texture_entry_t* renderer_get_texture_entry(texture_category_t category, int texture_id) {
+    if ((texture_id >= 0) && (texture_id < (MAX_TEXTURE_COUNT * N_TEX_CATS))) {
+        return &textures[texture_id + ((size_t)category * MAX_TEXTURE_COUNT)];
+    }
+    return NULL;
+}
 
 void vblank_handler(void) {
     ++vblank_counter;
@@ -151,7 +158,7 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform,
     for (size_t i = 0; i < mesh->n_triangles; ++i) {
         uint8_t tex_id = mesh->vertices[vert_idx].tex_id;
         if (tex_id == 254) continue;
-        if (tex_id != 255) glBindTexture(0, textures[(int)tex_id + tex_id_offset]);
+        if (tex_id != 255) glBindTexture(0, textures[(size_t)tex_id + ((size_t)mesh->tex_category * MAX_TEXTURE_COUNT)].texture_entry_id);
         else glBindTexture(0, 0);
         const vertex_3d_t v0 = mesh->vertices[vert_idx];
         const vertex_3d_t v1 = mesh->vertices[vert_idx + 2];
@@ -174,7 +181,7 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform,
     for (size_t i = 0; i < mesh->n_quads; ++i) {
         uint8_t tex_id = mesh->vertices[vert_idx].tex_id;
         if (tex_id == 254) continue;
-        if (tex_id != 255) glBindTexture(0, textures[(int)tex_id + tex_id_offset]);
+        if (tex_id != 255) glBindTexture(0, textures[(size_t)tex_id + ((size_t)mesh->tex_category * MAX_TEXTURE_COUNT)].texture_entry_id);
         else glBindTexture(0, 0);
         const vertex_3d_t v0 = mesh->vertices[vert_idx];
         const vertex_3d_t v1 = mesh->vertices[vert_idx + 1];
@@ -222,8 +229,7 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 
     // Render quad
     glPolyFmt(POLY_ALPHA(color.a >> 3) | POLY_CULL_NONE);
-    if (is_page) glBindTexture(0, texture_pages[texture_id]);
-    else glBindTexture(0, textures[texture_id]);
+    glBindTexture(0, textures[texture_id + ((size_t)category * MAX_TEXTURE_COUNT)].texture_entry_id);
     glColor3b(
         scalar_clamp((int)color.r * 2, 0, 255),
         scalar_clamp((int)color.g * 2, 0, 255),
@@ -259,7 +265,7 @@ void renderer_apply_fade(int fade_level) {
     glLoadIdentity();
 
     // Draw transparent quad
-    glBindTexture(0, texture_pages[4]);
+    glBindTexture(0, 0);
     glPolyFmt(POLY_ALPHA(fade_level >> 3) | POLY_CULL_NONE);
     glColor3b(0, 0, 0);
 
@@ -289,27 +295,18 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     TODO_SOFT()
 }
 
-void renderer_upload_texture(const texture_cpu_t* texture, uint8_t index) {
-    if (textures[index] != 0) glDeleteTextures(1, &textures[index]);
-    glGenTextures(1, &textures[index]);
-    glBindTexture(0, textures[index]);
+void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_category_t category) {
+    const size_t tex_index = (size_t)index + ((size_t)category * MAX_TEXTURE_COUNT);
+    int tex_entry_id = textures[tex_index].texture_entry_id;
+    if (tex_entry_id != 0) glDeleteTextures(1, &tex_entry_id);
+    glGenTextures(1, &tex_entry_id);
+    glBindTexture(0, tex_entry_id);
+    textures[tex_index].texture_entry_id = tex_entry_id;
     if (glTexImage2D(0, 0, GL_RGB16, 64, 64, 0, TEXGEN_OFF | ((texture->palette[0].a == 0) ? GL_TEXTURE_COLOR0_TRANSPARENT : 0), texture->data) == 0) {
-        printf("Error loading texture %i pixels\n", index);
+        printf("Error loading category %i texture %i pixels\n", (int)category, index);
     }
     if (glColorTableEXT(0, 0, 16, 0, 0, texture->palette) == 0) {
-        printf("Error loading texture %i palette\n", index);
-    }
-}
-
-void renderer_upload_8bit_texture_page(const texture_cpu_t* texture, const uint8_t index) {
-    if (texture_pages[index] != 0) glDeleteTextures(1, &texture_pages[index]);
-    glGenTextures(1, &texture_pages[index]);
-    glBindTexture(0, texture_pages[index]);
-    if (glTexImage2D(0, 0, GL_RGB256, 256, 256, 0, TEXGEN_OFF | ((texture->palette[0].a == 0) ? GL_TEXTURE_COLOR0_TRANSPARENT : 0), texture->data) == 0) {
-        printf("Error loading texture page %i pixels\n", index);
-    }
-    if (glColorTableEXT(0, 0, 256, 0, 0, texture->palette) == 0) {
-        printf("Error loading texture page %i palette\n", index);
+        printf("Error loading category %i texture %i palette\n", (int)category, index);
     }
 }
 
@@ -325,7 +322,8 @@ int renderer_get_delta_time_raw(void) {
 }
 
 int renderer_get_delta_time_ms(void) {
-    TODO()
+    int dt_raw = renderer_get_delta_time_raw();
+    return renderer_convert_dt_raw_to_ms(dt_raw);
 }
 
 int renderer_n_meshes_drawn(void) { return n_meshes_drawn; }
@@ -341,4 +339,18 @@ int renderer_should_close(void) {
 void renderer_set_depth_bias(int bias) {
     (void)bias;
     TODO_SOFT()
+}
+
+void renderer_free_texture(int index, texture_category_t category) {
+    texture_entry_t* entry = renderer_get_texture_entry(category, index);
+    if (entry == NULL) return;
+    if (entry->allocated == 0) return;
+
+    entry->allocated = 0;
+}
+
+void renderer_free_texture_category(texture_category_t category) {
+    for (size_t i = 0; i < MAX_TEXTURE_COUNT; ++i) {
+        renderer_free_texture(i, category);
+    }
 }
