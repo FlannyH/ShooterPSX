@@ -17,6 +17,7 @@
 #include "../renderer.h"
 #include "../common.h"
 #include "../input.h"
+#include "../mesh.h"
 #include "../file.h"
 
 #include <ImGuizmo.h>
@@ -307,8 +308,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     static int render_level_bvh_start_depth = 0;
     static int render_level_bvh_end_depth = 6;
     
-    if (render_level_graphics) renderer_draw_model_shaded(curr_level->graphics, &curr_level->transform, NULL, 0);
-    if (render_level_collision) renderer_draw_model_shaded(curr_level->collision_mesh_debug, &id_transform, NULL, 0);
+    if (render_level_graphics) renderer_draw_model_shaded(curr_level->graphics, &curr_level->transform, NULL);
+    if (render_level_collision) renderer_draw_model_shaded(curr_level->collision_mesh_debug, &id_transform, NULL);
     if (render_level_bvh) bvh_debug_draw(&curr_level->collision_bvh, render_level_bvh_start_depth, render_level_bvh_end_depth, (pixel32_t){ .r = 160, .g = 240, .b = 80, .a = 255 });
     if (render_level_nav_graph) bvh_debug_draw_nav_graph(&curr_level->collision_bvh);
     if (render_level_vislist_regions) {
@@ -353,10 +354,10 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         path_model[0] = 0;
         path_model_lod[0] = 0;
         level_name[0] = 0;
-        gizmos = model_load("editor/gizmos.msh", 0, (stack_t)0, GIZMO_TEXTURE_OFFSET, 0);
+        gizmos = model_load("editor/gizmos.msh", 0, (stack_t)0, TEX_CAT_PERSISTENT, 0);
         uint32_t n_tex = texture_collection_load("editor/gizmos.txc", &gizmo_textures, 1, STACK_TEMP);
         for (uint32_t i = 0; i < n_tex; ++i) {
-            renderer_upload_texture(&gizmo_textures[i], GIZMO_TEXTURE_OFFSET + i);
+            renderer_upload_texture(&gizmo_textures[i], i,  TEX_CAT_PERSISTENT);
         }
         initialized = true;
     }
@@ -376,7 +377,6 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 mem_free(curr_level->collision_mesh_debug);
                 mem_free(curr_level->lights);
             }
-            tex_alloc_cursor = 0;
             mem_debug();
 
             uint32_t* data;
@@ -584,21 +584,21 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         inspect_vec3(&player_spawn_rotation, "Player Spawn Rotation");
 
         if (ImGui::Button("Hot reload")) {
+            // todo: reuse level_load()
             mem_stack_release(STACK_TEMP);
             mem_stack_release(STACK_LEVEL);
             mem_stack_release(STACK_ENTITY);
             entity_init();
 
             // Load level textures
-            texture_cpu_t* tex_level;
-            tex_level_start = tex_alloc_cursor;
-            const uint32_t n_level_textures = texture_collection_load(path_texture, &tex_level, 1, STACK_TEMP);
+            texture_cpu_t *tex_level;
+            auto n_level_textures = texture_collection_load(path_texture, &tex_level, 1, STACK_TEMP);
             for (uint8_t i = 0; i < n_level_textures; ++i) {
-                renderer_upload_texture(&tex_level[i], i + tex_level_start);
+                renderer_upload_texture(&tex_level[i], i, TEX_CAT_LEVEL);
             }
 
             // Load graphics and collision data
-            curr_level->graphics = model_load(path_model, 1, STACK_LEVEL, tex_level_start, 1);
+            curr_level->graphics = model_load(path_model, 1, STACK_LEVEL, TEX_CAT_LEVEL, 1);
             curr_level->collision_mesh_debug = model_load_collision_debug(path_collision, 0, (stack_t)0);
             curr_level->collision_mesh = model_load_collision(path_collision, 1, STACK_LEVEL);
             curr_level->transform = { {0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096} };
@@ -827,7 +827,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             trans.position.y /= -COL_SCALE;
             trans.position.z /= -COL_SCALE;
             renderer_set_drawing_id(i, 2);
-            renderer_draw_mesh_shaded(&gizmos->meshes[(size_t)(curr_level->lights[i].type-1)], &trans, 0, 1, GIZMO_TEXTURE_OFFSET);
+            renderer_draw_mesh_shaded(&gizmos->meshes[(size_t)(curr_level->lights[i].type-1)], &trans, 0, 1);
         }
     }
     renderer_update_lights(curr_level->lights);

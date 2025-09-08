@@ -9,6 +9,7 @@ typedef enum {
     TEX_CAT_ENTITY,
     TEX_CAT_WEAPON,
     TEX_CAT_MISC,
+    TEX_CAT_PERSISTENT,
     N_TEX_CATS
 } texture_category_t;
 

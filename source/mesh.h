@@ -1,5 +1,10 @@
 #ifndef MESH_H
 #define MESH_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "collision.h"
 #include "renderer.h"
 
@@ -15,4 +20,8 @@ aabb_t triangle_get_bounds(const triangle_3d_t *self);
 aabb_t collision_triangle_get_bounds(const collision_triangle_3d_t* self);
 mesh_t* model_find_mesh(const model_t* model, const char* mesh_name);
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif

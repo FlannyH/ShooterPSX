@@ -80,6 +80,7 @@ texture_entry_t textures_level[MAX_TEXTURE_COUNT] = {0};
 texture_entry_t textures_entity[MAX_TEXTURE_COUNT] = {0};
 texture_entry_t textures_misc[MAX_TEXTURE_COUNT] = {0};
 texture_entry_t textures_weapon[MAX_TEXTURE_COUNT] = {0};
+texture_entry_t textures_persistent[MAX_TEXTURE_COUNT] = {0};
 texture_entry_t* renderer_get_texture_entry(texture_category_t category, int texture_id) {
     if (texture_id >= 0) {
         switch (category) {
@@ -88,6 +89,7 @@ texture_entry_t* renderer_get_texture_entry(texture_category_t category, int tex
             case TEX_CAT_ENTITY: return &textures_entity[texture_id];
             case TEX_CAT_WEAPON: return &textures_weapon[texture_id];
             case TEX_CAT_MISC: return &textures_misc[texture_id];
+            case TEX_CAT_PERSISTENT: return &textures_persistent[texture_id];
             default: printf("[ERROR] Invalid texture category %i\n", (int)category); return NULL;
         }
     }
