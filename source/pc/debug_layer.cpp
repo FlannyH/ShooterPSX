@@ -25,7 +25,7 @@
 #include <format>
 #endif
 
-#define GIZMO_TEXTURE_OFFSET 120
+// todo: fix debug renderers for collision, nav, etc
 
 extern const char* entity_names[];
 const char* light_type_names[] = {
@@ -124,7 +124,7 @@ size_t inspect_enum(size_t value, const char** names, const char* label) {
     {
         size_t i = 1;
         while (names[i]) {
-            if (ImGui::Selectable(names[i], false)) {
+            if (ImGui::Selectable(names[i], i == value)) {
                 new_value = i;
             }
             ++i;
@@ -181,7 +181,7 @@ void inspect_entity(size_t entity_id) {
             entity_platform_t* platform = (entity_platform_t*)entity_data;
             inspect_vec3(&platform->position_start, "Start position");
             inspect_vec3(&platform->position_end, "End position");
-            inspect_scalar(&platform->velocity, "Velocty");
+            inspect_scalar(&platform->velocity, "Velocity");
             ImGui::DragInt("Current timer value (ms)", &platform->curr_timer_value);
             ImGui::DragInt("Auto start to end timer (ms)", &platform->auto_start_timer);
             ImGui::DragInt("Auto end to start timer (ms)", &platform->auto_return_timer);
@@ -286,15 +286,15 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     // Level metadata
     static vec3_t player_spawn_position = (vec3_t){ 0, 0, 0 };
     static vec3_t player_spawn_rotation = (vec3_t){ 0, 0, 0 };
-    static char* level_path = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* path_music = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* path_bank = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* path_texture = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* path_collision = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* path_vislist = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* path_model = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* path_model_lod = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
-    static char* level_name = (char*)mem_alloc(256, MEM_CAT_UNDEFINED);
+    static char* level_path = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
+    static char* path_music = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
+    static char* path_bank = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
+    static char* path_texture = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
+    static char* path_collision = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
+    static char* path_vislist = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
+    static char* path_model = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
+    static char* path_model_lod = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
+    static char* level_name = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
     static model_t* gizmos = nullptr;
     static texture_cpu_t* gizmo_textures = nullptr;
     static bool initialized = false;
@@ -365,33 +365,42 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     {
         auto load = [curr_level, &player, &camera]() {
             mem_debug();
-            if (curr_level && curr_level->graphics) {
+            if (curr_level) {
                 // only slightly cursed, at least we can be sure that the pc/level editor builds use mem_alloc for these
-                for (uint32_t i = 0; i < curr_level->graphics->n_meshes; ++i) {
-                    mem_free(curr_level->graphics->meshes[i].vertices);
+                if (curr_level->graphics) {
+                    for (uint32_t i = 0; i < curr_level->graphics->n_meshes; ++i) {
+                        mem_free(curr_level->graphics->meshes[i].vertices);
+                    }
                 }
-                for (uint32_t i = 0; i < curr_level->collision_mesh_debug->n_meshes; ++i) {
-                    mem_free(curr_level->collision_mesh_debug->meshes[i].vertices);
+                if (curr_level->collision_mesh_debug) {
+                    if (curr_level->collision_mesh_debug->meshes) {
+                        for (uint32_t i = 0; i < curr_level->collision_mesh_debug->n_meshes; ++i) {
+                            mem_free(curr_level->collision_mesh_debug->meshes[i].vertices);
+                        }
+                        mem_free(curr_level->collision_mesh_debug->meshes);
+                    }
+                    mem_free(curr_level->collision_mesh_debug);
                 }
-                mem_free(curr_level->collision_mesh_debug->meshes);
-                mem_free(curr_level->collision_mesh_debug);
                 mem_free(curr_level->lights);
             }
             mem_debug();
 
             uint32_t* data;
             size_t size;
-            file_read(level_path, &data, &size, 1, STACK_TEMP);
+            if (file_read(level_path, &data, &size, 1, STACK_TEMP) == 0) {
+                printf("Failed to load level '%s'\n", level_path);
+            }
             level_header_t* header = (level_header_t*)data;
             char* binary_section = (char*)(&header[1]);
-            strcpy(path_music, binary_section + header->path_music_offset);
-            strcpy(path_bank, binary_section + header->path_bank_offset);
-            strcpy(path_texture, binary_section + header->path_texture_offset);
-            strcpy(path_collision, binary_section + header->path_collision_offset);
-            strcpy(path_vislist, binary_section + header->path_vislist_offset);
-            strcpy(path_model, binary_section + header->path_model_offset);
-            strcpy(path_model_lod, binary_section + header->path_model_lod_offset);
-            strcpy(level_name, binary_section + header->level_name_offset);
+            
+            strncpy(path_music, binary_section + header->path_music_offset, 255);
+            strncpy(path_bank, binary_section + header->path_bank_offset, 255);
+            strncpy(path_texture, binary_section + header->path_texture_offset, 255);
+            strncpy(path_collision, binary_section + header->path_collision_offset, 255);
+            strncpy(path_vislist, binary_section + header->path_vislist_offset, 255);
+            strncpy(path_model, binary_section + header->path_model_offset, 255);
+            strncpy(path_model_lod, binary_section + header->path_model_lod_offset, 255);
+            strncpy(level_name, binary_section + header->level_name_offset, 255);
 
             entity_init();
             *curr_level = level_load(level_path, LEVEL_LOAD_ALL);
@@ -464,9 +473,14 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 }
             }
 
-            uint8_t* entity_types = (uint8_t*)malloc(n_entities);
+            const size_t n_entities_padded = (n_entities + 3) & ~0x03;
+            const size_t n_extra_values = n_entities_padded - n_entities;
+            uint8_t* entity_types = (uint8_t*)mem_alloc(n_entities_padded, MEM_CAT_UNDEFINED);
             for (int i = 0; i < n_entities; ++i) {
                 entity_types[i] = entity_get_type(i);
+            }
+            for (size_t i = 0; i < n_extra_values; ++i) {
+                entity_types[i + n_entities] = 0;
             }
 
             light_t lights[MAX_LIGHT_COUNT];
@@ -500,7 +514,14 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 .n_lights = (uint16_t)n_lights,
             };
 
+            mem_free(entity_types);
+
             FILE* file = fopen(level_path, "wb");
+            if (file == nullptr) {
+                // todo: message boxes for errors?
+                printf("Error saving file '%s': could not open file\n", level_path);
+                return;
+            }
             fwrite(&header, sizeof(header), 1, file);
             fwrite(binary_section.data(), sizeof(binary_section[0]), binary_section.size(), file);
             fclose(file);
@@ -550,7 +571,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         ImGui::SameLine();
         if (ImGui::Button("Save")) {
             // If the level path is empty, open file dialog
-            if (level_path[0] == '0' || level_path[0] == ' ') {
+            if (level_path[0] == '\0' || level_path[0] == ' ') {
                 save_after_select = true;
                 file_dialog.SetTitle("Open level file");
                 file_dialog.SetTypeFilters({ ".lvl" });
@@ -847,7 +868,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
             if (!found) {
                 curr_level->text_entries = (char**)realloc(curr_level->text_entries, (curr_level->n_text_entries + 1) * sizeof(char**));
-                curr_level->text_entries[curr_level->n_text_entries] = (char*)malloc(255);
+                curr_level->text_entries[curr_level->n_text_entries] = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
                 curr_level->text_entries[curr_level->n_text_entries][0] = 0;
                 ++curr_level->n_text_entries;
             }
@@ -884,7 +905,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         const float window_width = content_offset_bottom_right.x - content_offset_top_left.x;
         const float window_height = content_offset_bottom_right.y - content_offset_top_left.y;
         const float nrm_mouse_x = (rel_mouse_pos.x / window_width) * 2.0 - 1.0;
-        const float nrm_mouse_y = (rel_mouse_pos.y / window_width) * 2.0 - 1.0;
+        const float nrm_mouse_y = (rel_mouse_pos.y / window_height) * 2.0 - 1.0;
         renderer_update_window_res((int)window_width, (int)window_height);
 
         // Draw the viewport
@@ -909,8 +930,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 render_transform.rotation.y = -selected_entity->rotation.y;
                 render_transform.rotation.z = -selected_entity->rotation.z;
                 render_transform.scale.x = selected_entity->scale.x;
-                render_transform.scale.y = selected_entity->scale.x;
-                render_transform.scale.z = selected_entity->scale.x;
+                render_transform.scale.y = selected_entity->scale.y;
+                render_transform.scale.z = selected_entity->scale.z;
 
                 // Calculate model matrix
                 mat4 model_matrix;
@@ -959,7 +980,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             *mouse_over_viewport = 1;
 
             if (input_pressed(PAD_L2, 0)) {
-                // Read stencil buffer
+                // Read picking buffer
+                // todo: reasses whether it should rely on RGBA byte packing
                 struct {
                     uint8_t index;
                     uint8_t what;
@@ -994,4 +1016,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 #endif
 void debug_layer_close(void) {
     ImGui::SaveIniSettingsToDisk("imgui_layout.ini");
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 }
