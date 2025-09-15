@@ -40,8 +40,8 @@ void main() {
     // If a texture is bound to the shader, and if this polygon has a texture
     if (texture_bound == 1 && (abs(out_texture - 255.0) > 0.5)) {
         // Get texture pixel coordinate on the texture atlas
-        vec2 uv_normalized = out_texcoord / vec2(256.0);
-        vec2 pixel_coord_within_texture = (uv_normalized * out_texture_size);
+        vec2 uv_normalized = out_texcoord;
+        vec2 pixel_coord_within_texture = out_texcoord;
 
         // Find mip level, and make sure it's not too high as to keep individual textures 1x1
         // the texture allocator guarantees that a texture will be at least the rounded up to

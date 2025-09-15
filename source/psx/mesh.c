@@ -166,9 +166,9 @@ void precompute_tex_triangle(POLY_GT3* prim, const vertex_3d_t* vertices, textur
     setRGB2(prim, v2.r >> 1, v2.g >> 1, v2.b >> 1);
 
     setUV3(prim,
-        (v0.u >> 2) + entry->offset_u, (v0.v >> 2) + entry->offset_v,
-        (v1.u >> 2) + entry->offset_u, (v1.v >> 2) + entry->offset_v,
-        (v2.u >> 2) + entry->offset_u, (v2.v >> 2) + entry->offset_v
+        (v0.u + entry->offset_u), (v0.v + entry->offset_v),
+        (v1.u + entry->offset_u), (v1.v + entry->offset_v),
+        (v2.u + entry->offset_u), (v2.v + entry->offset_v)
     );
 
     prim->clut = entry->clut; // note: when rendering, offset the Y coordinate by clut_fade for the distance fog effect
@@ -189,10 +189,10 @@ void precompute_tex_quad(POLY_GT4* prim, const vertex_3d_t* vertices, texture_ca
     setRGB3(prim, v3.r >> 1, v3.g >> 1, v3.b >> 1);
 
     setUV4(prim,
-        (v0.u >> 2) + entry->offset_u, (v0.v >> 2) + entry->offset_v,
-        (v1.u >> 2) + entry->offset_u, (v1.v >> 2) + entry->offset_v,
-        (v2.u >> 2) + entry->offset_u, (v2.v >> 2) + entry->offset_v,
-        (v3.u >> 2) + entry->offset_u, (v3.v >> 2) + entry->offset_v
+        (v0.u + entry->offset_u), (v0.v + entry->offset_v),
+        (v1.u + entry->offset_u), (v1.v + entry->offset_v),
+        (v2.u + entry->offset_u), (v2.v + entry->offset_v),
+        (v3.u + entry->offset_u), (v3.v + entry->offset_v)
     );
 
     prim->clut = entry->clut; // note: when rendering, offset the Y coordinate by clut_fade for the distance fog effect

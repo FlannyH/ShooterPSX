@@ -926,6 +926,8 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 	texture_entry_t tex_entry = {
 		.offset_u = tex_rect.x,
 		.offset_v = tex_rect.y,
+		.width = texture->width,
+		.height = texture->height,
 		.allocated = 1,
 		.average_color = texture->avg_color,
 		.texture_pool_id = pool_id,

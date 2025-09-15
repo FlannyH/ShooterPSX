@@ -301,8 +301,12 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
     if (tex_entry_id != 0) glDeleteTextures(1, &tex_entry_id);
     glGenTextures(1, &tex_entry_id);
     glBindTexture(0, tex_entry_id);
+    textures[tex_index].width = texture->width;
+    textures[tex_index].height = texture->height;
     textures[tex_index].texture_entry_id = tex_entry_id;
-    if (glTexImage2D(0, 0, GL_RGB16, 64, 64, 0, TEXGEN_OFF | ((texture->palette[0].a == 0) ? GL_TEXTURE_COLOR0_TRANSPARENT : 0), texture->data) == 0) {
+    textures[tex_index].allocated = 1;
+    
+    if (glTexImage2D(0, 0, GL_RGB16, texture->width, texture->height, 0, TEXGEN_OFF | ((texture->palette[0].a == 0) ? GL_TEXTURE_COLOR0_TRANSPARENT : 0), texture->data) == 0) {
         printf("Error loading category %i texture %i pixels\n", (int)category, index);
     }
     if (glColorTableEXT(0, 0, 16, 0, 0, texture->palette) == 0) {

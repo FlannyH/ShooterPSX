@@ -1,7 +1,7 @@
-# Blender 4.2.3 LTS MTL File: 'entity.blend'
+# Blender 4.5.3 LTS MTL File: 'entity.blend'
 # www.blender.org
 
-newmtl door_big_locked_bottom
+newmtl door_big_locked
 Ns 250.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.500000 0.500000 0.500000
@@ -9,9 +9,9 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd entity_tex/door_big_locked_bottom.png
+map_Kd entity_tex/door_big_locked.png
 
-newmtl door_big_locked_top
+newmtl door_big_unlocked
 Ns 250.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.500000 0.500000 0.500000
@@ -19,9 +19,9 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd entity_tex/door_big_locked_top.png
+map_Kd entity_tex/door_big_unlocked.png
 
-newmtl door_big_unlocked_bottom
+newmtl door_locked
 Ns 250.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.500000 0.500000 0.500000
@@ -29,57 +29,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd entity_tex/door_big_unlocked_bottom.png
-
-newmtl door_big_unlocked_top
-Ns 250.000000
-Ka 1.000000 1.000000 1.000000
-Ks 0.500000 0.500000 0.500000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 2
-map_Kd entity_tex/door_big_unlocked_top.png
-
-newmtl door_locked_bl
-Ns 250.000000
-Ka 1.000000 1.000000 1.000000
-Ks 0.500000 0.500000 0.500000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 2
-map_Kd entity_tex/door_locked_bl.png
-
-newmtl door_locked_br
-Ns 250.000000
-Ka 1.000000 1.000000 1.000000
-Ks 0.500000 0.500000 0.500000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 2
-map_Kd entity_tex/door_locked_br.png
-
-newmtl door_locked_tl
-Ns 250.000000
-Ka 1.000000 1.000000 1.000000
-Ks 0.500000 0.500000 0.500000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 2
-map_Kd entity_tex/door_locked_tl.png
-
-newmtl door_locked_tr
-Ns 250.000000
-Ka 1.000000 1.000000 1.000000
-Ks 0.500000 0.500000 0.500000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 2
-map_Kd entity_tex/door_locked_tr.png
+map_Kd entity_tex/door_locked.png
 
 newmtl door_sides
 Ns 250.000000
@@ -91,7 +41,7 @@ d 1.000000
 illum 2
 map_Kd entity_tex/door_sides.png
 
-newmtl door_unlocked_bl
+newmtl door_unlocked
 Ns 250.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.500000 0.500000 0.500000
@@ -99,37 +49,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd entity_tex/door_unlocked_bl.png
-
-newmtl door_unlocked_br
-Ns 250.000000
-Ka 1.000000 1.000000 1.000000
-Ks 0.500000 0.500000 0.500000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 2
-map_Kd entity_tex/door_unlocked_br.png
-
-newmtl door_unlocked_tl
-Ns 250.000000
-Ka 1.000000 1.000000 1.000000
-Ks 0.500000 0.500000 0.500000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 2
-map_Kd entity_tex/door_unlocked_tl.png
-
-newmtl door_unlocked_tr
-Ns 250.000000
-Ka 1.000000 1.000000 1.000000
-Ks 0.500000 0.500000 0.500000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 2
-map_Kd entity_tex/door_unlocked_tr.png
+map_Kd entity_tex/door_unlocked.png
 
 newmtl enemy_chaser_parts1
 Ns 250.000000
