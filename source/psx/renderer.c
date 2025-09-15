@@ -429,17 +429,21 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
     if (texture->bits_per_pixel == 8) offset_u *= 2;
     else if (texture->bits_per_pixel == 4) offset_u *= 4;
     
-    texture_entry_t tex_entry;
-    tex_entry.tpage = getTPage(texture_mode, 0, texture_rect.x, texture_rect.y);
-    tex_entry.clut = getClut(palette_rect.x, palette_rect.y);
-    tex_entry.offset_u = (uint8_t)(offset_u & 0xFF);
-    tex_entry.offset_v = (uint8_t)(texture_rect.y & 0xFF);
-    tex_entry.texture_pool_id = (uint8_t)pool_id;
-    tex_entry.texture_entry_id = texture_id;
-    tex_entry.palette_pool_id = 3;
-    tex_entry.palette_entry_id = palette_id;
-    tex_entry.allocated = 1;
-    tex_entry.average_color = texture->avg_color;
+    const texture_entry_t tex_entry = {
+        .tpage = getTPage(texture_mode, 0, texture_rect.x, texture_rect.y),
+        .clut = getClut(palette_rect.x, palette_rect.y),
+		.width = texture->width,
+		.height = texture->height,
+        .offset_u = (uint8_t)(offset_u & 0xFF),
+        .offset_v = (uint8_t)(texture_rect.y & 0xFF),
+        .texture_pool_id = (uint8_t)pool_id,
+        .texture_entry_id = texture_id,
+        .palette_pool_id = 3,
+        .palette_entry_id = palette_id,
+        .allocated = 1,
+        .average_color = texture->avg_color,
+    };
+
     switch (category) {
         case TEX_CAT_LEVEL: textures_level[index] = tex_entry; break;
         case TEX_CAT_ENTITY: textures_entity[index] = tex_entry; break;

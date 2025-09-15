@@ -37,6 +37,8 @@ typedef struct ALIGNED(4) {
     uint16_t tpage;
     uint16_t clut;
 #endif
+    uint8_t width; // 0 = 256
+    uint8_t height; // 0 = 256
 #ifndef _NDS
     uint8_t offset_u;
     uint8_t offset_v;
