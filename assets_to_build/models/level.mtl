@@ -1,4 +1,4 @@
-# Blender 4.5.1 LTS MTL File: 'level.blend'
+# Blender 4.5.3 LTS MTL File: 'level.blend'
 # www.blender.org
 
 newmtl blue_concrete
@@ -231,15 +231,15 @@ d 1.000000
 illum 2
 map_Kd level_tex/red_line.png
 
-newmtl red_tech_bl
-Ns 250.000000
+newmtl red_tech
+Ns 0.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
-Ni 1.450000
+Ni 1.500000
 d 1.000000
 illum 2
-map_Kd level_tex/red_tech_bl.png
+map_Kd level_tex/red_tech.png
 
 newmtl red_tech_br
 Ns 250.000000
@@ -259,17 +259,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd level_tex/red_tech_tl.png
-
-newmtl red_tech_tr
-Ns 250.000000
-Ka 1.000000 1.000000 1.000000
-Ks 0.500000 0.500000 0.500000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 2
-map_Kd level_tex/red_tech_tr.png
+map_Kd level_tex/red_tech.png
 
 newmtl regular_walls
 Ns 0.000000
