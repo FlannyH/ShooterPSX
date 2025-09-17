@@ -60,9 +60,9 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
 	renderer_draw_mesh_shaded(pickup->entity_header.mesh, &render_transform, 0, 0);
 
     if (close_enough_to_home_in) {
-        pickup_to_player = vec3_normalize(pickup_to_player);
+        const vec3_t pickup_to_player_norm = vec3_normalize(pickup_to_player);
         const scalar_t home_in_speed = 3 * ONE;
-        pickup->entity_header.position = vec3_add(pickup_pos, vec3_muls(pickup_to_player, home_in_speed));
+        pickup->entity_header.position = vec3_add(pickup_pos, vec3_muls(pickup_to_player_norm, home_in_speed));
     }
 
     if (close_enough_to_collect) {
@@ -77,7 +77,7 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
             case PICKUP_TYPE_KEY_BLUE:      sfx_to_play = sfx_key; player->has_key_blue = 1; break;   
             case PICKUP_TYPE_KEY_YELLOW:    sfx_to_play = sfx_key; player->has_key_yellow = 1; break; 
         }
-        audio_play_sound(sfx_to_play, 0, 0, (vec3_t){}, 1); 
+        audio_play_sound(sfx_to_play, 0, 0, (vec3_t){0, 0, 0}, 1); 
         entity_kill(slot);
     }
 }

@@ -877,33 +877,6 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 		return;
 	}
 
-	/*
-	
-	TODO:
-	- [X] make texture pool shared across platforms
-	- [X] init texture pools on pc
-	- [X] store pool info for single texture on texture alloc (top left, width, height)
-	- [X] upload pool info to gl textures
-	- [X] store texture category in mesh_t
-	- [X] bind metadata texture to shader when rendering
-	- [X] update texture sampling in GOURAUD.FSH
-	- [ ] pick max mip level in shader based on texture resolution
-	- [ ] create debug window to show texture atlas
-	- [ ] create debug window to show occupancy maps
-	- [ ] create debug window to show textures, where if you hover, it highlights on the texture atlas and occupancy maps
-	
-	textures are sorted into different categories, but they are stored in one big texture atlas
-	this means that for each category of model, there is a different texture id mapping
-	so level texture 1 could be at (64, 0), but entity texture 1 could be at (256, 128) for example
-	a way i could do that is to add a field to mesh.h indicating which set of mappings it should use
-	mappings could be stored in a gpu buffer, and then either bind the right one at runtime, or provide an offset
-
-	double check the texture pool allocation
-	figure out why its binding no resource
-	figure out why it's loading garbage
-	
-	*/
-
 	const int pool_id = 0;
 	int pool_entry = texture_pool_alloc(pool_id, width, height);
 	if (pool_entry < 0) {

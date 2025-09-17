@@ -30,7 +30,7 @@ static inline uint32_t get_bit_int(uint32_t value, uint32_t bit) {
     return value & mask;
 }
 
-static inline uint32_t get_bit_arr(uint32_t* array, uint32_t bit) {
+static inline uint32_t get_bit_arr(const uint32_t* array, uint32_t bit) {
     assert(array != NULL);
     const size_t array_index = bit / 32u;
     const size_t bit_index = bit % 32u;
@@ -121,16 +121,16 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
     // increase block size until we have a block size that can fully contain the smallest axis.
     // this aligns the texture with the next power of 2, and we can use this to find the max 
     // mipmap level to sample in the shader.
-    while (block_size < width && block_size < height) {
+    while ((block_size < width) && (block_size < height)) {
         curr_res /= 2;
         block_size *= 2;
         ++occupancy_map_index;
     }
-    uint32_t* occ_map = texture_pools[pool_index].occupancy_maps[occupancy_map_index];
+    const uint32_t* occ_map = texture_pools[pool_index].occupancy_maps[occupancy_map_index];
 
     // what shape do we need to check
-    uint32_t alloc_width = (width + block_size - 1) / block_size;
-    uint32_t alloc_height = (height + block_size - 1) / block_size;
+    const uint32_t alloc_width = (width + block_size - 1) / block_size;
+    const uint32_t alloc_height = (height + block_size - 1) / block_size;
 
     // todo: consider optimizing this
     // find a spot - lovely nested for loop to fit the shape in there somewhere
@@ -175,8 +175,8 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
     
     done:
     // update occupancy maps
-    uint32_t top = occ_top * block_size;
-    uint32_t left = occ_left * block_size;
+    const uint32_t top = occ_top * block_size;
+    const uint32_t left = occ_left * block_size;
     uint32_t start_x = left;
     uint32_t start_y = top;
     uint32_t end_x = start_x + width - 1;
@@ -239,10 +239,10 @@ void texture_pool_free(uint32_t pool_index, int* texture_ids, int texture_count)
         }
 
         changed = 1;
-        uint32_t start_x = texture->x;
-        uint32_t start_y = texture->y;
-        uint32_t end_x = texture->x + texture->w;
-        uint32_t end_y = texture->y + texture->h;
+        const uint32_t start_x = texture->x;
+        const uint32_t start_y = texture->y;
+        const uint32_t end_x = texture->x + texture->w;
+        const uint32_t end_y = texture->y + texture->h;
 
         // Mark as free by setting resolution to 0x0
         texture->w = 0;
@@ -272,7 +272,7 @@ void texture_pool_free(uint32_t pool_index, int* texture_ids, int texture_count)
 
             if (number_of_bits_after_first_word == 0) continue;
             
-            uint32_t and_mask = ~((1u << number_of_bits_after_first_word) - 1);
+            const uint32_t and_mask = ~((1u << number_of_bits_after_first_word) - 1);
             occ_map[word_index++] &= and_mask;
         }
     }
@@ -283,19 +283,19 @@ void texture_pool_free(uint32_t pool_index, int* texture_ids, int texture_count)
     uint32_t res_read = texture_pools[pool_index].resolution;
     uint32_t res_write = res_read >> 1;
     for (uint32_t occ_map_index = 0; occ_map_index < texture_pools[pool_index].n_occupancy_maps - 1; occ_map_index++) {
-        uint32_t* occ_map_read = texture_pools[pool_index].occupancy_maps[occ_map_index];
+        const uint32_t* occ_map_read = texture_pools[pool_index].occupancy_maps[occ_map_index];
         uint32_t* occ_map_write = texture_pools[pool_index].occupancy_maps[occ_map_index + 1];
         r >>= 1;
         for (uint32_t y = 0; y < res_write; ++y){
             for (uint32_t x = 0; x < res_write; ++x){
-                uint32_t index1 = (((y*2)+0) * res_read) + (x*2)+0;
-                uint32_t index2 = (((y*2)+0) * res_read) + (x*2)+1;
-                uint32_t index3 = (((y*2)+1) * res_read) + (x*2)+0;
-                uint32_t index4 = (((y*2)+1) * res_read) + (x*2)+1;
-                uint32_t sample1 = get_bit_arr(occ_map_read, index1);
-                uint32_t sample2 = get_bit_arr(occ_map_read, index2);
-                uint32_t sample3 = get_bit_arr(occ_map_read, index3);
-                uint32_t sample4 = get_bit_arr(occ_map_read, index4);
+                const uint32_t index1 = (((y*2)+0) * res_read) + (x*2)+0;
+                const uint32_t index2 = (((y*2)+0) * res_read) + (x*2)+1;
+                const uint32_t index3 = (((y*2)+1) * res_read) + (x*2)+0;
+                const uint32_t index4 = (((y*2)+1) * res_read) + (x*2)+1;
+                const uint32_t sample1 = get_bit_arr(occ_map_read, index1);
+                const uint32_t sample2 = get_bit_arr(occ_map_read, index2);
+                const uint32_t sample3 = get_bit_arr(occ_map_read, index3);
+                const uint32_t sample4 = get_bit_arr(occ_map_read, index4);
                 if (sample1 | sample2 | sample3 | sample4) {
                     set_bit_arr(occ_map_write, (y * res_write) + x);
                 }
