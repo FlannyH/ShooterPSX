@@ -179,20 +179,21 @@ void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const
     const vec2_t start_pos = pos;
 
     // Draw each character
-    while (*text) {
+    size_t text_cursor = 0;
+    while (text[text_cursor]) {
         // Handle special cases
-        if (*text == '\n') {
+        if (text[text_cursor] == '\n') {
             pos.x = start_pos.x;
             pos.y += font_dst_height * ONE;
             goto end;
         }
         
-        if (*text == '\r') {
+        if (text[text_cursor] == '\r') {
             pos.x = start_pos.x;
             goto end;
         }
 
-        if (*text == '\t') {
+        if (text[text_cursor] == '\t') {
             // Get X coordinate relative to start, and round the position up to the nearest multiple of 4
             scalar_t rel_x = pos.x - start_pos.x;
             int n_spaces = 4 - ((rel_x / font_dst_width) % 4);
@@ -200,9 +201,9 @@ void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const
             goto end;
         }
 
-        if (*text != ' ') {
+        if (text[text_cursor] != ' ') {
             // Get index in bitmap
-            int index_to_draw = (int)lut_font_letters[(size_t)*text];
+            int index_to_draw = (int)lut_font_letters[(size_t)text[text_cursor]];
 
             // Get UV coordinates
             vec2_t top_left;
@@ -215,7 +216,7 @@ void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const
 
         pos.x += font_dst_width * ONE;
         end:
-        ++text;
+        ++text_cursor;
     }
 }
 

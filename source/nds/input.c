@@ -16,7 +16,7 @@ void input_init(void) {
 
 void input_update(void) {
     scanKeys();
-    uint16_t key_state = keysHeld();
+    const uint16_t key_state = keysHeld();
     button_prev = button_curr;
     button_curr = 0;
     if (key_state & KEY_A) button_curr |= PAD_R2;
@@ -62,13 +62,12 @@ int input_released(uint16_t button_mask, int player_id) {
 }
 
 int input_check_cheat_buffer(int n_inputs, const uint16_t* inputs_to_check) {
-    int match = button_pressed_this_frame;
     for (int i = 0; i < n_inputs; ++i) {
         if (inputs_to_check[i] != input_buffer[i]) {
-            match = 0;
+            return 0;
         }
     }
-    return match;
+    return button_pressed_this_frame;
 }
 
 // Below this comment are dummy function implementations that are irrelevant for NDS, feel free to ignore
