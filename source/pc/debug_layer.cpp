@@ -981,7 +981,6 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
             if (input_pressed(PAD_L2, 0)) {
                 // Read picking buffer
-                // todo: reasses whether it should rely on RGBA byte packing
                 struct {
                     uint8_t index;
                     uint8_t what;

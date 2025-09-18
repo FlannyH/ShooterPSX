@@ -274,7 +274,6 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 	}
 
 	// Render
-	// todo: entity_render() that routes this to one function
 	transform_t render_transform;
 	render_transform.position.x = -chaser_pos.x / COL_SCALE;
 	render_transform.position.y = -chaser_pos.y / COL_SCALE;

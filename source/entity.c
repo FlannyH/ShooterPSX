@@ -22,6 +22,8 @@ model_t* entity_models = NULL;
 int n_entity_textures = 0;
 int entity_signals[ENTITY_SIGNAL_COUNT];
 
+// todo: figure out why entities seem to overflow
+
 void entity_update_all(player_t* player, int dt) {
 	// Reset counters
 	entity_n_active_aabb = 0;

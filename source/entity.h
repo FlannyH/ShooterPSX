@@ -10,10 +10,6 @@
 extern "C" {
 #endif
 
-// todo: reconsider if this could be separated into engine and game, where the game provides function pointers
-//       for new, update, hit, and delete, and then registers that into an index, so that entity type still 
-//       means smth, but engine and gameplay code would be separate
-
 #define ENTITY_NOT_SECTION_BOUND 255
 #define ENTITY_AABB_QUEUE_LENGTH 256
 #define ENTITY_LIST_LENGTH 256
