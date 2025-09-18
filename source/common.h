@@ -6,12 +6,12 @@
 #ifndef _NDS
 #define _USE_TEXTURE_POOLS
 //#define PAL
-//#define _DEBUG_CAMERA
+// #define _DEBUG_CAMERA
 #ifndef _DEBUG
-// #define _DEBUG
+#define _DEBUG
 #endif
 // #define _DEBUG_VERBOSE
-// #define _PCDRV
+#define _PCDRV
 #endif
 
 // #define BENCHMARK_MODE

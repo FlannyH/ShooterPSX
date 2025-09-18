@@ -189,14 +189,14 @@ void handle_stick_input(player_t* self, const int dt_ms) {
 
         // Debug
 #ifdef _DEBUG
-        if (input_held(PAD_UP, 0)) {
-            self->position.y += 40960;
-            self->velocity.y = 0;
-        }
-        if (input_held(PAD_DOWN, 0)) {
-            self->position.y -= 40960;
-            self->velocity.y = 0;
-        }
+        // if (input_held(PAD_UP, 0)) {
+        //     self->position.y += 40960;
+        //     self->velocity.y = 0;
+        // }
+        // if (input_held(PAD_DOWN, 0)) {
+        //     self->position.y -= 40960;
+        //     self->velocity.y = 0;
+        // }
 #endif
     } else {
         // Look left and right

@@ -32,6 +32,13 @@ uniform Lights {
     Light lights[256]; // MAX_LIGHT_COUNT
 };
 
+const mat4x4 psx_dither_table = mat4x4(
+    0, 8, 2, 10,
+    12, 4, 14, 6,
+    3, 11, 1, 9,
+    15, 7, 13, 5
+);
+
 void main() {
     vec4 vtx_color = vec4(out_color, alpha);
     vec4 tex_color = vec4(0.0);
@@ -159,8 +166,11 @@ void main() {
     // Apply lighting
     frag_color.xyz = (vtx_color.xyz + light_color.xyz) * tex_color.xyz;
 
+    // Limit color depth
+    vec3 color_quant = floor((frag_color.xyz + float(psx_dither_table[int(gl_FragCoord.x) % 4][int(gl_FragCoord.y) % 4]) / 512.0) * 32.0) / 32.0;
+
     // Gamma correction - roughly converts 2.2 gamma to 2.8 gamma, which is closer to how it looks on my ps1
-    frag_color.xyz = pow(frag_color.xyz, vec3(2.8 / 2.2));
+    frag_color.xyz = pow(color_quant, vec3(2.8 / 2.2));
     frag_color.w = 1.0;
 
     // For editor
