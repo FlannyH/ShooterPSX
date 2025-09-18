@@ -6,11 +6,17 @@
 #include <string.h>
 #include <stdio.h>
 
-#define PC_SEEK_MODE_START 0
-#define PC_SEEK_MODE_CURR 1
-#define PC_SEEK_MODE_END 2
-#define PC_ACCESS_MODE_READ_ONLY 0
-// todo: more access modes
+typedef enum {
+    PC_SEEK_START = 0,
+    PC_SEEK_CURR = 1,
+    PC_SEEK_END = 2,
+} pc_seek_mode_t;
+
+typedef enum {
+   PC_MODE_READ_ONLY = 0,
+   PC_MODE_WRITE_ONLY = 1,
+   PC_MODE_READ_WRITE = 2,
+} pc_open_mode_t;
 
 void pc_init() { 
     __asm__ volatile("break 0, 0x101"); 
@@ -62,8 +68,8 @@ int pc_close(int file_handle) {
 }
 
 int pc_file_size(int file_handle) { 
-    const int end = pc_lseek(file_handle, 0, PC_SEEK_MODE_END);
-    const int start = pc_lseek(file_handle, 0, PC_SEEK_MODE_START);
+    const int end = pc_lseek(file_handle, 0, PC_SEEK_END);
+    const int start = pc_lseek(file_handle, 0, PC_SEEK_START);
     return end - start;
 }
 
@@ -74,15 +80,15 @@ void file_init(const char* path) {
 
 int file_read(const char* path, uint32_t** destination, size_t* size, int on_stack, stack_t stack) {
     // Open file
-    int file_handle = pc_open(path, PC_ACCESS_MODE_READ_ONLY);
+    int file_handle = pc_open(path, PC_MODE_READ_ONLY);
     if (file_handle < 0) {
         printf("[ERROR] Error loading file \"%s\" via pcdrv!\n");
         return 0;
     }
 
     // Get file size and seek to start
-    int end = pc_lseek(file_handle, 0, PC_SEEK_MODE_END);
-    int start = pc_lseek(file_handle, 0, PC_SEEK_MODE_START);
+    int end = pc_lseek(file_handle, 0, PC_SEEK_END);
+    int start = pc_lseek(file_handle, 0, PC_SEEK_START);
     int data_size = (end - start);
 
     // Allocate space and read data
