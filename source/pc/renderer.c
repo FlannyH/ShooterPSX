@@ -527,8 +527,6 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 
 void renderer_end_frame(void) {
     renderer_tick_fade();
-	
-	update_delta_time_ms();
 
 	glfwGetWindowSize(window, &window_w, &window_h);
 
@@ -939,7 +937,12 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 	mem_free(pixels);
 }
 
-int renderer_get_delta_time_ms(void) { return dt_ms_int; }
+int renderer_delta_time_ms(dt_flags_t flags) { 
+	if (flags == DT_TICK) {
+		update_delta_time_ms();
+	}
+	return dt_ms_int; 
+}
 
 uint32_t renderer_get_n_total_triangles(void) { return n_total_triangles; }
 
@@ -1044,13 +1047,16 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 	glDisable(GL_BLEND);
 }
 
-void renderer_apply_fade(int fade_level) {
+void renderer_apply_fade(scalar_t fade_level) {
+	const scalar_t fade_level_normalized = scalar_div(fade_level, MAX_FADE_LEVEL);
+	const int fade_level_255 = (fade_level_normalized * 255) / ONE;
+
 	renderer_draw_2d_quad_axis_aligned(
 		(vec2_t){ 256 * ONE, 128 * ONE}, 
 		(vec2_t){ 512 * ONE, 256 * ONE }, 
 		(vec2_t){ 0, 0 }, 
 		(vec2_t){ 0, 0 }, 
-		(pixel32_t){ 0, 0, 0, fade_level }, 
+		(pixel32_t){ 0, 0, 0, fade_level_255 }, 
 		0, 255, 0
 	);
 }

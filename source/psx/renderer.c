@@ -317,7 +317,9 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
     addPrim(ord_tbl[drawbuffer] + depth + curr_ot_bias, new_quad);
 }
 
-void renderer_apply_fade(int fade_level) {
+void renderer_apply_fade(scalar_t fade_level) {
+    fade_level /= ONE;
+
     if (fade_level <= 0) return;
     if (fade_level > 255) fade_level = 255;
     fade_level *= fade_level;
@@ -516,9 +518,14 @@ int renderer_get_delta_time_raw(void) {
     }
 }
 
-int renderer_get_delta_time_ms(void) {
-    int dt_raw = renderer_get_delta_time_raw();
-    return renderer_convert_dt_raw_to_ms(dt_raw);
+int curr_dt_ms = 33;
+
+int renderer_delta_time_ms(dt_flags_t flags) {
+    if (flags == DT_TICK) {
+        int dt_raw = renderer_get_delta_time_raw();
+        curr_dt_ms = renderer_convert_dt_raw_to_ms(dt_raw);
+    }
+    return curr_dt_ms;
 }
 
 int renderer_n_meshes_drawn(void) { return n_meshes_drawn; }

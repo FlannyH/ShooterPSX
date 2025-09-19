@@ -253,7 +253,7 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
     glPopMatrix(1);
 }
 
-void renderer_apply_fade(int fade_level) {
+void renderer_apply_fade(scalar_t fade_level) {
     if (fade_level <= 0) return; 
 
     // Reset all matrices
@@ -266,7 +266,7 @@ void renderer_apply_fade(int fade_level) {
 
     // Draw transparent quad
     glBindTexture(0, 0);
-    glPolyFmt(POLY_ALPHA(fade_level >> 3) | POLY_CULL_NONE);
+    glPolyFmt(POLY_ALPHA((fade_level / ONE) >> 3) | POLY_CULL_NONE);
     glColor3b(0, 0, 0);
 
     glBegin(GL_QUADS);
@@ -325,9 +325,13 @@ int renderer_get_delta_time_raw(void) {
     return result; // todo: return actual number of vblanks this frame took, probably with a vblank interrupt
 }
 
-int renderer_get_delta_time_ms(void) {
-    int dt_raw = renderer_get_delta_time_raw();
-    return renderer_convert_dt_raw_to_ms(dt_raw);
+int dt_ms = 0;
+int renderer_delta_time_ms(dt_flags_t flags) {
+    if (flags == DT_TICK) {
+        int dt_raw = renderer_get_delta_time_raw();
+        dt_ms = renderer_convert_dt_raw_to_ms(dt_raw);
+    }
+    return dt_ms;
 }
 
 int renderer_n_meshes_drawn(void) { return n_meshes_drawn; }
