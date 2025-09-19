@@ -78,8 +78,7 @@ typedef struct {
 
 extern state_vars_t state;
 
-#define FADE_SPEED 18
-#define FADE_SPEED_SLOW 5
+#define FADE_SPEED (ONE / 4)
 
 #define DEPTH_BIAS_VIEWMODELS 64
 #define DEPTH_BIAS_LEVEL 256

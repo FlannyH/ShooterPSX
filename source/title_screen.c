@@ -167,7 +167,7 @@ void state_exit_title_screen(void) {
         ui_render_background();
         ui_render_logo();
 		renderer_end_frame();
-		if (get_current_state() == STATE_IN_GAME) music_set_volume(255 - renderer_get_fade_level());
+		if (get_current_state() == STATE_IN_GAME) music_set_volume(255 - (renderer_get_fade_level() / ONE));
 	}
 
     // One last frame with the screen blank

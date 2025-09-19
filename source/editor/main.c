@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
 	    mem_stack_release(STACK_TEMP);
 
         // Delta time
-        dt = renderer_get_delta_time_ms();
+        dt = renderer_delta_time_ms(DT_TICK);
         dt = scalar_min(dt, 40);
         time_counter += dt;
 

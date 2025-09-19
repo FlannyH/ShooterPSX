@@ -28,6 +28,7 @@ extern "C" {
 #define N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE 4
 #define NO_TEXTURE 255
 #define MAX_TEXTURE_COUNT 128
+#define MAX_FADE_LEVEL (255 * ONE)
 
 const static transform_t id_transform = { {0,0,0},{0,0,0}, {-4096, -4096, -4096} };
 extern int widescreen;
@@ -53,6 +54,11 @@ typedef struct ALIGNED(4) {
     pixel32_t average_color;
 } texture_entry_t;
 
+typedef enum {
+    DT_NO_TICK = 0,
+    DT_TICK = 1,
+} dt_flags_t;
+
 // todo: pick one coordinate system and make it consistent across graphics, physics, and model spaces, and then make it correct with a view matrix
 
 // Functions
@@ -64,10 +70,10 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform,
 void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, texture_category_t category);
 void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, texture_category_t category);
 void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const int centered, const pixel32_t color);
-void renderer_apply_fade(int fade_level);
+void renderer_apply_fade(scalar_t fade_level);
 void renderer_tick_fade(void);
-void renderer_start_fade_in(int speed);
-void renderer_start_fade_out(int speed);
+void renderer_start_fade_in(scalar_t speed);
+void renderer_start_fade_out(scalar_t speed);
 int renderer_is_fading(void);
 int renderer_get_fade_level(void);
 void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const transform_t* model_transform);
@@ -77,7 +83,7 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 void renderer_free_texture(int index, texture_category_t category);
 void renderer_free_texture_category(texture_category_t category);
 void renderer_set_video_mode(int is_pal);
-int renderer_get_delta_time_ms(void);
+int renderer_delta_time_ms(dt_flags_t flags);
 int renderer_convert_dt_raw_to_ms(int dt_raw);
 int renderer_should_close(void);
 void renderer_set_depth_bias(int bias);
