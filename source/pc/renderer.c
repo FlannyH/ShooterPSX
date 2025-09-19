@@ -649,7 +649,6 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 
     glUniform1i(glGetUniformLocation(shader_gouraud, "texture_bound"), mesh->vertices[0].tex_id != 255);
     glUniform1i(glGetUniformLocation(shader_gouraud, "texture_offset"), 0);
-	glUniform1i(glGetUniformLocation(shader_gouraud, "texture_is_page"), 0);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "curr_depth_bias"), curr_depth_bias);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "interpolation_mode"), int_mode);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "edge_behavior"), edge_mode);
@@ -760,7 +759,6 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "proj_matrix"), 1, GL_FALSE, &perspective_matrix[0][0]);
     glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "view_matrix"), 1, GL_FALSE, &view_matrix[0][0]);
     glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
-    glUniform1i(glGetUniformLocation(shader_gouraud, "texture_is_page"), 0);
     glUniform1i(glGetUniformLocation(shader_gouraud, "curr_depth_bias"), curr_depth_bias - 16);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "interpolation_mode"), 0);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "edge_behavior"), 0);
@@ -784,6 +782,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
         &line, GL_STATIC_DRAW);
 
     // Enable depth and draw
+    glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
