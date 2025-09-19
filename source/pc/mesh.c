@@ -152,15 +152,20 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
 		model = mem_stack_alloc(sizeof(model_t), stack);
 		model->meshes = mem_stack_alloc(sizeof(mesh_t), stack);
     	model->meshes[0].vertices = mem_stack_alloc(sizeof(vertex_3d_t) * col_mesh->n_verts, stack);
+    	model->meshes[0].normals = mem_stack_alloc(sizeof(normal_t) * col_mesh->n_verts, stack);
 	}
 	else {
 		model = mem_alloc(sizeof(model_t), MEM_CAT_MODEL);
 		model->meshes = mem_alloc(sizeof(mesh_t), MEM_CAT_MESH);
     	model->meshes[0].vertices = mem_alloc(sizeof(vertex_3d_t) * col_mesh->n_verts, MEM_CAT_MESH);
+    	model->meshes[0].normals = mem_alloc(sizeof(normal_t) * col_mesh->n_verts, MEM_CAT_MESH);
 	}
     model->n_meshes = 1;
     model->meshes[0].n_quads = 0;
     model->meshes[0].n_triangles = col_mesh->n_verts / 3;
+    model->meshes[0].vbo_vertices = 0;
+    model->meshes[0].vbo_normals = 0;
+    model->meshes[0].vao = 0;
 
     // Since collision model is only meant to be see in the level 
     // editor, don't bother calculating bounding boxes for culling
@@ -175,36 +180,39 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
     
     // We need graphics vertices to be able to render the 
     // model, so let's convert them one triangle at a time
-    vertex_3d_t* out = model->meshes[0].vertices;
+    vertex_3d_t* out_vtx = model->meshes[0].vertices;
+    normal_t* out_nrm = model->meshes[0].normals;
 
     for (size_t i = 0; i < col_mesh->n_verts / 3; i += 1) {
         // Generate vertex colors based on the triangle's normal
         vec3_t normal = vec3_neg(tris[i].normal);
-        normal.x += 4096; normal.x *= 127; normal.x /= 8192;
-        normal.y += 4096; normal.y *= 127; normal.y /= 8192;
-        normal.z += 4096; normal.z *= 127; normal.z /= 8192;
 
         for (size_t j = 0; j < 3; ++j) {
-            out[(i*3)+j] = (vertex_3d_t){
-                .r = normal.x,
-                .g = normal.y,
-                .b = normal.z,
+            out_vtx[(i*3)+j] = (vertex_3d_t){
+                .r = ((normal.x + 4096) * 127) / 8192,
+                .g = ((normal.y + 4096) * 127) / 8192,
+                .b = ((normal.z + 4096) * 127) / 8192,
                 .u = 0,
                 .v = 0,
                 .tex_id = 255,
             };
+            out_nrm[(i*3)+j] = (normal_t){
+                .x = (normal.x * 127) / 4096,
+                .y = (normal.y * 127) / 4096,
+                .z = (normal.z * 127) / 4096,
+            };
         }
 
         // Scale collision space vertex position data to graphics space
-        out[(i*3)+0].x = tris[i].v0.x / COL_SCALE;
-        out[(i*3)+0].y = tris[i].v0.y / COL_SCALE;
-        out[(i*3)+0].z = tris[i].v0.z / COL_SCALE;
-        out[(i*3)+1].x = tris[i].v1.x / COL_SCALE;
-        out[(i*3)+1].y = tris[i].v1.y / COL_SCALE;
-        out[(i*3)+1].z = tris[i].v1.z / COL_SCALE;
-        out[(i*3)+2].x = tris[i].v2.x / COL_SCALE;
-        out[(i*3)+2].y = tris[i].v2.y / COL_SCALE;
-        out[(i*3)+2].z = tris[i].v2.z / COL_SCALE;
+        out_vtx[(i*3)+0].x = tris[i].v0.x / COL_SCALE;
+        out_vtx[(i*3)+0].y = tris[i].v0.y / COL_SCALE;
+        out_vtx[(i*3)+0].z = tris[i].v0.z / COL_SCALE;
+        out_vtx[(i*3)+1].x = tris[i].v1.x / COL_SCALE;
+        out_vtx[(i*3)+1].y = tris[i].v1.y / COL_SCALE;
+        out_vtx[(i*3)+1].z = tris[i].v1.z / COL_SCALE;
+        out_vtx[(i*3)+2].x = tris[i].v2.x / COL_SCALE;
+        out_vtx[(i*3)+2].y = tris[i].v2.y / COL_SCALE;
+        out_vtx[(i*3)+2].z = tris[i].v2.z / COL_SCALE;
     }
 
     if (!on_stack) mem_free(file_data);
