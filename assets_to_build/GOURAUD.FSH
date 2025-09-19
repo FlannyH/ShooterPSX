@@ -34,7 +34,7 @@ uniform Lights {
 
 void main() {
     vec4 vtx_color = vec4(out_color, alpha);
-    vec4 tex_color = vec4(0.0);
+    vec4 tex_color = vec4(0.0, 0.0, 0.0, 1.0);
     vec4 light_color = vec4(0.0);
 
     // If a texture is bound to the shader, and if this polygon has a texture
@@ -125,13 +125,18 @@ void main() {
             vec4 lerp_x_y2 = mix(sample12, sample22, frac_x);
             vec4 lerp_y = mix(lerp_x_y1, lerp_x_y2, frac_y);
             tex_color = lerp_y;
+        }    
+
+        // Alpha clipping
+        if (tex_color.a < 0.5) {
+            discard;
         }
     }
 
-    // Alpha clipping
-    if (tex_color.a < 0.5) {
+    if (alpha < 0.001) {
         discard;
     }
+
 
     // Materials with id 254 are occluders; don't render them
     if (abs(out_texture - 254.0) < 0.5)  {
@@ -161,7 +166,7 @@ void main() {
 
     // Gamma correction - roughly converts 2.2 gamma to 2.8 gamma, which is closer to how it looks on my ps1
     frag_color.xyz = pow(frag_color.xyz, vec3(2.8 / 2.2));
-    frag_color.w = 1.0;
+    frag_color.w = tex_color.a * alpha;
 
     // For editor
     // todo: fix this
