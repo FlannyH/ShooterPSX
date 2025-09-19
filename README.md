@@ -21,3 +21,6 @@ https://github.com/FlannyH/ShooterPSX/assets/60531875/5cb85d24-7a6c-44a8-9a6b-af
 2. [Install BlocksDS](https://blocksds.github.io/docs/setup/options/windows/). Either keep the default paths, or manually set an environment variable `GCC_ARM_NONE_EABI_PATH` to the `gcc-arm-none-eabi/` folder and a `BLOCKSDS` environment variable to `blocksds/core/`
 3. Open command line and type `make nds`
 4. Navigate to folder `build/nds/` and either copy the SubNivis.nds file to a flash cart or run it in an emulator
+
+## Troubleshooting
+- If you are using an NVIDIA GPU, and there are problems with the visiblity list generator, especially if it prints `Too many sections (x >= 128)!`, make sure that in the NVIDIA Control Panel, Under Manage 3D settings, the Antialiasing options are set to "Application-controlled", or "Off". Otherwise, the section buffers will get anti-aliased, resulting in wrong section ids.
