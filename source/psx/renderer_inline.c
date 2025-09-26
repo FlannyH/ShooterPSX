@@ -1,13 +1,9 @@
 #include <psxgte.h>
 #include <inline_c.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-
 // Vertically the primitive's CLUT to 16 pixels, and then add the fade level to the Y coordinate
 #define SET_DISTANCE_FADE(primitive, fade_level) \
-    (primitive)->clut &= 0b111110000111111; \
-    (primitive)->clut |= fade_level << 6;
+    (primitive)->clut = ((primitive)->clut & 0b111110000111111) | (fade_level << 6); 
 
 #define gte_stsz01( r0, r1 ) __asm__ volatile ( \
 	"swc2	$17, 0( %0 );"	\
@@ -17,27 +13,51 @@
 	: "memory" )
 
 // Also overwrites the primitive code, so do this before calling setPolyGT3() etc
-#define COPY_COLOR(src, dest) *(uint32_t*)dest = *(uint32_t*)src;
-#define COPY_POS(src, dest) *(uint32_t*)dest = *(uint32_t*)src;
-#define COPY_UV(src, dest) *(uint16_t*)dest = *(uint16_t*)src;
+// #define COPY_COLOR(src, dest) *(uint32_t*)dest = *(uint32_t*)src;
+// #define COPY_POS(src, dest) *(uint32_t*)dest = *(uint32_t*)src;
+// #define COPY_UV(src, dest) *(uint16_t*)dest = *(uint16_t*)src;
+// #define COPY_COLOR(src, dest) memcpy(dest, src, sizeof(uint32_t))
+// #define COPY_POS(src, dest) memcpy(dest, src, sizeof(uint32_t))
+// #define COPY_UV(src, dest) memcpy(dest, src, sizeof(uint16_t))
 
-static inline void halfway_rgb_uv(uint8_t const *const src_a, uint8_t const *const src_b, uint8_t* dest) {
-    // hacky, but works specifically for GT3 and GT4's memory layouts
-    struct rgb_uv_t {
-        uint8_t r, g, b, code;
-        uint16_t x, y;
-        uint8_t u, v;
-    };
+static inline void COPY_COLOR(const void* restrict src, void* restrict dest) {
+     *(uint32_t*)dest = *(uint32_t*)src; 
+}
+static inline void COPY_POS(const void* restrict src, void* restrict dest) { 
+    *(uint32_t*)dest = *(uint32_t*)src; 
+}
+static inline void COPY_UV(const void* restrict src, void* restrict dest) { 
+    *(uint16_t*)dest = *(uint16_t*)src; 
+}
 
-    // lmao so many consts
-    struct rgb_uv_t const *const src_a_cast = (struct rgb_uv_t const *const)src_a; 
-    struct rgb_uv_t const *const src_b_cast = (struct rgb_uv_t const *const)src_b; 
-    struct rgb_uv_t* dest_cast = (struct rgb_uv_t*)dest; 
-    dest_cast->r = (src_a_cast->r / 2) + (src_b_cast->r / 2);
-    dest_cast->g = (src_a_cast->g / 2) + (src_b_cast->g / 2);
-    dest_cast->b = (src_a_cast->b / 2) + (src_b_cast->b / 2);
-    dest_cast->u = (src_a_cast->u / 2) + (src_b_cast->u / 2);
-    dest_cast->v = (src_a_cast->v / 2) + (src_b_cast->v / 2);
+static inline void halfway_rgb_uv(void const *restrict src_a, void const *restrict src_b, void *restrict dest) {
+    // Expected input n output layout:
+    //    struct rgb_uv_t {
+    //        uint8_t r, g, b, code;
+    //        uint16_t x, y;
+    //        uint8_t u, v;
+    //    };
+    // which matches the memory layout of a chunk of GT3 and GT4
+
+    register uint32_t rgb_a, rgb_b;
+    // Find halfway point between RGB, ignoring the code (just set it afterwards lmao)
+    rgb_a = ((uint32_t*)src_a)[0]; // read whole 32-bit word containing the R, G, B, and code values
+    rgb_a >>= 1; // shift whole word to the right to divide all of them by 2 in one cycle
+    rgb_a &= 0x7F7F7F7F; // this does shift the lower bits into the next upper bit, so clear out those bits
+    rgb_b = ((uint32_t*)src_b)[0]; // do the same thing for b
+    rgb_b >>= 1;
+    rgb_b &= 0x7F7F7F7F;
+    ((uint32_t*)dest)[0] = rgb_a + rgb_b; // add all of them together in one go
+
+    // Do the same for UV
+    register uint16_t uv_a, uv_b;
+    uv_a = ((uint16_t*)src_a)[4];
+    uv_a >>= 1;
+    uv_a &= 0x00007F7F;
+    uv_b = ((uint16_t*)src_b)[4];
+    uv_b >>= 1;
+    uv_b &= 0x00007F7F;
+    ((uint16_t*)dest)[4] = uv_a + uv_b; // add all of them together in one go
 }
 
 static inline void copy_rgb_uv(uint8_t const *const src, uint8_t* dest) {
@@ -115,25 +135,27 @@ static inline int frustrum_cull_aabb(const vec3_t min, const vec3_t max) {
     return 0;
 }
 
-static inline vertex_3d_t get_halfway_point(const vertex_3d_t v0, const vertex_3d_t v1) {
-    return (vertex_3d_t) {
-        .x = v0.x + ((v1.x - v0.x) >> 1),
-        .y = v0.y + ((v1.y - v0.y) >> 1),
-        .z = v0.z + ((v1.z - v0.z) >> 1),
-        .r = v0.r + ((v1.r - v0.r) >> 1),
-        .g = v0.g + ((v1.g - v0.g) >> 1),
-        .b = v0.b + ((v1.b - v0.b) >> 1),
-        .u = v0.u + ((v1.u - v0.u) >> 1),
-        .v = v0.v + ((v1.v - v0.v) >> 1),
-    };
-}
-
 static inline aligned_position_t get_halfway_position(const aligned_position_t v0, const aligned_position_t v1) {
-    return (aligned_position_t) {
-        .x = v0.x + ((v1.x - v0.x) >> 1),
-        .y = v0.y + ((v1.y - v0.y) >> 1),
-        .z = v0.z + ((v1.z - v0.z) >> 1),
-    };
+    // fetch X, Y
+    uint32_t xy0 = v0.vxy; // fetch whole word containing X and Y
+    uint32_t xy0_sign = xy0 & 0x80008000; // extract sign bit
+    xy0 >>= 1; // divide by 2
+    xy0 &= 0x7FFF7FFF; // fix sign bit
+    xy0 |= xy0_sign; // fix sign bit part 2
+    uint32_t xy1 = v1.vxy;
+    uint32_t xy1_sign = xy1 & 0x80008000;
+    xy1 >>= 1;
+    xy1 &= 0x7FFF7FFF;
+    xy1 |= xy1_sign;
+
+    // average
+    int16_t z = (v0.z >> 1) + (v1.z >> 1);
+
+    aligned_position_t result;
+    result.vxy = xy0 + xy1;
+    result.z = z;
+
+    return result;
 }
 
 void draw_level1_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, const size_t poly_idx, scalar_t otz) {
@@ -1401,5 +1423,3 @@ static inline void draw_tex_quad3d_fancy_no_precomp(const mesh_t* mesh, const si
     addPrim(ord_tbl[drawbuffer] + avg_z + curr_ot_bias, poly);
     return;
 }
-
-#pragma GCC diagnostic pop
