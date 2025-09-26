@@ -137,8 +137,8 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
     // for every block in this map layer
     uint32_t occ_top = 0;
     uint32_t occ_left = 0;
-    for (uint32_t dst_top = 0; dst_top < curr_res; ++dst_top) {
-        for (uint32_t dst_left = 0; dst_left < curr_res; ++dst_left) {
+    for (uint32_t dst_top = 0; dst_top < curr_res; dst_top += alloc_height) {
+        for (uint32_t dst_left = 0; dst_left < curr_res; dst_left += alloc_width) {
             // for every block in the texture to allocate
             int collisions = 0;
             for (uint32_t offset_y = 0; offset_y < alloc_height; ++offset_y) {
