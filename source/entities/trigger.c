@@ -6,7 +6,7 @@
 extern state_vars_t state;
 
 entity_trigger_t* entity_trigger_new(void) {
-    entity_trigger_t* entity = (entity_trigger_t*)entity_get_header(entity_alloc(ENTITY_PICKUP));
+    entity_trigger_t* entity = (entity_trigger_t*)entity_get_header(entity_alloc(ENTITY_TRIGGER));
     entity->entity_header.position = (vec3_t){0, 0, 0};
     entity->entity_header.rotation = (vec3_t){0, 0, 0};
     entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
