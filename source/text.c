@@ -113,6 +113,7 @@ const char* text_debug_menu_music[] = {
     "level2.dss",
     "level3.dss",
     "subnivis.dss",
+    "jungle.dss",
     "EXIT"
 };
 

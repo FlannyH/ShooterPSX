@@ -476,8 +476,10 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/pc/GOURAUD.FSH \
 					  $(PATH_ASSETS)/level_editor/editor/gizmos.msh \
 					  $(PATH_ASSETS)/pc/audio/instr.sbk \
 					  $(PATH_ASSETS)/pc/audio/sfx.sbk \
+					  $(PATH_ASSETS)/pc/audio/jungle.sbk \
 					  $(PATH_ASSETS)/psx/audio/instr.sbk \
 					  $(PATH_ASSETS)/psx/audio/sfx.sbk \
+					  $(PATH_ASSETS)/psx/audio/jungle.sbk \
 					  $(PATH_ASSETS)/shared/audio/music/black.dss \
 					  $(PATH_ASSETS)/shared/audio/music/combust.dss \
 					  $(PATH_ASSETS)/shared/audio/music/e1m1.dss \
@@ -489,6 +491,7 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/pc/GOURAUD.FSH \
 					  $(PATH_ASSETS)/shared/audio/music/level3.dss \
 					  $(PATH_ASSETS)/shared/audio/music/pitchtst.dss \
 					  $(PATH_ASSETS)/shared/audio/music/subnivis.dss \
+					  $(PATH_ASSETS)/shared/audio/music/jungle.dss \
 					  .WAIT \
 					  $(PATH_ASSETS)/shared/models/entity.txc \
 					  $(PATH_ASSETS)/shared/models/level.txc \
@@ -616,3 +619,4 @@ clean:
 	cargo clean --manifest-path=tools/obj2psx/Cargo.toml
 	cargo clean --manifest-path=tools/midi2psx/Cargo.toml
 	cargo clean --manifest-path=tools/psx_vislist_generator/Cargo.toml
+

@@ -1,0 +1,9 @@
+# Instrument ID;# Key Min;# Key Max;# Delay;# Attack;# Hold;# Decay;# Sustain;# Release;# Volume;# Panning;# Sample Source
+0;0;127;0;0;0;0;65535;0;290;127;samples/jungle/reese1c.wav
+1;0;127;0;0;0;0;65535;0;290;127;samples/jungle/amen_s-hghg.wav
+2;0;127;0;0;0;0;65535;0;290;127;samples/jungle/amen_k-k-.wav
+3;0;127;0;0;0;0;65535;0;290;127;samples/jungle/amen_hghg.wav
+4;0;127;0;0;0;0;65535;0;290;127;samples/jungle/amen_kks-hgk.wav
+5;0;127;0;0;0;0;65535;0;290;127;samples/jungle/amen_c-h-s-.wav
+6;0;127;0;0;0;0;65535;0;290;127;samples/jungle/charge_piano_sample.wav
+7;0;127;0;0;0;0;65535;0;290;127;samples/jungle/rave_saw_sample.wav
