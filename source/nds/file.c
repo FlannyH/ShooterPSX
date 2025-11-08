@@ -8,7 +8,10 @@
 #include <stdio.h>
 
 void file_init(const char*) {
-	nitroFSInit(NULL);
+    int result = nitroFSInit(NULL);
+    if (result != 0) { // non-zero means error
+        printf("Failed to initialize nitrofs! (error code %i)", result);
+    }
 }
 
 int file_read(const char* path, uint32_t** destination, size_t* size, int on_stack, stack_t stack) {
