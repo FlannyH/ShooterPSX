@@ -150,7 +150,7 @@ pc: LIBRARIES = glfw3 portaudio stdc++
 ifeq ($(OS),Windows_NT)
 pc: LIBRARIES += gdi32 opengl32 winmm ole32 SetupAPI 
 else
-pc: LIBRARIES += asound
+pc: LIBRARIES += asound pulse jack sndio
 endif
 pc: CC = gcc
 pc: CXX = g++
@@ -169,6 +169,8 @@ level_editor: DEFINES = _PC _LEVEL_EDITOR _DEBUG_CAMERA _DEBUG
 level_editor: LIBRARIES = glfw3 portaudio stdc++ 
 ifeq ($(OS),Windows_NT)
 level_editor: LIBRARIES += gdi32 opengl32 winmm ole32 SetupAPI 
+else
+level_editor: LIBRARIES += asound pulse jack sndio
 endif
 level_editor: CC = gcc
 level_editor: CXX = g++
@@ -205,14 +207,15 @@ GLFW_LIB_PATHS = $(PATH_LIB_PC)/glfw/src/libglfw3.a \
 # Build glfw - using Unix Makefiles generator because we're already using Make anyway
 glfw:
 	mkdir -p $(PATH_LIB_PC)/glfw
-	@cmake -S external/glfw -B $(PATH_LIB_PC)/glfw -G "Unix Makefiles" -Wno-dev --log-level=WARNING
+	@cmake -S external/glfw -B $(PATH_LIB_PC)/glfw -G "Unix Makefiles" -Wno-dev --log-level=WARNING -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 	@cmake --build $(PATH_LIB_PC)/glfw --parallel --target glfw
 	cp $(PATH_LIB_PC)/glfw/src/libglfw3.a $(PATH_LIB_PC)
 
 # Build portaudio
 portaudio:
 	mkdir -p $(PATH_LIB_PC)/portaudio
-	@cmake -S external/portaudio -B $(PATH_LIB_PC)/portaudio -G "Unix Makefiles" -Wno-dev --log-level=WARNING
+	@cmake -S external/portaudio -B $(PATH_LIB_PC)/portaudio -G "Unix Makefiles" -Wno-dev --log-level=WARNING -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+
 	@cmake --build $(PATH_LIB_PC)/portaudio --parallel --target portaudio
 	cp $(PATH_LIB_PC)/portaudio/libportaudio.a $(PATH_LIB_PC)
 
@@ -220,7 +223,7 @@ OBJ_PC += $(PATH_LIB_PC)/gl3w.o
 OBJ_LEVEL_EDITOR += $(PATH_LIB_PC)/gl3w.o
 gl3w:
 	mkdir -p $(PATH_LIB_PC)/gl3w
-	@cmake -S external/gl3w -B $(PATH_LIB_PC)/gl3w -G "Unix Makefiles" -Wno-dev --log-level=WARNING
+	@cmake -S external/gl3w -B $(PATH_LIB_PC)/gl3w -G "Unix Makefiles" -Wno-dev --log-level=WARNING -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 	@cmake --build $(PATH_LIB_PC)/gl3w --parallel
 	$(CC) -std=c11 -I$(PATH_LIB_PC)/gl3w/include -c $(PATH_LIB_PC)/gl3w/src/gl3w.c -o $(PATH_LIB_PC)/gl3w.o
 
