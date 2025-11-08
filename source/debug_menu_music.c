@@ -47,6 +47,7 @@ void state_update_debug_menu_music(int dt) {
 		"audio/music/level2.dss",
 		"audio/music/level3.dss",
 		"audio/music/subnivis.dss",
+		"audio/music/jungle.dss",
 	};
 
 	// Handle button navigation
@@ -54,7 +55,7 @@ void state_update_debug_menu_music(int dt) {
 		state.debug_menu_music.button_selected--;
 		state.debug_menu_music.button_pressed = 0;
 	}
-	if (input_pressed(PAD_DOWN, 0) && state.debug_menu_music.button_selected < 4) {
+	if (input_pressed(PAD_DOWN, 0) && state.debug_menu_music.button_selected < 5) {
 		state.debug_menu_music.button_selected++;
 		state.debug_menu_music.button_pressed = 0;
 	}
@@ -82,6 +83,19 @@ void state_update_debug_menu_music(int dt) {
 				music_play_sequence(0);
 				break;
 			case 4:
+				music_stop();
+				mem_stack_release(STACK_TEMP);
+				mem_stack_release(STACK_MUSIC);
+				audio_load_soundbank("audio/jungle.sbk", SOUNDBANK_TYPE_MUSIC);
+				mem_stack_release(STACK_TEMP);
+				audio_load_soundbank("audio/sfx.sbk", SOUNDBANK_TYPE_SFX);
+				mem_stack_release(STACK_TEMP);
+				music_load_sequence(songs[state.debug_menu_music.button_selected]);
+				music_set_volume(255);
+				music_play_sequence(0);
+				break;
+
+			case 5:
 				set_current_state(STATE_DEBUG_MENU_MAIN);
 				break;
 		}
@@ -106,7 +120,7 @@ void state_update_debug_menu_music(int dt) {
 	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_debug_menu_music[0], 1, 1, white);
 
 	// Draw settings text and box
-	for (int i = 0; i < 5; ++i) {
+	for (int i = 0; i < 6; ++i) {
 		pixel32_t color = (pixel32_t){128, 128, 128, 255};
 		if (i == state.debug_menu_music.button_selected) {
 			if (state.debug_menu_music.button_pressed) {
