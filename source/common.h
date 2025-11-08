@@ -5,7 +5,7 @@
 
 #ifndef _NDS
 #define _USE_TEXTURE_POOLS
-//#define PAL
+#define PAL
 //#define _DEBUG_CAMERA
 #ifndef _DEBUG
 // #define _DEBUG

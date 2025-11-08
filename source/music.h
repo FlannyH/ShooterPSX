@@ -119,6 +119,7 @@ typedef enum {
     N_ENV_STAGES,
 } env_stage_t;
 
+// todo: move this outside the music header and into game specific code
 typedef enum {
     sfx_ammo,
     sfx_armor_big,
