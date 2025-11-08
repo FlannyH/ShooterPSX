@@ -343,9 +343,10 @@ psx: LIBRARIES = gcc \
 				 gcc 
 psx: CC = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-gcc$(EXE_EXT)
 psx: CXX = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-g++$(EXE_EXT)
+psx: OBJDUMP = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-objdump$(EXE_EXT)
 psx: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -O2 -Wno-unused-function -fanalyzer -g -Wa,--strip-local-absolute -ffreestanding -fno-builtin -nostdlib -fdata-sections -ffunction-sections -fsigned-char -fno-strict-overflow -fdiagnostics-color=always -msoft-float -march=r3000 -mtune=r3000 -mabi=32 -mno-mt -mno-llsc -G8 -fno-pic -mno-abicalls -mgpopt -mno-extern-sdata -MMD -MP  -fuse-linker-plugin
 psx: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -O2 -std=c++20  -fuse-linker-plugin
-psx: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PSX)) -nostdlib -Wl,-gc-sections -G8 -static -T$(PSN00BSDK_LIBS)/ldscripts/exe.ld  -save-temps
+psx: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PSX)) -nostdlib -Wl,-gc-sections -G8 -static -T$(PSN00BSDK_LIBS)/ldscripts/exe.ld  -save-temps -flto
 psx: INCLUDE_DIRS = source \
 			   $(PATH_LIB_PC)/gl3w/include \
 			   $(PSN00BSDK_PATH)/include/libpsn00b 
@@ -355,6 +356,7 @@ $(PATH_TEMP_PSX)/$(PROJECT_NAME).elf: $(OBJ_PSX)
 	@mkdir -p $(dir $@)
 	@echo Linking $@
 	@$(CC) -o $@ $(OBJ_PSX) $(LINKER_FLAGS)
+	@$(OBJDUMP) -d -S -l --source-comment="# " $@ > $(PATH_TEMP_PSX)/$(PROJECT_NAME).s
 
 $(PATH_OBJ_PSX)/%.o: $(PATH_SOURCE)/%.c
 	@mkdir -p $(dir $@)
