@@ -159,7 +159,7 @@ void state_update_in_game(int dt) {
 	}
 
 	// Play shoot animation
-	if (state.in_game.gun_animation_timer > 0) {
+	if (state.in_game.gun_animation_timer > 99999999) {
 		state.in_game.gun_animation_timer -= dt * 16; 
 		if (state.in_game.gun_animation_timer < 0) {
 			state.in_game.gun_animation_timer = 0;
@@ -167,7 +167,7 @@ void state_update_in_game(int dt) {
 		state.in_game.gun_animation_timer_sqrt = scalar_mul(state.in_game.gun_animation_timer, state.in_game.gun_animation_timer);
 	}
 	else {
-		if (input_held(PAD_R2, 0) && state.in_game.player.ammo > 0) {
+		if (input_held(PAD_R2, 0)) {
 			shoot(camera_transform);
 		}
 		if (state.global.show_debug) {
@@ -362,10 +362,17 @@ void shoot(const transform_t camera_transform) {
 	ray_t ray = {
 		.length = INT32_MAX,
 		.position = (vec3_t){camera_transform.position.x, camera_transform.position.y, camera_transform.position.z},
-		.direction = {scalar_mul(siny, cosx), -sinx, scalar_mul(-cosy, cosx)},
+		.direction = {scalar_mul(siny, cosx), -sinx, scalar_mul(cosy, cosx)},
 	};
-	ray.position = vec3_muls(ray.position, -COL_SCALE);
-	ray.inv_direction = vec3_div((vec3_t){ONE, ONE, ONE}, ray.direction);
+	ray.position = vec3_muls(ray.position, COL_SCALE);
+
+	// Inverse of ray direction, or +/- ONE
+	if (scalar_abs(ray.direction.x) > 16) ray.inv_direction.x = scalar_div(ONE, ray.direction.x);
+	else ray.inv_direction.x = (ray.direction.x >= 0) ? +(255*ONE) : -(255*ONE);
+	if (scalar_abs(ray.direction.y) > 16) ray.inv_direction.y = scalar_div(ONE, ray.direction.y);
+	else ray.inv_direction.y = (ray.direction.y >= 0) ? +(255*ONE) : -(255*ONE);
+	if (scalar_abs(ray.direction.z) > 16) ray.inv_direction.z = scalar_div(ONE, ray.direction.z);
+	else ray.inv_direction.z = (ray.direction.z >= 0) ? +(255*ONE) : -(255*ONE);
 
 	// Intersect level
 	rayhit_t hit;
@@ -407,10 +414,10 @@ void shoot(const transform_t camera_transform) {
 
 	// Start shoot animation
 	state.in_game.gun_animation_timer = 4096;
-	state.in_game.screen_shake_intensity_position = 80000;
-	state.in_game.screen_shake_dampening_position = 200;
-	state.in_game.screen_shake_intensity_rotation = 240;
-	state.in_game.screen_shake_dampening_rotation = 2;
+	// state.in_game.screen_shake_intensity_position = 80000;
+	// state.in_game.screen_shake_dampening_position = 200;
+	// state.in_game.screen_shake_intensity_rotation = 240;
+	// state.in_game.screen_shake_dampening_rotation = 2;
 
 	// Play shoot sound
 	audio_play_sound(random_range(sfx_rev_shot_1, sfx_rev_shot_4 + 1), 0, 0, (vec3_t){}, ONE);

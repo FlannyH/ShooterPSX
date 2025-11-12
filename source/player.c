@@ -42,7 +42,6 @@ void player_init(player_t* player, vec3_t position, vec3_t rotation, int health,
 
 void check_ground_collision(player_t* self, level_collision_t* level_bvh, const int dt_ms) {
     WARN_IF("player radius squared was not computed, and is equal to 0", player_radius_squared == 0);
-
     if (self->ground_entity_id_curr != -1) {
         const entity_header_t* entity = entity_get_header(self->ground_entity_id_curr);
         self->ground_entity_prev = self->ground_entity_curr;
@@ -52,7 +51,10 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
             .scale = entity->scale,
         };
     }
-
+    (void)level_bvh;
+    (void)dt_ms;
+    
+    /*
     // If we entered the entity this frame, notify the entity
     if (self->ground_entity_id_prev == -1 && self->ground_entity_id_curr != -1) {
         entity_send_player_intersect(self->ground_entity_id_curr, self);
@@ -125,6 +127,7 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
         
         self->is_grounded = 1;
     }
+*/
 }
 
 void apply_gravity(player_t* self, const int dt_ms) {
@@ -142,6 +145,8 @@ void apply_gravity(player_t* self, const int dt_ms) {
 void handle_stick_input(player_t* self, const int dt_ms) {
     const scalar_t curr_acceleration = (self->is_grounded) ? (walking_acceleration * dt_ms) : ((walking_acceleration * dt_ms) / air_acceleration_divider);
 
+    // todo: merge parts of this code so we only do one set of additions to the player pos rot and vel
+    
     if (input_mouse_connected()) {
         // Moving forwards and backwards
         self->velocity.x += hisin(self->rotation.y) * input_left_stick_y(0) * (curr_acceleration) >> 16;
@@ -260,13 +265,14 @@ void handle_jump(player_t* self) {
 }
 
 void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_ms) {
+    (void)level_bvh;
     // Move the player, ask questions later
     self->position.x += self->velocity.x * dt_ms / PLAYER_VELOCITY_PRECISION;
     self->position.z += self->velocity.z * dt_ms / PLAYER_VELOCITY_PRECISION;
 
     for (size_t i = 0; i < 2; ++i) {
         rayhit_t hit = {};
-#ifndef _DEBUG_CAMERAxxx
+#ifndef _DEBUG_CAMERA
         // Collide
         const vertical_cylinder_t cyl = {
             .bottom = (vec3_t){self->position.x, self->position.y - eye_height - 4096 + step_height, self->position.z},
@@ -275,7 +281,7 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
             .radius_squared = player_radius_squared,
             .is_wall_check = 1,
         };
-        bvh_intersect_vertical_cylinder(level_bvh, cyl, &hit);
+        // bvh_intersect_vertical_cylinder(level_bvh, cyl, &hit);
 
         const size_t n_active_aabb = entity_get_n_active_aabb();
         for (size_t i = 0; i < n_active_aabb; ++i) {
@@ -284,13 +290,13 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
             curr_hit.distance = INT32_MAX;
             if (!box->is_solid && !box->is_trigger) continue;
 
-            int intersect = vertical_cylinder_aabb_intersect_fancy(&box->aabb, cyl, &curr_hit);
-            if (intersect && box->is_trigger) {
-                entity_send_player_intersect(box->entity_index, self);
-            }
-            if (!box->is_solid) continue;
-            if (!intersect) continue;
-            if (curr_hit.distance < hit.distance) memcpy(&hit, &curr_hit, sizeof(rayhit_t));
+            // int intersect = vertical_cylinder_aabb_intersect_fancy(&box->aabb, cyl, &curr_hit);
+            // if (intersect && box->is_trigger) {
+            //     entity_send_player_intersect(box->entity_index, self);
+            // }
+            // if (!box->is_solid) continue;
+            // if (!intersect) continue;
+            // if (curr_hit.distance < hit.distance) memcpy(&hit, &curr_hit, sizeof(rayhit_t));
         }
 #else
         (void)level_bvh;
