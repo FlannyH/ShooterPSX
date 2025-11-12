@@ -407,7 +407,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             player_spawn_position = vec3_from_svec3(curr_level->player_spawn_position);
             player_spawn_rotation = curr_level->player_spawn_rotation;
             player_init(player, player_spawn_position, player_spawn_rotation, 40, 0, 0);
-            camera->position = vec3_muls(player_spawn_position, -ONE * (ONE / COL_SCALE)); 
+            camera->position = vec3_muls(player_spawn_position, ONE * (ONE / COL_SCALE)); 
             camera->rotation = player_spawn_rotation;
         };
 
@@ -641,13 +641,13 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     {
         if (ImGui::TreeNodeEx("Camera Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
             float vec_float[] =  {
-                world_space_to_collision_space(scalar_to_float(-camera->position.x)),
-                world_space_to_collision_space(scalar_to_float(-camera->position.y)),
-                world_space_to_collision_space(scalar_to_float(-camera->position.z)),
+                world_space_to_collision_space(scalar_to_float(camera->position.x)),
+                world_space_to_collision_space(scalar_to_float(camera->position.y)),
+                world_space_to_collision_space(scalar_to_float(camera->position.z)),
             };
 
             if (ImGui::DragFloat3("Position", vec_float)) {
-                camera->position = vec3_from_floats(-vec_float[0], -vec_float[1], -vec_float[2]); 
+                camera->position = vec3_from_floats(vec_float[0], vec_float[1], vec_float[2]); 
             }
             inspect_vec3(&camera->rotation, "Rotation");
             ImGui::TreePop();
@@ -923,12 +923,12 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
                 // Transform to world units
                 transform_t render_transform;
-                render_transform.position.x = -selected_entity->position.x / COL_SCALE;
-                render_transform.position.y = -selected_entity->position.y / COL_SCALE;
-                render_transform.position.z = -selected_entity->position.z / COL_SCALE;
-                render_transform.rotation.x = -selected_entity->rotation.x;
-                render_transform.rotation.y = -selected_entity->rotation.y;
-                render_transform.rotation.z = -selected_entity->rotation.z;
+                render_transform.position.x = selected_entity->position.x / COL_SCALE;
+                render_transform.position.y = selected_entity->position.y / COL_SCALE;
+                render_transform.position.z = selected_entity->position.z / COL_SCALE;
+                render_transform.rotation.x = selected_entity->rotation.x;
+                render_transform.rotation.y = selected_entity->rotation.y;
+                render_transform.rotation.z = selected_entity->rotation.z;
                 render_transform.scale.x = selected_entity->scale.x;
                 render_transform.scale.y = selected_entity->scale.y;
                 render_transform.scale.z = selected_entity->scale.z;

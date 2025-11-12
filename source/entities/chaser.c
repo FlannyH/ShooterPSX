@@ -275,12 +275,12 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 
 	// Render
 	transform_t render_transform;
-	render_transform.position.x = -chaser_pos.x / COL_SCALE;
-	render_transform.position.y = -chaser_pos.y / COL_SCALE;
-	render_transform.position.z = -chaser_pos.z / COL_SCALE;
-	render_transform.rotation.x = -chaser->entity_header.rotation.x;
-	render_transform.rotation.y = -chaser->entity_header.rotation.y;
-	render_transform.rotation.z = -chaser->entity_header.rotation.z;
+	render_transform.position.x = chaser_pos.x / COL_SCALE;
+	render_transform.position.y = chaser_pos.y / COL_SCALE;
+	render_transform.position.z = chaser_pos.z / COL_SCALE;
+	render_transform.rotation.x = chaser->entity_header.rotation.x;
+	render_transform.rotation.y = chaser->entity_header.rotation.y;
+	render_transform.rotation.z = chaser->entity_header.rotation.z;
 	render_transform.scale.x = chaser->entity_header.scale.x;
 	render_transform.scale.y = chaser->entity_header.scale.x;
 	render_transform.scale.z = chaser->entity_header.scale.x;

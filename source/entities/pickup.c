@@ -45,12 +45,12 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
     pickup->entity_header.rotation.y += dt * 50;
 
 	transform_t render_transform;
-    render_transform.position.x = -pickup_pos.x / COL_SCALE;
-    render_transform.position.y = -pickup_pos.y / COL_SCALE;
-    render_transform.position.z = -pickup_pos.z / COL_SCALE;
-    render_transform.rotation.x = -pickup->entity_header.rotation.x;
-    render_transform.rotation.y = -pickup->entity_header.rotation.y;
-    render_transform.rotation.z = -pickup->entity_header.rotation.z;
+    render_transform.position.x = pickup_pos.x / COL_SCALE;
+    render_transform.position.y = pickup_pos.y / COL_SCALE;
+    render_transform.position.z = pickup_pos.z / COL_SCALE;
+    render_transform.rotation.x = pickup->entity_header.rotation.x;
+    render_transform.rotation.y = pickup->entity_header.rotation.y;
+    render_transform.rotation.z = pickup->entity_header.rotation.z;
 	render_transform.scale.x = pickup->entity_header.scale.x;
 	render_transform.scale.y = pickup->entity_header.scale.x;
 	render_transform.scale.z = pickup->entity_header.scale.x;

@@ -169,15 +169,21 @@ void renderer_begin_frame(const transform_t* camera_transform) {
     position.vx = -position.vx >> 12;
     position.vy = -position.vy >> 12;
     position.vz = -position.vz >> 12;
-    HiRotMatrix((VECTOR*)&camera_transform->rotation, &view_matrix); // VECTOR and vec3_t are identical bit-wise
+
+    VECTOR rotation;
+    rotation.vx = -camera_transform->rotation.x;
+    rotation.vy = -camera_transform->rotation.y;
+    rotation.vz = -camera_transform->rotation.z;
+    HiRotMatrix(&rotation, &view_matrix);
     ApplyMatrixLV(&view_matrix, &position, &position);
     TransMatrix(&view_matrix, &position);
 
     // Scale by aspect ratio
+    // todo: bespoke correction for PAL output
     aspect_matrix = (MATRIX){
         .m = {
             {(ONE * res_x) / (widescreen ? 427 : 320), 0, 0},
-            {0, ONE, 0},
+            {0, -ONE, 0}, // PS1 screen space is +Y=down, so invert the Y component
             {0, 0, ONE},
         },
         .t = {0, 0, 0},

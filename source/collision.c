@@ -89,7 +89,7 @@ void bvh_intersect_vertical_cylinder(level_collision_t* bvh, vertical_cylinder_t
 }
 
 void debug_draw(const level_collision_t* self, const bvh_node_t* node, const int min_depth, const int max_depth, const int curr_depth, const pixel32_t color) {
-    const transform_t trans = { {0, 0, 0}, {0, 0, 0}, {-ONE, -ONE, -ONE} };
+    const transform_t trans = { {0, 0, 0}, {0, 0, 0}, {ONE, ONE, ONE} };
 
     if (!self) return;
 
@@ -382,23 +382,23 @@ vec2_t find_closest_point_on_triangle_2d(vec2_t v0, vec2_t v1, vec2_t v2, vec2_t
     // Calculate edge0
     const vec2_t v1_p = vec2_sub(p, v1);
     const vec2_t v1_v2 = vec2_sub(v2, v1);
-    const scalar_t edge0 = vec2_cross(v1_p, v1_v2);
+    const scalar_t edge0 = -vec2_cross(v1_p, v1_v2);
 
     // Calculate edge1
     const vec2_t v2_p = vec2_sub(p, v2);
     const vec2_t v2_v0 = vec2_sub(v0, v2);
-    const scalar_t edge1 = vec2_cross(v2_p, v2_v0);
+    const scalar_t edge1 = -vec2_cross(v2_p, v2_v0);
 
     // Calculate edge2
     const vec2_t v0_p = vec2_sub(p, v0);
     const vec2_t v0_v1 = vec2_sub(v1, v0);
-    const scalar_t edge2 = vec2_cross(v0_p, v0_v1);
+    const scalar_t edge2 = -vec2_cross(v0_p, v0_v1);
 
     // Are we inside triangle?
     if (edge0 >= 0 && edge1 >= 0 && edge2 >= 0) {
         // Normalize barycoords
         const vec2_t v1_v0 = vec2_sub(v0, v1);
-        const scalar_t area = vec2_cross(v1_v0, v1_v2);
+        const scalar_t area = -vec2_cross(v1_v0, v1_v2);
         *u_out = scalar_div(edge0, area);
         *v_out = scalar_div(edge1, area);
 
@@ -688,7 +688,9 @@ int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere
     const scalar_t radius = sphere.radius >> 4;
     const scalar_t radius_squared = scalar_mul(radius, radius);
 
-    const vec3_t N = vec3_normalize(vec3_cross(vec3_sub(p1, p0), vec3_sub(p2, p0)));
+    const vec3_t e02 = vec3_sub(p2, p0);
+    const vec3_t e01 = vec3_sub(p1, p0);
+    const vec3_t N = vec3_normalize(vec3_cross(e02, e01));
     const scalar_t dist = vec3_dot(vec3_sub(center, p0), N);
 
     if (dist > 0) return 0;

@@ -137,12 +137,12 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	door_pos = vec3_add(door_pos, vec3_muls(door->open_offset, door->curr_interpolation_value));
 	transform_t render_transform;
 
-    render_transform.position.x = -door_pos.x / COL_SCALE;
-    render_transform.position.y = -door_pos.y / COL_SCALE;
-    render_transform.position.z = -door_pos.z / COL_SCALE;
-    render_transform.rotation.x = -door->entity_header.rotation.x;
-    render_transform.rotation.y = -door->entity_header.rotation.y;
-    render_transform.rotation.z = -door->entity_header.rotation.z;
+    render_transform.position.x = door_pos.x / COL_SCALE;
+    render_transform.position.y = door_pos.y / COL_SCALE;
+    render_transform.position.z = door_pos.z / COL_SCALE;
+    render_transform.rotation.x = door->entity_header.rotation.x;
+    render_transform.rotation.y = door->entity_header.rotation.y;
+    render_transform.rotation.z = door->entity_header.rotation.z;
 	render_transform.scale.x = door->entity_header.scale.x;
 	render_transform.scale.y = door->entity_header.scale.x;
 	render_transform.scale.z = door->entity_header.scale.x;

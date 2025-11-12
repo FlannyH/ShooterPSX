@@ -30,10 +30,10 @@ void debug_camera_update(debug_camera_t* self, const int dt_ms, const int regist
     if (register_input) {
         // Moving forwards and backwards
         self->velocity.x += hisin(self->transform.rotation.y) * input_left_stick_y(0) * (self->acceleration * dt_ms) >> 16;
-        self->velocity.z -= hicos(self->transform.rotation.y) * input_left_stick_y(0) * (self->acceleration * dt_ms) >> 16;
+        self->velocity.z += hicos(self->transform.rotation.y) * input_left_stick_y(0) * (self->acceleration * dt_ms) >> 16;
 
         // Strafing left and right
-        self->velocity.x += hicos(self->transform.rotation.y) * input_left_stick_x(0) * (self->acceleration * dt_ms) >> 16;
+        self->velocity.x -= hicos(self->transform.rotation.y) * input_left_stick_x(0) * (self->acceleration * dt_ms) >> 16;
         self->velocity.z += hisin(self->transform.rotation.y) * input_left_stick_x(0) * (self->acceleration * dt_ms) >> 16;
 
         // Moving up and down
@@ -92,8 +92,8 @@ void debug_camera_update(debug_camera_t* self, const int dt_ms, const int regist
         self->velocity.y = velocity_y_scalar;
     }
 
-    // Move the player based on velocity - subtract instead of add; view transform should be inverted
-    self->transform.position = vec3_sub(self->transform.position, vec3_muls(self->velocity, dt_ms * ONE));
+    // Move the player based on velocity
+    self->transform.position = vec3_add(self->transform.position, vec3_muls(self->velocity, dt_ms * ONE));
 
     if (register_input) {
         // Look up and down
@@ -106,6 +106,6 @@ void debug_camera_update(debug_camera_t* self, const int dt_ms, const int regist
         }
     
         // Look left and right
-        self->transform.rotation.y += (int32_t)(input_mouse_movement_x() * 8) * (mouse_sensitivity) >> 12;
+        self->transform.rotation.y -= (int32_t)(input_mouse_movement_x() * 8) * (mouse_sensitivity) >> 12;
     }
 }

@@ -185,7 +185,7 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
 
     for (size_t i = 0; i < col_mesh->n_verts / 3; i += 1) {
         // Generate vertex colors based on the triangle's normal
-        vec3_t normal = vec3_neg(tris[i].normal);
+        vec3_t normal = tris[i].normal;
 
         for (size_t j = 0; j < 3; ++j) {
             out_vtx[(i*3)+j] = (vertex_3d_t){

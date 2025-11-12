@@ -44,12 +44,12 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 
 	// Render
 	transform_t render_transform;
-    render_transform.position.x = -crate_pos.x / COL_SCALE;
-    render_transform.position.y = -crate_pos.y / COL_SCALE;
-    render_transform.position.z = -crate_pos.z / COL_SCALE;
-    render_transform.rotation.x = -crate->entity_header.rotation.x;
-    render_transform.rotation.y = -crate->entity_header.rotation.y;
-    render_transform.rotation.z = -crate->entity_header.rotation.z;
+    render_transform.position.x = crate_pos.x / COL_SCALE;
+    render_transform.position.y = crate_pos.y / COL_SCALE;
+    render_transform.position.z = crate_pos.z / COL_SCALE;
+    render_transform.rotation.x = crate->entity_header.rotation.x;
+    render_transform.rotation.y = crate->entity_header.rotation.y;
+    render_transform.rotation.z = crate->entity_header.rotation.z;
 	render_transform.scale.x = crate->entity_header.scale.x;
 	render_transform.scale.y = crate->entity_header.scale.x;
 	render_transform.scale.z = crate->entity_header.scale.x;

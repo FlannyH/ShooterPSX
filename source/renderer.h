@@ -30,7 +30,7 @@ extern "C" {
 #define MAX_TEXTURE_COUNT 128
 #define MAX_FADE_LEVEL (255 * ONE)
 
-const static transform_t id_transform = { {0,0,0},{0,0,0}, {-4096, -4096, -4096} };
+const static transform_t id_transform = { {0,0,0},{0,0,0}, {4096, 4096, 4096} };
 extern int widescreen;
 
 typedef struct ALIGNED(4) {

@@ -1,4 +1,4 @@
-# Blender 4.5.3 LTS MTL File: 'entity.blend'
+# Blender 4.5.4 LTS MTL File: 'entity.blend'
 # www.blender.org
 
 newmtl door_big_locked
@@ -129,7 +129,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 1
-map_Kd E:/Network/Y2021D-Y2-Retro_3D_shooter/TheOtherEngine/out/bin/Sandbox/x64_Release/assets/textures/pickup_invincibility.png
+map_Kd /e/Network/Y2021D-Y2-Retro_3D_shooter/TheOtherEngine/out/bin/Sandbox/x64_Release/assets/textures/pickup_invincibility.png
 
 newmtl key_blue
 Ns 0.000000

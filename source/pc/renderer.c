@@ -1,10 +1,12 @@
+#define CGLM_FORCE_LEFT_HANDED
+#include <cglm/cam.h>
+
 #include <GL/gl3w.h>
 
 #include <GLFW/glfw3.h>
 #include <cglm/affine.h>
 #include <cglm/types.h>
 #include <cglm/vec3.h>
-#include <cglm/cam.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
@@ -277,6 +279,7 @@ void renderer_init(void) {
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(DebugCallbackFunc, NULL);
 	glfwSwapInterval(0);
+	glFrontFace(GL_CCW);
 
 	// Set viewport
 	glViewport(0, 0, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING);
@@ -412,7 +415,7 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 		// Recreate projection matrix
 		aspect = (float)window_w / (float)window_h;
 		widescreen = (aspect >= 16.0f/10.0f);
-		glm_perspective(glm_rad(90.0f), aspect, 0.1f, 1000000.f, perspective_matrix);
+		glm_perspective(glm_rad(90.0f), aspect, 0.1f, 100000.f, perspective_matrix);
 		prev_window_w = window_w;
 		prev_window_h = window_h;
 	}
@@ -457,9 +460,9 @@ void renderer_begin_frame(const transform_t *camera_transform) {
         -(float)(camera_transform->position.z >> 12)
     };
 	const vec3 rotation = {
-			(float)camera_transform->rotation.x * (2 * PI / 131072.0f),
-			-(float)camera_transform->rotation.y * (2 * PI / 131072.0f) + PI,
-			(float)camera_transform->rotation.z * (2 * PI / 131072.0f) + PI
+		-((float)camera_transform->rotation.x * (2 * PI / 131072.0f)),
+		-((float)camera_transform->rotation.y * (2 * PI / 131072.0f)),
+		-((float)camera_transform->rotation.z * (2 * PI / 131072.0f))
 	};
 
 	// Set view matrix
@@ -500,9 +503,9 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 
 	memcpy(view_matrix, view_matrix_normal, sizeof(view_matrix_normal));
 
-	camera_dir.x = -view_matrix_normal[2][0] * 4096.f;
-	camera_dir.y = -view_matrix_normal[2][1] * 4096.f;
-	camera_dir.z = -view_matrix_normal[2][2] * 4096.f;
+	camera_dir.x = view_matrix_normal[2][0] * 4096.f;
+	camera_dir.y = view_matrix_normal[2][1] * 4096.f;
+	camera_dir.z = view_matrix_normal[2][2] * 4096.f;
 	memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
 
 	n_total_triangles = 0;
@@ -563,14 +566,14 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	// Apply translation
 	// Apply scale
     vec3 position = {
-            (float)model_transform->position.x,
-            (float)model_transform->position.y,
-            (float)model_transform->position.z,
+		(float)model_transform->position.x,
+		(float)model_transform->position.y,
+		(float)model_transform->position.z,
     };
     vec3 scale = {
-            (float)model_transform->scale.x / 4096.0f,
-            (float)model_transform->scale.y / 4096.0f,
-            (float)model_transform->scale.z / 4096.0f,
+		(float)model_transform->scale.x / 4096.0f,
+		(float)model_transform->scale.y / 4096.0f,
+		(float)model_transform->scale.z / 4096.0f,
     };
 	glm_translate(model_matrix, position);
     glm_scale(model_matrix, scale);
@@ -638,8 +641,8 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
 	if (local) {
 		static const mat4 id_matrix =   {{1.0f, 0.0f, 0.0f, 0.0f},                    \
-                                 		 {0.0f, -1.0f, 0.0f, 0.0f},                    \
-                                 		 {0.0f, 0.0f, -1.0f, 0.0f},                    \
+                                 		 {0.0f, 1.0f, 0.0f, 0.0f},                    \
+                                 		 {0.0f, 0.0f, 1.0f, 0.0f},                    \
                                  		 {0.0f, 0.0f, 0.0f, 1.0f}};
 		glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "view_matrix"), 1, GL_FALSE, &id_matrix[0][0]);
 	}
@@ -727,14 +730,14 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     // Apply translation
     // Apply scale
     vec3 position = {
-            (float)model_transform->position.x,
-            (float)model_transform->position.y,
-            (float)model_transform->position.z,
+		(float)model_transform->position.x,
+		(float)model_transform->position.y,
+		(float)model_transform->position.z,
     };
     vec3 scale = {
-            (float)model_transform->scale.x / (float)COL_SCALE,
-            (float)model_transform->scale.y / (float)COL_SCALE,
-            (float)model_transform->scale.z / (float)COL_SCALE,
+		(float)model_transform->scale.x / (float)COL_SCALE,
+		(float)model_transform->scale.y / (float)COL_SCALE,
+		(float)model_transform->scale.z / (float)COL_SCALE,
     };
     glm_translate(model_matrix, position);
     glm_scale(model_matrix, scale);

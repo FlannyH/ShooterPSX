@@ -87,12 +87,12 @@ void entity_platform_update(int slot, player_t* player, int dt) {
 
 	// Render
 	transform_t render_transform;
-	render_transform.position.x = -platform_pos.x / COL_SCALE;
-	render_transform.position.y = -platform_pos.y / COL_SCALE;
-	render_transform.position.z = -platform_pos.z / COL_SCALE;
-	render_transform.rotation.x = -platform->entity_header.rotation.x;
-	render_transform.rotation.y = -platform->entity_header.rotation.y;
-	render_transform.rotation.z = -platform->entity_header.rotation.z;
+	render_transform.position.x = platform_pos.x / COL_SCALE;
+	render_transform.position.y = platform_pos.y / COL_SCALE;
+	render_transform.position.z = platform_pos.z / COL_SCALE;
+	render_transform.rotation.x = platform->entity_header.rotation.x;
+	render_transform.rotation.y = platform->entity_header.rotation.y;
+	render_transform.rotation.z = platform->entity_header.rotation.z;
 	render_transform.scale.x = platform->entity_header.scale.x;
 	render_transform.scale.y = platform->entity_header.scale.x;
 	render_transform.scale.z = platform->entity_header.scale.x;
