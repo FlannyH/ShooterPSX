@@ -49,7 +49,6 @@ int point_aabb_intersect(const aabb_t* aabb, vec3_t point) {
 int ray_aabb_intersect(const aabb_t* aabb, ray_t ray) {
 #ifdef _DEBUG
     if (!aabb) return 0;
-    n_ray_aabb_intersects++;
 #endif
 
     const scalar_t tx1 = scalar_mul(aabb->min.x - ray.position.x, ray.inv_direction.x);
@@ -78,7 +77,6 @@ int ray_aabb_intersect_fancy(const aabb_t* aabb, ray_t ray, rayhit_t* hit) {
 #ifdef _DEBUG
     if (!aabb) return 0;
     if (!hit) return 0;
-    n_ray_aabb_intersects++;
 #endif
 
     // If the ray starts inside the box, always intersect
@@ -122,7 +120,6 @@ int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_
 #ifdef _DEBUG
     if (!triangle) return 0;
     if (!hit) return 0;
-    n_ray_triangle_intersects++;
 #endif
 
 #define SHIFT_COUNT 5

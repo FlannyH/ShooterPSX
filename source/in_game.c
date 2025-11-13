@@ -159,7 +159,7 @@ void state_update_in_game(int dt) {
 	}
 
 	// Play shoot animation
-	if (state.in_game.gun_animation_timer > 99999999) {
+	if (state.in_game.gun_animation_timer > 0) {
 		state.in_game.gun_animation_timer -= dt * 16; 
 		if (state.in_game.gun_animation_timer < 0) {
 			state.in_game.gun_animation_timer = 0;
@@ -167,7 +167,7 @@ void state_update_in_game(int dt) {
 		state.in_game.gun_animation_timer_sqrt = scalar_mul(state.in_game.gun_animation_timer, state.in_game.gun_animation_timer);
 	}
 	else {
-		if (input_held(PAD_R2, 0)) {
+		if (input_held(PAD_R2, 0) && state.in_game.player.ammo > 0) {
 			shoot(camera_transform);
 		}
 		if (state.global.show_debug) {
@@ -190,15 +190,15 @@ void state_update_in_game(int dt) {
 		transform_t gun_transform;
 		if (state.cheats.doom_mode) {
 			gun_transform.position.x = 0 + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE); if (widescreen) gun_transform.position.x += 30;
-			gun_transform.position.y = 165 + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE);
+			gun_transform.position.y = -165 + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE);
 			gun_transform.position.z = 110;
 		} else {
 			gun_transform.position.x = 145 + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE); if (widescreen) gun_transform.position.x += 30;
-			gun_transform.position.y = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE) + scalar_mul(state.in_game.gun_animation_timer_sqrt, 50);
+			gun_transform.position.y = -135 + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE) + scalar_mul(state.in_game.gun_animation_timer_sqrt, 50);
 			gun_transform.position.z = 125 - scalar_mul(state.in_game.gun_animation_timer_sqrt, 225);
 		}
 		gun_transform.rotation.x = 0 + scalar_mul(state.in_game.gun_animation_timer_sqrt, 9500);
-		gun_transform.rotation.y = 4096 * 16;
+		gun_transform.rotation.y = 0;
 		gun_transform.rotation.z = 0;
 		gun_transform.scale.x = ONE;
 		gun_transform.scale.y = ONE;
@@ -212,11 +212,11 @@ void state_update_in_game(int dt) {
 	{
 		transform_t sword_transform;
 		sword_transform.position.x = -165 + (isin(state.global.time_counter * 6) * speed_1d) / (32 * ONE); if (widescreen) sword_transform.position.x -= 52;
-		sword_transform.position.y = 135 + (icos(state.global.time_counter * 12) * speed_1d) / (64 * ONE);
+		sword_transform.position.y = -135 + (icos(state.global.time_counter * 12) * speed_1d) / (64 * ONE);
 		sword_transform.position.z = 180;
-		sword_transform.rotation.x = 1800 * 16;
-		sword_transform.rotation.y = 4096 * 16;
-		sword_transform.rotation.z = -2048 * 16;
+		sword_transform.rotation.x = 0;
+		sword_transform.rotation.y = 0;
+		sword_transform.rotation.z = 0;
 		sword_transform.scale.x = ONE;
 		sword_transform.scale.y = ONE;
 		sword_transform.scale.z = ONE;
@@ -414,10 +414,10 @@ void shoot(const transform_t camera_transform) {
 
 	// Start shoot animation
 	state.in_game.gun_animation_timer = 4096;
-	// state.in_game.screen_shake_intensity_position = 80000;
-	// state.in_game.screen_shake_dampening_position = 200;
-	// state.in_game.screen_shake_intensity_rotation = 240;
-	// state.in_game.screen_shake_dampening_rotation = 2;
+	state.in_game.screen_shake_intensity_position = 80000;
+	state.in_game.screen_shake_dampening_position = 200;
+	state.in_game.screen_shake_intensity_rotation = 240;
+	state.in_game.screen_shake_dampening_rotation = 2;
 
 	// Play shoot sound
 	audio_play_sound(random_range(sfx_rev_shot_1, sfx_rev_shot_4 + 1), 0, 0, (vec3_t){}, ONE);
