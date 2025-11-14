@@ -46,6 +46,12 @@ typedef struct {
 } vertical_cylinder_t;
 
 typedef struct {
+    vec3_t bottom;
+    scalar_t height;
+    scalar_t radius;
+} vertical_capsule_t;
+
+typedef struct {
     int16_t x, y, z; // 3D position
     uint8_t r, g, b; // 8-bit RGB color
     uint8_t u, v, tex_id; // Texture Coordinates
@@ -170,8 +176,8 @@ typedef struct {
     vec3_t position;
     vec3_t normal;
     scalar_t distance;
-    scalar_t distance_along_normal;
-    col_mat_t collision_material;
+    // scalar_t distance_along_normal;
+    // col_mat_t collision_material;
     ray_hit_type_t type;
     union {
         struct {

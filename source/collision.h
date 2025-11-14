@@ -25,9 +25,9 @@ int point_aabb_intersect(const aabb_t* aabb, vec3_t point);
 int ray_aabb_intersect(const aabb_t* aabb, ray_t ray);
 int ray_aabb_intersect_fancy(const aabb_t* aabb, ray_t ray, rayhit_t* hit);
 int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_t* hit);
-int vertical_cylinder_aabb_intersect(const aabb_t* aabb, vertical_cylinder_t vertical_cylinder);
-int vertical_cylinder_aabb_intersect_fancy(const aabb_t* aabb, const vertical_cylinder_t vertical_cylinder, rayhit_t* hit);
-int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vertical_cylinder_t vertical_cylinder, rayhit_t* hit);
+int vertical_capsule_aabb_intersect(const aabb_t* aabb, vertical_capsule_t vertical_cylinder);
+int vertical_capsule_aabb_intersect_fancy(const aabb_t* aabb, const vertical_capsule_t vertical_cylinder, rayhit_t* hit);
+int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, vertical_capsule_t vertical_cylinder, rayhit_t* hit);
 
 // Statistics
 void collision_clear_stats(void);
