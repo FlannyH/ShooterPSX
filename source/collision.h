@@ -29,7 +29,4 @@ int vertical_capsule_aabb_intersect(const aabb_t* aabb, vertical_capsule_t verti
 int vertical_capsule_aabb_intersect_fancy(const aabb_t* aabb, const vertical_capsule_t vertical_cylinder, rayhit_t* hit);
 int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, vertical_capsule_t vertical_cylinder, rayhit_t* hit);
 
-// Statistics
-void collision_clear_stats(void);
-
 #endif // COLLISION_H

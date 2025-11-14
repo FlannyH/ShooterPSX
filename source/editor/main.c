@@ -11,6 +11,8 @@
 #include "../level.h"
 #include "../file.h"
 
+#include "../test/test.h"
+
 #include <string.h>
 #include <unistd.h> 
 
@@ -37,6 +39,9 @@ int main(int argc, char** argv) {
     input_init();
 	entity_init();
     input_set_stick_deadzone(36);
+
+    const int n_failed_tests = test();
+    printf("Unit tests finished with %i errors\n", n_failed_tests);
     
     level_t level = (level_t){0}; // start with empty level
     memset(&level, 0, sizeof(level));

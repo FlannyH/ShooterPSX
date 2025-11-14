@@ -18,6 +18,8 @@
 #include "file.h"
 #include "text.h"
 
+#include "test/test.h"
+
 #ifdef _PSX
 #include <psxcd.h>
 #include <psxgpu.h>
@@ -72,6 +74,11 @@ int main(void) {
 	input_init();
 	input_set_stick_deadzone(36);
 	audio_init();
+
+#ifdef _DEBUG
+    const int n_failed_tests = test();
+    printf("Unit tests finished with %i errors\n", n_failed_tests);
+#endif
 
 	// Init state variables
 	memset(&state, 0, sizeof(state));

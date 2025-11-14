@@ -267,7 +267,6 @@ void draw_debug_info(int dt, const int n_sections) {
                  mem_stack_get_size(i) / KiB,
                  (mem_stack_get_occupied(i) * 100) / mem_stack_get_size(i));
     }
-    collision_clear_stats();
     FntFlush(-1);
 #endif
 	(void)dt;

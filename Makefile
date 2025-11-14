@@ -65,7 +65,8 @@ CODE_ENGINE_SHARED_C = collision.c \
 					   text.c \
 			  	  	   ui.c \
 			  	  	   entity.c \
-			  	  	   vislist.c
+			  	  	   vislist.c \
+					   test/test.c
 
 CODE_GAME_C = 		   debug_menu_main.c \
 					   debug_menu_music.c \
