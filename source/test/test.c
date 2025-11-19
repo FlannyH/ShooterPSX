@@ -92,10 +92,15 @@ int test_vertical_capsule_triangle_intersect(void) {
             vec3_from_floats(-2.0f, 0.0f, 0.0f), 
             vec3_from_floats(0.0f, 1.0f, 0.0f)
         },
+        (collision_triangle_3d_t){ // facing side
+            vec3_from_floats(0.0f, 0.0f, 0.0f), 
+            vec3_from_floats(-1.5f, 2.0f, 0.0f), 
+            vec3_from_floats(-2.0f, 0.0f, 0.0f), 
+            vec3_from_floats(0.0f, 1.0f, 0.0f)
+        },
     };
-    float v0x = 0.0f; float v0y = 0.0f;
-    float v1x = -1.5f; float v1y = 2.0f;
-    float v2x = -2.0f; float v2y = 0.0f;
+
+    int n_errors = 0;
 
     struct {
         collision_triangle_3d_t* triangle;
@@ -119,29 +124,22 @@ int test_vertical_capsule_triangle_intersect(void) {
         {&triangles[0], "t0 v2 barely miss bottom",               vec3_from_floats(-2.0f, 0.2505f, 0.0f), 0},
         {&triangles[0], "t0 v2 hit center",                       vec3_from_floats(-2.0f, -0.25f, 0.0f), 1},
         {&triangles[0], "t0 v2 barely miss top",                  vec3_from_floats(-2.0f, -0.7505f, 0.0f), 0},
-        {&triangles[0], "t0 v2 barely miss top",                  vec3_from_floats(-2.0f, -0.7505f, 0.0f), 0},
 
         // triangle facing up - edge vertical
         {&triangles[0], "t0 edge 0-1 miss bottom",                vec3_from_floats(-0.75f, 0.2505f, 1.0f), 0},
         {&triangles[0], "t0 edge 0-1 hit bottom",                 vec3_from_floats(-0.75f, 0.2495f, 1.0f), 1},
         {&triangles[0], "t0 edge 1-2 miss bottom",                vec3_from_floats(-1.75f, 0.2505f, 1.0f), 0},
         {&triangles[0], "t0 edge 1-2 hit bottom",                 vec3_from_floats(-1.75f, 0.2495f, 1.0f), 1},
-        {&triangles[0], "t0 edge 2-0 miss bottom",                vec3_from_floats(1.0f, 0.2505f, 0.0f), 0},
-        {&triangles[0], "t0 edge 2-0 hit bottom",                 vec3_from_floats(1.0f, 0.2495f, 0.0f), 1},
-        {&triangles[0], "t0 edge 0-1 miss bottom",                vec3_from_floats(-0.75f, 0.2505f, 1.0f), 0},
-        {&triangles[0], "t0 edge 0-1 hit bottom",                 vec3_from_floats(-0.75f, 0.2495f, 1.0f), 1},
-        {&triangles[0], "t0 edge 1-2 miss bottom",                vec3_from_floats(-1.75f, 0.2505f, 1.0f), 0},
-        {&triangles[0], "t0 edge 1-2 hit bottom",                 vec3_from_floats(-1.75f, 0.2495f, 1.0f), 1},
-        {&triangles[0], "t0 edge 2-0 miss bottom",                vec3_from_floats(1.0f, 0.2505f, 0.0f), 0},
-        {&triangles[0], "t0 edge 2-0 hit bottom",                 vec3_from_floats(1.0f, 0.2495f, 0.0f), 1           },
+        {&triangles[0], "t0 edge 2-0 miss bottom",                vec3_from_floats(-1.0f, 0.2505f, 0.0f), 0},
+        {&triangles[0], "t0 edge 2-0 hit bottom",                 vec3_from_floats(-1.0f, 0.2495f, 0.0f), 1},
 
         // triangle facing up - edge sideways
-        {&triangles[0], "t0 edge 0-1 miss sideways",              vec3_from_floats(-0.5725f, -0.25f, 1.165f), 0},
-        {&triangles[0], "t0 edge 0-1 hit sideways",               vec3_from_floats(-0.5525f, -0.25f, 1.165f), 1},
+        {&triangles[0], "t0 edge 0-1 hit sideways",               vec3_from_floats(-0.5525f, -0.25f, 1.165f), 0},
+        {&triangles[0], "t0 edge 0-1 miss sideways",              vec3_from_floats(-0.5725f, -0.25f, 1.165f), 1},
         {&triangles[0], "t0 edge 1-2 miss sideways",              vec3_from_floats(-1.98861f, -0.25f, 1.14448f), 0},
         {&triangles[0], "t0 edge 1-2 hit sideways",               vec3_from_floats(-1.96953f, -0.25f, 1.14486f), 1},
-        {&triangles[0], "t0 edge 2-1 miss sideways",              vec3_from_floats(-1.08621f, -0.25f, -0.248892f), 0},
-        {&triangles[0], "t0 edge 2-1 hit sideways",               vec3_from_floats(-1.08621f, -0.25f, -0.251354f), 1},
+        {&triangles[0], "t0 edge 2-1 hit sideways",               vec3_from_floats(-1.08621f, -0.25f, -0.251354f), 0},
+        {&triangles[0], "t0 edge 2-1 miss sideways",              vec3_from_floats(-1.08621f, -0.25f, -0.248892f), 1},
 
         // triangle facing up - corners sideways
         {&triangles[0], "t0 corner v0 hit",                       vec3_from_floats(0.165f, -0.25f, -0.165f), 1},
@@ -152,16 +150,142 @@ int test_vertical_capsule_triangle_intersect(void) {
         {&triangles[0], "t0 corner v2 miss",                      vec3_from_floats(-2.16988f, -0.25f, -0.187204f), 0},
 
         // triangle facing up - center
-        {&triangles[0], "t0 center miss bottom",               vec3_from_floats(-1.16666f, 0.3f, 0.66666f)},
-        {&triangles[0], "t0 center barely miss bottom",        vec3_from_floats(-1.16666f, 0.2505f, 0.66666f)},
-        {&triangles[0], "t0 center hit radius bottom",         vec3_from_floats(-1.16666f, 0.125f, 0.66666f)},
-        {&triangles[0], "t0 center barely hit segment bottom", vec3_from_floats(-1.16666f, 0.0f, 0.66666f)},
-        {&triangles[0], "t0 center hit center",                vec3_from_floats(-1.16666f, -0.25f, 0.66666f)},
-        {&triangles[0], "t0 center barely hit segment top",    vec3_from_floats(-1.16666f, -0.5f, 0.66666f)},
-        {&triangles[0], "t0 center hit radius top",            vec3_from_floats(-1.16666f, -0.625f, 0.66666f)},
-        {&triangles[0], "t0 center barely miss top",           vec3_from_floats(-1.16666f, -0.7505f, 0.66666f)},
-        {&triangles[0], "t0 center miss top",                  vec3_from_floats(-1.16666f, -1.0000f, 0.66666f)},
+        {&triangles[0], "t0 center miss bottom",                  vec3_from_floats(-1.16666f, 0.3f, 0.66666f), 0},
+        {&triangles[0], "t0 center barely miss bottom",           vec3_from_floats(-1.16666f, 0.2505f, 0.66666f), 0},
+        {&triangles[0], "t0 center hit radius bottom",            vec3_from_floats(-1.16666f, 0.125f, 0.66666f), 1},
+        {&triangles[0], "t0 center barely hit segment bottom",    vec3_from_floats(-1.16666f, 0.0f, 0.66666f), 1},
+        {&triangles[0], "t0 center hit center",                   vec3_from_floats(-1.16666f, -0.25f, 0.66666f), 1},
+        {&triangles[0], "t0 center barely hit segment top",       vec3_from_floats(-1.16666f, -0.5f, 0.66666f), 1},
+        {&triangles[0], "t0 center hit radius top",               vec3_from_floats(-1.16666f, -0.625f, 0.66666f), 1},
+        {&triangles[0], "t0 center barely miss top",              vec3_from_floats(-1.16666f, -0.7505f, 0.66666f), 0},
+        {&triangles[0], "t0 center miss top",                     vec3_from_floats(-1.16666f, -1.0000f, 0.66666f), 0},
+        
+        // triangle facing side - on vertices
+        {&triangles[1], "t1 v0 +Z vertex top miss",                      vec3_from_floats(0.0f, -0.51f, 0.3f), 0},
+        {&triangles[1], "t1 v0 +Z vertex top barely miss",               vec3_from_floats(0.0f, -0.51f, 0.251f), 0},
+        {&triangles[1], "t1 v0 +Z vertex top barely hit",                vec3_from_floats(0.0f, -0.51f, 0.249f), 1},
+        {&triangles[1], "t1 v0 +Z vertex top hit",                       vec3_from_floats(0.0f, -0.51f, 0.125f), 1},
+        {&triangles[1], "t1 v0 +Z vertex center miss",                   vec3_from_floats(0.0f, -0.25f, 0.3f), 0},
+        {&triangles[1], "t1 v0 +Z vertex center barely miss",            vec3_from_floats(0.0f, -0.25f, 0.2505f), 0},
+        {&triangles[1], "t1 v0 +Z vertex center barely hit",             vec3_from_floats(0.0f, -0.25f, 0.2495f), 1},
+        {&triangles[1], "t1 v0 +Z vertex center hit",                    vec3_from_floats(0.0f, -0.25f, 0.125f), 1},
+        {&triangles[1], "t1 v0 +Z vertex bottom miss",                   vec3_from_floats(0.0f, 0.0f, 0.3f), 0},
+        {&triangles[1], "t1 v0 +Z vertex bottom barely miss",            vec3_from_floats(0.0f, 0.0f, 0.2505f), 0},
+        {&triangles[1], "t1 v0 +Z vertex bottom barely hit",             vec3_from_floats(0.0f, 0.0f, 0.2495f), 1},
+        {&triangles[1], "t1 v0 +Z vertex bottom hit",                    vec3_from_floats(0.0f, 0.0f, 0.125f), 1},
+        {&triangles[1], "t1 v0 -Z vertex center miss",                   vec3_from_floats(0.0f, -0.25f, -0.3f), 0},
+        {&triangles[1], "t1 v0 -Z vertex center barely miss",            vec3_from_floats(0.0f, -0.25f, -0.2505f), 0},
+        {&triangles[1], "t1 v0 -Z vertex center barely hit",             vec3_from_floats(0.0f, -0.25f, -0.2495f), 1},
+        {&triangles[1], "t1 v0 -Z vertex center hit",                    vec3_from_floats(0.0f, -0.25f, -0.125f), 1},
+        {&triangles[1], "t1 v0 -Z vertex top miss",                      vec3_from_floats(0.0f, -0.51f, -0.3f), 0},
+        {&triangles[1], "t1 v0 -Z vertex top barely miss",               vec3_from_floats(0.0f, -0.51f, -0.251f), 0},
+        {&triangles[1], "t1 v0 -Z vertex top barely hit",                vec3_from_floats(0.0f, -0.51f, -0.249f), 1},
+        {&triangles[1], "t1 v0 -Z vertex top hit",                       vec3_from_floats(0.0f, -0.51f, -0.125f), 1},
+        {&triangles[1], "t1 v1 +Z vertex top miss",                      vec3_from_floats(-1.5f, 1.49f, 0.3f), 0},
+        {&triangles[1], "t1 v1 +Z vertex top barely miss",               vec3_from_floats(-1.5f, 1.49f, 0.251f), 0},
+        {&triangles[1], "t1 v1 +Z vertex top barely hit",                vec3_from_floats(-1.5f, 1.49f, 0.249f), 1},
+        {&triangles[1], "t1 v1 +Z vertex top hit",                       vec3_from_floats(-1.5f, 1.49f, 0.125f), 1},
+        {&triangles[1], "t1 v1 +Z vertex center miss",                   vec3_from_floats(-1.5f, 1.75f, 0.3f), 0},
+        {&triangles[1], "t1 v1 +Z vertex center barely miss",            vec3_from_floats(-1.5f, 1.75f, 0.2505f), 0},
+        {&triangles[1], "t1 v1 +Z vertex center barely hit",             vec3_from_floats(-1.5f, 1.75f, 0.2495f), 1},
+        {&triangles[1], "t1 v1 +Z vertex center hit",                    vec3_from_floats(-1.5f, 1.75f, 0.125f), 1},
+        {&triangles[1], "t1 v1 +Z vertex bottom miss",                   vec3_from_floats(-1.5f, 2.0f, 0.3f), 0},
+        {&triangles[1], "t1 v1 +Z vertex bottom barely miss",            vec3_from_floats(-1.5f, 2.0f, 0.2505f), 0},
+        {&triangles[1], "t1 v1 +Z vertex bottom barely hit",             vec3_from_floats(-1.5f, 2.0f, 0.2495f), 1},
+        {&triangles[1], "t1 v1 +Z vertex bottom hit",                    vec3_from_floats(-1.5f, 2.0f, 0.125f), 1},
+        {&triangles[1], "t1 v1 -Z vertex center miss",                   vec3_from_floats(-1.5f, 1.75f, -0.3f), 0},
+        {&triangles[1], "t1 v1 -Z vertex center barely miss",            vec3_from_floats(-1.5f, 1.75f, -0.2505f), 0},
+        {&triangles[1], "t1 v1 -Z vertex center barely hit",             vec3_from_floats(-1.5f, 1.75f, -0.2495f), 1},
+        {&triangles[1], "t1 v1 -Z vertex center hit",                    vec3_from_floats(-1.5f, 1.75f, -0.125f), 1},
+        {&triangles[1], "t1 v1 -Z vertex top miss",                      vec3_from_floats(-1.5f, 1.49f, -0.3f), 0},
+        {&triangles[1], "t1 v1 -Z vertex top barely miss",               vec3_from_floats(-1.5f, 1.49f, -0.2505f), 0},
+        {&triangles[1], "t1 v1 -Z vertex top barely hit",                vec3_from_floats(-1.5f, 1.49f, -0.2495f), 1},
+        {&triangles[1], "t1 v1 -Z vertex top hit",                       vec3_from_floats(-1.5f, 1.49f, -0.125f), 1},
+        // todo: v2
+        {&triangles[1], "t1 v2 +Z vertex top miss",                      vec3_from_floats(-2.0f, -0.51f, 0.3f), 0},
+        {&triangles[1], "t1 v2 +Z vertex top barely miss",               vec3_from_floats(-2.0f, -0.51f, 0.251f), 0},
+        {&triangles[1], "t1 v2 +Z vertex top barely hit",                vec3_from_floats(-2.0f, -0.51f, 0.249f), 1},
+        {&triangles[1], "t1 v2 +Z vertex top hit",                       vec3_from_floats(-2.0f, -0.51f, 0.125f), 1},
+        {&triangles[1], "t1 v2 +Z vertex center miss",                   vec3_from_floats(-2.0f, -0.25f, 0.3f), 0},
+        {&triangles[1], "t1 v2 +Z vertex center barely miss",            vec3_from_floats(-2.0f, -0.25f, 0.2505f), 0},
+        {&triangles[1], "t1 v2 +Z vertex center barely hit",             vec3_from_floats(-2.0f, -0.25f, 0.2495f), 1},
+        {&triangles[1], "t1 v2 +Z vertex center hit",                    vec3_from_floats(-2.0f, -0.25f, 0.125f), 1},
+        {&triangles[1], "t1 v2 +Z vertex bottom miss",                   vec3_from_floats(-2.0f, 0.0f, 0.3f), 0},
+        {&triangles[1], "t1 v2 +Z vertex bottom barely miss",            vec3_from_floats(-2.0f, 0.0f, 0.2505f), 0},
+        {&triangles[1], "t1 v2 +Z vertex bottom barely hit",             vec3_from_floats(-2.0f, 0.0f, 0.2495f), 1},
+        {&triangles[1], "t1 v2 +Z vertex bottom hit",                    vec3_from_floats(-2.0f, 0.0f, 0.125f), 1},
+        {&triangles[1], "t1 v2 -Z vertex center miss",                   vec3_from_floats(-2.0f, -0.25f, -0.3f), 0},
+        {&triangles[1], "t1 v2 -Z vertex center barely miss",            vec3_from_floats(-2.0f, -0.25f, -0.2505f), 0},
+        {&triangles[1], "t1 v2 -Z vertex center barely hit",             vec3_from_floats(-2.0f, -0.25f, -0.2495f), 1},
+        {&triangles[1], "t1 v2 -Z vertex center hit",                    vec3_from_floats(-2.0f, -0.25f, -0.125f), 1},
+        {&triangles[1], "t1 v2 -Z vertex top miss",                      vec3_from_floats(-2.0f, -0.51f, -0.3f), 0},
+        {&triangles[1], "t1 v2 -Z vertex top barely miss",               vec3_from_floats(-2.0f, -0.51f, -0.251f), 0},
+        {&triangles[1], "t1 v2 -Z vertex top barely hit",                vec3_from_floats(-2.0f, -0.51f, -0.249f), 1},
+        {&triangles[1], "t1 v2 -Z vertex top hit",                       vec3_from_floats(-2.0f, -0.51f, -0.125f), 1},
+        
+        // triangle facing side - barely hit vertices
+        {&triangles[1], "t1 v0 barely on vertex top miss +X",            vec3_from_floats(0.21f, -0.65f, 0.0f), 0},
+        {&triangles[1], "t1 v0 barely on vertex top hit +X",             vec3_from_floats(0.19f, -0.65f, 0.0f), 1},
+        {&triangles[1], "t1 v0 barely on vertex bottom miss +X",         vec3_from_floats(0.21f, 0.15f, 0.0f), 0},
+        {&triangles[1], "t1 v0 barely on vertex bottom hit +X",          vec3_from_floats(0.19f, 0.15f, 0.0f), 1},
+        {&triangles[1], "t1 v1 barely on vertex bottom miss -X",         vec3_from_floats(-1.69f, 2.17f, 0.0f), 0},
+        {&triangles[1], "t1 v1 barely on vertex bottom hit -X",          vec3_from_floats(-1.67f, 2.17f, 0.0f), 1},
+        {&triangles[1], "t1 v1 barely on vertex bottom hit +X",          vec3_from_floats(-1.32f, 2.17f, 0.0f), 1},
+        {&triangles[1], "t1 v1 barely on vertex bottom miss +X",         vec3_from_floats(-1.31f, 2.17f, 0.0f), 0},
+        {&triangles[1], "t1 v2 barely on vertex top miss +X",            vec3_from_floats(-0.21f, -0.65f, 0.0f), 0},
+        {&triangles[1], "t1 v2 barely on vertex top hit +X",             vec3_from_floats(-0.19f, -0.65f, 0.0f), 1},
+        {&triangles[1], "t1 v2 barely on vertex bottom hit +X",          vec3_from_floats(-0.19f, 0.15f, 0.0f), 1},
+        {&triangles[1], "t1 v2 barely on vertex bottom miss +X",         vec3_from_floats(-0.21f, 0.15f, 0.0f), 0},
+
+        // triangle facing side - edges
+        {&triangles[1], "t1 e20 -Z radius miss",           vec3_from_floats(-1.0f, -0.65f, -0.3f), 0},
+        {&triangles[1], "t1 e20 -Z radius barely miss",    vec3_from_floats(-1.0f, -0.65f, -0.21f), 0},
+        {&triangles[1], "t1 e20 -Z radius barely hit",     vec3_from_floats(-1.0f, -0.65f, -0.19f), 1},
+        {&triangles[1], "t1 e20 -Z radius hit",            vec3_from_floats(-1.0f, -0.65f, -0.1f), 1},
+        {&triangles[1], "t1 e20 Z radius center",          vec3_from_floats(-1.0f, -0.65f, 0.0f), 1},
+        {&triangles[1], "t1 e20 +Z radius hit",            vec3_from_floats(-1.0f, -0.65f, 0.1f), 1},
+        {&triangles[1], "t1 e20 +Z radius barely hit",     vec3_from_floats(-1.0f, -0.65f, 0.19f), 1},
+        {&triangles[1], "t1 e20 +Z radius barely miss",    vec3_from_floats(-1.0f, -0.65f, 0.21f), 0},
+        {&triangles[1], "t1 e20 +Z radius miss",           vec3_from_floats(-1.0f, -0.65f, 0.3f), 0},
+        {&triangles[1], "t1 e01 -Z radius miss",           vec3_from_floats(-0.5f, 0.92f, -0.3f), 0},
+        {&triangles[1], "t1 e01 -Z radius barely miss",    vec3_from_floats(-0.5f, 0.92f, -0.22f), 0},
+        {&triangles[1], "t1 e01 -Z radius barely hit",     vec3_from_floats(-0.5f, 0.92f, -0.19f), 1},
+        {&triangles[1], "t1 e01 -Z radius hit",            vec3_from_floats(-0.5f, 0.92f, -0.1f), 1},
+        {&triangles[1], "t1 e01 Z radius center",          vec3_from_floats(-0.5f, 0.92f, 0.0f), 1},
+        {&triangles[1], "t1 e01 +Z radius hit",            vec3_from_floats(-0.5f, 0.92f, 0.1f), 1},
+        {&triangles[1], "t1 e01 +Z radius barely hit",     vec3_from_floats(-0.5f, 0.92f, 0.19f), 1},
+        {&triangles[1], "t1 e01 +Z radius barely miss",    vec3_from_floats(-0.5f, 0.92f, 0.22f), 0},
+        {&triangles[1], "t1 e01 +Z radius miss",           vec3_from_floats(-0.5f, 0.92f, 0.3f), 0},
+        {&triangles[1], "t1 e12 -Z radius miss",           vec3_from_floats(-1.91f, 0.92f, -0.3f), 0},
+        {&triangles[1], "t1 e12 -Z radius barely miss",    vec3_from_floats(-1.91f, 0.92f, -0.22f), 0},
+        {&triangles[1], "t1 e12 -Z radius barely hit",     vec3_from_floats(-1.91f, 0.92f, -0.19f), 1},
+        {&triangles[1], "t1 e12 -Z radius hit",            vec3_from_floats(-1.91f, 0.92f, -0.1f), 1},
+        {&triangles[1], "t1 e12 Z radius center",          vec3_from_floats(-1.91f, 0.92f, 0.0f), 1},
+        {&triangles[1], "t1 e12 +Z radius hit",            vec3_from_floats(-1.91f, 0.92f, 0.1f), 1},
+        {&triangles[1], "t1 e12 +Z radius barely hit",     vec3_from_floats(-1.91f, 0.92f, 0.19f), 1},
+        {&triangles[1], "t1 e12 +Z radius barely miss",    vec3_from_floats(-1.91f, 0.92f, 0.22f), 0},
+        {&triangles[1], "t1 e12 +Z radius miss",           vec3_from_floats(-1.91f, 0.92f, 0.3f), 0},
     };
+
+
+    for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); ++i) {        
+        rayhit_t hit = {0};
+
+        vertical_capsule_t capsule = {
+            .bottom = tests[i].bottom,
+            .height = ONE/2,
+            .radius = ONE/4,
+        };
+
+        const int result = !!vertical_capsule_triangle_intersect(tests[i].triangle, capsule, &hit);
+
+        if (result != tests[i].expected_result) {
+            printf("UNIT TEST FAILED: \"%s\": expected result %i, got %i\n", tests[i].description, tests[i].expected_result, result);
+            ++n_errors;
+        }
+    }
+
+    return n_errors;
 }
 
 int test(void) {
