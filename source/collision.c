@@ -304,33 +304,96 @@ int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, verti
     assert(triangle);
     assert(hit);
 
-    // source: Christer Ericson - Real-Time Collision Detection (5.1.10)
+    // Project to XZ 2D
+    const vec2_t p = {vertical_capsule.bottom.x, vertical_capsule.bottom.z};
+    const vec2_t v0 = {triangle->v0.x, triangle->v0.z};
+    const vec2_t v1 = {triangle->v1.x, triangle->v1.z};
+    const vec2_t v2 = {triangle->v2.x, triangle->v2.z};
 
-    // todo: Project capsule line segment PQ onto the triangle plane
-    // todo: Find closest from PQ to AB
-    // todo: Find closest from PQ to BC
-    // todo: Find closest from PQ to CA
-    // todo: If P is hovering over the triangle, find closest from P to the plane
-    // todo: If Q is hovering over the triangle, find closest from Q to the plane
-    // todo: Take minimum and calculate hit info if intersect
-    
-    // notes:
-    // (cross 2)
-    // - if PQ's projection crosses over the entire triangle, this 
-    //   case is handled by the triangle edge tests (the first 3)
-    //   in this case, we can skip the edge that was not crossed
-    //
-    // (cross 1)
-    // - if PQ only crosses one edge, you can skip the other edges
-    //
-    // (cross 0, outside)
-    // - if PQ's projection does not hover over the triangle at all, 
-    //   this case is also handled by the first 3 triangle edge tests
-    //
-    // (cross 0, inside)
-    // - if PQ's projection is entirely contained within the 
-    //   triangle (and as such does not cross a triangle edge), 
-    //   it's safe to ignore the edge tests
+    // Find closest point from capsule center to triangle
+    // todo: double check winding order
+    const vec2_t v0_p = vec2_sub(p, v0);
+    const vec2_t v1_p = vec2_sub(p, v1);
+    const vec2_t v2_p = vec2_sub(p, v2);
+    const vec2_t v0_v1 = vec2_sub(v1, v0);
+    const vec2_t v1_v2 = vec2_sub(v2, v1);
+    const vec2_t v2_v0 = vec2_sub(v0, v2);
+    const scalar_t edge0 = vec2_cross(v1_v2, v1_p);
+    const scalar_t edge1 = vec2_cross(v2_v0, v2_p);
+    const scalar_t edge2 = vec2_cross(v0_v1, v0_p);
+
+    vec3_t closest_point_triangle;
+    scalar_t u;
+    scalar_t v;
+
+    const vec3_t v0_3d = triangle->v0;
+    const vec3_t v1_3d = triangle->v1;
+    const vec3_t v2_3d = triangle->v2;
+
+    // 0 negative -> inside triangle
+    // 1 negative -> on edge
+    // 2 negative -> on vertex, which is on either of the corresponding edges, just pick the first
+    // 3 negative -> (impossible)
+
+    if (edge0 >= 0 && edge1 >= 0 && edge2 >= 0) {
+        // Find point on segment closest to triangle
+        const vec3_t p_3d = vertical_capsule.bottom;
+        const vec3_t n = triangle->normal;
+
+        closest_point_triangle.x = p_3d.x;
+        closest_point_triangle.z = p_3d.z;
+
+        closest_point_triangle.y = v0_3d.y - scalar_div(
+            scalar_mul(n.x, (p_3d.x - v0_3d.x)) + scalar_mul(n.z, (p_3d.z - v0_3d.z)), 
+            n.y
+        );
+    }
+
+    else if (edge0 < 0) { // closest point is on edge v1_v2
+        const scalar_t t = scalar_clamp(
+            scalar_div(vec2_dot(v1_v2, v1_p), vec2_dot(v1_v2, v1_v2)),
+            0, ONE
+        );
+        const vec3_t v1_v2_3d = vec3_sub(v2_3d, v1_3d);
+        closest_point_triangle = vec3_add(v1_3d, vec3_muls(v1_v2_3d, t));
+    }
+    else if (edge1 < 0) { // closest point is on edge v2_v0
+        const scalar_t t = scalar_clamp(
+            scalar_div(vec2_dot(v2_v0, v2_p), vec2_dot(v2_v0, v2_v0)),
+            0, ONE
+        );
+        const vec3_t v2_v0_3d = vec3_sub(v0_3d, v2_3d);
+        closest_point_triangle = vec3_add(v2_3d, vec3_muls(v2_v0_3d, t));
+    }
+    else /*if (edge2 < 0)*/ { // closest point is on edge v0_v1
+        const scalar_t t = scalar_clamp(
+            scalar_div(vec2_dot(v0_v1, v0_p), vec2_dot(v0_v1, v0_v1)),
+            0, ONE
+        );
+        const vec3_t v0_v1_3d = vec3_sub(v1_3d, v0_3d);
+        closest_point_triangle = vec3_add(v0_3d, vec3_muls(v0_v1_3d, t));
+    }
+
+    const vec3_t closest_pos_on_line_segment = vec3_from_scalars(
+        vertical_capsule.bottom.x,
+        scalar_clamp(
+            closest_point_triangle.y, 
+            vertical_capsule.bottom.y, 
+            vertical_capsule.bottom.y + vertical_capsule.height
+        ),
+        vertical_capsule.bottom.z
+    );
+
+    const scalar_t distance2 = vec3_magnitude_squared(vec3_sub(
+        closest_point_triangle,
+        closest_pos_on_line_segment
+    ));
+
+    // todo: hit info
+    if (distance2 < scalar_mul(vertical_capsule.radius, vertical_capsule.radius)) {
+        return 1;
+    }
+
     return 0;
 }
 

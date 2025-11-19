@@ -49,6 +49,13 @@ static vec2_t vec2_mul(const vec2_t a, const vec2_t b) {
     };
 }
 
+static vec2_t vec2_muls(const vec2_t a, const scalar_t b) {
+    return (vec2_t) {
+        scalar_mul(a.x, b),
+        scalar_mul(a.y, b),
+    };
+}
+
 static vec2_t vec2_div(const vec2_t a, const vec2_t b) {
     return (vec2_t) {
         scalar_div(a.x, b.x),
