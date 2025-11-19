@@ -1,6 +1,48 @@
 #include "../collision.h"
 #include "../vec3.h"
 
+int test_scalar_math(void) {
+    int n_errors = 0;
+
+    typedef enum {
+        TEST_MUL = 2,
+        TEST_DIV = 3,
+    } test_type_t;
+
+    struct {
+        char* description;
+        scalar_t a, b;
+        scalar_t expected_result;
+        test_type_t type;
+    } tests[] = {
+        // multiply
+        {"2.5 * 1.25", scalar_from_float(2.5f), scalar_from_float(1.25f), scalar_from_float(3.125f), TEST_MUL},
+        {"0.0 * 1.25", scalar_from_float(0.0f), scalar_from_float(1.25f), scalar_from_float(0.0f), TEST_MUL},
+        {"511.0 * 1024.0", scalar_from_float(511.0f), scalar_from_float(1024.0f), scalar_from_float(523264.0f), TEST_MUL},
+        {"-511.0 * 1024.0", scalar_from_float(-511.0f), scalar_from_float(1024.0f), scalar_from_float(-523264.0f), TEST_MUL},
+        // divide
+        {"1.0 / 1.0", scalar_from_float(1.0f), scalar_from_float(1.0f), scalar_from_float(1.0f), TEST_DIV},
+        {"2.0 / 1.0", scalar_from_float(2.0f), scalar_from_float(1.0f), scalar_from_float(2.0f), TEST_DIV},
+        {"1.0 / 0.5", scalar_from_float(1.0f), scalar_from_float(0.5f), scalar_from_float(2.0f), TEST_DIV},
+        {"1.0 / 4096.0", scalar_from_float(1.0f), scalar_from_float(4096.0f), scalar_from_float(1.0f / 4096.0f), TEST_DIV},
+    };
+
+    for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); ++i) {
+        scalar_t result = 0;
+        switch (tests[i].type) {
+            case TEST_MUL: result = scalar_mul(tests[i].a, tests[i].b); break;
+            case TEST_DIV: result = scalar_div(tests[i].a, tests[i].b); break;
+            default: break;
+        }
+        if (result != tests[i].expected_result) {
+            printf("UNIT TEST FAILED: \"%s\": expected result %08x, got %08x\n", tests[i].description, tests[i].expected_result, result);
+            ++n_errors;
+        }
+    }
+
+    return n_errors;
+}
+
 int test_vertical_capsule_aabb_intersect(void) {
     aabb_t aabb = {
         .min = vec3_from_floats(-1.0f, -1.0f, -1.0f),
@@ -291,6 +333,7 @@ int test_vertical_capsule_triangle_intersect(void) {
 int test(void) {
     int n_errors = 0;
 
+    n_errors += test_scalar_math();
     n_errors += test_vertical_capsule_aabb_intersect();
     n_errors += test_vertical_capsule_triangle_intersect();
 
