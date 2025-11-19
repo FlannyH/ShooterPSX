@@ -12,7 +12,7 @@ typedef fixed20_12_t scalar_t;
 // Let's hope and pray that this will be compile-time evaluated
 ALWAYS_INLINE fixed20_12_t scalar_from_float(const float a) {
     fixed20_12_t result;
-    result = (int32_t)(a * 4096.0f);
+    result = (int32_t)((a * 4096.0f) + ((a >= 0.0f) ? 0.5f : -0.5f));
     return result;
 }
 
@@ -60,7 +60,7 @@ ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20
         // h = useful integer bits in high byte but with incorrect sign
         // L = useful integer bits in low byte
         // f = fractional bits
-        "mult %2, %3             \n\t" // hi, low = a*b 
+        "mult %3, %2             \n\t" // hi, low = a*b; b on the left side, it's likely to be smaller than a, and smaller left side = less cycles
 
         // --------------------------- // writes to r1 ----------------- | writes to r0 --------------------| 
         "mfhi %0                 \n\t" // _                              |   r0 = temp = hi                 |
@@ -82,6 +82,7 @@ ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20
 ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
     int64_t result32 = ((int64_t)a * ((int64_t)b)) >> 12;
 
+    // todo: make this default and add this check in the ps1 code
 #ifdef _DEBUG
     // overflow check
     if (result32 > INT32_MAX) {
