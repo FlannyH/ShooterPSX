@@ -130,14 +130,14 @@ int test_vertical_capsule_triangle_intersect(void) {
     collision_triangle_3d_t triangles[] = {
         (collision_triangle_3d_t){ // facing up
             vec3_from_floats(0.0f, 0.0f, 0.0f), 
-            vec3_from_floats(-1.5f, 0.0f, 2.0f), 
             vec3_from_floats(-2.0f, 0.0f, 0.0f), 
+            vec3_from_floats(-1.5f, 0.0f, 2.0f), 
             vec3_from_floats(0.0f, 1.0f, 0.0f)
         },
         (collision_triangle_3d_t){ // facing side
             vec3_from_floats(0.0f, 0.0f, 0.0f), 
-            vec3_from_floats(-1.5f, 2.0f, 0.0f), 
             vec3_from_floats(-2.0f, 0.0f, 0.0f), 
+            vec3_from_floats(-1.5f, 2.0f, 0.0f), 
             vec3_from_floats(0.0f, 1.0f, 0.0f)
         },
     };

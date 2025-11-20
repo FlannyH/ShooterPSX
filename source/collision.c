@@ -318,9 +318,9 @@ int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, verti
     const vec2_t v0_v1 = vec2_sub(v1, v0);
     const vec2_t v1_v2 = vec2_sub(v2, v1);
     const vec2_t v2_v0 = vec2_sub(v0, v2);
-    const scalar_t edge0 = vec2_cross(v1_v2, v1_p);
-    const scalar_t edge1 = vec2_cross(v2_v0, v2_p);
-    const scalar_t edge2 = vec2_cross(v0_v1, v0_p);
+    const scalar_t edge0 = vec2_cross(v1_p, v1_v2);
+    const scalar_t edge1 = vec2_cross(v2_p, v2_v0);
+    const scalar_t edge2 = vec2_cross(v0_p, v0_v1);
 
     vec3_t closest_point_triangle;
     scalar_t u;
