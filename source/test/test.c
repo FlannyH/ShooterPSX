@@ -110,8 +110,8 @@ int test_vertical_capsule_aabb_intersect(void) {
             .radius = ONE/2,
         };
 
-        const int result_fast = !!vertical_capsule_aabb_intersect(&aabb, capsule);
-        const int result_fancy = !!vertical_capsule_aabb_intersect_fancy(&aabb, capsule, &hit);
+        const int result_fast = vertical_capsule_aabb_intersect(&aabb, capsule);
+        const int result_fancy = vertical_capsule_aabb_intersect_fancy(&aabb, capsule, &hit);
         
         if (result_fast != capsule_bottoms[i].expected_result_fast) {
             printf("UNIT TEST FAILED: \"%s (fast)\": expected result %i, got %i\n", capsule_bottoms[i].description, capsule_bottoms[i].expected_result_fast, result_fast);
@@ -141,6 +141,12 @@ int test_vertical_capsule_triangle_intersect(void) {
             vec3_from_floats(0.0f, 1.0f, 0.0f)
         },
     };
+
+    for (size_t i = 0; i < (sizeof(triangles) / sizeof(*triangles)); ++i) {
+        const vec3_t e01 = vec3_sub(triangles[i].v1, triangles[i].v0);
+        const vec3_t e02 = vec3_sub(triangles[i].v2, triangles[i].v0);
+        triangles[i].normal = vec3_normalize(vec3_cross(e01, e02));
+    }
 
     int n_errors = 0;
 
@@ -319,7 +325,7 @@ int test_vertical_capsule_triangle_intersect(void) {
             .radius = ONE/4,
         };
 
-        const int result = !!vertical_capsule_triangle_intersect(tests[i].triangle, capsule, &hit);
+        const int result = vertical_capsule_triangle_intersect(tests[i].triangle, capsule, &hit);
 
         if (result != tests[i].expected_result) {
             printf("UNIT TEST FAILED: \"%s\": expected result %i, got %i\n", tests[i].description, tests[i].expected_result, result);
