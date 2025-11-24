@@ -132,13 +132,13 @@ int test_vertical_capsule_triangle_intersect(void) {
             vec3_from_floats(0.0f, 0.0f, 0.0f), 
             vec3_from_floats(-2.0f, 0.0f, 0.0f), 
             vec3_from_floats(-1.5f, 0.0f, 2.0f), 
-            vec3_from_floats(0.0f, 1.0f, 0.0f)
+            {}
         },
         (collision_triangle_3d_t){ // facing side
             vec3_from_floats(0.0f, 0.0f, 0.0f), 
             vec3_from_floats(-2.0f, 0.0f, 0.0f), 
             vec3_from_floats(-1.5f, 2.0f, 0.0f), 
-            vec3_from_floats(0.0f, 1.0f, 0.0f)
+            {}
         },
     };
 
@@ -280,10 +280,10 @@ int test_vertical_capsule_triangle_intersect(void) {
         {&triangles[1], "t1 v1 barely on vertex bottom hit -X",          vec3_from_floats(-1.67f, 2.17f, 0.0f), 1},
         {&triangles[1], "t1 v1 barely on vertex bottom hit +X",          vec3_from_floats(-1.32f, 2.17f, 0.0f), 1},
         {&triangles[1], "t1 v1 barely on vertex bottom miss +X",         vec3_from_floats(-1.31f, 2.17f, 0.0f), 0},
-        {&triangles[1], "t1 v2 barely on vertex top miss +X",            vec3_from_floats(-0.21f, -0.65f, 0.0f), 0},
-        {&triangles[1], "t1 v2 barely on vertex top hit +X",             vec3_from_floats(-0.19f, -0.65f, 0.0f), 1},
-        {&triangles[1], "t1 v2 barely on vertex bottom hit +X",          vec3_from_floats(-0.19f, 0.15f, 0.0f), 1},
-        {&triangles[1], "t1 v2 barely on vertex bottom miss +X",         vec3_from_floats(-0.21f, 0.15f, 0.0f), 0},
+        {&triangles[1], "t1 v2 barely on vertex top miss +X",            vec3_from_floats(-2.21f, -0.65f, 0.0f), 0},
+        {&triangles[1], "t1 v2 barely on vertex top hit +X",             vec3_from_floats(-2.19f, -0.65f, 0.0f), 1},
+        {&triangles[1], "t1 v2 barely on vertex bottom hit +X",          vec3_from_floats(-2.21f, 0.15f, 0.0f), 1},
+        {&triangles[1], "t1 v2 barely on vertex bottom miss +X",         vec3_from_floats(-2.23f, 0.15f, 0.0f), 0},
 
         // triangle facing side - edges
         {&triangles[1], "t1 e20 -Z radius miss",           vec3_from_floats(-1.0f, -0.65f, -0.3f), 0},
@@ -313,6 +313,15 @@ int test_vertical_capsule_triangle_intersect(void) {
         {&triangles[1], "t1 e12 +Z radius barely hit",     vec3_from_floats(-1.91f, 0.92f, 0.19f), 1},
         {&triangles[1], "t1 e12 +Z radius barely miss",    vec3_from_floats(-1.91f, 0.92f, 0.22f), 0},
         {&triangles[1], "t1 e12 +Z radius miss",           vec3_from_floats(-1.91f, 0.92f, 0.3f), 0},
+        {&triangles[1], "t1 center -Z radius miss",           vec3_from_floats(-1.0f, 0.4f, -0.3f), 0},
+        {&triangles[1], "t1 center -Z radius barely miss",    vec3_from_floats(-1.0f, 0.4f, -0.251f), 0},
+        {&triangles[1], "t1 center -Z radius barely hit",     vec3_from_floats(-1.0f, 0.4f, -0.249f), 1},
+        {&triangles[1], "t1 center -Z radius hit",            vec3_from_floats(-1.0f, 0.4f, -0.125f), 1},
+        {&triangles[1], "t1 center Z radius center",          vec3_from_floats(-1.0f, 0.4f, 0.0f), 1},
+        {&triangles[1], "t1 center +Z radius hit",            vec3_from_floats(-1.0f, 0.4f, 0.125f), 1},
+        {&triangles[1], "t1 center +Z radius barely hit",     vec3_from_floats(-1.0f, 0.4f, 0.249f), 1},
+        {&triangles[1], "t1 center +Z radius barely miss",    vec3_from_floats(-1.0f, 0.4f, 0.251f), 0},
+        {&triangles[1], "t1 center +Z radius miss",           vec3_from_floats(-1.0f, 0.4f, 0.3f), 0},
     };
 
 
@@ -330,6 +339,8 @@ int test_vertical_capsule_triangle_intersect(void) {
         if (result != tests[i].expected_result) {
             printf("UNIT TEST FAILED: \"%s\": expected result %i, got %i\n", tests[i].description, tests[i].expected_result, result);
             ++n_errors;
+
+            vertical_capsule_triangle_intersect(tests[i].triangle, capsule, &hit);
         }
     }
 

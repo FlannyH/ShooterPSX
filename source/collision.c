@@ -300,12 +300,132 @@ int vertical_capsule_aabb_intersect_fancy(const aabb_t* aabb, const vertical_cap
     return 1;
 }
 
-int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, vertical_capsule_t vertical_capsule, rayhit_t* hit) {
+int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, vertical_capsule_t capsule, rayhit_t* hit) {
     assert(triangle);
     assert(hit);
 
+    const scalar_t radius2 = scalar_mul(capsule.radius, capsule.radius);
+
+    // Edge case: if the triangle isn't facing up or down at all, top down doesn't make sense
+    if (abs(triangle->normal.y) < 32) {
+        // Project capsule segment points PQ onto triangle ABC plane -> P' and Q'
+        const vec3_t bottom_to_v0 = vec3_sub(triangle->v0, capsule.bottom);
+        const scalar_t distance_to_plane = vec3_dot(bottom_to_v0, triangle->normal);
+        const vec3_t p_proj = vec3_add(capsule.bottom, vec3_muls(triangle->normal, distance_to_plane));
+        const vec3_t q_proj = {p_proj.x, p_proj.y + capsule.height, p_proj.z}; // cheeky optimization, not entirely accurate but good enough
+
+        // Find points Ptri and Qtri on triangle ABC closest to P' and Q'
+        const vec3_t v0_p = vec3_sub(p_proj, triangle->v0);
+        const vec3_t v1_p = vec3_sub(p_proj, triangle->v1);
+        const vec3_t v2_p = vec3_sub(p_proj, triangle->v2);
+        const vec3_t v0_q = vec3_sub(q_proj, triangle->v0);
+        const vec3_t v1_q = vec3_sub(q_proj, triangle->v1);
+        const vec3_t v2_q = vec3_sub(q_proj, triangle->v2);
+        const vec3_t v0_v1 = vec3_sub(triangle->v1, triangle->v0);
+        const vec3_t v1_v2 = vec3_sub(triangle->v2, triangle->v1);
+        const vec3_t v2_v0 = vec3_sub(triangle->v0, triangle->v2);
+        const scalar_t p_edge0 = vec3_dot(vec3_cross(v1_p, v1_v2), triangle->normal);
+        const scalar_t p_edge1 = vec3_dot(vec3_cross(v2_p, v2_v0), triangle->normal);
+        const scalar_t p_edge2 = vec3_dot(vec3_cross(v0_p, v0_v1), triangle->normal);
+        const scalar_t q_edge0 = vec3_dot(vec3_cross(v1_q, v1_v2), triangle->normal);
+        const scalar_t q_edge1 = vec3_dot(vec3_cross(v2_q, v2_v0), triangle->normal);
+        const scalar_t q_edge2 = vec3_dot(vec3_cross(v0_q, v0_v1), triangle->normal);
+
+        vec3_t p_triangle = p_proj;
+        vec3_t q_triangle = q_proj;
+
+        // If P inside triangle
+        if (p_edge0 < 0 && p_edge1 < 0 && p_edge2 < 0) {
+            // do distance check and return
+            const vec3_t triangle_to_capsule = vec3_sub(capsule.bottom, p_triangle);
+            const scalar_t distance2 = vec3_magnitude_squared(triangle_to_capsule);
+            if (distance2 >= radius2) return 0;
+
+            // todo: hit info
+            return 1;
+        }
+        
+        // If Q inside triangle
+        if (q_edge0 < 0 && q_edge1 < 0 && q_edge2 < 0) {
+            // do distance check and return
+            const vec3_t triangle_to_capsule = vec3_sub(capsule.bottom, p_triangle);
+            const scalar_t distance2 = vec3_magnitude_squared(triangle_to_capsule);
+            if (distance2 >= radius2) return 0;
+
+            // todo: hit info
+            return 1;
+        }
+
+        // Both are outside the triangle, get closest points
+        // - p_triangle
+        if (p_edge0 > 0) { // closest point is on edge v1_v2
+            const scalar_t t = scalar_clamp(
+                scalar_div(vec3_dot(v1_v2, v1_p), vec3_dot(v1_v2, v1_v2)),
+                0, ONE
+            );
+            p_triangle = vec3_add(triangle->v1, vec3_muls(v1_v2, t));
+        }
+        else if (p_edge1 > 0) { // closest point is on edge v2_v0
+            const scalar_t t = scalar_clamp(
+                scalar_div(vec3_dot(v2_v0, v2_p), vec3_dot(v2_v0, v2_v0)),
+                0, ONE
+            );
+            p_triangle = vec3_add(triangle->v2, vec3_muls(v2_v0, t));
+        }
+        else if (p_edge2 > 0) { // closest point is on edge v0_v1
+            const scalar_t t = scalar_clamp(
+                scalar_div(vec3_dot(v0_v1, v0_p), vec3_dot(v0_v1, v0_v1)),
+                0, ONE
+            );
+            p_triangle = vec3_add(triangle->v0, vec3_muls(v0_v1, t));
+        }
+        // - q_triangle
+        if (q_edge0 > 0) { // closest point is on edge v1_v2
+            const scalar_t t = scalar_clamp(
+                scalar_div(vec3_dot(v1_v2, v1_q), vec3_dot(v1_v2, v1_v2)),
+                0, ONE
+            );
+            q_triangle = vec3_add(triangle->v1, vec3_muls(v1_v2, t));
+        }
+        else if (q_edge1 > 0) { // closest point is on edge v2_v0
+            const scalar_t t = scalar_clamp(
+                scalar_div(vec3_dot(v2_v0, v2_q), vec3_dot(v2_v0, v2_v0)),
+                0, ONE
+            );
+            q_triangle = vec3_add(triangle->v2, vec3_muls(v2_v0, t));
+        }
+        else if (q_edge2 > 0) { // closest point is on edge v0_v1
+            const scalar_t t = scalar_clamp(
+                scalar_div(vec3_dot(v0_v1, v0_q), vec3_dot(v0_v1, v0_v1)),
+                0, ONE
+            );
+            q_triangle = vec3_add(triangle->v0, vec3_muls(v0_v1, t));
+        }
+
+        // At this point we know the 2 points on the triangle closest to the ends of the capsule segment
+        // Now we need to pick the points on the segment closest to those 2 triangle points to check the distance
+        vec3_t p_clamped = capsule.bottom;
+        p_clamped.y = scalar_clamp(p_triangle.y, capsule.bottom.y, capsule.bottom.y + capsule.height);
+        vec3_t q_clamped = capsule.bottom;
+        q_clamped.y = scalar_clamp(q_triangle.y, capsule.bottom.y, capsule.bottom.y + capsule.height);
+
+        const scalar_t p_distance2 = vec3_magnitude_squared(vec3_sub(p_clamped, p_triangle));
+        const scalar_t q_distance2 = vec3_magnitude_squared(vec3_sub(q_clamped, q_triangle));
+
+        if (p_distance2 < q_distance2) {
+            if (p_distance2 < radius2) return 1;
+            return 0;
+        }
+        else {
+            if (q_distance2 < radius2) return 1;
+            return 0;
+        }
+        
+        return 0;
+    }
+
     // Project to XZ 2D
-    const vec2_t p = {vertical_capsule.bottom.x, vertical_capsule.bottom.z};
+    const vec2_t p = {capsule.bottom.x, capsule.bottom.z};
     const vec2_t v0 = {triangle->v0.x, triangle->v0.z};
     const vec2_t v1 = {triangle->v1.x, triangle->v1.z};
     const vec2_t v2 = {triangle->v2.x, triangle->v2.z};
@@ -330,6 +450,9 @@ int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, verti
     const vec3_t v1_3d = triangle->v1;
     const vec3_t v2_3d = triangle->v2;
 
+    // note: top down projection maps XYZ -> {X,Z} -> "XY", resulting in the cross 
+    //       product sign being flipped relative to the full 3D case.
+
     // 0 negative -> inside triangle
     // 1 negative -> on edge
     // 2 negative -> on vertex, which is on either of the corresponding edges, just pick the first
@@ -337,7 +460,7 @@ int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, verti
 
     if (edge0 >= 0 && edge1 >= 0 && edge2 >= 0) {
         // Find point on segment closest to triangle
-        const vec3_t p_3d = vertical_capsule.bottom;
+        const vec3_t p_3d = capsule.bottom;
         const vec3_t n = triangle->normal;
 
         closest_point_triangle.x = p_3d.x;
@@ -375,13 +498,13 @@ int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, verti
     }
 
     const vec3_t closest_pos_on_line_segment = vec3_from_scalars(
-        vertical_capsule.bottom.x,
+        capsule.bottom.x,
         scalar_clamp(
             closest_point_triangle.y, 
-            vertical_capsule.bottom.y, 
-            vertical_capsule.bottom.y + vertical_capsule.height
+            capsule.bottom.y, 
+            capsule.bottom.y + capsule.height
         ),
-        vertical_capsule.bottom.z
+        capsule.bottom.z
     );
 
     const scalar_t distance2 = vec3_magnitude_squared(vec3_sub(
@@ -390,7 +513,7 @@ int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, verti
     ));
 
     // todo: hit info
-    if (distance2 < scalar_mul(vertical_capsule.radius, vertical_capsule.radius)) {
+    if (distance2 < radius2) {
         return 1;
     }
 
