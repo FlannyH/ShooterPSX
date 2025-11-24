@@ -442,21 +442,19 @@ int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, verti
     const scalar_t edge1 = vec2_cross(v2_p, v2_v0);
     const scalar_t edge2 = vec2_cross(v0_p, v0_v1);
 
-    vec3_t closest_point_triangle;
-    scalar_t u;
-    scalar_t v;
-
     const vec3_t v0_3d = triangle->v0;
     const vec3_t v1_3d = triangle->v1;
     const vec3_t v2_3d = triangle->v2;
 
     // note: top down projection maps XYZ -> {X,Z} -> "XY", resulting in the cross 
     //       product sign being flipped relative to the full 3D case.
-
+    
     // 0 negative -> inside triangle
     // 1 negative -> on edge
     // 2 negative -> on vertex, which is on either of the corresponding edges, just pick the first
     // 3 negative -> (impossible)
+    
+    vec3_t closest_point_triangle;
 
     if (edge0 >= 0 && edge1 >= 0 && edge2 >= 0) {
         // Find point on segment closest to triangle
