@@ -77,10 +77,10 @@ void input_update(void) {
 
         // If we have analog sticks, update those, taking deadzone into account
         if (input_has_analog(i)) {
-            left_stick_x_curr[i] = -apply_deadzone(pad[i]->ls_x);
-            left_stick_y_curr[i] = -apply_deadzone(pad[i]->ls_y);
-            right_stick_x_curr[i] = -apply_deadzone(pad[i]->rs_x);
-            right_stick_y_curr[i] = -apply_deadzone(pad[i]->rs_y);
+            left_stick_x_curr[i] = apply_deadzone(pad[i]->ls_x);
+            left_stick_y_curr[i] = -apply_deadzone(pad[i]->ls_y); // Y axis on sticks is +Y=down, so we flip it
+            right_stick_x_curr[i] = apply_deadzone(pad[i]->rs_x);
+            right_stick_y_curr[i] = -apply_deadzone(pad[i]->rs_y); // Y axis on sticks is +Y=down, so we flip it
         }
     }
 }

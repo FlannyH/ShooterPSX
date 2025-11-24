@@ -153,8 +153,8 @@ void handle_stick_input(player_t* self, const int dt_ms) {
         self->velocity.z += hicos(self->rotation.y) * input_left_stick_y(0) * (curr_acceleration) >> 16;
 
         // Strafing left and right
-        self->velocity.x -= hicos(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
-        self->velocity.z += hisin(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
+        self->velocity.x += hicos(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
+        self->velocity.z -= hisin(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
 
         // Look up and down
         self->rotation.x -= (int32_t)(input_mouse_movement_y()) * (mouse_sensitivity) >> 12;
@@ -175,8 +175,8 @@ void handle_stick_input(player_t* self, const int dt_ms) {
         self->velocity.z += hicos(self->rotation.y) * input_left_stick_y(0) * (curr_acceleration) >> 16;
 
         // Strafing left and right
-        self->velocity.x -= hicos(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
-        self->velocity.z += hisin(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
+        self->velocity.x += hicos(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
+        self->velocity.z -= hisin(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
 
         // Look up and down
         self->rotation.x -= (int32_t)(input_right_stick_y(0)) * (stick_sensitivity * dt_ms) >> 12;
@@ -188,23 +188,21 @@ void handle_stick_input(player_t* self, const int dt_ms) {
         }
 
         // Look left and right
-        self->rotation.y -= (int32_t)(input_right_stick_x(0)) * (stick_sensitivity * dt_ms) >> 12;
+        self->rotation.y += (int32_t)(input_right_stick_x(0)) * (stick_sensitivity * dt_ms) >> 12;
 
         // Debug
         if (input_held(PAD_UP, 0)) {
-            self->position.y += 40960;
+            self->position.y += 4096 * dt_ms;
             self->velocity.y = 0;
         }
         if (input_held(PAD_DOWN, 0)) {
-            self->position.y -= 40960;
+            self->position.y -= 4096 * dt_ms;
             self->velocity.y = 0;
         }
-        #ifdef _DEBUG
-#endif
     } else {
         // Look left and right
         const int32_t dpad_x = ((int32_t)(input_held(PAD_RIGHT, 0) != 0) * 127) + ((int32_t)(input_held(PAD_LEFT, 0) != 0) * -127);
-        self->rotation.y -= dpad_x * (stick_sensitivity * dt_ms) >> 12;
+        self->rotation.y += dpad_x * (stick_sensitivity * dt_ms) >> 12;
         
         // Moving forwards and backwards
         const int32_t dpad_y = ((int32_t)(input_held(PAD_UP, 0) != 0) * 127) + ((int32_t)(input_held(PAD_DOWN, 0) != 0) * -127);
