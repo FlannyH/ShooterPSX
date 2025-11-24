@@ -279,7 +279,7 @@ void renderer_init(void) {
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(DebugCallbackFunc, NULL);
 	glfwSwapInterval(0);
-	glFrontFace(GL_CW);
+	glFrontFace(GL_CCW); // winding order after projection, apparently
 
 	// Set viewport
 	glViewport(0, 0, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING);
@@ -664,7 +664,7 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	// Enable depth, culling
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
+	glCullFace(GL_BACK);
 
 	// Bind the two framebuffers, one for color, one for object picking in the level editor
 
@@ -787,8 +787,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     // Enable depth and draw
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
+    glDisable(GL_CULL_FACE);
     glDrawArrays(GL_LINES, 0, 2);
 }
 
@@ -1043,8 +1042,7 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
+	glDisable(GL_CULL_FACE);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glDisable(GL_BLEND);
 }
