@@ -730,9 +730,9 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     // Apply translation
     // Apply scale
     vec3 position = {
-		(float)model_transform->position.x,
-		(float)model_transform->position.y,
-		(float)model_transform->position.z,
+		(float)model_transform->position.x / (float)ONE,
+		(float)model_transform->position.y / (float)ONE,
+		(float)model_transform->position.z / (float)ONE,
     };
     vec3 scale = {
 		(float)model_transform->scale.x,

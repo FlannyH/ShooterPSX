@@ -74,8 +74,9 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	vec3_t door_pos = door->entity_header.position;
 	const vec3_t player_pos = player->position;
 
-	const scalar_t distance_from_door_to_player_squared = vec3_magnitude_squared(vec3_sub(door_pos, player_pos));
-	const int player_close_enough = (distance_from_door_to_player_squared < 4500 * ONE) && (distance_from_door_to_player_squared > 0);
+	// distance is calculated at lower scale because vec3_magnitude_squared overflows otherwise
+	const scalar_t distance_from_door_to_player_squared = vec3_magnitude_squared(vec3_muls(vec3_sub(door_pos, player_pos), SCALAR(1.0/64.0)));
+	const int player_close_enough = (distance_from_door_to_player_squared < 45 * ONE);
 
 	// Handle unlocking with key cards
 	if (door->is_locked && player_close_enough) {
