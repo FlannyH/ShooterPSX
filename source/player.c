@@ -372,9 +372,4 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
     self->transform.rotation.x = self->rotation.x;
     self->transform.rotation.y = self->rotation.y;
     self->transform.rotation.z = self->rotation.z;
-
-    printf("player position: ");
-    vec3_debug(self->transform.position);
-    printf("player rotation: ");
-    vec3_debug(self->transform.rotation);
 }
