@@ -81,7 +81,6 @@ int ray_aabb_intersect_fancy(const aabb_t* aabb, ray_t ray, rayhit_t* hit) {
         return 1;
     }
 
-    // Otherwise, follow the other algorithm
     const scalar_t tx1 = scalar_mul(aabb->min.x - ray.position.x, ray.inv_direction.x);
     const scalar_t tx2 = scalar_mul(aabb->max.x - ray.position.x, ray.inv_direction.x);
 
@@ -336,23 +335,27 @@ int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, verti
 
         // If P inside triangle
         if (p_edge0 < 0 && p_edge1 < 0 && p_edge2 < 0) {
-            // do distance check and return
             const vec3_t triangle_to_capsule = vec3_sub(capsule.bottom, p_triangle);
             const scalar_t distance2 = vec3_magnitude_squared(triangle_to_capsule);
             if (distance2 >= radius2) return 0;
 
-            // todo: hit info
+            hit->distance = scalar_sqrt(distance2);
+            hit->normal = triangle->normal;
+            hit->position = p_triangle;
+
             return 1;
         }
         
         // If Q inside triangle
         if (q_edge0 < 0 && q_edge1 < 0 && q_edge2 < 0) {
-            // do distance check and return
             const vec3_t triangle_to_capsule = vec3_sub(capsule.bottom, p_triangle);
             const scalar_t distance2 = vec3_magnitude_squared(triangle_to_capsule);
             if (distance2 >= radius2) return 0;
 
-            // todo: hit info
+            hit->distance = scalar_sqrt(distance2);
+            hit->normal = triangle->normal;
+            hit->position = q_triangle;
+
             return 1;
         }
 
@@ -409,16 +412,28 @@ int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, verti
         vec3_t q_clamped = capsule.bottom;
         q_clamped.y = scalar_clamp(q_triangle.y, capsule.bottom.y, capsule.bottom.y + capsule.height);
 
-        const scalar_t p_distance2 = vec3_magnitude_squared(vec3_sub(p_clamped, p_triangle));
-        const scalar_t q_distance2 = vec3_magnitude_squared(vec3_sub(q_clamped, q_triangle));
+        const vec3_t p_dir = vec3_sub(p_clamped, p_triangle);
+        const vec3_t q_dir = vec3_sub(q_clamped, q_triangle);
 
-        if (p_distance2 < q_distance2) {
-            if (p_distance2 < radius2) return 1;
-            return 0;
-        }
-        else {
-            if (q_distance2 < radius2) return 1;
-            return 0;
+        const scalar_t p_distance2 = vec3_magnitude_squared(p_dir);
+        const scalar_t q_distance2 = vec3_magnitude_squared(p_dir);
+
+        const scalar_t min_distance = scalar_min(p_distance2, q_distance2);
+
+        if (min_distance < radius2) {
+            hit->distance = min_distance; 
+            if  (p_distance2 < q_distance2) {
+                hit->normal = p_dir;
+                hit->position = p_triangle;
+                hit->distance = scalar_sqrt(p_distance2);
+            }
+            else {
+                hit->normal = q_dir;
+                hit->position = q_triangle;
+                hit->distance = scalar_sqrt(q_distance2);
+            }
+
+            return 1;
         }
         
         return 0;
@@ -505,13 +520,18 @@ int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, verti
         capsule.bottom.z
     );
 
-    const scalar_t distance2 = vec3_magnitude_squared(vec3_sub(
+    const vec3_t dir = vec3_sub(
         closest_point_triangle,
         closest_pos_on_line_segment
-    ));
+    );
+
+    const scalar_t distance2 = vec3_magnitude_squared(dir);
 
     // todo: hit info
     if (distance2 < radius2) {
+        hit->position = closest_point_triangle;
+        hit->distance = scalar_sqrt(distance2);
+        hit->normal = vec3_divs(dir, hit->distance);
         return 1;
     }
 
