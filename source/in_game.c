@@ -189,14 +189,15 @@ void state_update_in_game(int dt) {
 
 		transform_t gun_transform;
 		if (state.cheats.doom_mode) {
-			gun_transform.position.x = 0 + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE); if (widescreen) gun_transform.position.x += 30;
-			gun_transform.position.y = -165 + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE);
-			gun_transform.position.z = 110;
+			gun_transform.position.x = SCALAR(0) + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE); 
+			gun_transform.position.y = SCALAR(-165) + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE);
+			gun_transform.position.z = SCALAR(110);
 		} else {
-			gun_transform.position.x = 145 + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE); if (widescreen) gun_transform.position.x += 30;
-			gun_transform.position.y = -135 + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE) + scalar_mul(state.in_game.gun_animation_timer_sqrt, 50);
-			gun_transform.position.z = 125 - scalar_mul(state.in_game.gun_animation_timer_sqrt, 225);
+			gun_transform.position.x = SCALAR(145) + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE);
+			gun_transform.position.y = SCALAR(-135) + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE) + scalar_mul(state.in_game.gun_animation_timer_sqrt, 50);
+			gun_transform.position.z = SCALAR(125) - scalar_mul(state.in_game.gun_animation_timer_sqrt, 225);
 		}
+		if (widescreen) gun_transform.position.x += 30;
 		gun_transform.rotation.x = 0 + scalar_mul(state.in_game.gun_animation_timer_sqrt, 9500);
 		gun_transform.rotation.y = 0;
 		gun_transform.rotation.z = 0;
@@ -211,15 +212,16 @@ void state_update_in_game(int dt) {
 	// Animate and render sword
 	{
 		transform_t sword_transform;
-		sword_transform.position.x = -165 + (isin(state.global.time_counter * 6) * speed_1d) / (32 * ONE); if (widescreen) sword_transform.position.x -= 52;
-		sword_transform.position.y = -135 + (icos(state.global.time_counter * 12) * speed_1d) / (64 * ONE);
-		sword_transform.position.z = 180;
+		sword_transform.position.x = SCALAR(-165) + (isin(state.global.time_counter * 6) * speed_1d) / 32;
+		sword_transform.position.y = SCALAR(-135) + (icos(state.global.time_counter * 12) * speed_1d) / 64;
+		sword_transform.position.z = SCALAR(180);
 		sword_transform.rotation.x = 0;
 		sword_transform.rotation.y = 0;
 		sword_transform.rotation.z = 0;
 		sword_transform.scale.x = ONE;
 		sword_transform.scale.y = ONE;
 		sword_transform.scale.z = ONE;
+		if (widescreen) sword_transform.position.x -= 52;
 		renderer_draw_mesh_shaded(&state.in_game.m_weapons->meshes[0], &sword_transform, 1, 0);
 	} 
 
@@ -363,7 +365,6 @@ void shoot(const transform_t camera_transform) {
 		.position = (vec3_t){camera_transform.position.x, camera_transform.position.y, camera_transform.position.z},
 		.direction = {scalar_mul(siny, cosx), -sinx, scalar_mul(cosy, cosx)},
 	};
-	ray.position = vec3_muls(ray.position, COL_SCALE);
 
 	// Inverse of ray direction, or +/- ONE
 	if (scalar_abs(ray.direction.x) > 16) ray.inv_direction.x = scalar_div(ONE, ray.direction.x);

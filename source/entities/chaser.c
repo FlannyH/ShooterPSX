@@ -45,7 +45,7 @@ void decide_action(entity_chaser_t* chaser, const vec3_t player_pos) {
 	// If the player is within aggro distance, do a raycast to see if the enemy can see the player
 	if (dist_chaser_to_player_squared < CHASER_AGGRO_DISTANCE_SQUARED) {
 		ray_t ray = {
-			.position = vec3_add(chaser_pos, vec3_from_scalars(0, 285 * COL_SCALE, 0)),
+			.position = vec3_add(chaser_pos, vec3_from_scalars(0, SCALAR(285), 0)),
 			.direction = vec3_normalize(chaser_to_player),
 			.length = INT32_MAX,
 		};
@@ -151,25 +151,25 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 	// Register hitboxes
 	const aabb_t bounds_body = (aabb_t){
 		.min = (vec3_t){ 
-			chaser_pos.x - (69 * COL_SCALE), 
-			chaser_pos.y - (0 * COL_SCALE), 
-			chaser_pos.z - (69 * COL_SCALE)
+			chaser_pos.x - SCALAR(69), 
+			chaser_pos.y - SCALAR(0), 
+			chaser_pos.z - SCALAR(69)
 		},
 		.max = (vec3_t){
-			chaser_pos.x - (-69 * COL_SCALE), 
-			chaser_pos.y - (-230 * COL_SCALE), 
-			chaser_pos.z - (-69 * COL_SCALE )},
+			chaser_pos.x - SCALAR(-69), 
+			chaser_pos.y - SCALAR(-230), 
+			chaser_pos.z - SCALAR(-69 )},
 	};
 	const aabb_t bounds_head = (aabb_t){
 		.min = (vec3_t){ 
-			chaser_pos.x - (25 * COL_SCALE), 
-			chaser_pos.y - (-230 * COL_SCALE), 
-			chaser_pos.z - (35 * COL_SCALE)
+			chaser_pos.x - SCALAR(25), 
+			chaser_pos.y - SCALAR(-230), 
+			chaser_pos.z - SCALAR(35)
 		},
 		.max = (vec3_t){
-			chaser_pos.x - (-35 * COL_SCALE), 
-			chaser_pos.y - (-340 * COL_SCALE), 
-			chaser_pos.z - (-35 * COL_SCALE )},
+			chaser_pos.x - SCALAR(-35), 
+			chaser_pos.y - SCALAR(-340), 
+			chaser_pos.z - SCALAR(-35 )},
 	};
 	const entity_collision_box_t box_body = {
 		.aabb = bounds_body,
@@ -275,9 +275,9 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 
 	// Render
 	transform_t render_transform;
-	render_transform.position.x = chaser_pos.x / COL_SCALE;
-	render_transform.position.y = chaser_pos.y / COL_SCALE;
-	render_transform.position.z = chaser_pos.z / COL_SCALE;
+	render_transform.position.x = chaser_pos.x;
+	render_transform.position.y = chaser_pos.y;
+	render_transform.position.z = chaser_pos.z;
 	render_transform.rotation.x = chaser->entity_header.rotation.x;
 	render_transform.rotation.y = chaser->entity_header.rotation.y;
 	render_transform.rotation.z = chaser->entity_header.rotation.z;

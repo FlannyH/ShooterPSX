@@ -246,7 +246,13 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform,
         model_matrix.m[0][2] = forward.x;   model_matrix.m[1][2] = forward.y;   model_matrix.m[2][2] = forward.z;
     }
     else HiRotMatrix((VECTOR*)&model_transform->rotation, &model_matrix); // VECTOR and vec3_t are identical bitwise
-    TransMatrix(&model_matrix, (VECTOR*)&model_transform->position); 
+
+    VECTOR position = {
+        model_transform->position.x / ONE,
+        model_transform->position.y / ONE,
+        model_transform->position.z / ONE,
+    };
+    TransMatrix(&model_matrix, &position); 
 
     if (local)  CompMatrixLV(&aspect_matrix, &model_matrix, &model_matrix);
     else        CompMatrixLV(&view_matrix, &model_matrix, &model_matrix);
@@ -363,8 +369,8 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     // Transform line to screen space
     int16_t v0_tr[2];
     int16_t v1_tr[2];
-    svec3_t sv0 = {v0.x / -COL_SCALE, v0.y / -COL_SCALE, v0.z / -COL_SCALE};
-    svec3_t sv1 = {v1.x / -COL_SCALE, v1.y / -COL_SCALE, v1.z / -COL_SCALE};
+    svec3_t sv0 = {v0.x, v0.y, v0.z};
+    svec3_t sv1 = {v1.x, v1.y, v1.z};
     int depth = 0;
     gte_ldv3(&sv0.x, &sv1.x, &sv1.x);
     gte_rtpt();

@@ -65,14 +65,14 @@ void entity_platform_update(int slot, player_t* player, int dt) {
 
 	const aabb_t mesh_bounds_translated = {
 		.min = {
-			platform_pos.x - (platform->entity_header.mesh->bounds.max.x * COL_SCALE),
-			platform_pos.y - (platform->entity_header.mesh->bounds.max.y * COL_SCALE),
-			platform_pos.z - (platform->entity_header.mesh->bounds.max.z * COL_SCALE),
+			platform_pos.x - (platform->entity_header.mesh->bounds.max.x),
+			platform_pos.y - (platform->entity_header.mesh->bounds.max.y),
+			platform_pos.z - (platform->entity_header.mesh->bounds.max.z),
 		},
 		.max = {
-			platform_pos.x - (platform->entity_header.mesh->bounds.min.x * COL_SCALE),
-			platform_pos.y - (platform->entity_header.mesh->bounds.min.y * COL_SCALE),
-			platform_pos.z - (platform->entity_header.mesh->bounds.min.z * COL_SCALE),
+			platform_pos.x - (platform->entity_header.mesh->bounds.min.x),
+			platform_pos.y - (platform->entity_header.mesh->bounds.min.y),
+			platform_pos.z - (platform->entity_header.mesh->bounds.min.z),
 		},
 	};
 
@@ -87,9 +87,9 @@ void entity_platform_update(int slot, player_t* player, int dt) {
 
 	// Render
 	transform_t render_transform;
-	render_transform.position.x = platform_pos.x / COL_SCALE;
-	render_transform.position.y = platform_pos.y / COL_SCALE;
-	render_transform.position.z = platform_pos.z / COL_SCALE;
+	render_transform.position.x = platform_pos.x;
+	render_transform.position.y = platform_pos.y;
+	render_transform.position.z = platform_pos.z;
 	render_transform.rotation.x = platform->entity_header.rotation.x;
 	render_transform.rotation.y = platform->entity_header.rotation.y;
 	render_transform.rotation.z = platform->entity_header.rotation.z;

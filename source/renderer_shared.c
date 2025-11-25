@@ -22,9 +22,9 @@ int sections[N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE];
 int renderer_get_camera_level_section(vec3_t pos, const vislist_t vis) {
     // Get player position
     const svec3_t position = {
-        pos.x / COL_SCALE,
-        pos.y / COL_SCALE,
-        pos.z / COL_SCALE,
+        pos.x / ONE,
+        pos.y / ONE,
+        pos.z / ONE,
     };
     n_sections = 0;
 

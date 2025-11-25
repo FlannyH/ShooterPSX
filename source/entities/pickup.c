@@ -19,7 +19,7 @@ entity_pickup_t* entity_pickup_new(void) {
 void entity_pickup_update(int slot, player_t* player, int dt) {
 	entity_pickup_t* pickup = (entity_pickup_t*)entity_get_header(slot);
 	const vec3_t pickup_pos = pickup->entity_header.position;
-	const vec3_t player_pos = vec3_sub(player->position, (vec3_t){0, 200 * COL_SCALE, 0});
+	const vec3_t player_pos = vec3_sub(player->position, (vec3_t){0, SCALAR(200), 0});
     vec3_t pickup_to_player = vec3_sub(player_pos, pickup_pos);
     const scalar_t distance_from_pickup_to_player_squared = vec3_magnitude_squared(pickup_to_player);
 	const int close_enough_to_home_in = (distance_from_pickup_to_player_squared < 2000 * ONE) && (distance_from_pickup_to_player_squared > 0);
@@ -45,9 +45,9 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
     pickup->entity_header.rotation.y += dt * 50;
 
 	transform_t render_transform;
-    render_transform.position.x = pickup_pos.x / COL_SCALE;
-    render_transform.position.y = pickup_pos.y / COL_SCALE;
-    render_transform.position.z = pickup_pos.z / COL_SCALE;
+    render_transform.position.x = pickup_pos.x;
+    render_transform.position.y = pickup_pos.y;
+    render_transform.position.z = pickup_pos.z;
     render_transform.rotation.x = pickup->entity_header.rotation.x;
     render_transform.rotation.y = pickup->entity_header.rotation.y;
     render_transform.rotation.z = pickup->entity_header.rotation.z;

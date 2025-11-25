@@ -9,6 +9,8 @@
 typedef int32_t fixed20_12_t;
 typedef fixed20_12_t scalar_t;
 
+#define SCALAR(a) ((int32_t)((a * 4096.0f) + ((a >= 0.0f) ? 0.5f : -0.5f)))
+
 // Let's hope and pray that this will be compile-time evaluated
 ALWAYS_INLINE fixed20_12_t scalar_from_float(const float a) {
     fixed20_12_t result;

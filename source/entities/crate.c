@@ -27,8 +27,7 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 
 	// Register collision
 	aabb_t bounds = entity_get_models()->meshes[ENTITY_MESH_CRATE].bounds;
-	bounds.min.x *= COL_SCALE; bounds.min.y *= COL_SCALE; bounds.min.z *= COL_SCALE; 
-	bounds.max.x *= COL_SCALE; bounds.max.y *= COL_SCALE; bounds.max.z *= COL_SCALE; 
+
 	const aabb_t collision_box = {
 		.min = vec3_sub(crate_pos, bounds.max),
 		.max = vec3_sub(crate_pos, bounds.min)
@@ -44,9 +43,9 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 
 	// Render
 	transform_t render_transform;
-    render_transform.position.x = crate_pos.x / COL_SCALE;
-    render_transform.position.y = crate_pos.y / COL_SCALE;
-    render_transform.position.z = crate_pos.z / COL_SCALE;
+    render_transform.position.x = crate_pos.x;
+    render_transform.position.y = crate_pos.y;
+    render_transform.position.z = crate_pos.z;
     render_transform.rotation.x = crate->entity_header.rotation.x;
     render_transform.rotation.y = crate->entity_header.rotation.y;
     render_transform.rotation.z = crate->entity_header.rotation.z;

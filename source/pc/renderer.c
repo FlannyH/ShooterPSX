@@ -566,9 +566,9 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	// Apply translation
 	// Apply scale
     vec3 position = {
-		(float)model_transform->position.x,
-		(float)model_transform->position.y,
-		(float)model_transform->position.z,
+		(float)model_transform->position.x / 4096.0f,
+		(float)model_transform->position.y / 4096.0f,
+		(float)model_transform->position.z / 4096.0f,
     };
     vec3 scale = {
 		(float)model_transform->scale.x / 4096.0f,
@@ -666,8 +666,6 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
-	// Bind the two framebuffers, one for color, one for object picking in the level editor
-
 	// Draw
 	if (mesh->n_triangles) glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
 	// todo: get rid of quads (they're legacy feature and aren't guaranteed to work)
@@ -735,9 +733,9 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
 		(float)model_transform->position.z,
     };
     vec3 scale = {
-		(float)model_transform->scale.x / (float)COL_SCALE,
-		(float)model_transform->scale.y / (float)COL_SCALE,
-		(float)model_transform->scale.z / (float)COL_SCALE,
+		(float)model_transform->scale.x,
+		(float)model_transform->scale.y,
+		(float)model_transform->scale.z,
     };
     glm_translate(model_matrix, position);
     glm_scale(model_matrix, scale);

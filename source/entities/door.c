@@ -115,8 +115,6 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	// Add collision for the door
 	if (door->is_locked) {
 		aabb_t bounds = door->entity_header.mesh->bounds;
-		bounds.min.x *= COL_SCALE; bounds.min.y *= COL_SCALE; bounds.min.z *= COL_SCALE; 
-		bounds.max.x *= COL_SCALE; bounds.max.y *= COL_SCALE; bounds.max.z *= COL_SCALE; 
 		const aabb_t collision_box = {
 			.min = vec3_sub(door_pos, bounds.max),
 			.max = vec3_sub(door_pos, bounds.min)
@@ -137,9 +135,9 @@ void entity_door_update(int slot, player_t* player, int dt) {
 	door_pos = vec3_add(door_pos, vec3_muls(door->open_offset, door->curr_interpolation_value));
 	transform_t render_transform;
 
-    render_transform.position.x = door_pos.x / COL_SCALE;
-    render_transform.position.y = door_pos.y / COL_SCALE;
-    render_transform.position.z = door_pos.z / COL_SCALE;
+    render_transform.position.x = door_pos.x;
+    render_transform.position.y = door_pos.y;
+    render_transform.position.z = door_pos.z;
     render_transform.rotation.x = door->entity_header.rotation.x;
     render_transform.rotation.y = door->entity_header.rotation.y;
     render_transform.rotation.z = door->entity_header.rotation.z;

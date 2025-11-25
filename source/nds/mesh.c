@@ -150,15 +150,15 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
                 .tex_id = 255,
             };
         }
-        out[(i*3)+0].x = tris[i].v0.x / COL_SCALE;
-        out[(i*3)+0].y = tris[i].v0.y / COL_SCALE;
-        out[(i*3)+0].z = tris[i].v0.z / COL_SCALE;
-        out[(i*3)+1].x = tris[i].v1.x / COL_SCALE;
-        out[(i*3)+1].y = tris[i].v1.y / COL_SCALE;
-        out[(i*3)+1].z = tris[i].v1.z / COL_SCALE;
-        out[(i*3)+2].x = tris[i].v2.x / COL_SCALE;
-        out[(i*3)+2].y = tris[i].v2.y / COL_SCALE;
-        out[(i*3)+2].z = tris[i].v2.z / COL_SCALE;
+        out[(i*3)+0].x = tris[i].v0.x;
+        out[(i*3)+0].y = tris[i].v0.y;
+        out[(i*3)+0].z = tris[i].v0.z;
+        out[(i*3)+1].x = tris[i].v1.x;
+        out[(i*3)+1].y = tris[i].v1.y;
+        out[(i*3)+1].z = tris[i].v1.z;
+        out[(i*3)+2].x = tris[i].v2.x;
+        out[(i*3)+2].y = tris[i].v2.y;
+        out[(i*3)+2].z = tris[i].v2.z;
     }
 
     return model;

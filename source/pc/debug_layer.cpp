@@ -80,9 +80,6 @@ extern "C" {
 float scalar_to_float(scalar_t a) {
     return (float)a / (float)ONE;
 }
-float world_space_to_collision_space(scalar_t a) {
-    return (float)a * ((float)COL_SCALE / (float)ONE);
-}
 
 void inspect_vec3(vec3_t* vec, const char* label) {
     float vec_float[] =  {
@@ -407,7 +404,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             player_spawn_position = vec3_from_svec3(curr_level->player_spawn_position);
             player_spawn_rotation = curr_level->player_spawn_rotation;
             player_init(player, player_spawn_position, player_spawn_rotation, 40, 0, 0);
-            camera->position = vec3_muls(player_spawn_position, ONE * (ONE / COL_SCALE)); 
+            camera->position = player_spawn_position;
             camera->rotation = player_spawn_rotation;
         };
 
@@ -641,9 +638,9 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     {
         if (ImGui::TreeNodeEx("Camera Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
             float vec_float[] =  {
-                world_space_to_collision_space(scalar_to_float(camera->position.x)),
-                world_space_to_collision_space(scalar_to_float(camera->position.y)),
-                world_space_to_collision_space(scalar_to_float(camera->position.z)),
+                scalar_to_float(camera->position.x),
+                scalar_to_float(camera->position.y),
+                scalar_to_float(camera->position.z),
             };
 
             if (ImGui::DragFloat3("Position", vec_float)) {
@@ -685,7 +682,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         if (ImGui::Button("Spawn")) {
             // Figure out where to spawn - in front of the camera
             const vec3_t forward = renderer_get_forward_vector();
-            const vec3_t spawn_pos = vec3_add(vec3_muls(camera->position, -COL_SCALE), vec3_muls(forward, -80 * ONE));
+            const vec3_t spawn_pos = vec3_add(camera->position, vec3_muls(forward, 80 * ONE));
 
             entity_header_t* entity;
 
@@ -773,7 +770,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         if (ImGui::Button("Spawn")) {
             // Figure out where to spawn - in front of the camera
             const vec3_t forward = renderer_get_forward_vector();
-            const vec3_t spawn_pos = vec3_add(vec3_muls(camera->position, -COL_SCALE), vec3_muls(forward, -80 * ONE));
+            const vec3_t spawn_pos = vec3_add(camera->position, vec3_muls(forward, 80 * ONE));
 
             for (size_t i = 0; i < MAX_LIGHT_COUNT; ++i) {
                 if (curr_level->lights[i].type == LIGHT_NONE) {
@@ -844,9 +841,6 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 };
                 renderer_debug_draw_aabb(&aabb, red, &id_transform);
             }
-            trans.position.x /= -COL_SCALE;
-            trans.position.y /= -COL_SCALE;
-            trans.position.z /= -COL_SCALE;
             renderer_set_drawing_id(i, 2);
             renderer_draw_mesh_shaded(&gizmos->meshes[(size_t)(curr_level->lights[i].type-1)], &trans, 0, 1);
         }
@@ -923,9 +917,9 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
                 // Transform to world units
                 transform_t render_transform;
-                render_transform.position.x = selected_entity->position.x / COL_SCALE;
-                render_transform.position.y = selected_entity->position.y / COL_SCALE;
-                render_transform.position.z = selected_entity->position.z / COL_SCALE;
+                render_transform.position.x = selected_entity->position.x;
+                render_transform.position.y = selected_entity->position.y;
+                render_transform.position.z = selected_entity->position.z;
                 render_transform.rotation.x = selected_entity->rotation.x;
                 render_transform.rotation.y = selected_entity->rotation.y;
                 render_transform.rotation.z = selected_entity->rotation.z;
@@ -941,14 +935,14 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 // Apply translation
                 // Apply scale
                 vec3 position = {
-                        (float)render_transform.position.x,
-                        (float)render_transform.position.y,
-                        (float)render_transform.position.z,
+                    (float)render_transform.position.x / (float)ONE,
+                    (float)render_transform.position.y / (float)ONE,
+                    (float)render_transform.position.z / (float)ONE,
                 };
                 vec3 scale = {
-                        (float)render_transform.scale.x / (float)COL_SCALE,
-                        (float)render_transform.scale.y / (float)COL_SCALE,
-                        (float)render_transform.scale.z / (float)COL_SCALE,
+                    (float)render_transform.scale.x / (float)ONE,
+                    (float)render_transform.scale.y / (float)ONE,
+                    (float)render_transform.scale.z / (float)ONE,
                 };
                 glm_translate(model_matrix, position);
                 glm_scale(model_matrix, scale);
@@ -965,9 +959,9 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             )) {
                 vec3 translation, rotation, scale;
                 ImGuizmo::DecomposeMatrixToComponents(&delta[0][0], &translation[0], &rotation[0], &scale[0]);
-                selected_entity->position.x -= (scalar_t)(translation[0] * (float)COL_SCALE);
-                selected_entity->position.y -= (scalar_t)(translation[1] * (float)COL_SCALE);
-                selected_entity->position.z -= (scalar_t)(translation[2] * (float)COL_SCALE);
+                selected_entity->position.x += SCALAR(translation[0]);
+                selected_entity->position.y += SCALAR(translation[1]);
+                selected_entity->position.z += SCALAR(translation[2]);
             }
         }
         
