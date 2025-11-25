@@ -182,12 +182,12 @@ int test_vertical_capsule_triangle_intersect(void) {
         {&triangles[0], "t0 edge 2-0 hit bottom",                 vec3_from_floats(-1.0f, 0.2495f, 0.0f), 1},
 
         // triangle facing up - edge sideways
-        {&triangles[0], "t0 edge 0-1 hit sideways",               vec3_from_floats(-0.5525f, -0.25f, 1.165f), 0},
-        {&triangles[0], "t0 edge 0-1 miss sideways",              vec3_from_floats(-0.5725f, -0.25f, 1.165f), 1},
+        {&triangles[0], "t0 edge 0-1 miss sideways",              vec3_from_floats(-0.5525f, -0.25f, 1.165f), 0},
+        {&triangles[0], "t0 edge 0-1 hit sideways",               vec3_from_floats(-0.5725f, -0.25f, 1.165f), 1},
         {&triangles[0], "t0 edge 1-2 miss sideways",              vec3_from_floats(-1.98861f, -0.25f, 1.14448f), 0},
         {&triangles[0], "t0 edge 1-2 hit sideways",               vec3_from_floats(-1.96953f, -0.25f, 1.14486f), 1},
-        {&triangles[0], "t0 edge 2-1 hit sideways",               vec3_from_floats(-1.08621f, -0.25f, -0.251354f), 0},
-        {&triangles[0], "t0 edge 2-1 miss sideways",              vec3_from_floats(-1.08621f, -0.25f, -0.248892f), 1},
+        {&triangles[0], "t0 edge 2-1 miss sideways",              vec3_from_floats(-1.08621f, -0.25f, -0.251354f), 0},
+        {&triangles[0], "t0 edge 2-1 hit sideways",               vec3_from_floats(-1.08621f, -0.25f, -0.248892f), 1},
 
         // triangle facing up - corners sideways
         {&triangles[0], "t0 corner v0 hit",                       vec3_from_floats(0.165f, -0.25f, -0.165f), 1},
@@ -326,7 +326,7 @@ int test_vertical_capsule_triangle_intersect(void) {
 
 
     for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); ++i) {        
-        rayhit_t hit = {0};
+        rayhit_t hit = {.distance = INT32_MAX};
 
         vertical_capsule_t capsule = {
             .bottom = tests[i].bottom,
