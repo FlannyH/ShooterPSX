@@ -48,6 +48,7 @@ int window_w = 32;
 int window_h = 32;
 int prev_window_w = 0;
 int prev_window_h = 0;
+float prev_aspect = 0;
 float aspect = 16.0f / 9.0f;
 transform_t cam_transform;
 vec3_t camera_pos;
@@ -410,14 +411,15 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 
 #ifndef _LEVEL_EDITOR
 	glfwGetWindowSize(window, &window_w, &window_h);
+	aspect = (float)window_w / (float)window_h;
 #endif
-	if (window_w != prev_window_w || window_h != prev_window_h) {
+	if (aspect != prev_aspect) {
 		// Recreate projection matrix
-		aspect = (float)window_w / (float)window_h;
 		widescreen = (aspect >= 16.0f/10.0f);
 		glm_perspective(glm_rad(90.0f), aspect, 0.1f, 100000.f, perspective_matrix);
 		prev_window_w = window_w;
 		prev_window_h = window_h;
+		prev_aspect = aspect;
 	}
 
 	if (render_w != prev_render_w || render_h != prev_render_h) {
@@ -668,7 +670,7 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 
 	// Draw
 	if (mesh->n_triangles) glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
-	// todo: get rid of quads (they're legacy feature and aren't guaranteed to work)
+	// todo: get rid of quads on pc (they're legacy feature and aren't guaranteed to work)
 	if (mesh->n_quads) glDrawArrays(GL_QUADS, mesh->n_triangles * 3, mesh->n_quads * 4);
 
 	n_total_triangles += mesh->n_triangles;
