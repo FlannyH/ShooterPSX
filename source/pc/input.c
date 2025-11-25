@@ -9,10 +9,10 @@
 #include <stdio.h>
 
 extern GLFWwindow* window;
-int8_t left_stick_x[2] = { 0, 0 };
-int8_t left_stick_y[2] = { 0, 0 };
-int8_t right_stick_x[2] = { 0, 0 };
-int8_t right_stick_y[2] = { 0, 0 };
+int16_t left_stick_x[2] = { 0, 0 };
+int16_t left_stick_y[2] = { 0, 0 };
+int16_t right_stick_x[2] = { 0, 0 };
+int16_t right_stick_y[2] = { 0, 0 };
 uint16_t button_prev[2] = { 0, 0 };
 uint16_t button_curr[2] = { 0, 0 };
 int8_t deadzone = 24;
@@ -157,10 +157,10 @@ void input_update(void) {
     }
     mouse_lock_prev = mouse_lock;
 
-    if (glfwGetKey(window, GLFW_KEY_W)) { left_stick_y[0] += 127; }
-    if (glfwGetKey(window, GLFW_KEY_S)) { left_stick_y[0] -= 127; }
-    if (glfwGetKey(window, GLFW_KEY_A)) { left_stick_x[0] += 127; }
-    if (glfwGetKey(window, GLFW_KEY_D)) { left_stick_x[0] -= 127; }
+    if (glfwGetKey(window, GLFW_KEY_W)) { left_stick_y[0] = +127; }
+    if (glfwGetKey(window, GLFW_KEY_A)) { left_stick_x[0] = -127; }
+    if (glfwGetKey(window, GLFW_KEY_S)) { left_stick_y[0] = -127; }
+    if (glfwGetKey(window, GLFW_KEY_D)) { left_stick_x[0] = +127; }
     button_curr[0] |= (PAD_SELECT)*glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT);
     //button_curr[0] |= (PAD_L3)*       glfwGetKey(window, GLFW_KEY_)   
     //button_curr[0] |= (PAD_R3)*       glfwGetKey(window, GLFW_KEY_)   
@@ -230,9 +230,12 @@ int input_released(const uint16_t button_mask, const int player_id) {
 
 int8_t input_left_stick_x(const int player_id) {
     const int8_t value = left_stick_x[player_id];
-    if (value < -currently_active_deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    if (value > currently_active_deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    return 0;
+    int16_t value16 = 0;
+    if (value < -currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
+    if (value > currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
+    if (value16 > 127) return 127;
+    if (value16 < -127) return -127;
+    return (int8_t)value16;
 }
 
 int8_t input_left_stick_x_relative(int player_id) {
@@ -242,9 +245,12 @@ int8_t input_left_stick_x_relative(int player_id) {
 
 int8_t input_left_stick_y(const int player_id) {
     const int8_t value = left_stick_y[player_id];
-    if (value < -currently_active_deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    if (value > currently_active_deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    return 0;
+    int16_t value16 = 0;
+    if (value < -currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
+    if (value > currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
+    if (value16 > 127) return 127;
+    if (value16 < -127) return -127;
+    return (int8_t)value16;
 }
 
 int8_t input_left_stick_y_relative(int player_id) {
@@ -254,9 +260,12 @@ int8_t input_left_stick_y_relative(int player_id) {
 
 int8_t input_right_stick_x(const int player_id) {
     const int8_t value = right_stick_x[player_id];
-    if (value < -currently_active_deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    if (value > currently_active_deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    return 0;
+    int16_t value16 = 0;
+    if (value < -currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
+    if (value > currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
+    if (value16 > 127) return 127;
+    if (value16 < -127) return -127;
+    return (int8_t)value16;
 }
 
 int8_t input_right_stick_x_relative(int player_id) {
@@ -266,9 +275,12 @@ int8_t input_right_stick_x_relative(int player_id) {
 
 int8_t input_right_stick_y(const int player_id) {
     const int8_t value = right_stick_y[player_id];
-    if (value < -currently_active_deadzone) return (int8_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    if (value > currently_active_deadzone) return (int8_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    return 0;
+    int16_t value16 = 0;
+    if (value < -currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
+    if (value > currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
+    if (value16 > 127) return 127;
+    if (value16 < -127) return -127;
+    return (int8_t)value16;
 }
 
 int8_t input_right_stick_y_relative(int player_id) {
