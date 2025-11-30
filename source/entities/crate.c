@@ -3,6 +3,7 @@
 #include "pickup.h"
 #include "../common.h"
 #include "../mesh.h"
+#include "../main.h"
 
 entity_crate_t* entity_crate_new(void) {
 	// Allocate memory for the entity
@@ -58,6 +59,7 @@ void entity_crate_update(int slot, player_t* player, int dt) {
 	if (crate->entity_header.mesh == NULL) {
 		crate->entity_header.mesh = model_find_mesh(entity_get_models(), "28_crate");
 	}
+	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
 	renderer_draw_mesh_shaded(crate->entity_header.mesh, &render_transform, 0, 0);
 }
 

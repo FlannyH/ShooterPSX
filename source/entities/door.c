@@ -4,6 +4,7 @@
 #include "../common.h"
 #include "../music.h"
 #include "../mesh.h"
+#include "../main.h"
 #include "../vec3.h"
 
 entity_door_t* entity_door_new(void) {
@@ -148,6 +149,7 @@ void entity_door_update(int slot, player_t* player, int dt) {
 #ifdef _LEVEL_EDITOR
 	renderer_set_drawing_id(slot, 1);
 #endif
+	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
 	renderer_draw_mesh_shaded(door->entity_header.mesh, &render_transform, 0, 0);
 }
 

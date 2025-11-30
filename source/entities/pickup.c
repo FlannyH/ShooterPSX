@@ -2,8 +2,9 @@
 
 #include "../common.h"
 #include "../mesh.h"
+#include "../main.h"
 
-#include "music.h"
+#include "../music.h"
 
 entity_pickup_t* entity_pickup_new(void) {
 	// Allocate memory for the entity
@@ -57,6 +58,7 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
 #ifdef _LEVEL_EDITOR
 	renderer_set_drawing_id(slot, 1);
 #endif
+	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
 	renderer_draw_mesh_shaded(pickup->entity_header.mesh, &render_transform, 0, 0);
 
     if (close_enough_to_home_in) {

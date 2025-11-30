@@ -2,6 +2,7 @@
 
 #include "../common.h"
 #include "../mesh.h"
+#include "../main.h"
 
 entity_platform_t* entity_platform_new(void) {
 	// Allocate memory for the entity
@@ -99,6 +100,7 @@ void entity_platform_update(int slot, player_t* player, int dt) {
 #ifdef _LEVEL_EDITOR
 	renderer_set_drawing_id(slot, 1);
 #endif
+	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
 	renderer_draw_mesh_shaded(platform->entity_header.mesh, &render_transform, 0, 0);
 }
 

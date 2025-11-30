@@ -290,6 +290,7 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 	if (chaser->entity_header.mesh == NULL) {
 		chaser->entity_header.mesh = model_find_mesh(entity_get_models(), "19_enemy_chaser_idle");
 	}
+	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
 	renderer_draw_mesh_shaded(chaser->entity_header.mesh, &render_transform, 0, 1);
 }
 
