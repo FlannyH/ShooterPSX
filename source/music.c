@@ -417,8 +417,8 @@ void audio_tick(int delta_time) {
 		const spu_channel_t* spu_ch = &spu_channel[i];
 		instrument_region_header_t* region = NULL;
 
-		scalar_t channel_volume = 127;
-		scalar_t channel_panning = 127;
+		int channel_volume = 127;
+		int channel_panning = 127;
 		if (spu_ch->midi_channel < N_MIDI_CHANNELS) {
 			const midi_channel_t* midi_ch = &midi_channel[spu_ch->midi_channel];
 			channel_volume = midi_ch->volume;
@@ -509,25 +509,25 @@ void audio_tick(int delta_time) {
 			vol_envs[i].stage = ENV_STAGE_IDLE;
 		}
 
-		// Volume 
-		scalar_t s_velocity = (((scalar_t)spu_ch->velocity) * ONE) / 127;
-		const scalar_t s_channel_volume = (channel_volume * region->volume) / 8;
-		s_velocity = scalar_mul(s_velocity, s_channel_volume);
-		s_velocity = scalar_mul(s_velocity, vol_envs[i].adsr_volume / (ADSR_VOLUME_ONE / ONE));
+		// Volume
+		int velocity = spu_ch->velocity;                                //                    = 0 -        127
+		velocity *= region->volume;                                     // 0-127 * 0-256      = 0 -      32512
+		velocity *= channel_volume;                                     // 0-32512 * 0-127    = 0 -    4129024
+		velocity *= (vol_envs[i].adsr_volume) / (ADSR_VOLUME_ONE >> 8); // 0-4129024 * 0-256  = 0 - 1057030144
+		velocity >>= 12;                                                // 0-1057030144 >> 12 = 0 -     258064
+
+		scalar_t s_velocity = scalar_div((velocity * ONE), 258064 * ONE);
 		s_velocity = scalar_mul(s_velocity, s_velocity);
 
-		PANIC_IF("note panning out of bounds!", channel_panning < 0 || channel_panning > 255);
-		PANIC_IF("region panning out of bounds!", (region->panning < 0) || (region->panning > 255));
+		int pan = channel_panning;
+		pan += region->panning;
+		pan -= 127;
+		if (pan > 254) pan = 254;
+		if (pan < 0) pan = 0;
 
-		const vec2_t stereo_volume = vec2_mul(
-			(vec2_t){
-				scalar_mul((uint32_t)lut_panning[254 - channel_panning], s_velocity),
-				scalar_mul((uint32_t)lut_panning[channel_panning], s_velocity),
-			},
-			(vec2_t){
-				(uint32_t)lut_panning[254 - region->panning],
-				(uint32_t)lut_panning[region->panning],
-			}
+		const vec2_t stereo_volume = vec2_from_scalars(
+			scalar_mul((uint32_t)lut_panning[254 - pan], s_velocity),
+			scalar_mul((uint32_t)lut_panning[pan], s_velocity)
 		);
 
 		mixer_channel_set_volume(i, stereo_volume.x, stereo_volume.y);
