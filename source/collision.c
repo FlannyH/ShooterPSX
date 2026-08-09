@@ -12,7 +12,10 @@ level_collision_t bvh_from_file(const char* path, int on_stack, stack_t stack) {
     // Load file
     uint32_t* data = NULL;
     size_t size;
-    file_read(path, &data, &size, on_stack, stack);
+    if (!file_read(path, &data, &size, on_stack, stack)) {
+        printf("[ERROR] Error opening file '%s'\n", path);
+        return (level_collision_t){0};
+    }
 
     // Find data and return to user
     const collision_mesh_header_t* header = (collision_mesh_header_t*)data;

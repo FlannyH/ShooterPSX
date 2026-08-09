@@ -93,11 +93,11 @@ void state_update_in_game(int dt) {
 
     // Apply screen shake to camera transform, then begin graphics frame
 	transform_t camera_transform = state.in_game.player.transform;
-	camera_transform.rotation.x += scalar_mul((random_u32() % 8192) - 4096, state.in_game.screen_shake_intensity_rotation);
-	camera_transform.rotation.y += scalar_mul((random_u32() % 8192) - 4096, state.in_game.screen_shake_intensity_rotation);
-	camera_transform.position.x += scalar_mul((random_u32() % 8192) - 4096, state.in_game.screen_shake_intensity_position);
-	camera_transform.position.y += scalar_mul((random_u32() % 8192) - 4096, state.in_game.screen_shake_intensity_position);
-	camera_transform.position.z += scalar_mul((random_u32() % 8192) - 4096, state.in_game.screen_shake_intensity_position);
+	camera_transform.rotation.x += scalar_mul(fixed_to_scalar(((random_u32() % (2 * 4096)) - 4096)), state.in_game.screen_shake_intensity_rotation);
+	camera_transform.rotation.y += scalar_mul(fixed_to_scalar(((random_u32() % (2 * 4096)) - 4096)), state.in_game.screen_shake_intensity_rotation);
+	camera_transform.position.x += scalar_mul(fixed_to_scalar(((random_u32() % (2 * 4096)) - 4096)), state.in_game.screen_shake_intensity_position);
+	camera_transform.position.y += scalar_mul(fixed_to_scalar(((random_u32() % (2 * 4096)) - 4096)), state.in_game.screen_shake_intensity_position);
+	camera_transform.position.z += scalar_mul(fixed_to_scalar(((random_u32() % (2 * 4096)) - 4096)), state.in_game.screen_shake_intensity_position);
 	renderer_begin_frame(&camera_transform);
 
 #ifdef BENCHMARK_MODE
