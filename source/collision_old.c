@@ -72,7 +72,7 @@ void handle_node_intersection_vertical_cylinder(level_collision_t* self, const b
         handle_node_intersection_vertical_cylinder(self, &self->nodes[current_node->left_first + 0], vertical_cylinder, hit, rec_depth + 1);
         handle_node_intersection_vertical_cylinder(self, &self->nodes[current_node->left_first + 1], vertical_cylinder, hit, rec_depth + 1);
     }
-} 
+}
 
 void bvh_intersect_ray(level_collision_t* self, ray_t ray, rayhit_t* hit) {
     hit->distance = INT32_MAX;
@@ -128,7 +128,7 @@ void bvh_debug_draw_nav_graph(const level_collision_t* bvh) {
 
         for (size_t j = 0; j < 4; ++j) {
             const uint16_t id_neighbor = bvh->nav_graph_nodes[i].neighbor_ids[j];
-            
+
             if (id_neighbor == 0xFFFF) break;
 
             svec3_t s_pos2 = bvh->nav_graph_nodes[id_neighbor].position;
@@ -184,7 +184,7 @@ int ray_aabb_intersect_fancy(const aabb_t* aabb, ray_t ray, rayhit_t* hit) {
 
     tmin = scalar_max(scalar_min(tz1, tz2), tmin);
     tmax = scalar_min(scalar_max(tz1, tz2), tmax);
-    
+
     // And store the result in the rayhit
     if (tmax >= tmin && tmax >= 0) {
         hit->distance = tmin;
@@ -218,7 +218,7 @@ int ray_aabb_intersect(const aabb_t* aabb, ray_t ray) {
 
     tmin = scalar_max(scalar_min(tz1, tz2), tmin);
     tmax = scalar_min(scalar_max(tz1, tz2), tmax);
-    
+
     return tmax >= tmin && tmax >= 0;
 }
 
@@ -287,9 +287,11 @@ int vertical_cylinder_aabb_intersect(const aabb_t* aabb, const vertical_cylinder
     // Check the Y axis first. If this does not overlap, there can not be a collision.
     if ((vertical_cylinder.bottom.y + vertical_cylinder.height) < aabb->min.y) return 0; // If top of cylinder is below the AABB, no intersect
     if (vertical_cylinder.bottom.y >= aabb->max.y) return 0; // If bottom of cylinder is above the AABB, no intersect
-    
+
     // The rest can be done in 2D
-    // Create a new AABB that's extended by the cylinder's radius. This is an approximation, but we use AABB's for BVH traversal only so it's fine
+    // Create a new AABB that's extended by the cylinder's radius.
+    // This is an approximation, but we use AABB's for BVH traversal only,
+    // and we want this to be fast, so the test being a bit generous is fine
     const scalar_t min_x = aabb->min.x - vertical_cylinder.radius;
     const scalar_t max_x = aabb->max.x + vertical_cylinder.radius;
     const scalar_t min_z = aabb->min.z - vertical_cylinder.radius;
@@ -316,7 +318,7 @@ int vertical_cylinder_aabb_intersect_fancy(const aabb_t* aabb, const vertical_cy
     if ((vertical_cylinder.bottom.y + vertical_cylinder.height) < aabb->min.y) return 0; // If top of cylinder is below the AABB, no intersect
     if (vertical_cylinder.bottom.y >= aabb->max.y) return 0; // If bottom of cylinder is above the AABB, no intersect
 
-    // The rest can now be done in 2D. Z becomes Y. Find the closest position on the AABB to the cylinder. 
+    // The rest can now be done in 2D. Z becomes Y. Find the closest position on the AABB to the cylinder.
     const vec2_t cylinder_center_pos = (vec2_t){vertical_cylinder.bottom.x, vertical_cylinder.bottom.z};
     const vec2_t closest_pos_on_aabb = {
         .x = scalar_clamp(vertical_cylinder.bottom.x, aabb->min.x, aabb->max.x),
@@ -338,12 +340,12 @@ int vertical_cylinder_aabb_intersect_fancy(const aabb_t* aabb, const vertical_cy
         }
 
         if ((vertical_cylinder.bottom.y + vertical_cylinder.height / 2) > (aabb->min.y + aabb->max.y / 2)) {
-            hit->normal = (vec3_t){0, 4096, 0};
+            hit->normal = (vec3_t){0, ONE, 0};
             hit->distance = vertical_cylinder.bottom.y - aabb->max.y;
             hit->position = (vec3_t){closest_pos_on_aabb.x, aabb->max.y, closest_pos_on_aabb.y};
         }
         else {
-            hit->normal = (vec3_t){0, -4096, 0};
+            hit->normal = (vec3_t){0, -ONE, 0};
             hit->distance = aabb->min.y - (vertical_cylinder.bottom.y + vertical_cylinder.height);
             hit->position = (vec3_t){closest_pos_on_aabb.x, aabb->min.y, closest_pos_on_aabb.y};
         }
@@ -367,7 +369,7 @@ scalar_t get_progress_of_p_on_ab(vec2_t a, vec2_t b, vec2_t p) {
     scalar_t progress_along_edge = scalar_div(ap_dot_ab, length_ab);
 
     // Clamp it between 0.0 and 1.0
-    progress_along_edge = scalar_clamp(progress_along_edge, 0, 4096);
+    progress_along_edge = scalar_clamp(progress_along_edge, 0, ONE);
     return progress_along_edge;
 }
 
@@ -422,7 +424,7 @@ vec2_t find_closest_point_on_triangle_2d(vec2_t v0, vec2_t v1, vec2_t v2, vec2_t
         progress = get_progress_of_p_on_ab(v1, v2, p);
         closest_point = vec2_add(v1, vec2_mul(vec2_sub(v2, v1), vec2_from_scalar(progress)));
         *u_out = 0;
-        *v_out = 4096 - progress;
+        *v_out = ONE - progress;
 
     }
     // A = v2, B = v0
@@ -436,7 +438,7 @@ vec2_t find_closest_point_on_triangle_2d(vec2_t v0, vec2_t v1, vec2_t v2, vec2_t
     else /*if (edge2 < 0)*/ {
         progress = get_progress_of_p_on_ab(v0, v1, p);
         closest_point = vec2_add(v0, vec2_mul(vec2_sub(v1, v0), vec2_from_scalar(progress)));
-        *u_out = 4096 - progress;
+        *u_out = ONE - progress;
         *v_out = progress;
     }
 
@@ -453,13 +455,13 @@ scalar_t get_progress_of_p_on_ab_3d(vec3_t a, vec3_t b, vec3_t p) {
     scalar_t progress_along_edge = scalar_div(ap_dot_ab, length_ab);
 
     // Clamp it between 0.0 and 1.0
-    progress_along_edge = scalar_clamp(progress_along_edge, 0, 4096);
+    progress_along_edge = scalar_clamp(progress_along_edge, 0, ONE);
     return progress_along_edge;
 }
 
 // Assumes `p` lies on the triangle's plane
 vec3_t find_closest_point_on_triangle_3d(collision_triangle_3d_t* triangle, vec3_t p) {
-    // Calculate edge0 
+    // Calculate edge0
     const vec3_t v1_p = vec3_sub(p, triangle->v1);
     const vec3_t v1_v2 = vec3_sub(triangle->v2, triangle->v1);
     const vec3_t edge0 = vec3_cross(v1_v2, v1_p);
@@ -478,7 +480,7 @@ vec3_t find_closest_point_on_triangle_3d(collision_triangle_3d_t* triangle, vec3
     const scalar_t signed_distance_from_01 = vec3_dot(edge2, triangle->normal);
 
     // Point is inside triangle
-    if (signed_distance_from_12 >= 0 
+    if (signed_distance_from_12 >= 0
     &&  signed_distance_from_20 >= 0
     &&  signed_distance_from_01 >= 0
     ) {
@@ -486,23 +488,23 @@ vec3_t find_closest_point_on_triangle_3d(collision_triangle_3d_t* triangle, vec3
     }
 
     // A's dorito zone - closest point is A
-    if (signed_distance_from_12 >= 0 
+    if (signed_distance_from_12 >= 0
     &&  signed_distance_from_20 < 0
     &&  signed_distance_from_01 < 0
     ) {
         return triangle->v0;
     }
-    
+
     // B's dorito zone - closest point is B
-    if (signed_distance_from_12 < 0 
+    if (signed_distance_from_12 < 0
     &&  signed_distance_from_20 >= 0
     &&  signed_distance_from_01 < 0
     ) {
         return triangle->v1;
     }
-    
+
     // C's dorito zone - closest point is C
-    if (signed_distance_from_12 < 0 
+    if (signed_distance_from_12 < 0
     &&  signed_distance_from_20 < 0
     &&  signed_distance_from_01 >= 0
     ) {
@@ -510,7 +512,7 @@ vec3_t find_closest_point_on_triangle_3d(collision_triangle_3d_t* triangle, vec3
     }
 
     // AB's chonko zone - closest point is on AB
-    if (signed_distance_from_12 >= 0 
+    if (signed_distance_from_12 >= 0
     &&  signed_distance_from_20 >= 0
     &&  signed_distance_from_01 < 0
     ) {
@@ -519,7 +521,7 @@ vec3_t find_closest_point_on_triangle_3d(collision_triangle_3d_t* triangle, vec3
     }
 
     // BC's chonko zone - closest point is on BC
-    if (signed_distance_from_12 < 0 
+    if (signed_distance_from_12 < 0
     &&  signed_distance_from_20 >= 0
     &&  signed_distance_from_01 >= 0
     ) {
@@ -528,7 +530,7 @@ vec3_t find_closest_point_on_triangle_3d(collision_triangle_3d_t* triangle, vec3
     }
 
     // CA's chonko zone - closest point is on CA. There is no other logical combination so if we get here it has to be this
-    /*if (signed_distance_from_12 >= 0 
+    /*if (signed_distance_from_12 >= 0
     &&  signed_distance_from_20 < 0
     &&  signed_distance_from_01 >= 0
     ) */ {
@@ -571,7 +573,7 @@ int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vert
         hit->distance = INT32_MAX;
         return 0;
     }
-    w = 4096 - u - v;
+    w = ONE - u - v;
 
     // We found the closest point! Does the circle intersect it?
     const scalar_t distance_to_closest_point = vec2_magnitude_squared(vec2_sub(position, closest_pos_on_triangle));
@@ -600,17 +602,17 @@ int vertical_cylinder_triangle_intersect(collision_triangle_3d_t* triangle, vert
         const scalar_t t_v2v0 = scalar_div(vec2_dot(v2_point, v2_v0), vec2_magnitude_squared(v2_v0));
         scalar_t min_y = INT32_MAX;
         scalar_t max_y = INT32_MIN;
-        if (!is_infinity(t_v0v1) && t_v0v1 >= 0 && t_v0v1 <= 4096) {
+        if (!is_infinity(t_v0v1) && t_v0v1 >= 0 && t_v0v1 <= ONE) {
             const scalar_t y = triangle->v0.y + scalar_mul(triangle->v1.y - triangle->v0.y, t_v0v1);
             if (y < min_y) min_y = y;
             if (y > max_y) max_y = y;
         }
-        if (!is_infinity(t_v1v2) && t_v1v2 >= 0 && t_v1v2 <= 4096) {
+        if (!is_infinity(t_v1v2) && t_v1v2 >= 0 && t_v1v2 <= ONE) {
             const scalar_t y = triangle->v1.y + scalar_mul(triangle->v2.y - triangle->v1.y, t_v1v2);
             if (y < min_y) min_y = y;
             if (y > max_y) max_y = y;
         }
-        if (!is_infinity(t_v2v0) && t_v2v0 >= 0 && t_v2v0 <= 4096) {
+        if (!is_infinity(t_v2v0) && t_v2v0 >= 0 && t_v2v0 <= ONE) {
             const scalar_t y = triangle->v2.y + scalar_mul(triangle->v0.y - triangle->v2.y, t_v2v0);
             if (y < min_y) min_y = y;
             if (y > max_y) max_y = y;
@@ -695,7 +697,7 @@ int sphere_triangle_intersect(collision_triangle_3d_t* triangle, sphere_t sphere
 
     if (dist > 0) return 0;
     if (dist < -radius || dist > radius) return 0;
-    
+
     const vec3_t point0 = vec3_sub(center, vec3_muls(N, dist));
     const vec3_t c0 = vec3_cross(vec3_sub(point0, p0), vec3_sub(p1, p0));
     const vec3_t c1 = vec3_cross(vec3_sub(point0, p1), vec3_sub(p2, p1));
