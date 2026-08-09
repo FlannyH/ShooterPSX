@@ -67,7 +67,7 @@ int ray_aabb_intersect(const aabb_t* aabb, ray_t ray) {
 
     tmin = scalar_max(scalar_min(tz1, tz2), tmin);
     tmax = scalar_min(scalar_max(tz1, tz2), tmax);
-    
+
     return tmax >= tmin && tmax >= 0;
 }
 
@@ -99,7 +99,7 @@ int ray_aabb_intersect_fancy(const aabb_t* aabb, ray_t ray, rayhit_t* hit) {
 
     tmin = scalar_max(scalar_min(tz1, tz2), tmin);
     tmax = scalar_min(scalar_max(tz1, tz2), tmax);
-    
+
     // And store the result in the rayhit
     if (tmax >= tmin && tmax >= 0) {
         hit->distance = tmin;
