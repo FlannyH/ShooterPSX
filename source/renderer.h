@@ -79,6 +79,7 @@ int renderer_is_fading(void);
 int renderer_get_fade_level(void);
 void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const transform_t* model_transform);
 void renderer_debug_draw_aabb(const aabb_t* box, pixel32_t color, const transform_t* model_transform);
+void renderer_debug_draw_centered_box(vec3_t position, vec3_t size, pixel32_t color, const transform_t* model_transform);
 void renderer_debug_draw_sphere(sphere_t sphere);
 void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_category_t category);
 void renderer_free_texture(int index, texture_category_t category);

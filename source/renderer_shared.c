@@ -99,6 +99,15 @@ void renderer_debug_draw_aabb(const aabb_t* box, const pixel32_t color, const tr
     renderer_debug_draw_line(vertex001, vertex011, color, model_transform);
 }
 
+void renderer_debug_draw_centered_box(vec3_t position, vec3_t size, pixel32_t color, const transform_t* model_transform) {
+    const aabb_t box = {
+        .max = vec3_add(position, vec3_shift_right(size, 1)),
+        .min = vec3_sub(position, vec3_shift_right(size, 1)),
+    };
+
+    renderer_debug_draw_aabb(&box, color, model_transform);
+}
+
 void renderer_debug_draw_sphere(const sphere_t sphere) {
     renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(sphere.radius, 0, 0)), white, &id_transform);
     renderer_debug_draw_line(sphere.center, vec3_add(sphere.center, vec3_from_int32s(-sphere.radius, 0, 0)), white, &id_transform);
