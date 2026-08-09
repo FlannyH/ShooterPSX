@@ -2,7 +2,7 @@
 #define MUSIC_H
 
 #include "mixer.h"
-#include "vec3.h"
+#include "math/vec3.h"
 
 #include <stdint.h>
 

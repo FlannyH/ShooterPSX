@@ -5,10 +5,10 @@
 extern "C" {
 #endif
 
-#include "fixed_point.h"
+#include "math/scalar.h"
 #include "collision.h"
 #include "renderer.h"
-#include "vec3.h"
+#include "math/vec3.h"
 
 #define MAX_HEALTH 100
 #define MAX_ARMOR 50

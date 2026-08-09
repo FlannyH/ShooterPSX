@@ -1,5 +1,5 @@
 #include "../collision.h"
-#include "../vec3.h"
+#include "../math/vec3.h"
 
 int test_scalar_math(void) {
     int n_errors = 0;

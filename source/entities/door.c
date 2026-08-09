@@ -5,7 +5,7 @@
 #include "../music.h"
 #include "../mesh.h"
 #include "../main.h"
-#include "../vec3.h"
+#include "../math/vec3.h"
 
 entity_door_t* entity_door_new(void) {
 	// Allocate memory for the entity

@@ -1,19 +1,20 @@
 #ifndef VEC3_H
 #define VEC3_H
 
-#include "fixed_point.h"
+#include "common.h"
+#include "scalar.h"
 
-// todo: psx gte-accelerated svec3_t math
+// todo(vec3_gte_opt): desc: psx gte-accelerated svec3_t math
+// todo(vec2_inline): desc: is inlining the functions actually faster?
 
 typedef struct {
-    fixed20_12_t x, y, z;
+    scalar_t x, y, z;
 } vec3_t;
 
 typedef struct {
     int16_t x, y, z; // 3D position
 } svec3_t;
 
-// Let's hope and cry that this will be compile-time evaluated
 ALWAYS_INLINE vec3_t vec3_from_floats(const float x, const float y, const float z) {
     return (vec3_t) {
         scalar_from_float(x),
@@ -40,11 +41,12 @@ ALWAYS_INLINE vec3_t vec3_from_scalars(const scalar_t x, const scalar_t y, const
     return (vec3_t){ x, y, z };
 }
 
+// todo: this one may not work in float mode yet
 ALWAYS_INLINE vec3_t vec3_from_int32s(int32_t x, int32_t y, int32_t z) {
     return (vec3_t) {
-        x,
-        y,
-        z,
+        (scalar_t)x,
+        (scalar_t)y,
+        (scalar_t)z,
     };
 }
 
@@ -72,11 +74,27 @@ ALWAYS_INLINE vec3_t vec3_add(const vec3_t a, const vec3_t b) {
     };
 }
 
+ALWAYS_INLINE vec3_t vec3_adds(const vec3_t a, const scalar_t b) {
+    return (vec3_t) {
+        a.x + b,
+        a.y + b,
+        a.z + b,
+    };
+}
+
 ALWAYS_INLINE vec3_t vec3_sub(const vec3_t a, const vec3_t b) {
     return (vec3_t) {
         a.x - b.x,
         a.y - b.y,
         a.z - b.z,
+    };
+}
+
+ALWAYS_INLINE vec3_t vec3_subs(const vec3_t a, const scalar_t b) {
+    return (vec3_t) {
+        a.x - b,
+        a.y - b,
+        a.z - b,
     };
 }
 
@@ -117,13 +135,6 @@ ALWAYS_INLINE static scalar_t vec3_dot(const vec3_t a, const vec3_t b) {
     +      scalar_mul(a.y, b.y)
     +      scalar_mul(a.z, b.z);
 }
-ALWAYS_INLINE static vec3_t vec3_scale(const vec3_t a, const scalar_t b) {
-    return (vec3_t) {
-        scalar_mul(a.x, b),
-        scalar_mul(a.y, b),
-        scalar_mul(a.z, b),
-    };
-}
 
 ALWAYS_INLINE vec3_t vec3_min(const vec3_t a, const vec3_t b) {
     return (vec3_t) {
@@ -153,6 +164,10 @@ ALWAYS_INLINE static scalar_t vec3_magnitude_squared(const vec3_t a) {
     return x2 + y2 + z2;
 }
 
+ALWAYS_INLINE static scalar_t vec3_magnitude(const vec3_t a) {
+    return scalar_sqrt(vec3_magnitude_squared(a));
+}
+
 ALWAYS_INLINE static vec3_t vec3_normalize(const vec3_t a) {
     const scalar_t magnitude_squared = vec3_magnitude_squared(a);
     const scalar_t magnitude = scalar_sqrt(magnitude_squared);
@@ -171,19 +186,19 @@ ALWAYS_INLINE static vec3_t vec3_cross(vec3_t a, vec3_t b) {
     };
 }
 
-ALWAYS_INLINE vec3_t vec3_shift_right(vec3_t a, int amount) {
+ALWAYS_INLINE static vec3_t vec3_shift_right(vec3_t a, int amount) {
     return (vec3_t) {
-        a.x >> amount,
-        a.y >> amount,
-        a.z >> amount,
+        scalar_shift_right(a.x, amount),
+        scalar_shift_right(a.y, amount),
+        scalar_shift_right(a.z, amount),
     };
 }
 
-ALWAYS_INLINE vec3_t vec3_shift_left(vec3_t a, int amount) {
+ALWAYS_INLINE static vec3_t vec3_shift_left(vec3_t a, int amount) {
     return (vec3_t) {
-        a.x << amount,
-        a.y << amount,
-        a.z << amount,
+        scalar_shift_left(a.x, amount),
+        scalar_shift_left(a.y, amount),
+        scalar_shift_left(a.z, amount),
     };
 }
 

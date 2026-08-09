@@ -1,7 +1,7 @@
 #ifndef COLLISION_H
 #define COLLISION_H
 
-#include "fixed_point.h"
+#include "math/scalar.h"
 #include "structs.h"
 #include "texture.h"
 

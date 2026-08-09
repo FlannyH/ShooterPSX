@@ -1,7 +1,7 @@
 
 #ifndef STRUCTS_H
 #define STRUCTS_H
-#include "vec3.h"
+#include "math/vec3.h"
 
 typedef enum {
     TEX_CAT_NONE = 0,

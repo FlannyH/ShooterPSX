@@ -5,7 +5,7 @@
 #include "entities/chaser.h"
 #include "entities/crate.h"
 #include "entities/door.h"
-#include "fixed_point.h"
+#include "math/scalar.h"
 #include "renderer.h"
 #include "texture.h"
 #include "cheats.h"

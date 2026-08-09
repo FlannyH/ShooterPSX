@@ -2,7 +2,7 @@
 #define MIXER_H
 
 #include <stdint.h>
-#include "fixed_point.h"
+#include "math/scalar.h"
 
 #if defined(_PC)
 #define N_SPU_CHANNELS 32

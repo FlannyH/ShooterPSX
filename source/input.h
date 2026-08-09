@@ -3,7 +3,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "fixed_point.h"
+#include "math/scalar.h"
 
 #include <stdint.h>
 #include <stddef.h>

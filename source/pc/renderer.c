@@ -19,7 +19,7 @@
 #include "memory.h"
 #include "input.h"
 #include "file.h"
-#include "vec3.h"
+#include "math/vec3.h"
 #include "lut.h"
 
 #define PI 3.14159265358979f

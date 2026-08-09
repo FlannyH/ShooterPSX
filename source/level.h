@@ -6,7 +6,7 @@ extern "C" {
 #endif
 #include "structs.h"
 #include "vislist.h"
-#include "vec3.h"
+#include "math/vec3.h"
 
 #include <stdint.h>
 

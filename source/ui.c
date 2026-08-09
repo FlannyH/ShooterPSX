@@ -2,7 +2,7 @@
 #include "common.h"
 
 #include "renderer.h"
-#include "vec2.h"
+#include "math/vec2.h"
 
 void ui_render_background() {
 #if defined(_PSX) || defined(_PC)

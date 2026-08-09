@@ -4,7 +4,7 @@
 #include "renderer.h"
 #include "player.h"
 #include "level.h"
-#include "vec3.h"
+#include "math/vec3.h"
 
 typedef enum {
     STATE_NONE,

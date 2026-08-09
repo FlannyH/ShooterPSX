@@ -1,7 +1,7 @@
 #include "collision.h"
 #include "common.h"
 
-#include "fixed_point.h"
+#include "scalar.h"
 #include "renderer.h"
 #include "memory.h"
 #include "file.h"

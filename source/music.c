@@ -1,11 +1,11 @@
 #include "music.h"
 #include "common.h"
 
-#include "fixed_point.h"
+#include "math/scalar.h"
+#include "math/vec2.h"
 #include "memory.h"
 #include "mixer.h"
 #include "file.h"
-#include "vec2.h"
 #include "lut.h"
 
 #include <stdio.h>

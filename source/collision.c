@@ -2,8 +2,9 @@
 #include "file.h"
 #include "renderer.h"
 #include "texture.h"
-#include "vec2.h"
-#include "vec3.h"
+#include "math/scalar.h"
+#include "math/vec2.h"
+#include "math/vec3.h"
 #include <assert.h>
 #include <string.h>
 
