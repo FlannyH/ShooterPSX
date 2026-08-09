@@ -20,6 +20,7 @@ typedef struct {
 
 PaStream* stream = NULL;
 #define MIXER_SAMPLE_RATE 44100
+#define MIXER_BUFFER_SIZE 256
 
 int16_t* music_samples = NULL;
 int16_t* sfx_samples = NULL;
@@ -161,7 +162,7 @@ void mixer_init(void) {
         NULL,
         &output_parameters,
         MIXER_SAMPLE_RATE,
-        paFramesPerBufferUnspecified,
+        MIXER_BUFFER_SIZE,
         paClipOff,
         &pa_callback,
         NULL // todo(pc_audio_userdata): desc: userdata?
