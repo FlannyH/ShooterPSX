@@ -280,7 +280,7 @@ void renderer_init(void) {
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(DebugCallbackFunc, NULL);
 	glfwSwapInterval(0);
-	glFrontFace(GL_CCW); // winding order after projection, apparently
+	glFrontFace(GL_CCW);
 
 	// Set viewport
 	glViewport(0, 0, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING);
