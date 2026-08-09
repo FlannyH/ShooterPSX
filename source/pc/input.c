@@ -178,12 +178,6 @@ void input_update(void) {
     button_curr[0] |= (PAD_CROSS)*glfwGetKey(window, GLFW_KEY_SPACE);
     button_curr[0] |= (PAD_SQUARE)*glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
 
-    if (button_curr[0]) keyboard_focus = 0;
-    if (abs(left_stick_x[0]) > deadzone) keyboard_focus = 0;
-    if (abs(left_stick_y[0]) > deadzone) keyboard_focus = 0;
-    if (abs(right_stick_x[0]) > deadzone) keyboard_focus = 0;
-    if (abs(right_stick_y[0]) > deadzone) keyboard_focus = 0;
-
     currently_active_deadzone = keyboard_focus ? 0 : deadzone;
 
     // Update cheat buffer
