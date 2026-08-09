@@ -483,7 +483,7 @@ void renderer_begin_frame(const transform_t *camera_transform) {
     glm_translate(view_matrix_topdown, top_down_position);
 
     glm_mat4_identity(view_matrix_third_person);
-    vec3 distance = { 0, 0, -400 };
+    vec3 distance = { 0, 0, 400 };
     glm_translate(view_matrix_third_person, distance);
 
     // Apply rotation
@@ -732,9 +732,9 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
 		(float)model_transform->position.z / (float)ONE,
     };
     vec3 scale = {
-		(float)model_transform->scale.x,
-		(float)model_transform->scale.y,
-		(float)model_transform->scale.z,
+		(float)model_transform->scale.x / (float)ONE,
+		(float)model_transform->scale.y / (float)ONE,
+		(float)model_transform->scale.z / (float)ONE,
     };
     glm_translate(model_matrix, position);
     glm_scale(model_matrix, scale);
@@ -766,12 +766,12 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
 
     // Copy data into it
     line_3d_t line;
-    line.v0.x = (int16_t)(v0.x >> 12);
-    line.v0.y = (int16_t)(v0.y >> 12);
-    line.v0.z = (int16_t)(v0.z >> 12);
-    line.v1.x = (int16_t)(v1.x >> 12);
-    line.v1.y = (int16_t)(v1.y >> 12);
-    line.v1.z = (int16_t)(v1.z >> 12);
+    line.v0.x = (int16_t)int_from_scalar(v0.x);
+    line.v0.y = (int16_t)int_from_scalar(v0.y);
+    line.v0.z = (int16_t)int_from_scalar(v0.z);
+    line.v1.x = (int16_t)int_from_scalar(v1.x);
+    line.v1.y = (int16_t)int_from_scalar(v1.y);
+    line.v1.z = (int16_t)int_from_scalar(v1.z);
     line.v0.r = color.r;
     line.v0.g = color.g;
     line.v0.b = color.b;

@@ -151,7 +151,7 @@ void main() {
                 light_color.xyz += add_light_color;
             }
             if (abs(lights[i].type - 2.0) < 0.5) { // Point
-                vec3 surface_to_light = (lights[i].direction_position * -8.0) - (out_position_ws / 4096.0);
+                vec3 surface_to_light = (lights[i].direction_position) - (out_position_ws / 4096.0);
                 vec3 light_dir = normalize(surface_to_light) * vec3(-1.0, -1.0, 1.0);
                 float distance2 = dot(surface_to_light, surface_to_light); // todo(gouraud_distance_calc): desc: is vertex lighting distance calculation in the right units?
 

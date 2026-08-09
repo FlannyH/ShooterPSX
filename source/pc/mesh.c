@@ -204,15 +204,15 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
         }
 
         // Scale collision space vertex position data to graphics space
-        out_vtx[(i*3)+0].x = tris[i].v0.x;
-        out_vtx[(i*3)+0].y = tris[i].v0.y;
-        out_vtx[(i*3)+0].z = tris[i].v0.z;
-        out_vtx[(i*3)+1].x = tris[i].v1.x;
-        out_vtx[(i*3)+1].y = tris[i].v1.y;
-        out_vtx[(i*3)+1].z = tris[i].v1.z;
-        out_vtx[(i*3)+2].x = tris[i].v2.x;
-        out_vtx[(i*3)+2].y = tris[i].v2.y;
-        out_vtx[(i*3)+2].z = tris[i].v2.z;
+        out_vtx[(i*3)+0].x = tris[i].v0.x * ONE;
+        out_vtx[(i*3)+0].y = tris[i].v0.y * ONE;
+        out_vtx[(i*3)+0].z = tris[i].v0.z * ONE;
+        out_vtx[(i*3)+1].x = tris[i].v1.x * ONE;
+        out_vtx[(i*3)+1].y = tris[i].v1.y * ONE;
+        out_vtx[(i*3)+1].z = tris[i].v1.z * ONE;
+        out_vtx[(i*3)+2].x = tris[i].v2.x * ONE;
+        out_vtx[(i*3)+2].y = tris[i].v2.y * ONE;
+        out_vtx[(i*3)+2].z = tris[i].v2.z * ONE;
     }
 
     if (!on_stack) mem_free(file_data);
