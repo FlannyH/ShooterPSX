@@ -51,6 +51,7 @@ void main() {
 	out_normal = in_normal;
 	out_texture = in_texture;
 	
+	// todo(gouraud_double_code): desc: resolve duplicate vertex lighting code
 	if (vertex_lighting != 0) {
 		for (int i = 0; i < 256; ++i) {
 			if (abs(lights[i].type - 0.0) < 0.5) continue;

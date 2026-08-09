@@ -21,7 +21,7 @@ extern "C" {
 #include "vec2.h"
 
 #include <stdint.h>
-    
+
 #define ORD_TBL_LENGTH 4096
 #define RES_Y_PAL 256
 #define RES_Y_NTSC 240
@@ -30,7 +30,7 @@ extern "C" {
 #define MAX_TEXTURE_COUNT 128
 #define MAX_FADE_LEVEL (255 * ONE)
 
-const static transform_t id_transform = { {0,0,0},{0,0,0}, {4096, 4096, 4096} };
+const static transform_t id_transform = { {0,0,0},{0,0,0}, {ONE, ONE, ONE} };
 extern int widescreen;
 
 typedef struct ALIGNED(4) {
@@ -59,7 +59,8 @@ typedef enum {
     DT_TICK = 1,
 } dt_flags_t;
 
-// todo: pick one coordinate system and make it consistent across graphics, physics, and model spaces, and then make it correct with a view matrix
+// todo(renderer_coordinate_system): desc: pick one coordinate system
+//                                   and make it consistent across graphics, physics, and model spaces, and then make it correct for each platform with a view matrix
 
 // Functions
 void renderer_init(void); // Initializes the renderer by configuring the GPU, setting the video mode, and preparing the drawing environment
@@ -101,6 +102,7 @@ void renderer_update_window_res(int width, int height);
 void renderer_update_lights(const light_t* const lights);
 #endif
 
+// todo: into math/?
 inline uint8_t mul_8x8(const uint8_t a, const uint8_t b) {
     uint16_t c = ((uint16_t)a * (uint16_t)b) >> 8;
     if (c > 255) c = 255;
@@ -109,7 +111,7 @@ inline uint8_t mul_8x8(const uint8_t a, const uint8_t b) {
 
 #ifdef _LEVEL_EDITOR
 vec3_t renderer_get_forward_vector(void); // Used in the level editor to determine where to spawn new entities
-#endif 
+#endif
 
 extern int vsync_enable;
 extern int is_pal;

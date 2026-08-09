@@ -117,7 +117,7 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
     uint32_t block_size = 1;
     uint32_t occupancy_map_index = 0;
 
-    // todo: figure out a fast way to do this
+    // todo(texture_pool_alloc_opt): desc: figure out a fast way to allocate textures
     // increase block size until we have a block size that can fully contain the smallest axis.
     // this aligns the texture with the next power of 2, and we can use this to find the max 
     // mipmap level to sample in the shader.
@@ -132,7 +132,6 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
     const uint32_t alloc_width = (width + block_size - 1) / block_size;
     const uint32_t alloc_height = (height + block_size - 1) / block_size;
 
-    // todo: consider optimizing this
     // find a spot - lovely nested for loop to fit the shape in there somewhere
     // for every block in this map layer
     uint32_t occ_top = 0;

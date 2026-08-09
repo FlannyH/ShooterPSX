@@ -56,7 +56,7 @@ vec3_t camera_dir;
 int curr_depth_bias = 0;
 int n_meshes_drawn = 0;
 
-// todo: i can probably make this more clean
+// todo(pc_renderer_globals): desc: reassess global variables
 // Need to define these somewhere so it compiles, unused in Windows build
 int is_pal = 0;
 int vsync_enable = 0; // 0 = unlocked, 1 = 60 fps or 50 fps, 2 = 30 fps or 25 fps
@@ -109,12 +109,12 @@ GLuint light_buffer_gpu;
 
 typedef enum { vertex, pixel, geometry, compute } ShaderType;
 
-static void DebugCallbackFunc(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, 
+static void DebugCallbackFunc(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
 							  const GLchar *message, const GLvoid *userParam) {
 	(void)length;
 	(void)userParam;
 
-	// Skip some less useful info 
+	// Skip some less useful info
 	// http://stackoverflow.com/questions/12004396/opengl-debug-context-performance-warning
 	if (id == 131218) return;
 
@@ -161,7 +161,7 @@ void update_delta_time_ms(void) {
 	do {
 		new_dt = clock();
 		dt = new_dt - dt_clock;
-		dt_clock = new_dt; 
+		dt_clock = new_dt;
 		dt_ms_float += ((float)dt * 1000.0f) / (float)CLOCKS_PER_SEC;
 	} while (dt_ms_float < 1);
 
@@ -209,7 +209,7 @@ bool load_shader_part(char *path, const ShaderType type, const GLuint *program) 
 			printf("[ERROR] File '%s':\n\n%s\n", path, &frag_shader_error[0]);
 			return false;
 		}
-		
+
 		printf("[WARN]  File '%s':\n\n%s\n", path, &frag_shader_error[0]);
 	}
 
@@ -247,7 +247,7 @@ GLuint shader_from_file(char *vert_path, char *frag_path) {
 			printf("[ERROR] Linking shader program:\n\n%s\n", &frag_shader_error[0]);
 			return false;
 		}
-		
+
 		printf("[WARN]  Linking shader program:\n\n%s\n", &frag_shader_error[0]);
 	}
 
@@ -275,7 +275,7 @@ void renderer_init(void) {
 	}
 	glfwMakeContextCurrent(window);
 	gl3wInit();
-	// todo: only do this if GL 4.3 core profile is available
+	// todo(pc_gl_debug): desc: only enable opengl debug layer this if GL 4.3 core profile is available
 	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(DebugCallbackFunc, NULL);
@@ -313,17 +313,15 @@ void renderer_init(void) {
 	debug_layer_init(window);
 
 	// Zero init textures
-	// todo: unhardcode resolution
+	// todo(pc_texture_atlas_resolution): desc: unhardcode texture atlas resolutions
     uint32_t* zero_data = mem_alloc(2048 * 2048 * 4, MEM_CAT_TEXTURE);
-	// todo: unhardcode resolution
 	for (size_t i = 0; i < 2048 * 2048; ++i) {
 		zero_data[i] = 0u;
 	}
-	
+
 	glGenTextures(1, &textures);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textures);
-	// todo: unhardcode resolution
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, zero_data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST_MIPMAP_NEAREST);
@@ -333,7 +331,7 @@ void renderer_init(void) {
 	glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
     mem_free(zero_data);
-	
+
 	// Create pool info buffer
 	const size_t texture_data_size = MAX_TEXTURE_COUNT * N_TEX_CATS * sizeof(uint16_t) * 4;
     uint16_t* zero_metadata = mem_alloc(texture_data_size, MEM_CAT_TEXTURE);
@@ -350,54 +348,53 @@ void renderer_init(void) {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16I, MAX_TEXTURE_COUNT, (GLsizei)N_TEX_CATS, 0, GL_RGBA_INTEGER, GL_SHORT, zero_metadata);
     glBindTexture(GL_TEXTURE_2D, 0);
     mem_free(zero_metadata);
-	
+
 	// Create gpu light buffer
 	glGenBuffers(1, &light_buffer_gpu);
-	
+
 	// Create fbo
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-	
+
 	// Create color attachment
 	glGenTextures(1, &fb_texture);
 	glBindTexture(GL_TEXTURE_2D, fb_texture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fb_texture, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
-	
+
 	// Create depth attachment
 	glGenTextures(1, &fb_depth);
 	glBindTexture(GL_TEXTURE_2D, fb_depth);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
-	
+
 	// Create object picking framebuffer data
 	glGenTextures(1, &picking_fb_texture);
 	glBindTexture(GL_TEXTURE_2D, picking_fb_texture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, 0, GL_RG, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, picking_fb_texture, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
-	
+
 	// Check if ok
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE) {
 		printf("[ERROR] FBO incomplete: 0x%X\n", status);
 	}
-	
+
 	GLenum draw_buffers[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 	glDrawBuffers(2, draw_buffers);
-	
+
 	glfwGetWindowSize(window, &window_w, &window_h);
-	
-	// todo: unhardcode resolution
+
 	texture_pool_init(0, 0, 0, 2048);
 }
 double lasttime = 0.0;
@@ -427,7 +424,7 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 		glBindTexture(GL_TEXTURE_2D, fb_texture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, render_w, render_h, 0, GL_RGBA, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 	
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fb_texture, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -435,7 +432,7 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 		glBindTexture(GL_TEXTURE_2D, fb_depth);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, render_w, render_h, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 	
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -444,7 +441,7 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 		glBindTexture(GL_TEXTURE_2D, picking_fb_texture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, render_w, render_h, 0, GL_RG, GL_UNSIGNED_BYTE, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 	
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, picking_fb_texture, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -457,9 +454,9 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 
 	// Convert from PS1 to GLM
     vec3 position = {
-        -(float)(camera_transform->position.x >> 12),
-        -(float)(camera_transform->position.y >> 12),
-        -(float)(camera_transform->position.z >> 12)
+        -(float)camera_transform->position.x / ONE,
+        -(float)camera_transform->position.y / ONE,
+        -(float)camera_transform->position.z / ONE
     };
 	const vec3 rotation = {
 		-((float)camera_transform->rotation.x * (2 * PI / 131072.0f)),
@@ -505,9 +502,9 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 
 	memcpy(view_matrix, view_matrix_normal, sizeof(view_matrix_normal));
 
-	camera_dir.x = view_matrix_normal[2][0] * 4096.f;
-	camera_dir.y = view_matrix_normal[2][1] * 4096.f;
-	camera_dir.z = view_matrix_normal[2][2] * 4096.f;
+	camera_dir.x = view_matrix_normal[2][0] * ONE;
+	camera_dir.y = view_matrix_normal[2][1] * ONE;
+	camera_dir.z = view_matrix_normal[2][2] * ONE;
 	memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
 
 	n_total_triangles = 0;
@@ -568,22 +565,22 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	// Apply translation
 	// Apply scale
     vec3 position = {
-		(float)model_transform->position.x / 4096.0f,
-		(float)model_transform->position.y / 4096.0f,
-		(float)model_transform->position.z / 4096.0f,
+		(float)model_transform->position.x / ONE,
+		(float)model_transform->position.y / ONE,
+		(float)model_transform->position.z / ONE,
     };
     vec3 scale = {
-		(float)model_transform->scale.x / 4096.0f,
-		(float)model_transform->scale.y / 4096.0f,
-		(float)model_transform->scale.z / 4096.0f,
+		(float)model_transform->scale.x / ONE,
+		(float)model_transform->scale.y / ONE,
+		(float)model_transform->scale.z / ONE,
     };
 	glm_translate(model_matrix, position);
     glm_scale(model_matrix, scale);
 	if (facing_camera) {
-		vec3 camera_pos_float = { 
-			(float)camera_pos.x / 4096.f,
-			(float)camera_pos.y / 4096.f,
-			(float)camera_pos.z / 4096.f,
+		vec3 camera_pos_float = {
+			(float)camera_pos.x / ONE,
+			(float)camera_pos.y / ONE,
+			(float)camera_pos.z / ONE,
 		};
 		vec3 up = {  0.0f, 1.0f, 0.0f };
 		vec3 forward;
@@ -604,14 +601,14 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 
 	glUseProgram(shader_gouraud);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, light_buffer_gpu);
-	unsigned int lights_index = glGetUniformBlockIndex(shader_gouraud, "Lights");   
+	unsigned int lights_index = glGetUniformBlockIndex(shader_gouraud, "Lights");
 	glUniformBlockBinding(shader_gouraud, lights_index, 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textures);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, texture_metadata);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "tex"), 0);
-	glUniform1i(glGetUniformLocation(shader_gouraud, "tex_meta"), 1); 
+	glUniform1i(glGetUniformLocation(shader_gouraud, "tex_meta"), 1);
 	glBindVertexArray(mesh->vao);
 
 	if (mesh->vbo_vertices == 0) {
@@ -628,7 +625,7 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 		glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(vertex_3d_t), (const void*)offsetof(vertex_3d_t, r));
 		glVertexAttribPointer(2, 2, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(vertex_3d_t), (const void*)offsetof(vertex_3d_t, u));
 		glVertexAttribPointer(3, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(vertex_3d_t), (const void*)offsetof(vertex_3d_t, tex_id));
-		
+
 		if (mesh->vbo_normals == 0 && mesh->normals) {
 			glGenBuffers(1, &mesh->vbo_normals);
 			glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_normals);
@@ -670,7 +667,7 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 
 	// Draw
 	if (mesh->n_triangles) glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
-	// todo: get rid of quads on pc (they're legacy feature and aren't guaranteed to work)
+	// todo(pc_quad_deprecated): desc: get rid of quads on pc (they're legacy feature and aren't guaranteed to work)
 	if (mesh->n_quads) glDrawArrays(GL_QUADS, mesh->n_triangles * 3, mesh->n_quads * 4);
 
 	n_total_triangles += mesh->n_triangles;
@@ -752,7 +749,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     glBindTexture(GL_TEXTURE_2D, 0);
     glUniform1i(glGetUniformLocation(shader_gouraud, "texture_bound"), 0);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "tex"), 0);
-	glUniform1i(glGetUniformLocation(shader_gouraud, "tex_meta"), 1); 
+	glUniform1i(glGetUniformLocation(shader_gouraud, "tex_meta"), 1);
 
     // Bind vertex buffers
     glBindVertexArray(vao);
@@ -812,7 +809,7 @@ static inline pixel32_t pixel16_to_32(const pixel16_t pixel) {
 void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_category_t category) {
     assert(texture != NULL);
 
-	// todo: fill transparent pixels by extending from the opaque pixels for better alpha cutting
+	// todo(pc_renderer_extend_transparent): desc: fill transparent pixels by extending from the opaque pixels for better alpha cutting
 
 	// if texture resolution is 0, interpret it as 256
 	uint32_t width = (uint32_t)texture->width;
@@ -836,10 +833,10 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 			// Get 2 indices from 1 byte of texture data
 			const uint8_t color_index_left = (pixel_bytes[i] >> 0) & 0x0F;
 			const uint8_t color_index_right = (pixel_bytes[i] >> 4) & 0x0F;
-			
+
 			// Get 16-bit color values from palette
 			const pixel16_t pixel_left = texture->palette[(size_t)color_index_left];
-			
+
 			// Expand to 32-bit color
 			pixels[dst_i++] = pixel16_to_32(pixel_left);
 			if (dst_i < pixel_count) {
@@ -923,14 +920,14 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 
 	// Upload texture
 	glBindTexture(GL_TEXTURE_2D, textures);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 
-		tex_rect.x, 
-		tex_rect.y, 
-		tex_rect.w, 
-		tex_rect.h, 
+	glTexSubImage2D(GL_TEXTURE_2D, 0,
+		tex_rect.x,
+		tex_rect.y,
+		tex_rect.w,
+		tex_rect.h,
 		GL_RGBA, GL_UNSIGNED_BYTE, pixels
 	);
-	// todo: expensive, maybe mark texture as dirty and generate on begin frame?
+	// todo(pc_renderer_defer_mipmap_gen): desc: expensive, maybe mark texture as dirty and generate on begin frame?
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -938,11 +935,11 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 	mem_free(pixels);
 }
 
-int renderer_delta_time_ms(dt_flags_t flags) { 
+int renderer_delta_time_ms(dt_flags_t flags) {
 	if (flags == DT_TICK) {
 		update_delta_time_ms();
 	}
-	return dt_ms_int; 
+	return dt_ms_int;
 }
 
 uint32_t renderer_get_n_total_triangles(void) { return n_total_triangles; }
@@ -1010,7 +1007,7 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, texture_metadata);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "tex"), 0);
-	glUniform1i(glGetUniformLocation(shader_gouraud, "tex_meta"), 1); 
+	glUniform1i(glGetUniformLocation(shader_gouraud, "tex_meta"), 1);
 
 	// Bind vertex buffers
 	glBindVertexArray(vao);
@@ -1052,11 +1049,11 @@ void renderer_apply_fade(scalar_t fade_level) {
 	const int fade_level_255 = (fade_level_normalized * 255) / ONE;
 
 	renderer_draw_2d_quad_axis_aligned(
-		(vec2_t){ 256 * ONE, 128 * ONE}, 
-		(vec2_t){ 512 * ONE, 256 * ONE }, 
-		(vec2_t){ 0, 0 }, 
-		(vec2_t){ 0, 0 }, 
-		(pixel32_t){ 0, 0, 0, fade_level_255 }, 
+		(vec2_t){ 256 * ONE, 128 * ONE},
+		(vec2_t){ 512 * ONE, 256 * ONE },
+		(vec2_t){ 0, 0 },
+		(vec2_t){ 0, 0 },
+		(pixel32_t){ 0, 0, 0, fade_level_255 },
 		0, 255, 0
 	);
 }

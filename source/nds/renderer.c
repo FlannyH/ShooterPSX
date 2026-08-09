@@ -107,7 +107,7 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform,
         glTranslatef32(model_transform->position.x, -model_transform->position.y, -model_transform->position.z);
         glScalef32(-model_transform->scale.x, -model_transform->scale.y, -model_transform->scale.z);
         if (facing_camera) {
-            // todo: verify that this is correct, if used at all
+            // todo(renderer_nds_facing_camera): verify that nds facing camera code is correct, if used at all
             const vec3_t up = vec3_from_scalars(0, ONE, 0);
             const vec3_t forward = vec3_normalize(vec3_neg(model_transform->position)); // When local, the camera is at (0, 0, 0), so the vector from the mesh to the camera is the negative of the mesh translation
             const vec3_t right = vec3_normalize(vec3_cross(up, forward));
@@ -150,7 +150,8 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform,
         }
     }
 
-    // todo - display lists
+    // todo(nds_display_lists): desc: display lists
+    // todo(nds_display_lists): deps: nds_renderer_include
     // Draw triangles
     size_t vert_idx = 0;
     glPolyFmt(POLY_ALPHA(31) | (local ? POLY_CULL_FRONT : POLY_CULL_BACK));
@@ -322,7 +323,7 @@ void renderer_set_video_mode(int is_pal) {
 int renderer_get_delta_time_raw(void) {
     int result = vblank_counter;
     vblank_counter = 0;
-    return result; // todo: return actual number of vblanks this frame took, probably with a vblank interrupt
+    return result; // todo(nds_renderer_get_delta_time_raw): desc: return actual number of vblanks this frame took, probably with a vblank interrupt
 }
 
 int dt_ms = 0;

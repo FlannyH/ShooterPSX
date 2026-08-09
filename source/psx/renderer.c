@@ -179,7 +179,7 @@ void renderer_begin_frame(const transform_t* camera_transform) {
     TransMatrix(&view_matrix, &position);
 
     // Scale by aspect ratio
-    // todo: bespoke correction for PAL output
+    // todo(psx_renderer_pal_aspect): desc: bespoke correction for PAL output
     aspect_matrix = (MATRIX){
         .m = {
             {(ONE * res_x) / (widescreen ? 427 : 320), 0, 0},

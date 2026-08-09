@@ -74,7 +74,7 @@ typedef struct {
     vec3_t normal;
 } collision_triangle_3d_t;
 
-#ifdef _PSX 
+#ifdef _PSX
 #include <psxgpu.h>
 
 typedef struct {
@@ -194,18 +194,18 @@ typedef struct {
 #define MAGIC_FCOL 0x4C4F4346
 typedef struct {
     uint32_t file_magic;           // File magic: "FCOL"
-    uint32_t n_verts;              // The number of vertices in this collision mesh 
-    uint32_t n_nodes;              // The number of nodes in the collision mesh's BVH 
-    uint32_t triangle_data_offset; // Offset to raw triangle data 
+    uint32_t n_verts;              // The number of vertices in this collision mesh
+    uint32_t n_nodes;              // The number of nodes in the collision mesh's BVH
+    uint32_t triangle_data_offset; // Offset to raw triangle data
     uint32_t terrain_id_offset;    // Offset to array of 8 bit terrain IDs for each triangle
-    uint32_t bvh_nodes_offset;     // Offset to the precalculated BVH's node pool 
-    uint32_t bvh_indices_offset;   // Offset to the precalculated BVH's index array 
-    uint32_t nav_graph_offset;     // Offset to the precalculated navigation graph for the enemies 
+    uint32_t bvh_nodes_offset;     // Offset to the precalculated BVH's node pool
+    uint32_t bvh_indices_offset;   // Offset to the precalculated BVH's index array
+    uint32_t nav_graph_offset;     // Offset to the precalculated navigation graph for the enemies
 } collision_mesh_header_t;
 
 typedef struct {
   int16_t x, y, z;
-  uint16_t terrain_id;  
+  uint16_t terrain_id;
 } col_mesh_file_vert_t;
 
 typedef struct {
@@ -218,9 +218,9 @@ typedef struct {
 } collision_mesh_t;
 
 typedef struct {
-    vec3_t position; // Position (4096 is 1.0 meter)
-    vec3_t rotation; // Angles in fixed-point format (131072 units = 360 degrees)
-    vec3_t scale;    // Scale (4096 = 1.0)
+    vec3_t position;
+    vec3_t rotation;
+    vec3_t scale;
 } transform_t;
 
 typedef struct {

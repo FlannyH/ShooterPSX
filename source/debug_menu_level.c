@@ -45,14 +45,6 @@ void state_update_debug_menu_level(int dt) {
 	
 	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_debug_menu_level[0], 1, 1, white);
 
-	char* levels[] = {
-		"levels/test.lvl",
-		"levels/test2.lvl",
-		"levels/test3.lvl",
-		"levels/level1.lvl",
-		"levels/level2.lvl",
-	};
-
 	// Draw settings text and box
 	for (int i = 0; i < 4; ++i) {
 		pixel32_t color = (pixel32_t){128, 128, 128, 255};
@@ -87,7 +79,16 @@ void state_update_debug_menu_level(int dt) {
 
 	// Handle button presses
 	if (input_released(PAD_CROSS, 0)) {
+		char* levels[] = {
+			"levels/test.lvl",
+			"levels/test2.lvl",
+			"levels/test3.lvl",
+			"levels/level1.lvl",
+			"levels/level2.lvl",
+		};
+		
 		state.debug_menu_level.button_pressed = 0;
+
 		switch (state.debug_menu_level.button_selected) {
 			case 0:
 			case 1: 

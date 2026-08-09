@@ -10,7 +10,8 @@
 #include "psx/renderer.h"
 #endif
 #include "texture_pool.h"
-// todo: include nds/renderer.h once i get to it
+// todo(nds_renderer_include): desc: include nds/renderer.h
+// todo(nds_renderer_include): deps: nds_renderer_fix
 
 // This file contains code that's either the exact same across platforms,
 // or so similar that it makes sense to put it in the same file with ifdefs.

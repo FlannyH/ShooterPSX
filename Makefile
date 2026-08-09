@@ -3,7 +3,7 @@ ISO_XML = iso.xml
 PROJECT_SOURCE_DIR = .
 
 # Get executable extension
-EXE_EXT = 
+EXE_EXT =
 ifeq ($(OS),Windows_NT)
 	EXE_EXT += .exe
 endif
@@ -97,7 +97,7 @@ CODE_ENGINE_PC_C =   pc/file.c \
 				     pc/mesh.c \
 				     pc/mixer.c \
 				     pc/psx.c \
-				     pc/renderer.c 
+				     pc/renderer.c
 CODE_ENGINE_PC_CPP = pc/debug_layer.cpp
 
 # Source files specific to NDS
@@ -106,8 +106,8 @@ CODE_ENGINE_NDS_C = nds/psx.c \
 				    nds/input.c \
 				    nds/mesh.c \
 				    nds/mixer.c \
-				    nds/renderer.c 
-					
+				    nds/renderer.c
+
 # Where the object files go
 PATH_OBJ_PSX = $(PATH_TEMP_PSX)/obj
 PATH_OBJ_PC  = $(PATH_TEMP_PC)/obj
@@ -120,7 +120,7 @@ CODE_LEVEL_EDITOR = editor/main.c editor/camera.c
 
 # Create code sets and object sets
 CODE_PSX_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PSX_C) 	$(CODE_GAME_MAIN) 		$(CODE_GAME_C)
-CODE_PSX_CPP			= $(CODE_ENGINE_SHARED_CPP) 	
+CODE_PSX_CPP			= $(CODE_ENGINE_SHARED_CPP)
 CODE_PC_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PC_C) 	$(CODE_GAME_MAIN) 		$(CODE_GAME_C)
 CODE_PC_CPP			    = $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_PC_CPP)
 CODE_NDS_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_NDS_C) 	$(CODE_GAME_MAIN) 		$(CODE_GAME_C)
@@ -129,17 +129,17 @@ CODE_LEVEL_EDITOR_C		= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PC_C) 	$(CODE_LE
 CODE_LEVEL_EDITOR_CPP	= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_PC_CPP)
 
 OBJ_PSX					= 	$(patsubst %.c, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_C))				\
-							$(patsubst %.cpp, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_CPP))				
+							$(patsubst %.cpp, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_CPP))
 OBJ_PC					= 	$(patsubst %.c, 	$(PATH_OBJ_PC)/%.o,	            $(CODE_PC_C))				\
-							$(patsubst %.cpp, 	$(PATH_OBJ_PC)/%.o,	            $(CODE_PC_CPP))				
+							$(patsubst %.cpp, 	$(PATH_OBJ_PC)/%.o,	            $(CODE_PC_CPP))
 OBJ_NDS					= 	$(patsubst %.c, 	$(PATH_OBJ_NDS)/%.o,	        $(CODE_NDS_C))				\
-							$(patsubst %.cpp, 	$(PATH_OBJ_NDS)/%.o,	        $(CODE_NDS_CPP))				
+							$(patsubst %.cpp, 	$(PATH_OBJ_NDS)/%.o,	        $(CODE_NDS_CPP))
 OBJ_LEVEL_EDITOR		= 	$(patsubst %.c, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVEL_EDITOR_C))		\
-							$(patsubst %.cpp, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVEL_EDITOR_CPP))		
+							$(patsubst %.cpp, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVEL_EDITOR_CPP))
 
-CFLAGS = -Wall -Wextra -Werror -std=c11 -Wno-old-style-declaration -Wno-format 
+CFLAGS = -Wall -Wextra -std=c11 -Wno-old-style-declaration -Wno-format
 CXXFLAGS = -Wall -Wextra -Werror -std=c++20 -Wno-format
-LINKER_FLAGS = 
+LINKER_FLAGS =
 
 # .PHONY: all submodules pc level_editor psx nds clean mkdir_output_pc pc_dependencies glfw gl3w imgui imguizmo
 .NOTPARALLEL: assets tools pc psx level_editor nds clean
@@ -149,7 +149,7 @@ all: submodules tools assets pc level_editor psx nds
 pc: DEFINES = _PC
 pc: LIBRARIES = glfw3 portaudio stdc++
 ifeq ($(OS),Windows_NT)
-pc: LIBRARIES += gdi32 opengl32 winmm ole32 SetupAPI 
+pc: LIBRARIES += gdi32 opengl32 winmm ole32 SetupAPI
 else
 pc: LIBRARIES += asound pulse jack sndio
 endif
@@ -167,9 +167,9 @@ pc: INCLUDE_DIRS = source \
 			   $(PATH_LIB_PC)/gl3w/include
 pc: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 level_editor: DEFINES = _PC _LEVEL_EDITOR _DEBUG_CAMERA _DEBUG
-level_editor: LIBRARIES = glfw3 portaudio stdc++ 
+level_editor: LIBRARIES = glfw3 portaudio stdc++
 ifeq ($(OS),Windows_NT)
-level_editor: LIBRARIES += gdi32 opengl32 winmm ole32 SetupAPI 
+level_editor: LIBRARIES += gdi32 opengl32 winmm ole32 SetupAPI
 else
 level_editor: LIBRARIES += asound pulse jack sndio
 endif
@@ -197,7 +197,7 @@ mkdir_output_pc:
 
 submodules:
 	# git submodule update --init --recursive
-	
+
 pc_dependencies: submodules .WAIT glfw .WAIT gl3w .WAIT imgui .WAIT imguizmo .WAIT portaudio .WAIT
 
 GLFW_LIB_PATHS = $(PATH_LIB_PC)/glfw/src/libglfw3.a \
@@ -265,7 +265,7 @@ IMGUIZMO_SRC = \
     $(IMGUIZMO_SRC_DIR)/ImCurveEdit.cpp \
     $(IMGUIZMO_SRC_DIR)/ImGradient.cpp \
     $(IMGUIZMO_SRC_DIR)/ImGuizmo.cpp \
-    $(IMGUIZMO_SRC_DIR)/ImSequencer.cpp 
+    $(IMGUIZMO_SRC_DIR)/ImSequencer.cpp
 
 # Corresponding object files
 OBJ_IMGUIZMO = $(IMGUIZMO_SRC:$(IMGUIZMO_SRC_DIR)/%.cpp=$(IMGUIZMO_OBJ_DIR)/%.o)
@@ -341,7 +341,7 @@ psx: LIBRARIES = gcc \
 				 smd_exe_gprel \
 				 lzp_exe_gprel \
 				 c_exe_gprel \
-				 gcc 
+				 gcc
 psx: CC = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-gcc$(EXE_EXT)
 psx: CXX = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-g++$(EXE_EXT)
 psx: OBJDUMP = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-objdump$(EXE_EXT)
@@ -350,7 +350,7 @@ psx: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -O2 -std=c++20  -fuse-linker-plu
 psx: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PSX)) -nostdlib -Wl,-gc-sections -G8 -static -T$(PSN00BSDK_LIBS)/ldscripts/exe.ld  -save-temps -flto
 psx: INCLUDE_DIRS = source \
 			   $(PATH_LIB_PC)/gl3w/include \
-			   $(PSN00BSDK_PATH)/include/libpsn00b 
+			   $(PSN00BSDK_PATH)/include/libpsn00b
 psx: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
 
 $(PATH_TEMP_PSX)/$(PROJECT_NAME).elf: $(OBJ_PSX)
@@ -612,7 +612,7 @@ $(PATH_TEMP)/psx/assets.sfa: $(COMPILED_ASSET_LIST) tools
 
 assets: tools $(PATH_TEMP)/pc/assets.sfa $(PATH_TEMP)/psx/assets.sfa
 
-clean_assets: 
+clean_assets:
 	rm -rf $(PATH_ASSETS)
 
 rebuild_assets: clean_assets assets
@@ -625,4 +625,3 @@ clean:
 	cargo clean --manifest-path=tools/obj2psx/Cargo.toml
 	cargo clean --manifest-path=tools/midi2psx/Cargo.toml
 	cargo clean --manifest-path=tools/psx_vislist_generator/Cargo.toml
-

@@ -69,7 +69,7 @@ particle_system_t* particle_system_new(particle_system_params_t* params) {
     particle_system->params = params;
     particle_system->particle_buffer = mem_stack_alloc(sizeof(particle_t) * params->n_particles_max, STACK_ENTITY);
 
-    // todo
+    // todo(particle_system_new): desc: particle_system_new()
     return NULL;
 }
 

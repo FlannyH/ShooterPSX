@@ -36,14 +36,14 @@ typedef struct {
     uint16_t volume;        // Q8.8 volume multiplier applied after the volume envelope
     uint16_t panning;       // Panning for this region, 0 = left, 127 = middle, 254 = right
     uint8_t key_min;        // Minimum MIDI key for this instrument region
-    uint8_t key_max;        // Maximum MIDI key for this instrument region         
+    uint8_t key_max;        // Maximum MIDI key for this instrument region
 } instrument_region_header_t;
 
 typedef struct {
     uint32_t sample_start;  // Offset (bytes) into sample data chunk. Can be written to SPU Sample Start Address
     uint32_t sample_length; // Number of bytes in this sample. If `loop_start` is not equal to UINT32_MAX, this determines when to jump back to loop_start.
     uint32_t sample_rate;   // Sample rate (Hz) at MIDI key 60 (C5)
-    uint32_t loop_start;    // Offset (bytes) relative to sample start to return to after the end of a sample. 
+    uint32_t loop_start;    // Offset (bytes) relative to sample start to return to after the end of a sample.
     uint32_t format;        // 0 = PSX SPU-ADPCM, 1 = Signed little-endian 16-bit PCM
 } sample_header_t;
 
@@ -82,6 +82,7 @@ typedef struct {
 #define SPU_STAGE_ON 1
 #define SPU_STAGE_OFF 0
 typedef struct {
+    // todo(music_spatial_instruments): desc: add to `spu_stage_on_t` a flag to signify whether it's a spatial note or not
     vec3_t position; // only if midi_channel == MIDI_CHANNEL_SFX_*
     scalar_t max_distance; // only if midi_channel == MIDI_CHANNEL_SFX_*
     uint32_t voice_start;
@@ -101,6 +102,7 @@ typedef struct {
     uint8_t key;
 } spu_stage_off_t;
 
+// todo(music_midi_channel_position): desc: make it possible to move a midi channel in 3d space
 typedef struct {
     uint8_t volume;      // channel volume. 0 = 0%, 127 = 100%, 254 = 200%
     uint8_t panning;     // channel panning, 0 is left, 254 is right
@@ -119,7 +121,7 @@ typedef enum {
     N_ENV_STAGES,
 } env_stage_t;
 
-// todo: move this outside the music header and into game specific code
+// todo(music_move_sfx_enum): desc: move the sfx enum from engine code to game code
 typedef enum {
     sfx_ammo,
     sfx_armor_big,

@@ -297,11 +297,11 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 void entity_chaser_on_hit(int slot, int hitbox_index) {
 	(void)slot;
 	if (hitbox_index == 0) {
-		// todo: handle body hits
+		// todo(chaser_body_hits): desc: handle body hits
 		printf("hit enemy body\n");
 	}
 	if (hitbox_index == 1) {
-		// todo: handle head hits
+		// todo(chaser_head_hits): desc: handle head hits
 		printf("hit enemy head\n");
 	}
 }

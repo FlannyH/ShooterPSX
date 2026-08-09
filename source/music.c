@@ -37,6 +37,7 @@ instrument_region_header_t* sfx_instrument_regions = NULL;
 size_t n_sfx_instrument_regions = 0;
 
 // Sequence
+// todo(music_multi_sequence): allow playing multiple sequences, where each sequence may have an origin point, so that the positions sent to the music code are relative to that origin point
 size_t music_stack_seq_offset = 0;
 dyn_song_seq_header_t* curr_loaded_seq = NULL;
 uint8_t* sequence_pointer = NULL;
@@ -45,9 +46,9 @@ uint8_t music_playing = 0;
 uint8_t audio_ticking = 0;
 int16_t wait_timer = 0;
 
-vec3_t listener_pos;
-vec3_t listener_forward;
-vec3_t listener_right;
+vec3_t listener_pos = {0};
+vec3_t listener_forward = {0};
+vec3_t listener_right = {0};
 
 scalar_t ms_per_tick = 0;
 scalar_t ms_precision_counter = 0;
@@ -57,7 +58,7 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
 	uint32_t* data;
 	size_t size;
 	file_read(path, &data, &size, 1, STACK_TEMP);
-	
+
 	// Validate header
 	const soundbank_header_t* sbk_header = (soundbank_header_t*)data;
 	if (sbk_header->file_magic != MAGIC_FSBK) {
@@ -111,7 +112,7 @@ uint32_t calculate_channel_pitch(uint32_t base_sample_rate, int key, int pitch_w
 		coarse_min = pitch_wheel / 1000;
 		coarse_max = coarse_min + 1;
 		fine = ((pitch_wheel * 256) / 1000) & 0xFF;
-	} 
+	}
 	else {
 		coarse_max = (pitch_wheel + 1) / 1000;
 		coarse_min = coarse_max - 1;
@@ -122,12 +123,12 @@ uint32_t calculate_channel_pitch(uint32_t base_sample_rate, int key, int pitch_w
 	const uint64_t sample_rate_a = ((uint64_t)base_sample_rate * (uint64_t)lut_note_pitch[key + coarse_min]) >> 8;
 	const uint64_t sample_rate_b = ((uint64_t)base_sample_rate * (uint64_t)lut_note_pitch[key + coarse_max]) >> 8;
 	return (uint32_t)(((sample_rate_a * (255-fine)) + (sample_rate_b * (fine))) >> 4);
-} 
+}
 
 void audio_stage_on(int instrument, int key, int pan, int velocity, int pitch_wheel, int midi_channel, vec3_t position, scalar_t max_distance) {
 	if (sfx_instrument_regions == NULL || music_instrument_regions == NULL) return;
 	if (sfx_instruments == NULL || music_instruments == NULL) return;
-	
+
 	PANIC_IF("note panning out of bounds!", pan < 0 || pan > 255);
 
 	// Find first instrument region that fits, and start playing the note
@@ -142,11 +143,11 @@ void audio_stage_on(int instrument, int key, int pan, int velocity, int pitch_wh
 	const sample_header_t* samples = (is_sfx) ? &sfx_sample_headers[0] : &music_sample_headers[0];
 
 	for (size_t i = 0; i < n_regions; ++i) {
-		if (key >= regions[i].key_min 
+		if (key >= regions[i].key_min
 		&& key <= regions[i].key_max) {
 			const uint16_t sample_index = regions[i].sample_index;
 
-			// Stage a note on event					
+			// Stage a note on event
 			staged_note_on_events[n_staged_note_on_events] = (spu_stage_on_t){
 				.voice_start = samples[sample_index].sample_start,
 				.sample_rate = calculate_channel_pitch(samples[sample_index].sample_rate, key, pitch_wheel),
@@ -211,7 +212,7 @@ void music_play_sequence(uint32_t section) {
 	PANIC_IF("misaligned music data!", (((intptr_t)header_end) & 0x03) != 0);
 	PANIC_IF("misaligned music section table!", (((intptr_t)section_table) & 0x03) != 0);
 	sequence_pointer = ((uint8_t*)header_end) + curr_loaded_seq->offset_section_data + section_table[section];
-	
+
 	// Initialize variables
 	music_playing = 1;
 	wait_timer = 1;
@@ -258,7 +259,7 @@ void audio_tick(int delta_time) {
 				const uint8_t key = *sequence_pointer++;
 				const uint8_t velocity = *sequence_pointer++;
 
-				// todo: make this cleaner
+				// todo(music_loop_cleanup): desc: clean up loop support
 				// Quick hack to add in looping support via the drum channel
 				if ((command & 0x0F) == 9) {
 					// Loop start
@@ -328,7 +329,7 @@ void audio_tick(int delta_time) {
 				(void)denom;
 			}
 
-			// Set Loop Start		
+			// Set Loop Start
 			else if (command == 0xFE) {
 				loop_start = sequence_pointer;
 			}
@@ -338,13 +339,13 @@ void audio_tick(int delta_time) {
 				sequence_pointer = loop_start;
 			}
 
-			// Unknown command 
+			// Unknown command
 			else {
 				printf("Unknown FDSS command %02X\n", command);
 			}
 		}
 	}
-	
+
 	// Handle staged events
 	uint32_t note_on = 0;
 	uint32_t note_off = 0;
@@ -376,7 +377,7 @@ void audio_tick(int delta_time) {
 				channel_id = j;
 				break;
 			}
-            // todo: maybe select based on volume, since an envelope in decay or release at like 2% volume you wont hear that
+            // todo(music_channel_allocation_improvement): desc: maybe select based on volume, since an envelope in decay or release at like 2% volume you wont hear that
 			if (vol_envs[j].stage == ENV_STAGE_RELEASE && vol_envs[j].stage_time > max_release_stage_time) {
 				max_release_stage_time = vol_envs[j].stage_time;
 				channel_id = j;
@@ -430,7 +431,7 @@ void audio_tick(int delta_time) {
 
 		// This code may run before the soundbanks are loaded, so if the instrument region is null, skip this channel
 		if (region == NULL) break;
-		
+
 		// Update volume envelope
 		vol_envs[i].stage_time += delta_stage_time;
 
@@ -447,7 +448,7 @@ void audio_tick(int delta_time) {
 			if (vol_envs[i].stage_time >= region->delay) {
 				vol_envs[i].stage_time -= region->delay;
 				vol_envs[i].stage = ENV_STAGE_ATTACK;
-			} 
+			}
 		}
 		if (vol_envs[i].stage == ENV_STAGE_ATTACK) {
 			if (region->attack == 0) {
@@ -466,7 +467,7 @@ void audio_tick(int delta_time) {
 			if (vol_envs[i].stage_time >= region->hold) {
 				vol_envs[i].stage_time -= region->hold;
 				vol_envs[i].stage = ENV_STAGE_DECAY;
-			} 
+			}
 		}
 		if (vol_envs[i].stage == ENV_STAGE_DECAY) {
 			if (region->decay == 0) {
@@ -477,7 +478,7 @@ void audio_tick(int delta_time) {
 				if (vol_envs[i].stage_time >= region->decay) {
 					vol_envs[i].stage_time -= region->decay;
 					vol_envs[i].stage = ENV_STAGE_SUSTAIN;
-				} 
+				}
 			}
 		}
 		if (vol_envs[i].stage == ENV_STAGE_SUSTAIN) {
@@ -485,7 +486,7 @@ void audio_tick(int delta_time) {
 			if (region->sustain == 0) {
 				vol_envs[i].stage_time = 0;
 				vol_envs[i].stage = ENV_STAGE_RELEASE;
-			} 
+			}
 		}
 		if (vol_envs[i].stage == ENV_STAGE_RELEASE) {
 			if (region->release == 0) {

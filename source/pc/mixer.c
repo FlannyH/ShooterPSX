@@ -48,7 +48,7 @@ float sample_from_index(const int16_t* const samples, int sample_index, size_t l
 float interpolate_sample(const int16_t* const samples, double sample_index, size_t loop_stride, int sample_end) {
 #if 0 // nearest neighbor sampling
     return sample_from_index(samples, (size_t)sample_index, loop_stride, sample_end);;
-    
+
 #elif 0 // linear sampling
     const size_t sample_index1 = (size_t)sample_index;
     const size_t sample_index2 = sample_index1 + 1;
@@ -59,7 +59,7 @@ float interpolate_sample(const int16_t* const samples, double sample_index, size
 
 #elif 1 // 4-tap gaussian sampling
     const size_t sample_index1 = (size_t)sample_index;
-    float output = 0.0f; 
+    float output = 0.0f;
     for (int i = -1; i < 3; i++) {
         const int sample_idx = sample_index1 + i;
         const double distance = fabs(sample_index - (double)sample_idx);
@@ -74,7 +74,7 @@ int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffe
     (void)user_data;
     (void)flags;
     (void)time_info;
-    
+
     const double sample_length = (double)1.0 / (double)MIXER_SAMPLE_RATE;
     float* output = (float*)output_buffer;
 
@@ -93,7 +93,7 @@ int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffe
 
         for (int channel_index = 0; channel_index < N_SPU_CHANNELS; ++channel_index) {
             mixer_channel_t* mixer_ch = &mixer_channel[channel_index];
-            
+
             if (mixer_ch->is_playing == 0) {
                 continue;
             }
@@ -124,7 +124,7 @@ int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffe
 
         output[i * 2 + 0] = vol_l * global_volume_left;
         output[i * 2 + 1] = vol_r * global_volume_right;
-    } 
+    }
 
     return paContinue;
 }
@@ -138,9 +138,9 @@ void mixer_init(void) {
     Pa_Initialize();
 
     const int device_index = Pa_GetDefaultOutputDevice();
-    if (device_index == paNoDevice) { 
+    if (device_index == paNoDevice) {
         printf("Failed to get audio output device\n");
-        return; 
+        return;
     }
 
     const PaStreamParameters output_parameters = {
@@ -164,7 +164,7 @@ void mixer_init(void) {
         paFramesPerBufferUnspecified,
         paClipOff,
         &pa_callback,
-        NULL // todo: userdata?
+        NULL // todo(pc_audio_userdata): desc: userdata?
     );
     if (error != paNoError || stream == NULL) {
         printf("Failed to open audio stream!\n");
@@ -206,7 +206,7 @@ void mixer_upload_sample_data(const void* const sample_data, size_t n_bytes, sou
         memcpy(music_samples, sample_data, n_bytes);
         memset(((uint8_t*)music_samples) + n_bytes, 0, 4);
         return;
-    }    
+    }
     if (soundbank_type == SOUNDBANK_TYPE_SFX) {
         if (sfx_samples) mem_free(sfx_samples);
         sfx_samples = mem_alloc(n_bytes + 4, MEM_CAT_AUDIO); // 4 dummy samples required for gaussian sampling

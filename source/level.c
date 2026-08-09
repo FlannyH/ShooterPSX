@@ -21,7 +21,7 @@ level_t level_load(const char* level_path, const uint32_t flags) {
 
 	renderer_free_texture_category(TEX_CAT_LEVEL);
 
-    // Read the file 
+    // Read the file
     uint32_t* file_data = NULL;
     size_t size = 0;
     file_read(level_path, &file_data, &size, 1, STACK_TEMP);
@@ -66,14 +66,14 @@ level_t level_load(const char* level_path, const uint32_t flags) {
         }
         mem_stack_reset_to_marker(STACK_TEMP, marker);
     }
-    
+
     level_t level = (level_t) {
 #ifdef _LEVEL_EDITOR
         .collision_mesh_debug = model_load_collision_debug(path_collision, 0, 0),
 #else
         .collision_mesh_debug = NULL,
 #endif
-        .transform = (transform_t){{0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096}},
+        .transform = (transform_t){{0, 0, 0}, {0, 0, 0}, {ONE, ONE, ONE}},
         .vislist = vislist_load(path_vislist, 1, STACK_LEVEL),
         .collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL),
         .n_level_textures = n_level_textures,

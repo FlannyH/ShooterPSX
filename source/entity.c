@@ -22,7 +22,7 @@ model_t* entity_models = NULL;
 int n_entity_textures = 0;
 int entity_signals[ENTITY_SIGNAL_COUNT];
 
-// todo: figure out why entities seem to overflow
+// todo(entity_overflow): desc:figure out what i meant by "figure out why entities seem to overflow"
 
 void entity_update_all(player_t* player, int dt) {
 	// Reset counters
@@ -143,7 +143,7 @@ void entity_sanitize(void) {
 }
 
 void entity_kill(int slot) {
-	// todo: maybe support destructors?
+	// todo(entity_destructors): desc: maybe support destructors?
 	entity_types[slot] = ENTITY_NONE;
 }
 

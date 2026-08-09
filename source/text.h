@@ -1,7 +1,7 @@
 #ifndef TEXT_H
 #define TEXT_H
 
-// todo: put these in a separate asset instead of hardcoding them into the code
+// todo(text_asset): desc: put text entries in a separate asset instead of hardcoding them into the code
 
 extern const char* text_main_menu[];
 extern const char* text_settings[];

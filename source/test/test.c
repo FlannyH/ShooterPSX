@@ -48,7 +48,7 @@ int test_vertical_capsule_aabb_intersect(void) {
         .min = vec3_from_floats(-1.0f, -1.0f, -1.0f),
         .max = vec3_from_floats(+1.0f, +1.0f, +1.0f),
     };
-    
+
     int n_errors_fast = 0;
     int n_errors_fancy = 0;
 
@@ -112,7 +112,7 @@ int test_vertical_capsule_aabb_intersect(void) {
 
         const int result_fast = vertical_capsule_aabb_intersect(&aabb, capsule);
         const int result_fancy = vertical_capsule_aabb_intersect_fancy(&aabb, capsule, &hit);
-        
+
         if (result_fast != capsule_bottoms[i].expected_result_fast) {
             printf("UNIT TEST FAILED: \"%s (fast)\": expected result %i, got %i\n", capsule_bottoms[i].description, capsule_bottoms[i].expected_result_fast, result_fast);
             ++n_errors_fast;
@@ -129,15 +129,15 @@ int test_vertical_capsule_aabb_intersect(void) {
 int test_vertical_capsule_triangle_intersect(void) {
     collision_triangle_3d_t triangles[] = {
         (collision_triangle_3d_t){ // facing up
-            vec3_from_floats(0.0f, 0.0f, 0.0f), 
-            vec3_from_floats(-2.0f, 0.0f, 0.0f), 
-            vec3_from_floats(-1.5f, 0.0f, 2.0f), 
+            vec3_from_floats(0.0f, 0.0f, 0.0f),
+            vec3_from_floats(-1.5f, 0.0f, 2.0f),
+            vec3_from_floats(-2.0f, 0.0f, 0.0f),
             {}
         },
         (collision_triangle_3d_t){ // facing side
-            vec3_from_floats(0.0f, 0.0f, 0.0f), 
-            vec3_from_floats(-2.0f, 0.0f, 0.0f), 
-            vec3_from_floats(-1.5f, 2.0f, 0.0f), 
+            vec3_from_floats(0.0f, 0.0f, 0.0f),
+            vec3_from_floats(-1.5f, 2.0f, 0.0f),
+            vec3_from_floats(-2.0f, 0.0f, 0.0f),
             {}
         },
     };
@@ -207,7 +207,7 @@ int test_vertical_capsule_triangle_intersect(void) {
         {&triangles[0], "t0 center hit radius top",               vec3_from_floats(-1.16666f, -0.625f, 0.66666f), 1},
         {&triangles[0], "t0 center barely miss top",              vec3_from_floats(-1.16666f, -0.7505f, 0.66666f), 0},
         {&triangles[0], "t0 center miss top",                     vec3_from_floats(-1.16666f, -1.0000f, 0.66666f), 0},
-        
+
         // triangle facing side - on vertices
         {&triangles[1], "t1 v0 +Z vertex top miss",                      vec3_from_floats(0.0f, -0.51f, 0.3f), 0},
         {&triangles[1], "t1 v0 +Z vertex top barely miss",               vec3_from_floats(0.0f, -0.51f, 0.251f), 0},
@@ -249,7 +249,6 @@ int test_vertical_capsule_triangle_intersect(void) {
         {&triangles[1], "t1 v1 -Z vertex top barely miss",               vec3_from_floats(-1.5f, 1.49f, -0.2505f), 0},
         {&triangles[1], "t1 v1 -Z vertex top barely hit",                vec3_from_floats(-1.5f, 1.49f, -0.2495f), 1},
         {&triangles[1], "t1 v1 -Z vertex top hit",                       vec3_from_floats(-1.5f, 1.49f, -0.125f), 1},
-        // todo: v2
         {&triangles[1], "t1 v2 +Z vertex top miss",                      vec3_from_floats(-2.0f, -0.51f, 0.3f), 0},
         {&triangles[1], "t1 v2 +Z vertex top barely miss",               vec3_from_floats(-2.0f, -0.51f, 0.251f), 0},
         {&triangles[1], "t1 v2 +Z vertex top barely hit",                vec3_from_floats(-2.0f, -0.51f, 0.249f), 1},
@@ -270,7 +269,7 @@ int test_vertical_capsule_triangle_intersect(void) {
         {&triangles[1], "t1 v2 -Z vertex top barely miss",               vec3_from_floats(-2.0f, -0.51f, -0.251f), 0},
         {&triangles[1], "t1 v2 -Z vertex top barely hit",                vec3_from_floats(-2.0f, -0.51f, -0.249f), 1},
         {&triangles[1], "t1 v2 -Z vertex top hit",                       vec3_from_floats(-2.0f, -0.51f, -0.125f), 1},
-        
+
         // triangle facing side - barely hit vertices
         {&triangles[1], "t1 v0 barely on vertex top miss +X",            vec3_from_floats(0.21f, -0.65f, 0.0f), 0},
         {&triangles[1], "t1 v0 barely on vertex top hit +X",             vec3_from_floats(0.19f, -0.65f, 0.0f), 1},
@@ -325,7 +324,7 @@ int test_vertical_capsule_triangle_intersect(void) {
     };
 
 
-    for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); ++i) {        
+    for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); ++i) {
         rayhit_t hit = {.distance = INT32_MAX};
 
         vertical_capsule_t capsule = {

@@ -7,7 +7,7 @@
 
 model_t* model_load(const char* path, int on_stack, stack_t stack, texture_category_t tex_category, int optimize_for_single_render_per_frame) {
     (void)optimize_for_single_render_per_frame;
-    
+
     // Read the file
     uint32_t* file_data;
     size_t size;
@@ -33,7 +33,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
 	if (on_stack) {
 		model = mem_stack_alloc(sizeof(model_t), stack);
 		model->meshes = mem_stack_alloc(sizeof(mesh_t) * model_header->n_submeshes, stack);
-	} 
+	}
 	else {
 		model = mem_alloc(sizeof(model_t), MEM_CAT_MODEL);
 		model->meshes = mem_alloc(sizeof(mesh_t) * model_header->n_submeshes, MEM_CAT_MESH);
@@ -53,7 +53,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
         char* string = NULL;
         if (on_stack) {
             string = mem_stack_alloc(mesh_name_length + 1, stack);
-        } 
+        }
         else {
             string = mem_alloc(mesh_name_length + 1, MEM_CAT_MODEL);
         }
@@ -85,7 +85,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
         vertex_3d_t* new_verts = mem_alloc(((mesh->n_triangles * 3) + (mesh->n_quads * 6)) * sizeof(vertex_3d_t), MEM_CAT_MODEL);
         normal_t* new_normals = mem_alloc(((mesh->n_triangles * 3) + (mesh->n_quads * 6)) * sizeof(normal_t), MEM_CAT_MODEL);
 
-        // todo: generate normals
+        // todo(pc_mesh_generate_normals): desc: generate mesh normals on pc if none are provided
         // Copy the vertex texture ids to each vertex instead of just the first. OpenGL is annoying about this.
         size_t k = 0;
         size_t l = 0;
@@ -167,7 +167,7 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
     model->meshes[0].vbo_normals = 0;
     model->meshes[0].vao = 0;
 
-    // Since collision model is only meant to be see in the level 
+    // Since collision model is only meant to be see in the level
     // editor, don't bother calculating bounding boxes for culling
     model->meshes[0].bounds = (aabb_t) {
         .max = (vec3_t) {.x = INT32_MAX, .y = INT32_MAX, .z = INT32_MAX,},
@@ -177,8 +177,8 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
     // Find the collision triangle data
     const intptr_t binary = (intptr_t)(col_mesh + 1);
     const collision_triangle_3d_t* tris = (collision_triangle_3d_t*)(binary + col_mesh->triangle_data_offset);
-    
-    // We need graphics vertices to be able to render the 
+
+    // We need graphics vertices to be able to render the
     // model, so let's convert them one triangle at a time
     vertex_3d_t* out_vtx = model->meshes[0].vertices;
     normal_t* out_nrm = model->meshes[0].normals;
@@ -189,17 +189,17 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
 
         for (size_t j = 0; j < 3; ++j) {
             out_vtx[(i*3)+j] = (vertex_3d_t){
-                .r = ((normal.x + 4096) * 127) / 8192,
-                .g = ((normal.y + 4096) * 127) / 8192,
-                .b = ((normal.z + 4096) * 127) / 8192,
+                .r = ((normal.x + ONE) * 127) / (2 * ONE),
+                .g = ((normal.y + ONE) * 127) / (2 * ONE),
+                .b = ((normal.z + ONE) * 127) / (2 * ONE),
                 .u = 0,
                 .v = 0,
                 .tex_id = 255,
             };
             out_nrm[(i*3)+j] = (normal_t){
-                .x = (normal.x * 127) / 4096,
-                .y = (normal.y * 127) / 4096,
-                .z = (normal.z * 127) / 4096,
+                .x = (normal.x * 127) / ONE,
+                .y = (normal.y * 127) / ONE,
+                .z = (normal.z * 127) / ONE,
             };
         }
 

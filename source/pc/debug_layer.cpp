@@ -25,7 +25,7 @@
 #include <format>
 #endif
 
-// todo: fix debug renderers for collision, nav, etc
+// todo(debug_renderer_fix): desc: fix debug renderers for collision, nav, etc
 
 extern const char* entity_names[];
 const char* light_type_names[] = {
@@ -89,7 +89,7 @@ void inspect_vec3(vec3_t* vec, const char* label) {
     };
 
     if (ImGui::DragFloat3(label, vec_float)) {
-        *vec = vec3_from_floats(vec_float[0], vec_float[1], vec_float[2]); 
+        *vec = vec3_from_floats(vec_float[0], vec_float[1], vec_float[2]);
     }
 }
 
@@ -101,9 +101,9 @@ void inspect_svec3_4_12(svec3_t* vec, const char* label) {
     };
 
     if (ImGui::DragFloat3(label, vec_float)) {
-        vec->x = (int16_t)vec_float[0]; 
-        vec->y = (int16_t)vec_float[1]; 
-        vec->z = (int16_t)vec_float[2]; 
+        vec->x = (int16_t)vec_float[0];
+        vec->y = (int16_t)vec_float[1];
+        vec->z = (int16_t)vec_float[2];
     }
 }
 
@@ -111,7 +111,7 @@ void inspect_scalar(scalar_t* scalar, const char* label) {
     float scalar_float = scalar_to_float(*scalar);
 
     if (ImGui::DragFloat(label, &scalar_float)) {
-        *scalar = scalar_from_float(scalar_float); 
+        *scalar = scalar_from_float(scalar_float);
     }
 }
 
@@ -136,7 +136,7 @@ void inspect_entity(size_t entity_id) {
     if (entity_type == ENTITY_NONE) return;
 
     entity_header_t* entity_data = entity_get_header(entity_id);
-            
+
     if (ImGui::TreeNodeEx("Entity Header", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (entity_data->mesh) ImGui::Text("Mesh: %s", entity_data->mesh->name);
         inspect_vec3(&entity_data->position, "Position");
@@ -158,7 +158,7 @@ void inspect_entity(size_t entity_id) {
             if (ImGui::Checkbox("Rotated", &is_rotated)) { door->is_rotated = (int)is_rotated; door->state_changed = 1; }
             if (ImGui::Checkbox("Open by signal", &open_by_signal)) { door->open_by_signal = (int)open_by_signal; door->state_changed = 1; }
         }
-        
+
         else if (entity_type == ENTITY_PICKUP) {
             entity_pickup_t* pickup = (entity_pickup_t*)entity_data;
             const size_t old_type = (size_t)pickup->type;
@@ -168,7 +168,7 @@ void inspect_entity(size_t entity_id) {
                 pickup->entity_header.mesh = NULL; // force refresh mesh data
             }
         }
-        
+
         else if (entity_type == ENTITY_CRATE) {
             entity_crate_t* crate = (entity_crate_t*)entity_data;
             crate->pickup_to_spawn = inspect_enum((size_t)crate->pickup_to_spawn, pickup_names, "Pickup type to spawn");
@@ -215,8 +215,8 @@ void inspect_entity(size_t entity_id) {
             trigger->trigger_type = (uint8_t)inspect_enum((int)trigger->trigger_type, entity_trigger_type_names, "Trigger type");
             if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TEXT) {
                 float rgb[3] = {
-                    (float)trigger->data_text.color.r / 255.f, 
-                    (float)trigger->data_text.color.g / 255.f, 
+                    (float)trigger->data_text.color.r / 255.f,
+                    (float)trigger->data_text.color.g / 255.f,
                     (float)trigger->data_text.color.b / 255.f,
                 };
                 if (ImGui::ColorEdit3("Text color", rgb)) {
@@ -304,7 +304,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     static bool render_level_vislist_regions = false;
     static int render_level_bvh_start_depth = 0;
     static int render_level_bvh_end_depth = 6;
-    
+
     if (render_level_graphics) renderer_draw_model_shaded(curr_level->graphics, &curr_level->transform, NULL);
     if (render_level_collision) renderer_draw_model_shaded(curr_level->collision_mesh_debug, &id_transform, NULL);
     if (render_level_bvh) bvh_debug_draw(&curr_level->collision_bvh, render_level_bvh_start_depth, render_level_bvh_end_depth, (pixel32_t){ .r = 160, .g = 240, .b = 80, .a = 255 });
@@ -317,11 +317,11 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         while (node_handle_ptr != node_add_ptr) {
             // check a node
             visbvh_node_t* node = &curr_level->vislist.bvh_root[node_stack[node_handle_ptr]];
-            
+
             aabb_t aabb;
             aabb.min = vec3_shift_right(vec3_from_svec3(node->min), 3);
             aabb.max = vec3_shift_right(vec3_from_svec3(node->max), 3);
-            
+
             // If the node is an interior node
             if ((node->child_or_vis_index & 0x80000000) == 0) {
                 // Add the 2 children to the stack
@@ -332,7 +332,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             }
             else {
                 // Draw
-                const static transform_t trans = { {0,0,0},{0,0,0}, {4096, 4096, 4096} };
+                const static transform_t trans = { {0,0,0},{0,0,0}, {ONE, ONE, ONE} };
                 renderer_debug_draw_aabb(&aabb, green, &trans);
             }
 
@@ -389,7 +389,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             }
             level_header_t* header = (level_header_t*)data;
             char* binary_section = (char*)(&header[1]);
-            
+
             strncpy(path_music, binary_section + header->path_music_offset, 255);
             strncpy(path_bank, binary_section + header->path_bank_offset, 255);
             strncpy(path_texture, binary_section + header->path_texture_offset, 255);
@@ -422,7 +422,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
             auto write_data_and_get_offset = [](std::vector<uint8_t>& output, const void* data, size_t size_in_bytes) {
                 const uint8_t* ptr = (uint8_t*)data;
-                
+
                 // align to 4 bytes
                 while ((output.size() % 4) != 0) output.push_back(0);
 
@@ -515,7 +515,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
             FILE* file = fopen(level_path, "wb");
             if (file == nullptr) {
-                // todo: message boxes for errors?
+                // todo(error_dialog): desc: message boxes for errors?
                 printf("Error saving file '%s': could not open file\n", level_path);
                 return;
             }
@@ -602,7 +602,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         inspect_vec3(&player_spawn_rotation, "Player Spawn Rotation");
 
         if (ImGui::Button("Hot reload")) {
-            // todo: reuse level_load()
+            // todo(debug_level_load_reuse_code): desc: reuse level_load() in hot reload
             mem_stack_release(STACK_TEMP);
             mem_stack_release(STACK_LEVEL);
             mem_stack_release(STACK_ENTITY);
@@ -619,11 +619,11 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             curr_level->graphics = model_load(path_model, 1, STACK_LEVEL, TEX_CAT_LEVEL, 1);
             curr_level->collision_mesh_debug = model_load_collision_debug(path_collision, 0, (stack_t)0);
             curr_level->collision_mesh = model_load_collision(path_collision, 1, STACK_LEVEL);
-            curr_level->transform = { {0, 0, 0}, {0, 0, 0}, {4096, 4096, 4096} };
+            curr_level->transform = { {0, 0, 0}, {0, 0, 0}, {ONE, ONE, ONE} };
             curr_level->vislist = vislist_load(path_vislist, 1, STACK_LEVEL);
 
             curr_level->collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL);
-            
+
             player->position = player_spawn_position;
             player->rotation = player_spawn_rotation;
             camera->position = player_spawn_position;
@@ -644,7 +644,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             };
 
             if (ImGui::DragFloat3("Position", vec_float)) {
-                camera->position = vec3_from_floats(vec_float[0], vec_float[1], vec_float[2]); 
+                camera->position = vec3_from_floats(vec_float[0], vec_float[1], vec_float[2]);
             }
             inspect_vec3(&camera->rotation, "Rotation");
             ImGui::TreePop();
@@ -742,7 +742,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             ImGui::Text("Selected entity");
             ImGui::Spacing();
             inspect_entity(*selected_entity_slot);
-            
+
             // If deleted, deselect it
             if (entity_get_type(*selected_entity_slot) == ENTITY_NONE) {
                 *selected_entity_slot = -1;
@@ -792,7 +792,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         }
 
         if (ImGui::Button("Defragment")) {
-            // todo: light_defragment();
+            // todo(debug_light_defragment): desc: light_defragment();
         }
     }
     ImGui::End();
@@ -817,7 +817,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             ImGui::Text("Selected light");
             ImGui::Spacing();
             inspect_light(curr_level, *selected_light_slot);
-            
+
             // If deleted, deselect it
             if (curr_level->lights[*selected_light_slot].type == LIGHT_NONE) {
                 *selected_light_slot = -1;
@@ -874,13 +874,13 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             if (ImGui::TreeNode(std::format("{}", i).c_str())) {
                 ImGui::PushID(i);
                 ImGui::InputTextMultiline("", curr_level->text_entries[i], 255);
-                if (ImGui::Button("Delete")) { 
+                if (ImGui::Button("Delete")) {
                     curr_level->text_entries[i][0] = 127;
                 }
                 ImGui::PopID();
                 ImGui::TreePop();
             }
-        }   
+        }
     }
     ImGui::End();
 
@@ -911,7 +911,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         ImGuizmo::SetDrawlist();
         ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, window_width, window_height);
         mat4 delta;
-        
+
         if (*selected_entity_slot != -1) {
                 entity_header_t* selected_entity = entity_get_header(*selected_entity_slot);
 
@@ -964,9 +964,9 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 selected_entity->position.z += SCALAR(translation[2]);
             }
         }
-        
+
         // If the mouse is inside the window, check for entities under the cursor
-        if (nrm_mouse_x >= -1.0f 
+        if (nrm_mouse_x >= -1.0f
         && nrm_mouse_x <= 1.0f
         && nrm_mouse_y >= -1.0f
         && nrm_mouse_y <= 1.0f
@@ -980,9 +980,9 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                     uint8_t what;
                     uint16_t padding;
                 } pick_info;
-                glReadBuffer(GL_COLOR_ATTACHMENT1);  
+                glReadBuffer(GL_COLOR_ATTACHMENT1);
                 glReadPixels((GLint)rel_mouse_pos.x, (GLint)(renderer_height() - rel_mouse_pos.y), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pick_info);
-                
+
                 if (!ImGuizmo::IsOver() && !ImGuizmo::IsUsingAny()) {
                     if (pick_info.what == 1) {
                         *selected_entity_slot = pick_info.index;

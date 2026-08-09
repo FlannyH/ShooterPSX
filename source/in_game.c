@@ -36,7 +36,7 @@
 #include <filesystem.h>
 #endif
 
-// todo: separate big functions into multiple smaller ones to make it easier to read
+// todo(in_game_cleanup): desc: separate big functions into multiple smaller ones to make it easier to read
 
 void update_screen_shake_intensity(int dt);
 void load_weapon_textures(void);
@@ -72,7 +72,7 @@ void state_enter_in_game(void) {
 	// Load weapon textures
     load_weapon_textures();
     mem_stack_release(STACK_TEMP);
-	
+
 	// Load weapon models
 	state.in_game.m_weapons = model_load("models/weapons.msh", 1, STACK_LEVEL, TEX_CAT_WEAPON, 1);
 
@@ -111,10 +111,10 @@ void state_update_in_game(int dt) {
 
     // Set depth bias to render level geometry in front of UI and weapon models
 	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
-	
+
 	// Figure out where the player is so we can use the right vislist
 	const int n_sections = renderer_get_camera_level_section(state.in_game.player.position, state.in_game.level.vislist);
-	
+
 	state.global.frame_counter += 1;
 
 #if defined(_DEBUG) && defined(_PSX)
@@ -136,9 +136,9 @@ void state_update_in_game(int dt) {
 		if (timer_value_after < timer_value_before) timer_value_after += 0x10000;
 
 		// Show how long it took to render the level
-		snprintf(debug_text_buffer, 64, "LEVEL: %i HBLANKS", timer_value_after - timer_value_before);	
+		snprintf(debug_text_buffer, 64, "LEVEL: %i HBLANKS", timer_value_after - timer_value_before);
 		renderer_set_depth_bias(0);
-		renderer_draw_text((vec2_t){32 * ONE, 64 * ONE}, debug_text_buffer, 0, 0, (fps >= 30) ? green : red);	
+		renderer_draw_text((vec2_t){32 * ONE, 64 * ONE}, debug_text_buffer, 0, 0, (fps >= 30) ? green : red);
 #else
 		renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists);
 #endif
@@ -159,8 +159,8 @@ void state_update_in_game(int dt) {
 	}
 
 	// Play shoot animation
-	if (state.in_game.gun_animation_timer > 0) {
-		state.in_game.gun_animation_timer -= dt * 16; 
+	if (state.in_game.gun_animation_timer > 0 && 0) {
+		state.in_game.gun_animation_timer -= dt * 16;
 		if (state.in_game.gun_animation_timer < 0) {
 			state.in_game.gun_animation_timer = 0;
 		}
@@ -189,7 +189,7 @@ void state_update_in_game(int dt) {
 
 		transform_t gun_transform;
 		if (state.cheats.doom_mode) {
-			gun_transform.position.x = SCALAR(0) + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE); 
+			gun_transform.position.x = SCALAR(0) + (isin(state.global.time_counter * 6) * speed_1d) / (40 * ONE);
 			gun_transform.position.y = SCALAR(-165) + (icos(state.global.time_counter * 12) * speed_1d) / (80 * ONE);
 			gun_transform.position.z = SCALAR(110);
 		} else {
@@ -223,7 +223,7 @@ void state_update_in_game(int dt) {
 		sword_transform.scale.z = ONE;
 		if (widescreen) sword_transform.position.x -= 52;
 		renderer_draw_mesh_shaded(&state.in_game.m_weapons->meshes[0], &sword_transform, 1, 0);
-	} 
+	}
 
 	renderer_end_frame();
 
@@ -246,21 +246,21 @@ void draw_debug_info(int dt, const int n_sections) {
     FntPrint(-1, "frame: %i\n", state.global.frame_counter);
     FntPrint(-1, "time: %i.%03i\n", state.global.time_counter / 1000, state.global.time_counter % 1000);
     FntPrint(-1, "player pos: %i, %i, %i\n",
-             state.in_game.player.position.x / 4096,
-             state.in_game.player.position.y / 4096,
-             state.in_game.player.position.z / 4096);
+             state.in_game.player.position.x / ONE,
+             state.in_game.player.position.y / ONE,
+             state.in_game.player.position.z / ONE);
     FntPrint(-1, "player velocity: %i, %i, %i\n",
              state.in_game.player.velocity.x,
              state.in_game.player.velocity.y,
              state.in_game.player.velocity.z);
     FntPrint(-1, "origin: %i, %i, %i\n",
-             state.debug.shoot_origin_position.x / 4096,
-             state.debug.shoot_origin_position.y / 4096,
-             state.debug.shoot_origin_position.z / 4096);
+             state.debug.shoot_origin_position.x / ONE,
+             state.debug.shoot_origin_position.y / ONE,
+             state.debug.shoot_origin_position.z / ONE);
     FntPrint(-1, "hit: %i, %i, %i\n",
-             state.debug.shoot_hit_position.x / 4096,
-             state.debug.shoot_hit_position.y / 4096,
-             state.debug.shoot_hit_position.z / 4096);
+             state.debug.shoot_hit_position.x / ONE,
+             state.debug.shoot_hit_position.y / ONE,
+             state.debug.shoot_hit_position.z / ONE);
     FntPrint(-1, "gun anim timer: %i\n", state.in_game.gun_animation_timer);
     for (int i = 0; i < N_STACK_TYPES; ++i) {
         FntPrint(-1, "%s: %i / %i KiB (%i%%)\n",
@@ -392,7 +392,7 @@ void shoot(const transform_t camera_transform) {
 			}
 		}
 	}
-	
+
 #ifdef _DEBUG
 	// Update debug display
 	if (!is_infinity(hit.distance)) {
@@ -413,7 +413,7 @@ void shoot(const transform_t camera_transform) {
 	}
 
 	// Start shoot animation
-	state.in_game.gun_animation_timer = 4096;
+	state.in_game.gun_animation_timer = ONE;
 	state.in_game.screen_shake_intensity_position = 80000;
 	state.in_game.screen_shake_dampening_position = 200;
 	state.in_game.screen_shake_intensity_rotation = 240;

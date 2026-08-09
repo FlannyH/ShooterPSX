@@ -230,7 +230,7 @@ int vertical_capsule_aabb_intersect(const aabb_t* aabb, const vertical_capsule_t
 int vertical_capsule_aabb_intersect_fancy(const aabb_t* aabb, const vertical_capsule_t vertical_capsule, rayhit_t* hit) {
     assert(aabb);
     assert(hit);
-    
+
     // Find Y range overlap between capsule line segment and AABB
     const scalar_t radius = vertical_capsule.radius;
     const scalar_t radius2 = scalar_mul(radius, radius);
@@ -245,7 +245,7 @@ int vertical_capsule_aabb_intersect_fancy(const aabb_t* aabb, const vertical_cap
     // If overlap, just check distance in 2D
     if (y_overlap) {
         const vec2_t cap_pos_2d = (vec2_t){
-            vertical_capsule.bottom.x, 
+            vertical_capsule.bottom.x,
             vertical_capsule.bottom.z
         };
         const vec2_t aabb_closest_2d = (vec2_t){
@@ -345,7 +345,7 @@ int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, verti
 
             return 1;
         }
-        
+
         // If Q inside triangle
         if (q_edge0 < 0 && q_edge1 < 0 && q_edge2 < 0) {
             const vec3_t triangle_to_capsule = vec3_sub(capsule.bottom, p_triangle);
@@ -436,7 +436,7 @@ int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, verti
 
             return 1;
         }
-        
+
         return 0;
     }
 
@@ -481,7 +481,7 @@ int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, verti
         closest_point_triangle.z = p_3d.z;
 
         closest_point_triangle.y = v0_3d.y - scalar_div(
-            scalar_mul(n.x, (p_3d.x - v0_3d.x)) + scalar_mul(n.z, (p_3d.z - v0_3d.z)), 
+            scalar_mul(n.x, (p_3d.x - v0_3d.x)) + scalar_mul(n.z, (p_3d.z - v0_3d.z)),
             n.y
         );
     }
@@ -514,8 +514,8 @@ int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, verti
     const vec3_t closest_pos_on_line_segment = vec3_from_scalars(
         capsule.bottom.x,
         scalar_clamp(
-            closest_point_triangle.y, 
-            capsule.bottom.y, 
+            closest_point_triangle.y,
+            capsule.bottom.y,
             capsule.bottom.y + capsule.height
         ),
         capsule.bottom.z
@@ -530,7 +530,7 @@ int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, verti
 
     if (distance2 < radius2) {
         const scalar_t distance = scalar_sqrt(distance2);
-        
+
         hit->position = closest_point_triangle;
         hit->distance = distance - capsule.radius;
 
@@ -587,7 +587,7 @@ void bvh_debug_draw_nav_graph(const level_collision_t* bvh) {
 
         for (size_t j = 0; j < 4; ++j) {
             const uint16_t id_neighbor = bvh->nav_graph_nodes[i].neighbor_ids[j];
-            
+
             if (id_neighbor == 0xFFFF) break;
 
             svec3_t s_pos2 = bvh->nav_graph_nodes[id_neighbor].position;
@@ -597,4 +597,3 @@ void bvh_debug_draw_nav_graph(const level_collision_t* bvh) {
         }
     }
 }
-

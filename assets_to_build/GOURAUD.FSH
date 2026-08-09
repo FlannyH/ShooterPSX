@@ -34,7 +34,7 @@ uniform Lights {
 
 void main() {
     vec4 vtx_color = vec4(out_color, alpha);
-    vec4 tex_color = vec4(0.0, 0.0, 0.0, 1.0);
+    vec4 tex_color = vec4(1.0, 1.0, 1.0, 1.0);
     vec4 light_color = vec4(0.0);
 
     // If a texture is bound to the shader, and if this polygon has a texture
@@ -153,7 +153,7 @@ void main() {
             if (abs(lights[i].type - 2.0) < 0.5) { // Point
                 vec3 surface_to_light = (lights[i].direction_position * -8.0) - (out_position_ws / 4096.0);
                 vec3 light_dir = normalize(surface_to_light) * vec3(-1.0, -1.0, 1.0);
-                float distance2 = dot(surface_to_light, surface_to_light); // todo: is this in the right units?
+                float distance2 = dot(surface_to_light, surface_to_light); // todo(gouraud_distance_calc): desc: is vertex lighting distance calculation in the right units?
 
                 vec3 add_light_color = clamp(dot(out_normal, light_dir), 0.0, 1.0) * lights[i].color * lights[i].intensity;
                 light_color.xyz += (add_light_color / distance2);
@@ -169,7 +169,7 @@ void main() {
     frag_color.w = pow(tex_color.a * alpha, 1.0 / 1.5);
 
     // For editor
-    // todo: fix this
+    // todo(gouraud_obj_picking_fix): desc: verify object picking correctness
     object_picking.x = float(drawing_id) / 255.0;
     object_picking.y = float(drawing_what) / 255.0;
 }
