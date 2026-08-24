@@ -7,10 +7,6 @@ typedef struct {
     int32_t vx, vy, vz;
 } VECTOR;
 
-int hisin(int a);
-int hicos(int a);
-int isin(int a);
-int icos(int a);
 int FntPrint(int id, const char* fmt, ...);
 char* FntFlush(int id);
 

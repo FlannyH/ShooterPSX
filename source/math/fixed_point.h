@@ -2,6 +2,7 @@
 #define FIXED_POINT_H
 
 #include "common.h"
+#include "../lut.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -172,6 +173,34 @@ ALWAYS_INLINE int is_infinity(const fixed20_12_t a) {
 
 ALWAYS_INLINE int int_from_scalar(scalar_t scalar) {
     return scalar / ONE;
+}
+
+ALWAYS_INLINE static scalar_t trig_sin(scalar_t angle) {
+    // |  XXX  |   |
+    // |XX | XX|   |
+    // X - - - X - - -
+    // |   |   |XX | XX
+    // |   |   |  XXX
+    // 0   1   2   3
+    const scalar_t angle_wrapped = angle & (ONE - 1);
+    const size_t lut_size = sizeof(lut_quarter_sine) / sizeof(lut_quarter_sine[0]);
+    const size_t lut_entry = ((angle_wrapped & ((ONE / 4) - 1)) * lut_size) / (ONE / 4);
+    const size_t quadrant = angle_wrapped >> 10;
+
+    if      (quadrant == 0)     return +(lut_quarter_sine[lut_entry]       / (65536 / ONE));
+    else if (quadrant == 1)     return +(lut_quarter_sine[255 - lut_entry] / (65536 / ONE));
+    else if (quadrant == 2)     return -(lut_quarter_sine[lut_entry]       / (65536 / ONE));
+    else /*if (quadrant == 3)*/ return -(lut_quarter_sine[255 - lut_entry] / (65536 / ONE));
+}
+
+ALWAYS_INLINE static scalar_t trig_cos(scalar_t angle) {
+    // XX  |   |   |  X
+    // | XX|   |   |XX
+    // - - X - - - X -
+    // |   |XX | XX|
+    // |   |  XXX  |
+    // 0   1   2   3
+    return trig_sin(angle + scalar_from_float(0.25f));
 }
 
 #endif // FIXED_POINT_H

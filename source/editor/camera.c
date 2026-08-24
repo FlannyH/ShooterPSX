@@ -1,8 +1,8 @@
 #include "camera.h"
 
 #include "../common.h"
-#include "../player.h" 
-#include "../input.h"  
+#include "../player.h"
+#include "../input.h"
 
 debug_camera_t debug_camera_new(void) {
     return (debug_camera_t) {
@@ -29,12 +29,12 @@ void debug_camera_update(debug_camera_t* self, const int dt_ms, const int regist
 
     if (register_input) {
         // Moving forwards and backwards
-        self->velocity.x += hisin(self->transform.rotation.y) * input_left_stick_y(0) * (self->acceleration * dt_ms) >> 16;
-        self->velocity.z += hicos(self->transform.rotation.y) * input_left_stick_y(0) * (self->acceleration * dt_ms) >> 16;
+        self->velocity.x += trig_sin(self->transform.rotation.y) * input_left_stick_y(0) * (self->acceleration * dt_ms) >> 16;
+        self->velocity.z += trig_cos(self->transform.rotation.y) * input_left_stick_y(0) * (self->acceleration * dt_ms) >> 16;
 
         // Strafing left and right
-        self->velocity.x += hicos(self->transform.rotation.y) * input_left_stick_x(0) * (self->acceleration * dt_ms) >> 16;
-        self->velocity.z -= hisin(self->transform.rotation.y) * input_left_stick_x(0) * (self->acceleration * dt_ms) >> 16;
+        self->velocity.x += trig_cos(self->transform.rotation.y) * input_left_stick_x(0) * (self->acceleration * dt_ms) >> 16;
+        self->velocity.z -= trig_sin(self->transform.rotation.y) * input_left_stick_x(0) * (self->acceleration * dt_ms) >> 16;
 
         // Moving up and down
         self->velocity.y -= input_held(PAD_SQUARE, 0) ? self->acceleration * dt_ms * 127 : 0;
@@ -65,7 +65,7 @@ void debug_camera_update(debug_camera_t* self, const int dt_ms, const int regist
         else if (velocity_scalar > drag) {
             velocity_scalar -= drag;
         }
-        else {           
+        else {
             velocity_scalar = 0;
         }
 
@@ -85,7 +85,7 @@ void debug_camera_update(debug_camera_t* self, const int dt_ms, const int regist
         else if (velocity_y_scalar > drag) {
             velocity_y_scalar -= drag;
         }
-        else {           
+        else {
             velocity_y_scalar = 0;
         }
         if (self->velocity.y < 0) velocity_y_scalar *= -1;
@@ -98,13 +98,13 @@ void debug_camera_update(debug_camera_t* self, const int dt_ms, const int regist
     if (register_input) {
         // Look up and down
         self->transform.rotation.x -= (int32_t)(input_mouse_movement_y() * 8) * (mouse_sensitivity) >> 12;
-        if (self->transform.rotation.x > 32768) {
-            self->transform.rotation.x = 32768;
+        if (self->transform.rotation.x > ONE/4) {
+            self->transform.rotation.x = ONE/4;
         }
-        if (self->transform.rotation.x < -32768) {
-            self->transform.rotation.x = -32768;
+        if (self->transform.rotation.x < -ONE/4) {
+            self->transform.rotation.x = -ONE/4;
         }
-    
+
         // Look left and right
         self->transform.rotation.y -= (int32_t)(input_mouse_movement_x() * 8) * (mouse_sensitivity) >> 12;
     }

@@ -3,7 +3,7 @@
 
 #include "../pc/psx.h"
 #include "../structs.h"
-#include "../vec3.h" 
+#include "../math/vec3.h"
 
 typedef struct {
     transform_t transform; // graphics space

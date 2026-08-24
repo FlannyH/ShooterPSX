@@ -459,9 +459,9 @@ void renderer_begin_frame(const transform_t *camera_transform) {
         -(float)camera_transform->position.z / ONE
     };
 	const vec3 rotation = {
-		-((float)camera_transform->rotation.x * (2 * PI / 131072.0f)),
-		-((float)camera_transform->rotation.y * (2 * PI / 131072.0f)),
-		-((float)camera_transform->rotation.z * (2 * PI / 131072.0f))
+		-((float)camera_transform->rotation.x * (2 * PI / ONE)),
+		-((float)camera_transform->rotation.y * (2 * PI / ONE)),
+		-((float)camera_transform->rotation.z * (2 * PI / ONE))
 	};
 
 	// Set view matrix
@@ -594,9 +594,9 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 		model_matrix[2][0] = forward[0]; 	model_matrix[2][1] = forward[1];	model_matrix[2][2] = forward[2];
 	}
 	else {
-		glm_rotate_x(model_matrix, (float)model_transform->rotation.x * 2 * PI / 131072.0f, model_matrix);
-		glm_rotate_y(model_matrix, (float)model_transform->rotation.y * 2 * PI / 131072.0f, model_matrix);
-		glm_rotate_z(model_matrix, (float)model_transform->rotation.z * 2 * PI / 131072.0f, model_matrix);
+		glm_rotate_x(model_matrix, (float)model_transform->rotation.x * 2 * PI / ONE, model_matrix);
+		glm_rotate_y(model_matrix, (float)model_transform->rotation.y * 2 * PI / ONE, model_matrix);
+		glm_rotate_z(model_matrix, (float)model_transform->rotation.z * 2 * PI / ONE, model_matrix);
 	}
 
 	glUseProgram(shader_gouraud);
@@ -738,9 +738,9 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     };
     glm_translate(model_matrix, position);
     glm_scale(model_matrix, scale);
-    glm_rotate_x(model_matrix, (float)model_transform->rotation.x * 2 * PI / 131072.0f, model_matrix);
-    glm_rotate_y(model_matrix, (float)model_transform->rotation.y * 2 * PI / 131072.0f, model_matrix);
-    glm_rotate_z(model_matrix, (float)model_transform->rotation.z * 2 * PI / 131072.0f, model_matrix);
+    glm_rotate_x(model_matrix, (float)model_transform->rotation.x * 2 * PI / ONE, model_matrix);
+    glm_rotate_y(model_matrix, (float)model_transform->rotation.y * 2 * PI / ONE, model_matrix);
+    glm_rotate_z(model_matrix, (float)model_transform->rotation.z * 2 * PI / ONE, model_matrix);
 
     // Bind shader
     glUseProgram(shader_gouraud);
