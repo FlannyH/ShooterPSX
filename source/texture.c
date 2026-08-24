@@ -10,9 +10,11 @@ uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures,
     if (out_textures == NULL) return 0;
 
     // Read the file
-    uint32_t* file_data;
-    size_t size;
-    file_read(path, &file_data, &size, on_stack, stack);
+    uint32_t* file_data = NULL;
+    size_t size = 0;
+    if (!file_read(path, &file_data, &size, on_stack, stack)) {
+        return 0;
+    }
 
     // Read the texture collection header
     const tex_col_header_t* tex_col_hdr = (tex_col_header_t*)file_data;

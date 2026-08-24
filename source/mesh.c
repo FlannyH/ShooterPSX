@@ -10,7 +10,9 @@ collision_mesh_t* model_load_collision(const char* path, int on_stack, stack_t s
     // Read the file
     uint32_t* file_data;
     size_t size;
-    file_read(path, &file_data, &size, on_stack, stack);
+    if (!file_read(path, &file_data, &size, on_stack, stack)) {
+        return 0;
+    }
 
     // Read collision header
     const collision_mesh_header_t* col_mesh = (collision_mesh_header_t*)file_data;

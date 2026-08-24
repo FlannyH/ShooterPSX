@@ -10,7 +10,9 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
     // Read the file
     uint32_t* file_data;
     size_t size;
-    file_read(path, &file_data, &size, on_stack, stack);
+    if (!file_read(path, &file_data, &size, on_stack, stack)) {
+        return 0;
+    }
 
     // Get header data
     const model_header_t* model_header = (model_header_t*)file_data;
@@ -134,7 +136,9 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
     // Read the file
     uint32_t* file_data;
     size_t size;
-    file_read(path, &file_data, &size, on_stack, stack);
+    if (!file_read(path, &file_data, &size, on_stack, stack)) {
+        return 0;
+    }
 
     // Read collision header
     const collision_mesh_header_t* col_mesh = (collision_mesh_header_t*)file_data;

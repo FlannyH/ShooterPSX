@@ -57,7 +57,9 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
 	// Load the SBK file
 	uint32_t* data;
 	size_t size;
-	file_read(path, &data, &size, 1, STACK_TEMP);
+	if (!file_read(path, &data, &size, 1, STACK_TEMP)) {
+	    return;
+	}
 
 	// Validate header
 	const soundbank_header_t* sbk_header = (soundbank_header_t*)data;
