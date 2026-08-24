@@ -61,6 +61,7 @@ int main(int argc, char** argv) {
 
     int selected_entity = -1;
     int selected_light = -1;
+    int selected_shape = -1;
     int mouse_over_viewport = 0;
 
     while (!renderer_should_close()) {
@@ -89,7 +90,7 @@ int main(int argc, char** argv) {
             entity_update_all(&player, 0);
 
             debug_layer_begin();
-            debug_layer_manipulate_entity(&camera.transform, &selected_entity, &selected_light, &mouse_over_viewport, &level, &player);
+            debug_layer_manipulate_entity(&camera.transform, &selected_entity, &selected_light, &selected_shape, &mouse_over_viewport, &level, &player);
             debug_layer_end();
         }
         renderer_end_frame();

@@ -27,6 +27,8 @@
 
 // todo(debug_renderer_fix): desc: fix debug renderers for collision, nav, etc
 
+static model_t* gizmos = nullptr;
+
 extern const char* entity_names[];
 const char* light_type_names[] = {
     "None",
@@ -284,11 +286,25 @@ void inspect_light(level_t* curr_level, size_t light_id) {
 void inspect_shape(level_t* curr_level, size_t shape_id) {
     const uint8_t shape_type = curr_level->shapes[shape_id].type;
     if (shape_type == SHAPE_NONE) return;
+    else if (shape_type == SHAPE_SPHERE) {
+        inspect_vec3(&curr_level->shapes[shape_id].sphere.center, "Center");
+        inspect_scalar(&curr_level->shapes[shape_id].sphere.radius, "Radius");
+        const aabb_t aabb = {
+            .min = vec3_sub(curr_level->shapes[shape_id].sphere.center, vec3_from_scalar(curr_level->shapes[shape_id].sphere.radius)),
+            .max = vec3_add(curr_level->shapes[shape_id].sphere.center, vec3_from_scalar(curr_level->shapes[shape_id].sphere.radius)),
+        };
+        renderer_debug_draw_aabb(&aabb, {255, 255, 127, 255}, &id_transform);
+    }
+    else if (shape_type == SHAPE_AABB) {
+        inspect_vec3(&curr_level->shapes[shape_id].aabb.min, "Min");
+        inspect_vec3(&curr_level->shapes[shape_id].aabb.max, "Max");
+        renderer_debug_draw_aabb(&curr_level->shapes[shape_id].aabb, {255, 255, 127, 255}, &id_transform);
+    }
 
 }
 
 #define PI 3.14159265358979f
-void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slot, int* selected_light_slot, int* mouse_over_viewport, level_t* curr_level, player_t* player) {
+void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slot, int* selected_light_slot, int* selected_shape_slot, int* mouse_over_viewport, level_t* curr_level, player_t* player) {
     ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
     static ImGui::FileBrowser file_dialog(ImGuiFileBrowserFlags_EnterNewFilename);
 
@@ -304,7 +320,6 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     static char* path_model = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
     static char* path_model_lod = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
     static char* level_name = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
-    static model_t* gizmos = nullptr;
     static texture_cpu_t* gizmo_textures = nullptr;
     static bool initialized = false;
 
@@ -748,6 +763,17 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     // Entity inspector menu
     ImGui::Begin("Entity Inspector", NULL, ImGuiWindowFlags_None);
     {
+        if (selected_entity_slot != NULL && *selected_entity_slot >= 0) {
+            ImGui::Text("Selected entity");
+            ImGui::Spacing();
+            inspect_entity(*selected_entity_slot);
+
+            // If deleted, deselect it
+            if (entity_get_type(*selected_entity_slot) == ENTITY_NONE) {
+                *selected_entity_slot = -1;
+            }
+        }
+        ImGui::Spacing();
         if (ImGui::TreeNode("All entities")) {
             for (size_t i = 0; i < ENTITY_LIST_LENGTH; ++i) {
                 if (entity_get_type((int)i) != ENTITY_NONE) {
@@ -760,16 +786,6 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 }
             }
             ImGui::TreePop();
-        }
-        if (selected_entity_slot != NULL && *selected_entity_slot >= 0) {
-            ImGui::Text("Selected entity");
-            ImGui::Spacing();
-            inspect_entity(*selected_entity_slot);
-
-            // If deleted, deselect it
-            if (entity_get_type(*selected_entity_slot) == ENTITY_NONE) {
-                *selected_entity_slot = -1;
-            }
         }
     }
     ImGui::End();
@@ -845,10 +861,12 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 if (curr_level->shapes[i].type == SHAPE_NONE) {
                     if (curr_selected_shape_type == SHAPE_SPHERE) {
                         curr_level->shapes[i].sphere.center = spawn_pos;
-                        curr_level->shapes[i].sphere.radius = scalar_from_float(16.0);
+                        curr_level->shapes[i].sphere.radius = scalar_from_float(100.0);
                         curr_level->shapes[i].sphere.radius_squared = scalar_mul(curr_level->shapes[i].sphere.radius, curr_level->shapes[i].sphere.radius);
                     }
                     else if (curr_selected_shape_type == SHAPE_AABB) {
+                        curr_level->shapes[i].aabb.min = vec3_sub(spawn_pos, vec3_from_scalar(SCALAR(100.0)));
+                        curr_level->shapes[i].aabb.max = vec3_add(spawn_pos, vec3_from_scalar(SCALAR(100.0)));
                     }
                     curr_level->shapes[i].type = curr_selected_shape_type;
                     break;
@@ -865,6 +883,17 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     // Light inspector menu
     ImGui::Begin("Light Inspector", NULL, ImGuiWindowFlags_None);
     {
+        if (selected_light_slot != NULL && *selected_light_slot >= 0) {
+            ImGui::Text("Selected light");
+            ImGui::Spacing();
+            inspect_light(curr_level, *selected_light_slot);
+
+            // If deleted, deselect it
+            if (curr_level->lights[*selected_light_slot].type == LIGHT_NONE) {
+                *selected_light_slot = -1;
+            }
+        }
+        ImGui::Spacing();
         if (ImGui::TreeNode("All lights")) {
             for (size_t i = 0; i < MAX_LIGHT_COUNT && curr_level->lights; ++i) {
                 if (curr_level->lights[i].type != LIGHT_NONE) {
@@ -878,22 +907,23 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             }
             ImGui::TreePop();
         }
-        if (selected_light_slot != NULL && *selected_light_slot >= 0) {
-            ImGui::Text("Selected light");
-            ImGui::Spacing();
-            inspect_light(curr_level, *selected_light_slot);
-
-            // If deleted, deselect it
-            if (curr_level->lights[*selected_light_slot].type == LIGHT_NONE) {
-                *selected_light_slot = -1;
-            }
-        }
     }
     ImGui::End();
 
     // Collision inspector menu
     ImGui::Begin("Collision Inspector", NULL, ImGuiWindowFlags_None);
     {
+        if (selected_shape_slot != NULL && *selected_shape_slot >= 0) {
+            ImGui::Text("Selected shape");
+            ImGui::Spacing();
+            inspect_shape(curr_level, *selected_shape_slot);
+
+            // If deleted, deselect it
+            if (!curr_level->shapes || curr_level->shapes[*selected_shape_slot].type == SHAPE_NONE) {
+                *selected_shape_slot = -1;
+            }
+        }
+        ImGui::Spacing();
         if (ImGui::TreeNode("All shapes")) {
             for (size_t i = 0; i < MAX_SHAPE_COUNT && curr_level->shapes; ++i) {
                 if (curr_level->shapes[i].type != SHAPE_NONE) {
@@ -936,11 +966,24 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             transform_t trans = {
                 .position = curr_level->shapes[i].sphere.center,
                 .rotation = vec3_from_scalar(0),
-                .scale = vec3_from_scalar(curr_level->shapes[i].sphere.radius),
+                .scale = vec3_from_scalar(curr_level->shapes[i].sphere.radius / 1024), // 1024 because the model is scaled by 1024 for precision
             };
 
             renderer_set_drawing_id(i, 3);
-            renderer_draw_mesh_shaded(&gizmos->meshes[2], &trans, 0, 1);
+            renderer_draw_mesh_shaded(&gizmos->meshes[2], &trans, 0, 0);
+        }
+        else if (curr_level->shapes[i].type == SHAPE_AABB) {
+            vec3_t min = curr_level->shapes[i].aabb.min;
+            vec3_t max = curr_level->shapes[i].aabb.max;
+            vec3_t size = vec3_sub(max, min);
+            transform_t trans = {
+                .position = min,
+                .rotation = vec3_from_scalar(0),
+                .scale = {size.x / -1024, size.y / 1024, size.z / -1024}, // 1024 because the model is scaled by 1024 for precision
+            };
+
+            renderer_set_drawing_id(i, 3);
+            renderer_draw_mesh_shaded(&gizmos->meshes[3], &trans, 0, 0);
         }
     }
 
@@ -1057,43 +1100,69 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, window_width, window_height);
         mat4 delta;
 
-        if (*selected_entity_slot != -1) {
+        bool has_selected_entity = (*selected_entity_slot != -1);
+        bool has_selected_light = (*selected_light_slot != -1);
+        bool has_selected_shape = (*selected_shape_slot != -1);
+
+        bool light_has_position = false;
+        if (has_selected_light) {
+            if (curr_level->lights[*selected_light_slot].type == LIGHT_POINT) light_has_position = true;
+        }
+
+        if (has_selected_entity || (has_selected_light && light_has_position) || has_selected_shape) {
+            // Transform to world units
+            transform_t render_transform{{0, 0, 0}, {0, 0, 0}, {ONE, ONE, ONE}};
+
+            if (has_selected_entity) {
                 entity_header_t* selected_entity = entity_get_header(*selected_entity_slot);
+                render_transform.position = selected_entity->position;
+                render_transform.rotation = selected_entity->rotation;
+                render_transform.scale = selected_entity->scale;
+            }
+            else if (has_selected_light) {
+                light_t light = curr_level->lights[*selected_light_slot];
+                render_transform.position = vec3_from_svec3(light.direction_position);
+            }
+            else if (has_selected_shape) {
+                shape_t shape = curr_level->shapes[*selected_shape_slot];
+                if (shape.type == SHAPE_SPHERE) {
+                    render_transform.position = shape.sphere.center;
+                    render_transform.scale = vec3_from_scalar(shape.sphere.radius);
+                }
+                if (shape.type == SHAPE_AABB) {
+                    // todo: move nearest corner?
+                    vec3_t size = vec3_sub(shape.aabb.max, shape.aabb.min);
+                    if (size.x < 0) size.x = -size.x;
+                    if (size.y < 0) size.y = -size.y;
+                    if (size.z < 0) size.z = -size.z;
+                    render_transform.position = vec3_add(shape.aabb.min, vec3_shift_right(size, 1));
+                    render_transform.scale = size;
+                }
+            }
 
-                // Transform to world units
-                transform_t render_transform;
-                render_transform.position.x = selected_entity->position.x;
-                render_transform.position.y = selected_entity->position.y;
-                render_transform.position.z = selected_entity->position.z;
-                render_transform.rotation.x = selected_entity->rotation.x;
-                render_transform.rotation.y = selected_entity->rotation.y;
-                render_transform.rotation.z = selected_entity->rotation.z;
-                render_transform.scale.x = selected_entity->scale.x;
-                render_transform.scale.y = selected_entity->scale.y;
-                render_transform.scale.z = selected_entity->scale.z;
+            // Calculate model matrix
+            mat4 model_matrix;
+            glm_mat4_identity(model_matrix);
 
-                // Calculate model matrix
-                mat4 model_matrix;
-                glm_mat4_identity(model_matrix);
+            // Apply rotation
+            // Apply translation
+            // Apply scale
+            vec3 position = {
+                (float)render_transform.position.x / (float)ONE,
+                (float)render_transform.position.y / (float)ONE,
+                (float)render_transform.position.z / (float)ONE,
+            };
+            vec3 scale = {
+                (float)render_transform.scale.x / (float)ONE,
+                (float)render_transform.scale.y / (float)ONE,
+                (float)render_transform.scale.z / (float)ONE,
+            };
+            glm_translate(model_matrix, position);
+            glm_scale(model_matrix, scale);
+            glm_rotate_x(model_matrix, (float)render_transform.rotation.x * 2 * PI / 131072.0f, model_matrix);
+            glm_rotate_y(model_matrix, (float)render_transform.rotation.y * 2 * PI / 131072.0f, model_matrix);
+            glm_rotate_z(model_matrix, (float)render_transform.rotation.z * 2 * PI / 131072.0f, model_matrix);
 
-                // Apply rotation
-                // Apply translation
-                // Apply scale
-                vec3 position = {
-                    (float)render_transform.position.x / (float)ONE,
-                    (float)render_transform.position.y / (float)ONE,
-                    (float)render_transform.position.z / (float)ONE,
-                };
-                vec3 scale = {
-                    (float)render_transform.scale.x / (float)ONE,
-                    (float)render_transform.scale.y / (float)ONE,
-                    (float)render_transform.scale.z / (float)ONE,
-                };
-                glm_translate(model_matrix, position);
-                glm_scale(model_matrix, scale);
-                glm_rotate_x(model_matrix, (float)render_transform.rotation.x * 2 * PI / 131072.0f, model_matrix);
-                glm_rotate_y(model_matrix, (float)render_transform.rotation.y * 2 * PI / 131072.0f, model_matrix);
-                glm_rotate_z(model_matrix, (float)render_transform.rotation.z * 2 * PI / 131072.0f, model_matrix);
             if (ImGuizmo::Manipulate(
                 renderer_debug_view_matrix(),
                 renderer_debug_perspective_matrix(),
@@ -1104,9 +1173,35 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             )) {
                 vec3 translation, rotation, scale;
                 ImGuizmo::DecomposeMatrixToComponents(&delta[0][0], &translation[0], &rotation[0], &scale[0]);
-                selected_entity->position.x += SCALAR(translation[0]);
-                selected_entity->position.y += SCALAR(translation[1]);
-                selected_entity->position.z += SCALAR(translation[2]);
+
+                if (has_selected_entity) {
+                    entity_header_t* selected_entity = entity_get_header(*selected_entity_slot);
+                    selected_entity->position.x += SCALAR(translation[0]);
+                    selected_entity->position.y += SCALAR(translation[1]);
+                    selected_entity->position.z += SCALAR(translation[2]);
+                }
+                if (has_selected_light) {
+                    light_t* selected_light = &curr_level->lights[*selected_light_slot];
+                    selected_light->direction_position.x += translation[0];
+                    selected_light->direction_position.y += translation[1];
+                    selected_light->direction_position.z += translation[2];
+                }
+                if (has_selected_shape) {
+                    shape_t* selected_shape = &curr_level->shapes[*selected_shape_slot];
+                    if (selected_shape->type == SHAPE_SPHERE) {
+                        selected_shape->sphere.center.x += SCALAR(translation[0]);
+                        selected_shape->sphere.center.y += SCALAR(translation[1]);
+                        selected_shape->sphere.center.z += SCALAR(translation[2]);
+                    }
+                    else if (selected_shape->type == SHAPE_AABB) {
+                        selected_shape->aabb.min.x += SCALAR(translation[0]);
+                        selected_shape->aabb.min.y += SCALAR(translation[1]);
+                        selected_shape->aabb.min.z += SCALAR(translation[2]);
+                        selected_shape->aabb.max.x += SCALAR(translation[0]);
+                        selected_shape->aabb.max.y += SCALAR(translation[1]);
+                        selected_shape->aabb.max.z += SCALAR(translation[2]);
+                    }
+                }
             }
         }
 
@@ -1129,18 +1224,12 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 glReadPixels((GLint)rel_mouse_pos.x, (GLint)(renderer_height() - rel_mouse_pos.y), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pick_info);
 
                 if (!ImGuizmo::IsOver() && !ImGuizmo::IsUsingAny()) {
-                    if (pick_info.what == 1) {
-                        *selected_entity_slot = pick_info.index;
-                        *selected_light_slot = -1;
-                    }
-                    else if (pick_info.what == 2) {
-                        *selected_entity_slot = -1;
-                        *selected_light_slot = pick_info.index;
-                    }
-                    else {
-                        *selected_entity_slot = -1;
-                        *selected_light_slot = -1;
-                    }
+                    *selected_light_slot = -1;
+                    *selected_shape_slot = -1;
+                    *selected_entity_slot = -1;
+                    if (pick_info.what == 1) *selected_entity_slot = pick_info.index;
+                    else if (pick_info.what == 2) *selected_light_slot = pick_info.index;
+                    else if (pick_info.what == 3) *selected_shape_slot = pick_info.index;
                 }
             }
         }
