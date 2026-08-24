@@ -50,6 +50,7 @@ level_t level_load(const char* level_path, const uint32_t flags) {
     const char* level_entity_pool = (const char*)((binary_section + level_header->entity_pool_offset));
     const uint8_t* level_entity_types = (const uint8_t*)((binary_section + level_header->entity_types_offset));
     const light_t* lights = (const light_t*)((binary_section + level_header->light_data_offset));
+    const shape_t* shapes = (const shape_t*)((binary_section + level_header->shape_data_offset));
     const char* text = (const char*)((binary_section + level_header->text_offset));
 
     // We gotta do some specific memory management if we want to fit as much into the temporary stack as we can
@@ -83,6 +84,18 @@ level_t level_load(const char* level_path, const uint32_t flags) {
 
     level.graphics = model_load(path_graphics, 1, STACK_LEVEL, TEX_CAT_LEVEL, 1);
     mem_stack_reset_to_marker(STACK_TEMP, marker);
+
+    if (flags & LEVEL_LOAD_COLLISION) {
+        // Load shapes
+        level.n_shapes = level_header->n_shapes;
+#ifdef _LEVEL_EDITOR
+        level.shapes = malloc(MAX_SHAPE_COUNT * sizeof(shape_t));
+        memset(level.shapes, 0, MAX_SHAPE_COUNT * sizeof(shape_t));
+#else
+        level.shapes = mem_stack_alloc(level.n_shapes * sizeof(shape_t), STACK_LEVEL);
+#endif
+        memcpy(level.shapes, shapes, level.n_shapes * sizeof(shape_t));
+    }
 
     if (flags & LEVEL_LOAD_ENTITIES) {
         // Load entities

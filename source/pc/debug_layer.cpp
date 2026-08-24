@@ -34,6 +34,12 @@ const char* light_type_names[] = {
     "Point light",
     NULL
 };
+const char* shape_type_names[] = {
+    "None",
+    "Sphere",
+    "AABB",
+    NULL
+};
 
 void debug_layer_init(GLFWwindow* window) {
     ImGui::CreateContext();
@@ -275,6 +281,12 @@ void inspect_light(level_t* curr_level, size_t light_id) {
     }
 }
 
+void inspect_shape(level_t* curr_level, size_t shape_id) {
+    const uint8_t shape_type = curr_level->shapes[shape_id].type;
+    if (shape_type == SHAPE_NONE) return;
+
+}
+
 #define PI 3.14159265358979f
 void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slot, int* selected_light_slot, int* mouse_over_viewport, level_t* curr_level, player_t* player) {
     ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
@@ -481,12 +493,21 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             }
 
             light_t lights[MAX_LIGHT_COUNT];
+            shape_t shapes[MAX_SHAPE_COUNT];
             memset(lights, 0, sizeof(lights));
+            memset(shapes, 0, sizeof(shapes));
 
             int n_lights = 0;
             for (int i = 0; i < MAX_LIGHT_COUNT; ++i) {
                 if (curr_level->lights[i].type != LIGHT_NONE) {
                     lights[n_lights++] = curr_level->lights[i];
+                }
+            }
+
+            int n_shapes = 0;
+            for (int i = 0; i < MAX_SHAPE_COUNT; ++i) {
+                if (curr_level->shapes[i].type != SHAPE_NONE) {
+                    shapes[n_shapes++] = curr_level->shapes[i];
                 }
             }
 
@@ -502,6 +523,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_types, (n_entities + 3) & ~0x03), // 4-byte padding
                 .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_data_serialized.data(), entity_data_serialized.size() * sizeof(entity_data_serialized[0])),
                 .light_data_offset =  (uint32_t)write_data_and_get_offset(binary_section, lights, n_lights * sizeof(light_t)),
+                .shape_data_offset =  (uint32_t)write_data_and_get_offset(binary_section, shapes, n_shapes * sizeof(shape_t)),
                 .level_name_offset = (uint32_t)write_text_and_get_offset(binary_section, level_name),
                 .text_offset = (uint32_t)write_data_and_get_offset(binary_section, text_data_serialized.data(), text_data_serialized.size()),
                 .n_text_entries = (uint32_t)curr_level->n_text_entries,
@@ -509,6 +531,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 .player_spawn_rotation = player_spawn_rotation,
                 .n_entities = (uint16_t)n_entities,
                 .n_lights = (uint16_t)n_lights,
+                .n_shapes = (uint16_t)n_shapes,
             };
 
             mem_free(entity_types);
@@ -797,6 +820,48 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     }
     ImGui::End();
 
+    ImGui::Begin("Collision spawning");
+    {
+        int shape_count = 0;
+        for (size_t i = 0; i < MAX_SHAPE_COUNT; ++i) {
+            if (!curr_level->shapes) break;
+            if (curr_level->shapes[i].type != SHAPE_NONE) {
+                ++shape_count;
+            }
+        }
+
+        ImGui::Text("Shapes: %i / %i", shape_count, MAX_SHAPE_COUNT);
+
+        // Shape select dropdown
+        static size_t curr_selected_shape_type = 1;
+        curr_selected_shape_type = inspect_enum(curr_selected_shape_type, shape_type_names, "Shape type");
+
+        if (ImGui::Button("Spawn")) {
+            // Figure out where to spawn - in front of the camera
+            const vec3_t forward = renderer_get_forward_vector();
+            const vec3_t spawn_pos = vec3_add(camera->position, vec3_muls(forward, 80 * ONE));
+
+            for (size_t i = 0; i < MAX_SHAPE_COUNT; ++i) {
+                if (curr_level->shapes[i].type == SHAPE_NONE) {
+                    if (curr_selected_shape_type == SHAPE_SPHERE) {
+                        curr_level->shapes[i].sphere.center = spawn_pos;
+                        curr_level->shapes[i].sphere.radius = scalar_from_float(16.0);
+                        curr_level->shapes[i].sphere.radius_squared = scalar_mul(curr_level->shapes[i].sphere.radius, curr_level->shapes[i].sphere.radius);
+                    }
+                    else if (curr_selected_shape_type == SHAPE_AABB) {
+                    }
+                    curr_level->shapes[i].type = curr_selected_shape_type;
+                    break;
+                }
+            }
+        }
+
+        if (ImGui::Button("Defragment")) {
+            // todo(debug_shape_defragment): desc: shape_defragment();
+        }
+    }
+    ImGui::End();
+
     // Light inspector menu
     ImGui::Begin("Light Inspector", NULL, ImGuiWindowFlags_None);
     {
@@ -826,7 +891,26 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     }
     ImGui::End();
 
-    for (int i = 0; i < MAX_LIGHT_COUNT && curr_level->lights && i < curr_level->n_lights; ++i) {
+    // Collision inspector menu
+    ImGui::Begin("Collision Inspector", NULL, ImGuiWindowFlags_None);
+    {
+        if (ImGui::TreeNode("All shapes")) {
+            for (size_t i = 0; i < MAX_SHAPE_COUNT && curr_level->shapes; ++i) {
+                if (curr_level->shapes[i].type != SHAPE_NONE) {
+                    static std::string tree_nodes[MAX_SHAPE_COUNT];
+                    tree_nodes[i] = std::format("{} - {}", i, shape_type_names[curr_level->shapes[i].type]);
+                    if (ImGui::TreeNode(tree_nodes[i].c_str())) {
+                        inspect_shape(curr_level, i);
+                        ImGui::TreePop();
+                    }
+                }
+            }
+            ImGui::TreePop();
+        }
+    }
+    ImGui::End();
+
+    for (int i = 0; i < MAX_LIGHT_COUNT && curr_level->lights; ++i) {
         if (curr_level->lights[i].type != LIGHT_NONE
         && curr_level->lights[i].type != LIGHT_DIRECTIONAL) {
             transform_t trans = {
@@ -846,6 +930,19 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         }
     }
     renderer_update_lights(curr_level->lights);
+
+    for (int i = 0; i < MAX_SHAPE_COUNT && curr_level->shapes; ++i) {
+        if (curr_level->shapes[i].type == SHAPE_SPHERE) {
+            transform_t trans = {
+                .position = curr_level->shapes[i].sphere.center,
+                .rotation = vec3_from_scalar(0),
+                .scale = vec3_from_scalar(curr_level->shapes[i].sphere.radius),
+            };
+
+            renderer_set_drawing_id(i, 3);
+            renderer_draw_mesh_shaded(&gizmos->meshes[2], &trans, 0, 1);
+        }
+    }
 
     // Text editor window
     ImGui::Begin("Text editor", NULL, ImGuiWindowFlags_None);

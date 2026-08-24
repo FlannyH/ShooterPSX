@@ -14,7 +14,7 @@
 #include "../test/test.h"
 
 #include <string.h>
-#include <unistd.h> 
+#include <unistd.h>
 
 int widescreen = 0;
 state_t current_state = STATE_NONE;
@@ -42,12 +42,14 @@ int main(int argc, char** argv) {
 
     const int n_failed_tests = test();
     printf("Unit tests finished with %i errors\n", n_failed_tests);
-    
+
     level_t level = (level_t){0}; // start with empty level
     memset(&level, 0, sizeof(level));
     level.lights = mem_alloc(MAX_LIGHT_COUNT * sizeof(light_t), MEM_CAT_UNDEFINED);
     memset(level.lights, 0, MAX_LIGHT_COUNT * sizeof(light_t));
-    
+    level.shapes = mem_alloc(MAX_SHAPE_COUNT * sizeof(shape_t), MEM_CAT_UNDEFINED);
+    memset(level.shapes, 0, MAX_SHAPE_COUNT * sizeof(shape_t));
+
     player_t player; player_init(&player, vec3_from_scalar(0), vec3_from_scalar(0), 40, 0, 0);
     player_update(&player, &level.collision_bvh, 0, 0);
     debug_camera_t camera = debug_camera_new();
@@ -81,11 +83,11 @@ int main(int argc, char** argv) {
 
         input_update();
         debug_camera_update(&camera, dt, mouse_lock);
-        
+
         renderer_begin_frame(&camera.transform);
         {
             entity_update_all(&player, 0);
-            
+
             debug_layer_begin();
             debug_layer_manipulate_entity(&camera.transform, &selected_entity, &selected_light, &mouse_over_viewport, &level, &player);
             debug_layer_end();

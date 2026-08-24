@@ -138,7 +138,7 @@ OBJ_LEVEL_EDITOR		= 	$(patsubst %.c, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVE
 							$(patsubst %.cpp, 	$(PATH_OBJ_LEVEL_EDITOR)/%.o, 	$(CODE_LEVEL_EDITOR_CPP))
 
 CFLAGS = -Wall -Wextra -std=c11 -Wno-old-style-declaration -Wno-format
-CXXFLAGS = -Wall -Wextra -Werror -std=c++20 -Wno-format
+CXXFLAGS = -Wall -Wextra -std=c++20 -Wno-format
 LINKER_FLAGS =
 
 # .PHONY: all submodules pc level_editor psx nds clean mkdir_output_pc pc_dependencies glfw gl3w imgui imguizmo

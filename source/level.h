@@ -24,13 +24,15 @@ typedef struct {
     uint32_t entity_types_offset;   // Offset to entity_types data, which gets copied into `entity_types`
     uint32_t entity_pool_offset;    // Offset to entity_pool data, which gets copied into `entity_pool`
     uint32_t light_data_offset;     // Optional offset to an array of lights. Set to 0xFFFFFFFF if there are no lights
+    uint32_t shape_data_offset;     // Optional offset to an array of shapes. Set to 0xFFFFFFFF if there are no shapes
     uint32_t level_name_offset;     // Offset to string containing display name of the level as shown in game to the player
     uint32_t text_offset;           // Offset to text data for entities
     uint32_t n_text_entries;        // How many text entries there are
     svec3_t player_spawn_position;  // Where in the map the player spawns, in model space units
-    vec3_t player_spawn_rotation;   // Player spawn rotation, 0x20000 = 360 degrees
+    vec3_t player_spawn_rotation;   // Player spawn rotation, ONE = 360 degrees
     uint16_t n_entities;            // Number of predefined entities in this map
     uint16_t n_lights;              // Number of lights in this map's light array
+    uint16_t n_shapes;              // Number of shapes in this map's shape array
 } level_header_t;
 
 typedef struct {
@@ -39,7 +41,7 @@ typedef struct {
     uint8_t color_r;            // 8-bit RGB values, which are then multiplied by the intensity when applying the light
     uint8_t color_g;            // 8-bit RGB values, which are then multiplied by the intensity when applying the light
     uint8_t color_b;            // 8-bit RGB values, which are then multiplied by the intensity when applying the light
-    uint8_t type;               // What type of light this is. 0 = none, 1 = directional light, 2 = point light
+    uint8_t type;               // What type of light this is, see light_type_t
 } light_t;
 
 typedef enum {
@@ -49,10 +51,25 @@ typedef enum {
 } light_type_t;
 
 typedef struct {
+    uint8_t type;
+    union {
+        sphere_t sphere;
+        aabb_t aabb;
+    };
+} shape_t;
+
+typedef enum {
+    SHAPE_NONE = 0,
+    SHAPE_SPHERE = 1,
+    SHAPE_AABB = 2,
+} shape_type_t;
+
+typedef struct {
     model_t* graphics;
     model_t* collision_mesh_debug;
     collision_mesh_t* collision_mesh;
     light_t* lights;
+    shape_t* shapes;
     transform_t transform;
     vislist_t vislist;
     level_collision_t collision_bvh;
@@ -62,6 +79,7 @@ typedef struct {
     int n_text_entries;
     int n_level_textures;
     int n_lights;
+    int n_shapes;
 } level_t;
 
 typedef enum {
@@ -81,6 +99,7 @@ typedef enum {
 } level_load_flags_t;
 
 #define MAX_LIGHT_COUNT 256
+#define MAX_SHAPE_COUNT 256 // todo: make this bigger as fit
 
 level_t level_load(const char* level_path, const uint32_t flags);
 
