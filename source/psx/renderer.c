@@ -1,16 +1,17 @@
 #include "renderer.h"
 #include "../renderer.h"
+
+#include <string.h>
+#include <assert.h>
+#include <psxgte.h>
+#include <psxgpu.h>
+
 #include "../common.h"
 
 #include "texture_pool.h"
 #include "collision.h"
 #include "particles.h"
 #include "lut.h"
-
-#include <string.h>
-#include <assert.h>
-#include <psxgte.h>
-#include <psxgpu.h>
 
 #define TRI_THRESHOLD_MUL_SUB2_30 3
 #define TRI_THRESHOLD_MUL_SUB1_30 7
@@ -120,7 +121,7 @@ void renderer_init(void) {
     // Configures the pair of DRAWENVs for the DISPENVs
     SetDefDrawEnv(&draw[0], res_x, 0, res_x, RES_Y_NTSC);
     SetDefDrawEnv(&draw[1], 0, 0, res_x, RES_Y_NTSC);
-    
+
     // Specifies the clear color of the DRAWENV
     setRGB0(&draw[0], 16, 16, 20);
     setRGB0(&draw[1], 16, 16, 20);
@@ -199,7 +200,7 @@ void renderer_begin_frame(const transform_t* camera_transform) {
 
 void renderer_end_frame(void) {
     renderer_tick_fade();
-    
+
     // Wait for GPU to finish drawing and V-blank
     DrawSync(0);
 
@@ -215,15 +216,15 @@ void renderer_end_frame(void) {
 
     // Clear render queue
     ClearOTagR(ord_tbl[drawbuffer], ORD_TBL_LENGTH);
-    
+
     // Apply Envs
     PutDispEnv(&disp[drawbuffer]);
     PutDrawEnv(&draw[drawbuffer]);
-    
+
     // Enable display
     if (drawn_first_frame)
         SetDispMask(1);
-    
+
     // Draw Ordering Table
     DrawOTag(ord_tbl[1-drawbuffer] + ORD_TBL_LENGTH - 1);
 
@@ -252,7 +253,7 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform,
         model_transform->position.y / ONE,
         model_transform->position.z / ONE,
     };
-    TransMatrix(&model_matrix, &position); 
+    TransMatrix(&model_matrix, &position);
 
     if (local)  CompMatrixLV(&aspect_matrix, &model_matrix, &model_matrix);
     else        CompMatrixLV(&view_matrix, &model_matrix, &model_matrix);
@@ -303,7 +304,7 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
     // Allocate quad primitive
     POLY_FT4* new_quad = (POLY_FT4*)next_primitive;
     next_primitive += sizeof(POLY_FT4) / sizeof(*next_primitive);
-    setPolyFT4(new_quad); 
+    setPolyFT4(new_quad);
 
     // Position
     const int y_offset = is_pal ? 0 : -16;
@@ -316,15 +317,15 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 
     // Color
     setRGB0(new_quad, color.r, color.g, color.b);
-    
+
     // Texture info
     new_quad->clut = entry->clut;
     new_quad->tpage = entry->tpage;
     setUV4(new_quad,
-        (uv_tl.x / ONE) + entry->offset_u, (uv_tl.y / ONE) + entry->offset_v,
-        (uv_br.x / ONE) + entry->offset_u, (uv_tl.y / ONE) + entry->offset_v,
-        (uv_tl.x / ONE) + entry->offset_u, (uv_br.y / ONE) + entry->offset_v,
-        (uv_br.x / ONE) + entry->offset_u, (uv_br.y / ONE) + entry->offset_v
+        (uv_tl.x / ONE) + entry->pool_offset_u, (uv_tl.y / ONE) + entry->pool_offset_v,
+        (uv_br.x / ONE) + entry->pool_offset_u, (uv_tl.y / ONE) + entry->pool_offset_v,
+        (uv_tl.x / ONE) + entry->pool_offset_u, (uv_br.y / ONE) + entry->pool_offset_v,
+        (uv_br.x / ONE) + entry->pool_offset_u, (uv_br.y / ONE) + entry->pool_offset_v
     );
     addPrim(ord_tbl[drawbuffer] + depth + curr_ot_bias, new_quad);
 }
@@ -346,7 +347,7 @@ void renderer_apply_fade(scalar_t fade_level) {
     setXY0(new_tile, 0, 0);
     setWH(new_tile, res_x, curr_res_y);
     addPrim(ord_tbl[drawbuffer] + 0, new_tile);
-    
+
     // Set color blend mode to subtract
     DR_TPAGE* new_tpage = (DR_TPAGE*)next_primitive;
     next_primitive += sizeof(DR_TPAGE) / sizeof(*next_primitive);
@@ -422,34 +423,34 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
         return;
     }
 #endif
-    
+
     // Upload texture pixels to VRAM
     const rect_t texture_rect = texture_pool_rect(pool_id, texture_id);
     const rect_t palette_rect = texture_pool_rect(3, palette_id);
     LoadImage((RECT*)&texture_rect, (uint32_t*)texture->data);
     LoadImage((RECT*)&palette_rect, (uint32_t*)texture->palette);
     DrawSync(0);
-    
+
     // Calculate texture metadata
     /*if (texture->bits_per_pixel == 16)*/ uint16_t texture_mode = 2;
     if (texture->bits_per_pixel == 8) texture_mode = 1;
     else if (texture->bits_per_pixel == 4) texture_mode = 0;
-    #ifdef _DEBUG   
+    #ifdef _DEBUG
     else printf("[WARN] texture->bits_per_pixel: got %i, expected 4, 8, or 16\n", texture->bits_per_pixel);
     #endif
-    
+
     // Store texture metadata
     uint32_t offset_u = texture_rect.x;
     if (texture->bits_per_pixel == 8) offset_u *= 2;
     else if (texture->bits_per_pixel == 4) offset_u *= 4;
-    
+
     const texture_entry_t tex_entry = {
         .tpage = getTPage(texture_mode, 0, texture_rect.x, texture_rect.y),
         .clut = getClut(palette_rect.x, palette_rect.y),
 		.width = texture->width,
 		.height = texture->height,
-        .offset_u = (uint8_t)(offset_u & 0xFF),
-        .offset_v = (uint8_t)(texture_rect.y & 0xFF),
+        .pool_offset_u = (uint8_t)(offset_u & 0xFF),
+        .pool_offset_v = (uint8_t)(texture_rect.y & 0xFF),
         .texture_pool_id = (uint8_t)pool_id,
         .texture_entry_id = texture_id,
         .palette_pool_id = 3,
@@ -506,7 +507,7 @@ void renderer_set_video_mode(int is_pal) {
     // Specifies the clear color of the DRAWENV
     setRGB0(&draw[0], 16, 16, 20);
     setRGB0(&draw[1], 16, 16, 20);
-    
+
     // Enable background clear
     draw[0].isbg = 1;
     draw[1].isbg = 1;

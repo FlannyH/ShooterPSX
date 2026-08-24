@@ -1,7 +1,7 @@
 #include "input.h"
 #include "../common.h"
 
-#include "scalar.h"
+#include "../math/scalar.h"
 
 #include <psxapi.h>
 #include <psxpad.h>

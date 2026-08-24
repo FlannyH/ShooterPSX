@@ -1,10 +1,10 @@
 #include "mixer.h"
 #include "music.h"
-#include "../common.h"
 #include <hwregs_c.h>
 #include <psxetc.h>
 #include <psxapi.h>
 #include <psxspu.h>
+#include "../common.h"
 
 #define SBK_MUSIC_SIZE (333 * KiB)
 #define SBK_MUSIC_OFFSET 0x01000
@@ -17,7 +17,7 @@ static void timer2_handler(void) {
 void mixer_init(void) {
     SpuInit();
 
-	TIMER_CTRL(2) = 
+	TIMER_CTRL(2) =
 		(2 << 8) | // Use "System Clock / 8" source
 		(1 << 4) | // Interrupt when hitting target value
 		(1 << 6) | // Repeat this interrupt every time the timer reaches target
@@ -42,7 +42,7 @@ void mixer_global_set_volume(scalar_t left, scalar_t right) {
 
 void mixer_set_music_tempo(uint32_t raw_tempo) {
     // Convert from raw tempo value to sysclock reload value
-    TIMER_RELOAD(2) = (raw_tempo * 44100) / 512; 
+    TIMER_RELOAD(2) = (raw_tempo * 44100) / 512;
 }
 
 void mixer_channel_set_sample_rate(size_t channel_index, scalar_t sample_rate) {

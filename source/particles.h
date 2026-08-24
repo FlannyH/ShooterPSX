@@ -4,8 +4,8 @@
 #include "texture.h"
 #include "structs.h"
 #include "random.h"
-#include "vec3.h"
-#include "vec2.h"
+#include "math/vec3.h"
+#include "math/vec2.h"
 
 enum BlendMode
 {

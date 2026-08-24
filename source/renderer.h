@@ -44,6 +44,10 @@ typedef struct ALIGNED(4) {
     uint8_t palette_entry_id; // invalid if set to 255
     uint16_t pool_offset_u;
     uint16_t pool_offset_v;
+#ifdef _PSX
+    uint16_t clut;
+    uint16_t tpage;
+#endif
 } texture_entry_t;
 
 typedef enum {

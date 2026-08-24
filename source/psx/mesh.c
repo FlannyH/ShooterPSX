@@ -38,7 +38,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
 	if (on_stack) {
 		model = mem_stack_alloc(sizeof(model_t), stack);
 		model->meshes = mem_stack_alloc(sizeof(mesh_t) * model_header->n_submeshes, stack);
-	} 
+	}
 	else {
 		model = mem_alloc(sizeof(model_t), MEM_CAT_MODEL);
 		model->meshes = mem_alloc(sizeof(mesh_t) * model_header->n_submeshes, MEM_CAT_MESH);
@@ -58,7 +58,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
         char* string = NULL;
         if (on_stack) {
             string = mem_stack_alloc(mesh_name_length + 1, stack);
-        } 
+        }
         else {
             string = mem_alloc(mesh_name_length + 1, MEM_CAT_MODEL);
         }
@@ -166,9 +166,9 @@ void precompute_tex_triangle(POLY_GT3* prim, const vertex_3d_t* vertices, textur
     setRGB2(prim, v2.r >> 1, v2.g >> 1, v2.b >> 1);
 
     setUV3(prim,
-        (v0.u + entry->offset_u), (v0.v + entry->offset_v),
-        (v1.u + entry->offset_u), (v1.v + entry->offset_v),
-        (v2.u + entry->offset_u), (v2.v + entry->offset_v)
+        (v0.u + entry->pool_offset_u), (v0.v + entry->pool_offset_v),
+        (v1.u + entry->pool_offset_u), (v1.v + entry->pool_offset_v),
+        (v2.u + entry->pool_offset_u), (v2.v + entry->pool_offset_v)
     );
 
     prim->clut = entry->clut; // note: when rendering, offset the Y coordinate by clut_fade for the distance fog effect
@@ -189,10 +189,10 @@ void precompute_tex_quad(POLY_GT4* prim, const vertex_3d_t* vertices, texture_ca
     setRGB3(prim, v3.r >> 1, v3.g >> 1, v3.b >> 1);
 
     setUV4(prim,
-        (v0.u + entry->offset_u), (v0.v + entry->offset_v),
-        (v1.u + entry->offset_u), (v1.v + entry->offset_v),
-        (v2.u + entry->offset_u), (v2.v + entry->offset_v),
-        (v3.u + entry->offset_u), (v3.v + entry->offset_v)
+        (v0.u + entry->pool_offset_u), (v0.v + entry->pool_offset_v),
+        (v1.u + entry->pool_offset_u), (v1.v + entry->pool_offset_v),
+        (v2.u + entry->pool_offset_u), (v2.v + entry->pool_offset_v),
+        (v3.u + entry->pool_offset_u), (v3.v + entry->pool_offset_v)
     );
 
     prim->clut = entry->clut; // note: when rendering, offset the Y coordinate by clut_fade for the distance fog effect

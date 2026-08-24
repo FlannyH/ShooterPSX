@@ -10,6 +10,9 @@
 typedef int32_t fixed20_12_t;
 typedef fixed20_12_t scalar_t;
 
+#ifdef ONE
+#undef ONE
+#endif
 #define ONE ((scalar_t)(1 << 12))
 
 #define SCALAR(a) ((int32_t)(((a) * (ONE)) + (((a) >= 0.0f) ? 0.5f : -0.5f)))
