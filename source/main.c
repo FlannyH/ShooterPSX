@@ -1,24 +1,14 @@
 #include "main.h"
 #include "common.h"
 
-#include "entities/pickup.h"
-#include "entities/chaser.h"
-#include "entities/crate.h"
-#include "entities/door.h"
-#include "math/scalar.h"
-#include "renderer.h"
-#include "texture.h"
-#include "cheats.h"
-#include "player.h"
-#include "memory.h"
-#include "entity.h"
-#include "random.h"
+
 #include "input.h"
 #include "music.h"
 #include "file.h"
-#include "text.h"
 
+#ifdef _DEBUG
 #include "test/test.h"
+#endif
 
 #ifdef _PSX
 #include <psxcd.h>

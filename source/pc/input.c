@@ -1,7 +1,6 @@
 #include "input.h"
 
 #include "pc/psx.h"
-#include "../common.h"
 
 #include <GL/gl3w.h>
 
@@ -81,7 +80,7 @@ void input_update(void) {
     GLFWgamepadstate state2;
     glfwGetGamepadState(player1_index, &state1);
     glfwGetGamepadState(player2_index, &state2);
-    
+
     // Gamepad
     if (glfwGetGamepadState(player1_index, &state1)) {
         left_stick_x[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_LEFT_X] * 127.f);
@@ -162,8 +161,8 @@ void input_update(void) {
     if (glfwGetKey(window, GLFW_KEY_S)) { left_stick_y[0] = -127; }
     if (glfwGetKey(window, GLFW_KEY_D)) { left_stick_x[0] = +127; }
     button_curr[0] |= (PAD_SELECT)*glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT);
-    //button_curr[0] |= (PAD_L3)*       glfwGetKey(window, GLFW_KEY_)   
-    //button_curr[0] |= (PAD_R3)*       glfwGetKey(window, GLFW_KEY_)   
+    //button_curr[0] |= (PAD_L3)*       glfwGetKey(window, GLFW_KEY_)
+    //button_curr[0] |= (PAD_R3)*       glfwGetKey(window, GLFW_KEY_)
     button_curr[0] |= (PAD_START)*glfwGetKey(window, GLFW_KEY_ESCAPE);
     button_curr[0] |= (PAD_UP)*glfwGetKey(window, GLFW_KEY_UP);
     button_curr[0] |= (PAD_RIGHT)*glfwGetKey(window, GLFW_KEY_RIGHT);
@@ -319,6 +318,6 @@ int input_mouse_movement_y(void) {
     return (int)(cursor_pos_prev_y - cursor_pos_y);
 }
 
-int input_mouse_scroll(void) { 
+int input_mouse_scroll(void) {
     return (int)(mouse_scroll_curr - mouse_scroll_prev);
 }

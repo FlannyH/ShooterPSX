@@ -2,7 +2,7 @@
 #define LUT_H
 #include <stdint.h>
 
-// Q20.12 fixed point multiplier for panning. 
+// Q20.12 fixed point multiplier for panning.
 // Applies circular panning law for a pan value where 0 = left, 127 = center, 254 - right
 // Value goes from 0 - 4096, which corresponds to the volume of the right channel.
 // To get the left channel, plug in `254 - panning` instead

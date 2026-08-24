@@ -34,21 +34,23 @@ typedef struct {
 } player_t;
 
 #define PLAYER_VELOCITY_PRECISION 16
-const static int32_t eye_height = 200 * COL_SCALE;
-const static int32_t player_radius = 100 * COL_SCALE;
-const static int32_t step_height = 100 * COL_SCALE;
-const static int32_t terminal_velocity_down = -32000;
-const static int32_t terminal_velocity_up = 40000;
-const static int32_t gravity = -5;
-const static int32_t walking_acceleration = 45;
-const static int32_t air_acceleration_divider = 2;
-const static int32_t walking_max_speed = 12000;
-const static int32_t stick_sensitivity = 3200;
-const static int32_t mouse_sensitivity = 128000;
-const static int32_t walking_drag = 44;
-const static int32_t jump_drag_divider = 4;
-const static int32_t initial_jump_velocity = 1200;
-const static int32_t jump_ground_threshold = 4000;
+const static scalar_t eye_height = SCALAR(200);
+const static scalar_t player_height = SCALAR(200);
+const static scalar_t player_radius = SCALAR(160);
+// const static int32_t step_height = SCALAR(100);
+const static scalar_t terminal_velocity_down = SCALAR(-5.0);
+// const static int32_t terminal_velocity_up = 40000;
+const static scalar_t gravity = SCALAR(-5.0);
+const static scalar_t walking_acceleration = SCALAR(16.0);
+const static scalar_t air_acceleration_scalar = SCALAR(0.5);
+const static scalar_t walking_max_speed = SCALAR(1.5);
+const static scalar_t stick_sensitivity = SCALAR(0.25);
+const static scalar_t mouse_sensitivity = SCALAR(2.0);
+const static scalar_t walking_drag = SCALAR(8.0);
+const static scalar_t vertical_drag = SCALAR(2.0);
+const static int32_t jump_drag_scalar = 4;
+// const static int32_t initial_jump_velocity = 1200;
+// const static int32_t jump_ground_threshold = 4000;
 
 void player_init(player_t* player, vec3_t position, vec3_t rotation, int health, int armor, int ammo);
 void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms, const int time_counter);
