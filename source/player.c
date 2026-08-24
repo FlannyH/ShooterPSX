@@ -15,7 +15,7 @@
 
 #define FOOTSTEP_TIMER_MAX 350
 
-static scalar_t player_radius_squared = 0;
+static scalar_t player_radius_squared = ((int64_t)player_radius * (int64_t)player_radius) >> 12;
 
 void player_init(player_t* player, vec3_t position, vec3_t rotation, int health, int armor, int ammo) {
     player->transform = (transform_t){
@@ -53,14 +53,14 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
     }
     (void)level_bvh;
     (void)dt_ms;
-    
+
     /*
     // If we entered the entity this frame, notify the entity
     if (self->ground_entity_id_prev == -1 && self->ground_entity_id_curr != -1) {
         entity_send_player_intersect(self->ground_entity_id_curr, self);
     }
 
-    // If we're on an entity this frame, move the player along with it    
+    // If we're on an entity this frame, move the player along with it
     if (self->ground_entity_id_prev == self->ground_entity_id_curr && self->ground_entity_id_curr != -1) {
         self->position = vec3_add(self->position, vec3_sub(self->ground_entity_curr.position, self->ground_entity_prev.position));
         self->rotation = vec3_add(self->rotation, vec3_sub(self->ground_entity_curr.rotation, self->ground_entity_prev.rotation));
@@ -124,7 +124,7 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
 
         // Set player camera height to eye_height units above the ground
         self->position.y = (hit.position.y + eye_height);
-        
+
         self->is_grounded = 1;
     }
 */
@@ -146,15 +146,15 @@ void handle_stick_input(player_t* self, const int dt_ms) {
     const scalar_t curr_acceleration = (self->is_grounded) ? (walking_acceleration * dt_ms) : ((walking_acceleration * dt_ms) / air_acceleration_divider);
 
     // todo: merge parts of this code so we only do one set of additions to the player pos rot and vel
-    
+
     if (input_mouse_connected()) {
         // Moving forwards and backwards
-        self->velocity.x += hisin(self->rotation.y) * input_left_stick_y(0) * (curr_acceleration) >> 16;
-        self->velocity.z += hicos(self->rotation.y) * input_left_stick_y(0) * (curr_acceleration) >> 16;
+        self->velocity.x += trig_sin(self->rotation.y) * input_left_stick_y(0) * (curr_acceleration) >> 16;
+        self->velocity.z += trig_cos(self->rotation.y) * input_left_stick_y(0) * (curr_acceleration) >> 16;
 
         // Strafing left and right
-        self->velocity.x += hicos(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
-        self->velocity.z -= hisin(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
+        self->velocity.x += trig_cos(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
+        self->velocity.z -= trig_sin(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
 
         // Look up and down
         self->rotation.x -= (int32_t)(input_mouse_movement_y()) * (mouse_sensitivity) >> 12;
@@ -171,12 +171,12 @@ void handle_stick_input(player_t* self, const int dt_ms) {
 
     if (input_has_analog(0)) {
         // Moving forwards and backwards
-        self->velocity.x += hisin(self->rotation.y) * input_left_stick_y(0) * (curr_acceleration) >> 16;
-        self->velocity.z += hicos(self->rotation.y) * input_left_stick_y(0) * (curr_acceleration) >> 16;
+        self->velocity.x += trig_sin(self->rotation.y) * input_left_stick_y(0) * (curr_acceleration) >> 16;
+        self->velocity.z += trig_cos(self->rotation.y) * input_left_stick_y(0) * (curr_acceleration) >> 16;
 
         // Strafing left and right
-        self->velocity.x += hicos(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
-        self->velocity.z -= hisin(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
+        self->velocity.x += trig_cos(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
+        self->velocity.z -= trig_sin(self->rotation.y) * input_left_stick_x(0) * (curr_acceleration) >> 16;
 
         // Look up and down
         self->rotation.x -= (int32_t)(input_right_stick_y(0)) * (stick_sensitivity * dt_ms) >> 12;
@@ -192,27 +192,27 @@ void handle_stick_input(player_t* self, const int dt_ms) {
 
         // Debug
         if (input_held(PAD_UP, 0)) {
-            self->position.y += 4096 * dt_ms;
+            self->position.y += ONE * dt_ms;
             self->velocity.y = 0;
         }
         if (input_held(PAD_DOWN, 0)) {
-            self->position.y -= 4096 * dt_ms;
+            self->position.y -= ONE * dt_ms;
             self->velocity.y = 0;
         }
     } else {
         // Look left and right
         const int32_t dpad_x = ((int32_t)(input_held(PAD_RIGHT, 0) != 0) * 127) + ((int32_t)(input_held(PAD_LEFT, 0) != 0) * -127);
         self->rotation.y += dpad_x * (stick_sensitivity * dt_ms) >> 12;
-        
+
         // Moving forwards and backwards
         const int32_t dpad_y = ((int32_t)(input_held(PAD_UP, 0) != 0) * 127) + ((int32_t)(input_held(PAD_DOWN, 0) != 0) * -127);
-        self->velocity.x += hisin(self->rotation.y) * dpad_y * (curr_acceleration) >> 16;
-        self->velocity.z += hicos(self->rotation.y) * dpad_y * (curr_acceleration) >> 16;
+        self->velocity.x += trig_sin(self->rotation.y) * dpad_y * (curr_acceleration) >> 16;
+        self->velocity.z += trig_cos(self->rotation.y) * dpad_y * (curr_acceleration) >> 16;
 
         // Strafing left and right
         const int32_t shoulder_x = ((int32_t)(input_held(PAD_L1, 0) != 0) * 127) + ((int32_t)(input_held(PAD_R1, 0) != 0) * -127);
-        self->velocity.x -= hicos(self->rotation.y) * shoulder_x * (curr_acceleration) >> 16;
-        self->velocity.z += hisin(self->rotation.y) * shoulder_x * (curr_acceleration) >> 16;
+        self->velocity.x -= trig_cos(self->rotation.y) * shoulder_x * (curr_acceleration) >> 16;
+        self->velocity.z += trig_sin(self->rotation.y) * shoulder_x * (curr_acceleration) >> 16;
     }
 }
 
@@ -238,7 +238,7 @@ void handle_drag(player_t* self, const int dt_ms) {
     else if (velocity_scalar > curr_drag) {
         velocity_scalar -= curr_drag;
     }
-    else {           
+    else {
         velocity_scalar = 0;
     }
 
@@ -273,8 +273,8 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
 #ifndef _DEBUG_CAMERA
         // Collide
         const vertical_cylinder_t cyl = {
-            .bottom = (vec3_t){self->position.x, self->position.y - eye_height - 4096 + step_height, self->position.z},
-            .height = eye_height + 4096 - step_height,
+            .bottom = (vec3_t){self->position.x, self->position.y - eye_height - ONE + step_height, self->position.z},
+            .height = eye_height + ONE - step_height,
             .radius = player_radius,
             .radius_squared = player_radius_squared,
             .is_wall_check = 1,
@@ -327,9 +327,9 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
     if (!level_bvh) return;
 
     const vec3_t player_right = (vec3_t) {
-        -hicos(self->rotation.y),
+        -trig_cos(self->rotation.y),
         0,
-        +hisin(self->rotation.y),
+        +trig_sin(self->rotation.y),
     };
     audio_update_listener(self->position, player_right);
 
@@ -341,22 +341,22 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
 #ifndef _DEBUG_CAMERA
     apply_gravity(self, dt_ms);
 #endif
-    check_ground_collision(self, level_bvh, dt_ms);
+    // check_ground_collision(self, level_bvh, dt_ms);
     handle_stick_input(self, dt_ms);
     handle_drag(self, dt_ms);
 #ifndef _DEBUG_CAMERA
     handle_jump(self);
 #endif
     handle_movement(self, level_bvh, dt_ms);
-    
+
 #ifdef _DEBUG_CAMERA
     (void)time_counter;
     self->position.y += 1000 * ((dt_ms * (input_held(PAD_UP, 0) != 0)) - (dt_ms * (input_held(PAD_DOWN, 0) != 0)));
-    self->transform.position.y = self->position.y * (4096 / COL_SCALE);
+    self->transform.position.y = self->position.y;
 #else
     const vec2_t vel_2d = {self->velocity.x, self->velocity.z};
     const scalar_t speed_1d = vec2_magnitude(vel_2d) / PLAYER_VELOCITY_PRECISION;
-    self->transform.position.y = self->position.y * (4096 / COL_SCALE) + isin(time_counter * 12) * speed_1d / 64;
+    self->transform.position.y = self->position.y + isin(time_counter * 12) * speed_1d / 64;
 
     self->footstep_timer += dt_ms;
     if (self->footstep_timer >= FOOTSTEP_TIMER_MAX) {
@@ -366,9 +366,14 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
         }
     }
 #endif
-    self->transform.position.x = self->position.x * (4096 / COL_SCALE);
-    self->transform.position.z = self->position.z * (4096 / COL_SCALE);
-    
+
+    const vec2_t vel_2d = {self->velocity.x, self->velocity.z};
+    const scalar_t speed_1d = vec2_magnitude(vel_2d) / PLAYER_VELOCITY_PRECISION;
+
+    self->transform.position.x = self->position.x;
+    self->transform.position.y = self->position.y + trig_sin(time_counter * 12) * speed_1d / 64;
+    self->transform.position.z = self->position.z;
+
     self->transform.rotation.x = self->rotation.x;
     self->transform.rotation.y = self->rotation.y;
     self->transform.rotation.z = self->rotation.z;
