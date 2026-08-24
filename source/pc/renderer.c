@@ -893,8 +893,8 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 	rect_t tex_rect = texture_pool_rect(pool_id, pool_entry);
 
 	texture_entry_t tex_entry = {
-		.offset_u = tex_rect.x,
-		.offset_v = tex_rect.y,
+		.pool_offset_u = tex_rect.x,
+		.pool_offset_v = tex_rect.y,
 		.width = texture->width,
 		.height = texture->height,
 		.allocated = 1,
@@ -1072,4 +1072,8 @@ float* renderer_debug_perspective_matrix(void) {
 
 float* renderer_debug_view_matrix(void) {
 	return &view_matrix[0][0];
+}
+
+int renderer_debug_fetch_atlas(void) {
+    return textures;
 }

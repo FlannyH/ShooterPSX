@@ -34,24 +34,16 @@ const static transform_t id_transform = { {0,0,0},{0,0,0}, {ONE, ONE, ONE} };
 extern int widescreen;
 
 typedef struct ALIGNED(4) {
-#ifdef _PSX
-    uint16_t tpage;
-    uint16_t clut;
-#endif
+    pixel32_t average_color;
+    uint8_t allocated; // unallocated if 0, allocated otherwise
     uint8_t width; // 0 = 256
     uint8_t height; // 0 = 256
-#ifndef _NDS
-    uint8_t offset_u;
-    uint8_t offset_v;
     uint8_t texture_pool_id; // invalid if set to 255
-#endif
     uint8_t texture_entry_id; // invalid if set to 255
-#ifndef _NDS
     uint8_t palette_pool_id; // invalid if set to 255
     uint8_t palette_entry_id; // invalid if set to 255
-#endif
-    uint8_t allocated; // unallocated if 0, allocated otherwise
-    pixel32_t average_color;
+    uint16_t pool_offset_u;
+    uint16_t pool_offset_v;
 } texture_entry_t;
 
 typedef enum {
@@ -98,6 +90,7 @@ texture_entry_t* renderer_get_texture_entry(texture_category_t category, int tex
 #ifdef _LEVEL_EDITOR
 float* renderer_debug_perspective_matrix(void);
 float* renderer_debug_view_matrix(void);
+int renderer_debug_fetch_atlas(void);
 void renderer_set_drawing_id(int id, int what); // what: 0 = none, 1 = entity, 2 = light
 void renderer_update_window_res(int width, int height);
 void renderer_update_lights(const light_t* const lights);

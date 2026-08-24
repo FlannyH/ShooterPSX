@@ -981,6 +981,54 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     }
     ImGui::End();
 
+    // Texture viewer window
+    ImGui::Begin("Texture viewer", NULL, ImGuiWindowFlags_None);
+    {
+        if (ImGui::TreeNode("Level textures")) {
+            for (size_t i = 0; i < MAX_TEXTURE_COUNT; ++i) {
+                texture_entry_t* entry = renderer_get_texture_entry(TEX_CAT_LEVEL, i);
+                if (!entry->allocated) continue;
+
+                float u0 = entry->pool_offset_u;
+                float v0 = entry->pool_offset_v;
+                float u1 = u0 + entry->width;
+                float v1 = v0 + entry->height;
+                u0 /= 2048;
+                u1 /= 2048;
+                v0 /= 2048;
+                v1 /= 2048;
+
+                ImGui::Image(
+                    (ImTextureID)renderer_debug_fetch_atlas(),
+                    ImVec2(64, 64),
+                    ImVec2(u0, v0),
+                    ImVec2(u1, v1)
+                );
+
+                ImGui::SameLine();
+                ImGui::Text("Resolution: %i x %i", entry->width ? entry->width : 256, entry->height ? entry->height : 256);
+
+                ImGui::SameLine();
+                ImGui::Text("Pool offset: (%i, %i)", entry->pool_offset_u, entry->pool_offset_v);
+
+                ImGui::SameLine();
+                ImGui::Text("Pool %i", entry->texture_pool_id);
+
+                ImGui::SameLine();
+                ImGui::Text("Entry %i", entry->texture_entry_id);
+            }
+            ImGui::TreePop();
+        }
+        if (ImGui::TreeNode("Texture Atlas")) {
+            ImGui::Image(
+                (ImTextureID)renderer_debug_fetch_atlas(),
+                ImVec2(2048, 2048)
+            );
+            ImGui::TreePop();
+        }
+    }
+    ImGui::End();
+
     // Viewport with gizmos
     int flags = ImGuizmo::IsOver() || ImGuizmo::IsUsingAny() ? ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove : 0;
     ImGui::Begin("Viewport", NULL, flags);
