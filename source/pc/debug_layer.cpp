@@ -303,6 +303,49 @@ void inspect_shape(level_t* curr_level, size_t shape_id) {
 
 }
 
+void draw_texture_category(const char* name, texture_category_t category, bool show_detail) {
+    const float cell_width = 80 + (show_detail * 152);
+    int items_per_row = ImGui::GetContentRegionAvail().x / cell_width;
+    if (items_per_row < 1) items_per_row = 1;
+    int column = 0;
+    if (ImGui::TreeNode(name)) {
+        for (size_t i = 0; i < MAX_TEXTURE_COUNT; ++i) {
+            texture_entry_t* entry = renderer_get_texture_entry(category, i);
+            if (!entry->allocated) continue;
+
+            float u0 = entry->pool_offset_u;
+            float v0 = entry->pool_offset_v;
+            float u1 = u0 + entry->width;
+            float v1 = v0 + entry->height;
+            u0 /= 2048;
+            u1 /= 2048;
+            v0 /= 2048;
+            v1 /= 2048;
+
+            if ((column++ % items_per_row) != 0) {
+                ImGui::SameLine();
+            }
+            ImGui::Image(
+                (ImTextureID)renderer_debug_fetch_atlas(),
+                ImVec2(64, 64),
+                ImVec2(u0, v0),
+                ImVec2(u1, v1)
+            );
+
+            if (show_detail) {
+                ImGui::SameLine();
+                ImGui::BeginGroup();
+                ImGui::Text("Resolution: %i x %i", entry->width ? entry->width : 256, entry->height ? entry->height : 256);
+                ImGui::Text("Pool offset: (%i, %i)", entry->pool_offset_u, entry->pool_offset_v);
+                ImGui::Text("Pool %i", entry->texture_pool_id);
+                ImGui::Text("Entry %i", entry->texture_entry_id);
+                ImGui::EndGroup();
+            }
+        }
+    ImGui::TreePop();
+    }
+}
+
 #define PI 3.14159265358979f
 void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slot, int* selected_light_slot, int* selected_shape_slot, int* mouse_over_viewport, level_t* curr_level, player_t* player) {
     ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
@@ -1028,45 +1071,18 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     // Texture viewer window
     ImGui::Begin("Texture viewer", NULL, ImGuiWindowFlags_None);
     {
-        if (ImGui::TreeNode("Level textures")) {
-            for (size_t i = 0; i < MAX_TEXTURE_COUNT; ++i) {
-                texture_entry_t* entry = renderer_get_texture_entry(TEX_CAT_LEVEL, i);
-                if (!entry->allocated) continue;
-
-                float u0 = entry->pool_offset_u;
-                float v0 = entry->pool_offset_v;
-                float u1 = u0 + entry->width;
-                float v1 = v0 + entry->height;
-                u0 /= 2048;
-                u1 /= 2048;
-                v0 /= 2048;
-                v1 /= 2048;
-
-                ImGui::Image(
-                    (ImTextureID)renderer_debug_fetch_atlas(),
-                    ImVec2(64, 64),
-                    ImVec2(u0, v0),
-                    ImVec2(u1, v1)
-                );
-
-                ImGui::SameLine();
-                ImGui::Text("Resolution: %i x %i", entry->width ? entry->width : 256, entry->height ? entry->height : 256);
-
-                ImGui::SameLine();
-                ImGui::Text("Pool offset: (%i, %i)", entry->pool_offset_u, entry->pool_offset_v);
-
-                ImGui::SameLine();
-                ImGui::Text("Pool %i", entry->texture_pool_id);
-
-                ImGui::SameLine();
-                ImGui::Text("Entry %i", entry->texture_entry_id);
-            }
-            ImGui::TreePop();
-        }
+        static bool show_detail = false;
+        ImGui::Checkbox("View allocation details", &show_detail);
+        draw_texture_category("Level textures", TEX_CAT_LEVEL, show_detail);
+        draw_texture_category("Entity textures", TEX_CAT_ENTITY, show_detail);
+        draw_texture_category("Weapon textures", TEX_CAT_WEAPON, show_detail);
+        draw_texture_category("Misc textures", TEX_CAT_MISC, show_detail);
+        draw_texture_category("Persistent textures", TEX_CAT_PERSISTENT, show_detail);
         if (ImGui::TreeNode("Texture Atlas")) {
+            auto avail = ImGui::GetContentRegionAvail().x;
             ImGui::Image(
                 (ImTextureID)renderer_debug_fetch_atlas(),
-                ImVec2(2048, 2048)
+                ImVec2(avail, avail)
             );
             ImGui::TreePop();
         }
