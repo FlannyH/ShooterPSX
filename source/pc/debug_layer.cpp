@@ -322,6 +322,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     static char* level_name = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
     static texture_cpu_t* gizmo_textures = nullptr;
     static bool initialized = false;
+    static auto gizmode = ImGuizmo::TRANSLATE;
 
     // Debug state
     static bool render_level_graphics = true;
@@ -1080,7 +1081,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         const ImVec2 mouse_pos = ImGui::GetMousePos();
         const ImVec2 window_pos = ImGui::GetWindowPos();
         const ImVec2 content_offset_top_left = ImGui::GetWindowContentRegionMin();
-        const ImVec2 content_offset_bottom_right = ImGui::GetWindowContentRegionMax();
+        ImVec2 content_offset_bottom_right = ImGui::GetWindowContentRegionMax();
+        content_offset_bottom_right.y -= ImGui::GetFrameHeightWithSpacing() * 1.0f;
         ImVec2 rel_mouse_pos = mouse_pos;
         rel_mouse_pos.x -= content_offset_top_left.x + window_pos.x;
         rel_mouse_pos.y -= content_offset_top_left.y + window_pos.y;
@@ -1093,6 +1095,16 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         // Draw the viewport
         const auto wsize = ImVec2(renderer_width(), renderer_height());
         ImGui::Image((ImTextureID)(intptr_t)fb_texture, wsize, ImVec2(0, 1), ImVec2(1, 0));
+
+        static int selected = 0;
+        ImGui::RadioButton("Translate", &selected, 0);
+        ImGui::SameLine();
+        ImGui::RadioButton("Rotate", &selected, 1);
+        ImGui::SameLine();
+        ImGui::RadioButton("Scale", &selected, 2);
+        if (selected == 0) gizmode = ImGuizmo::TRANSLATE;
+        else if (selected == 1) gizmode = ImGuizmo::ROTATE;
+        else if (selected == 2) gizmode = ImGuizmo::SCALE;
 
         // Handle entity gizmo
         ImGuizmo::SetOrthographic(false);
@@ -1159,47 +1171,85 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             };
             glm_translate(model_matrix, position);
             glm_scale(model_matrix, scale);
-            glm_rotate_x(model_matrix, (float)render_transform.rotation.x * 2 * PI / 131072.0f, model_matrix);
-            glm_rotate_y(model_matrix, (float)render_transform.rotation.y * 2 * PI / 131072.0f, model_matrix);
-            glm_rotate_z(model_matrix, (float)render_transform.rotation.z * 2 * PI / 131072.0f, model_matrix);
+            glm_rotate_z(model_matrix, ((float)render_transform.rotation.z * 2 * PI) / ONE, model_matrix);
+            glm_rotate_y(model_matrix, ((float)render_transform.rotation.y * 2 * PI) / ONE, model_matrix);
+            glm_rotate_x(model_matrix, ((float)render_transform.rotation.x * 2 * PI) / ONE, model_matrix);
 
             if (ImGuizmo::Manipulate(
                 renderer_debug_view_matrix(),
                 renderer_debug_perspective_matrix(),
-                ImGuizmo::TRANSLATE,
-                ImGuizmo::LOCAL,
+                gizmode,
+                ImGuizmo::WORLD,
                 &model_matrix[0][0],
                 &delta[0][0]
             )) {
-                vec3 translation, rotation, scale;
+                vec3 translation{}, rotation{}, scale{};
                 ImGuizmo::DecomposeMatrixToComponents(&delta[0][0], &translation[0], &rotation[0], &scale[0]);
+
+                printf("t: %3.3f, %3.3f, %3.3f\t", translation[0], translation[1], translation[2]);
+                printf("r: %3.3f, %3.3f, %3.3f\t", rotation[0], rotation[1], rotation[2]);
+                printf("s: %3.3f, %3.3f, %3.3f\n\n", scale[0], scale[1], scale[2]);
 
                 if (has_selected_entity) {
                     entity_header_t* selected_entity = entity_get_header(*selected_entity_slot);
-                    selected_entity->position.x += SCALAR(translation[0]);
-                    selected_entity->position.y += SCALAR(translation[1]);
-                    selected_entity->position.z += SCALAR(translation[2]);
+                    if (gizmode == ImGuizmo::TRANSLATE) {
+                        selected_entity->position.x += SCALAR(translation[0]);
+                        selected_entity->position.y += SCALAR(translation[1]);
+                        selected_entity->position.z += SCALAR(translation[2]);
+                    }
+                    if (gizmode == ImGuizmo::ROTATE) {
+                        selected_entity->rotation.x += SCALAR(rotation[0] / 360.0f);
+                        selected_entity->rotation.y += SCALAR(rotation[1] / 360.0f);
+                        selected_entity->rotation.z += SCALAR(rotation[2] / 360.0f);
+                    }
+                    if (gizmode == ImGuizmo::SCALE) {
+                        selected_entity->scale.x = scalar_mul(selected_entity->scale.x, SCALAR(scale[0]));
+                        selected_entity->scale.y = scalar_mul(selected_entity->scale.y, SCALAR(scale[1]));
+                        selected_entity->scale.z = scalar_mul(selected_entity->scale.z, SCALAR(scale[2]));
+                    }
                 }
                 if (has_selected_light) {
                     light_t* selected_light = &curr_level->lights[*selected_light_slot];
-                    selected_light->direction_position.x += translation[0];
-                    selected_light->direction_position.y += translation[1];
-                    selected_light->direction_position.z += translation[2];
+                    if (gizmode == ImGuizmo::TRANSLATE) {
+                        selected_light->direction_position.x += translation[0];
+                        selected_light->direction_position.y += translation[1];
+                        selected_light->direction_position.z += translation[2];
+                    }
                 }
                 if (has_selected_shape) {
                     shape_t* selected_shape = &curr_level->shapes[*selected_shape_slot];
                     if (selected_shape->type == SHAPE_SPHERE) {
-                        selected_shape->sphere.center.x += SCALAR(translation[0]);
-                        selected_shape->sphere.center.y += SCALAR(translation[1]);
-                        selected_shape->sphere.center.z += SCALAR(translation[2]);
+                        if (gizmode == ImGuizmo::TRANSLATE) {
+                            selected_shape->sphere.center.x += SCALAR(translation[0]);
+                            selected_shape->sphere.center.y += SCALAR(translation[1]);
+                            selected_shape->sphere.center.z += SCALAR(translation[2]);
+                        }
                     }
                     else if (selected_shape->type == SHAPE_AABB) {
-                        selected_shape->aabb.min.x += SCALAR(translation[0]);
-                        selected_shape->aabb.min.y += SCALAR(translation[1]);
-                        selected_shape->aabb.min.z += SCALAR(translation[2]);
-                        selected_shape->aabb.max.x += SCALAR(translation[0]);
-                        selected_shape->aabb.max.y += SCALAR(translation[1]);
-                        selected_shape->aabb.max.z += SCALAR(translation[2]);
+                        if (gizmode == ImGuizmo::TRANSLATE) {
+                            selected_shape->aabb.min.x += SCALAR(translation[0]);
+                            selected_shape->aabb.min.y += SCALAR(translation[1]);
+                            selected_shape->aabb.min.z += SCALAR(translation[2]);
+                            selected_shape->aabb.max.x += SCALAR(translation[0]);
+                            selected_shape->aabb.max.y += SCALAR(translation[1]);
+                            selected_shape->aabb.max.z += SCALAR(translation[2]);
+                        }
+                        if (gizmode == ImGuizmo::SCALE) {
+                            if ((scale[0] != 1.0f) || (scale[1] != 1.0f) || (scale[2] != 1.0f)) {
+                                vec3_t initial_size = vec3_sub(selected_shape->aabb.max, selected_shape->aabb.min);
+                                const vec3_t center = vec3_add(selected_shape->aabb.min, vec3_shift_right(initial_size, 1));
+                                if (initial_size.x < 0) initial_size.x *= -1;
+                                if (initial_size.y < 0) initial_size.y *= -1;
+                                if (initial_size.z < 0) initial_size.z *= -1;
+                                vec3_t new_size = vec3_add(initial_size, vec3_from_scalars(
+                                    SCALAR(translation[0]),
+                                    SCALAR(translation[1]),
+                                    SCALAR(translation[2])
+                                ));
+                                selected_shape->aabb.min = vec3_sub(center, vec3_shift_right(new_size, 1));
+                                selected_shape->aabb.max = vec3_add(center, vec3_shift_right(new_size, 1));
+                            }
+                        }
                     }
                 }
             }
