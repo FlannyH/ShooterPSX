@@ -290,7 +290,16 @@ void inspect_shape(level_t* curr_level, size_t shape_id) {
     if (shape_type == SHAPE_NONE) return;
     else if (shape_type == SHAPE_SPHERE) {
         inspect_vec3(&curr_level->shapes[shape_id].sphere.center, "Center");
+        ImGui::SameLine();
+        if (ImGui::Button("Center to selected vtx")) {
+            curr_level->shapes[shape_id].sphere.center = selected_vertex_position;
+        }
+
         inspect_scalar(&curr_level->shapes[shape_id].sphere.radius, "Radius");
+        ImGui::SameLine();
+        if (ImGui::Button("Fit to selected vtx")) {
+            curr_level->shapes[shape_id].sphere.radius = vec3_magnitude(vec3_sub(selected_vertex_position, curr_level->shapes[shape_id].sphere.center));
+        }
         const aabb_t aabb = {
             .min = vec3_sub(curr_level->shapes[shape_id].sphere.center, vec3_from_scalar(curr_level->shapes[shape_id].sphere.radius)),
             .max = vec3_add(curr_level->shapes[shape_id].sphere.center, vec3_from_scalar(curr_level->shapes[shape_id].sphere.radius)),
