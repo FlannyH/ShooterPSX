@@ -91,7 +91,7 @@ CODE_ENGINE_PSX_C = psx/file.c \
 				    psx/mixer.c \
 				    psx/renderer.c
 
-# Source files specific to Windows
+# Source files specific to PC
 CODE_ENGINE_PC_C =   pc/file.c \
 				     pc/input.c \
 				     pc/mesh.c \
@@ -145,7 +145,7 @@ LINKER_FLAGS =
 .NOTPARALLEL: assets tools pc psx level_editor nds clean
 all: submodules tools assets pc level_editor psx nds
 
-# Windows target
+# PC target
 pc: DEFINES = _PC
 pc: LIBRARIES = glfw3 portaudio stdc++
 ifeq ($(OS),Windows_NT)
@@ -519,8 +519,8 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/pc/GOURAUD.FSH \
 					  $(PATH_ASSETS)/shared/models/test3.vis \
 					  .WAIT \
 
-# Shaders for Windows and Level Editor build
 $(PATH_ASSETS)/pc/%.FSH: $(PATH_ASSETS_TO_BUILD)/%.FSH
+# Shaders for PC and Level Editor build
 	@mkdir -p $(dir $@)
 	@echo Copying $@
 	@cp $< $@

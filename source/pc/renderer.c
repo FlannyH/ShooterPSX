@@ -57,7 +57,7 @@ int curr_depth_bias = 0;
 int n_meshes_drawn = 0;
 
 // todo(pc_renderer_globals): desc: reassess global variables
-// Need to define these somewhere so it compiles, unused in Windows build
+// Need to define these somewhere so it compiles, unused in PC build
 int is_pal = 0;
 int vsync_enable = 0; // 0 = unlocked, 1 = 60 fps or 50 fps, 2 = 30 fps or 25 fps
 int tex_entity_start = 0;
@@ -71,7 +71,8 @@ GLuint fb_texture;
 GLuint fb_depth;
 GLuint picking_fb_texture;
 int drawing_id = 255;
-int drawing_what = 0; // 0 = nothing, 1 = entity, 2 = light
+int drawing_what = 0; // 0 = nothing, 1 = entity, 2 = light, 3 = shape
+#endif
 
 // debug
 static int int_mode = 0;
