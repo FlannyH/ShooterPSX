@@ -1,4 +1,4 @@
-#version 140
+#version 330
 
 in vec3 out_position_ws;
 in vec3 out_color;
@@ -8,8 +8,9 @@ flat in float out_texture;
 flat in vec2 out_texture_offset;
 flat in vec2 out_texture_size;
 
-out vec4 frag_color;
-out vec2 object_picking;
+layout(location = 0) out vec4 frag_color;
+layout(location = 1) out vec2 object_picking;
+layout(location = 2) out vec3 vertex_picking;
 
 uniform sampler2D tex;
 uniform int texture_bound;
@@ -125,7 +126,7 @@ void main() {
             vec4 lerp_x_y2 = mix(sample12, sample22, frac_x);
             vec4 lerp_y = mix(lerp_x_y1, lerp_x_y2, frac_y);
             tex_color = lerp_y;
-        }    
+        }
 
         // Alpha clipping
         if (tex_color.a < 0.5) {

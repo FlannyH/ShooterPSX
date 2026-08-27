@@ -66,10 +66,14 @@ int tex_level_start = 0;
 int tex_alloc_cursor = 0;
 int res_x = 512; // Pretend it's the same as PSX
 
-GLuint fbo;
-GLuint fb_texture;
-GLuint fb_depth;
-GLuint picking_fb_texture;
+GLuint fbo = 0;
+GLuint fb_texture = 0;
+GLuint fb_depth = 0;
+
+#ifdef _LEVEL_EDITOR
+GLuint shader_vertex_pick = 0;
+GLuint picking_fb_texture = 0;
+GLuint closest_vertex_fb_texture = 0;
 int drawing_id = 255;
 int drawing_what = 0; // 0 = nothing, 1 = entity, 2 = light, 3 = shape
 #endif
@@ -266,6 +270,7 @@ int renderer_height(void) {
 void renderer_init(void) {
 	// Create OpenGL window
 	glfwInit();
+
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 	window = glfwCreateWindow(320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, "Sub Nivis", NULL, NULL);
@@ -275,6 +280,7 @@ void renderer_init(void) {
 		exit(-1);
 	}
 	glfwMakeContextCurrent(window);
+
 	gl3wInit();
 	// todo(pc_gl_debug): desc: only enable opengl debug layer this if GL 4.3 core profile is available
 	glEnable(GL_DEBUG_OUTPUT);
@@ -290,8 +296,12 @@ void renderer_init(void) {
 	glm_perspective(glm_rad(90.0f), 4.0f / 3.0f, 0.1f, 100000.f, perspective_matrix);
 
 	// Load shaders
-	shader_gouraud = shader_from_file("GOURAUD.VSH", "GOURAUD.FSH");
-	shader_blit = shader_from_file("BLIT.VSH", "BLIT.FSH");
+	shader_gouraud = shader_from_file("shaders/gouraud.vsh", "shaders/gouraud.fsh");
+	shader_blit = shader_from_file("shaders/blit.vsh", "shaders/blit.fsh");
+
+#ifdef _LEVEL_EDITOR
+	shader_vertex_pick = shader_from_file("shaders/vertex_pick.vsh", "shaders/vertex_pick.fsh");
+#endif
 
 	// Set up VAO and VBO
 	glGenVertexArrays(1, &vao);
@@ -376,6 +386,7 @@ void renderer_init(void) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+#ifdef _LEVEL_EDITOR
 	// Create object picking framebuffer data
 	glGenTextures(1, &picking_fb_texture);
 	glBindTexture(GL_TEXTURE_2D, picking_fb_texture);
@@ -385,14 +396,24 @@ void renderer_init(void) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, picking_fb_texture, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    // Create vertex picking framebuffer data
+	glGenTextures(1, &closest_vertex_fb_texture);
+	glBindTexture(GL_TEXTURE_2D, closest_vertex_fb_texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, closest_vertex_fb_texture, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+#endif
+
 	// Check if ok
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE) {
 		printf("[ERROR] FBO incomplete: 0x%X\n", status);
 	}
 
-	GLenum draw_buffers[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-	glDrawBuffers(2, draw_buffers);
+	GLenum draw_buffers[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+	glDrawBuffers(3, draw_buffers);
 
 	glfwGetWindowSize(window, &window_w, &window_h);
 
@@ -438,6 +459,7 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, fb_depth, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
+#ifdef _LEVEL_EDITOR
 		// Resize object picking attachment
 		glBindTexture(GL_TEXTURE_2D, picking_fb_texture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, render_w, render_h, 0, GL_RG, GL_UNSIGNED_BYTE, NULL);
@@ -445,6 +467,15 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, picking_fb_texture, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
+
+		// Resize vertex picking attachment
+		glBindTexture(GL_TEXTURE_2D, closest_vertex_fb_texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, render_w, render_h, 0, GL_RGB, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, closest_vertex_fb_texture, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+#endif
 
 		// Check if ok
 		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -497,11 +528,13 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 
 	// Clear screen
 	glStencilMask(0xFF);
-	float clear_color0[] = { 0.1f, 0.1f, 0.2f, 1.0f}; glClearBufferfv(GL_COLOR, 0, clear_color0);
-	float clear_color1[] = { 0.0f, 0.0f, 0.0f, 0.0f}; glClearBufferfv(GL_COLOR, 1, clear_color1);
+	float clear_color0[] = { 0.1f, 0.1f, 0.2f, 1.0f}; glClearBufferfv(GL_COLOR, 0, clear_color0); glClear(GL_COLOR_BUFFER_BIT);
+	float clear_color1[] = { 0.0f, 0.0f, 0.0f, 0.0f}; glClearBufferfv(GL_COLOR, 1, clear_color1); glClear(GL_COLOR_BUFFER_BIT);
+	float clear_color2[] = { 0.0f, 0.0f, 0.0f, 0.0f}; glClearBufferfv(GL_COLOR, 2, clear_color2); glClear(GL_COLOR_BUFFER_BIT);
 	glClearDepth(1.0); glClear(GL_DEPTH_BUFFER_BIT);
 
-	memcpy(view_matrix, view_matrix_normal, sizeof(view_matrix_normal));
+	if (input_held(PAD_SELECT, 0)) memcpy(view_matrix, view_matrix_third_person, sizeof(view_matrix_third_person));
+	else memcpy(view_matrix, view_matrix_normal, sizeof(view_matrix_normal));
 
 	camera_dir.x = view_matrix_normal[2][0] * ONE;
 	camera_dir.y = view_matrix_normal[2][1] * ONE;
@@ -600,6 +633,34 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 		glm_rotate_z(model_matrix, (float)model_transform->rotation.z * 2 * PI / ONE, model_matrix);
 	}
 
+#ifdef _LEVEL_EDITOR
+	// Vertex picking
+	glUseProgram(shader_vertex_pick);
+
+	// Set matrices
+	glUniformMatrix4fv(glGetUniformLocation(shader_vertex_pick, "proj_matrix"), 1, GL_FALSE, &perspective_matrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader_vertex_pick, "model_matrix"), 1, GL_FALSE, &model_matrix[0][0]);
+	if (local) {
+		static const mat4 id_matrix =   {{1.0f, 0.0f, 0.0f, 0.0f},                    \
+                         		 {0.0f, 1.0f, 0.0f, 0.0f},                    \
+                         		 {0.0f, 0.0f, 1.0f, 0.0f},                    \
+                         		 {0.0f, 0.0f, 0.0f, 1.0f}};
+		glUniformMatrix4fv(glGetUniformLocation(shader_vertex_pick, "view_matrix"), 1, GL_FALSE, &id_matrix[0][0]);
+	}
+	else {
+		glUniformMatrix4fv(glGetUniformLocation(shader_vertex_pick, "view_matrix"), 1, GL_FALSE, &view_matrix[0][0]);
+	}
+
+	glUniform1i(glGetUniformLocation(shader_vertex_pick, "curr_depth_bias"), -64);
+
+	glPointSize(50.0f);
+	glDepthMask(GL_FALSE);
+	if (mesh->n_triangles) glDrawArrays(GL_POINTS, 0, mesh->n_triangles * 3);
+	if (mesh->n_quads) glDrawArrays(GL_POINTS, mesh->n_triangles * 3, mesh->n_quads * 4);
+	glDepthMask(GL_TRUE);
+	glPointSize(1.0f);
+#endif
+
 	glUseProgram(shader_gouraud);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, light_buffer_gpu);
 	unsigned int lights_index = glGetUniformBlockIndex(shader_gouraud, "Lights");
@@ -656,10 +717,13 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	glUniform1i(glGetUniformLocation(shader_gouraud, "interpolation_mode"), int_mode);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "edge_behavior"), edge_mode);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "tex_category"), (GLint)mesh->tex_category);
-	glUniform1i(glGetUniformLocation(shader_gouraud, "drawing_id"), drawing_id);
-	glUniform1i(glGetUniformLocation(shader_gouraud, "drawing_what"), drawing_what);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "vertex_lighting"), 0);
 	glUniform1f(glGetUniformLocation(shader_gouraud, "alpha"), 1.0f);
+
+#ifdef _LEVEL_EDITOR
+	glUniform1i(glGetUniformLocation(shader_gouraud, "drawing_id"), drawing_id);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "drawing_what"), drawing_what);
+#endif
 
 	// Enable depth, culling
 	glEnable(GL_DEPTH_TEST);
@@ -667,8 +731,8 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	glCullFace(GL_BACK);
 
 	// Draw
-	if (mesh->n_triangles) glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
 	// todo(pc_quad_deprecated): desc: get rid of quads on pc (they're legacy feature and aren't guaranteed to work)
+	if (mesh->n_triangles) glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
 	if (mesh->n_quads) glDrawArrays(GL_QUADS, mesh->n_triangles * 3, mesh->n_quads * 4);
 
 	n_total_triangles += mesh->n_triangles;

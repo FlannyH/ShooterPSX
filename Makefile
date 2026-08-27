@@ -458,10 +458,12 @@ COMPILED_TOOLS_LIST = $(TOOLS_BIN)/obj2psx$(EXE_EXT) \
 tools: $(COMPILED_TOOLS_LIST)
 
 # For levels, make the first 2 art .col, .vis, and then the rest. this way everything can be built in the right order
-COMPILED_ASSET_LIST = $(PATH_ASSETS)/pc/GOURAUD.FSH \
-					  $(PATH_ASSETS)/pc/GOURAUD.VSH \
-					  $(PATH_ASSETS)/pc/BLIT.FSH \
-					  $(PATH_ASSETS)/pc/BLIT.VSH \
+COMPILED_ASSET_LIST = $(PATH_ASSETS)/pc/shaders/gouraud.fsh \
+					  $(PATH_ASSETS)/pc/shaders/gouraud.vsh \
+					  $(PATH_ASSETS)/pc/shaders/blit.fsh \
+					  $(PATH_ASSETS)/pc/shaders/blit.vsh \
+					  $(PATH_ASSETS)/level_editor/shaders/vertex_pick.fsh \
+					  $(PATH_ASSETS)/level_editor/shaders/vertex_pick.vsh \
 					  $(PATH_ASSETS)/shared/levels/test.lvl \
 					  $(PATH_ASSETS)/shared/levels/test2.lvl \
 					  $(PATH_ASSETS)/shared/levels/test3.lvl \
@@ -519,13 +521,23 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/pc/GOURAUD.FSH \
 					  $(PATH_ASSETS)/shared/models/test3.vis \
 					  .WAIT \
 
-$(PATH_ASSETS)/pc/%.FSH: $(PATH_ASSETS_TO_BUILD)/%.FSH
 # Shaders for PC and Level Editor build
+$(PATH_ASSETS)/pc/%.vsh: $(PATH_ASSETS_TO_BUILD)/%.vsh
 	@mkdir -p $(dir $@)
 	@echo Copying $@
 	@cp $< $@
 
-$(PATH_ASSETS)/pc/%.VSH: $(PATH_ASSETS_TO_BUILD)/%.VSH
+$(PATH_ASSETS)/pc/%.fsh: $(PATH_ASSETS_TO_BUILD)/%.fsh
+	@mkdir -p $(dir $@)
+	@echo Copying $@
+	@cp $< $@
+
+$(PATH_ASSETS)/level_editor/%.vsh: $(PATH_ASSETS_TO_BUILD)/level_editor/%.vsh
+	@mkdir -p $(dir $@)
+	@echo Copying $@
+	@cp $< $@
+
+$(PATH_ASSETS)/level_editor/%.fsh: $(PATH_ASSETS_TO_BUILD)/level_editor/%.fsh
 	@mkdir -p $(dir $@)
 	@echo Copying $@
 	@cp $< $@
