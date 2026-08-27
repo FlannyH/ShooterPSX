@@ -75,7 +75,7 @@ GLuint shader_vertex_pick = 0;
 GLuint picking_fb_texture = 0;
 GLuint closest_vertex_fb_texture = 0;
 int drawing_id = 255;
-int drawing_what = 0; // 0 = nothing, 1 = entity, 2 = light, 3 = shape
+int drawing_what = 0; // 0 = nothing, 1 = entity, 2 = light, 3 = shape, 4 = vertex
 #endif
 
 // debug
@@ -528,9 +528,9 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 
 	// Clear screen
 	glStencilMask(0xFF);
-	float clear_color0[] = { 0.1f, 0.1f, 0.2f, 1.0f}; glClearBufferfv(GL_COLOR, 0, clear_color0); glClear(GL_COLOR_BUFFER_BIT);
-	float clear_color1[] = { 0.0f, 0.0f, 0.0f, 0.0f}; glClearBufferfv(GL_COLOR, 1, clear_color1); glClear(GL_COLOR_BUFFER_BIT);
-	float clear_color2[] = { 0.0f, 0.0f, 0.0f, 0.0f}; glClearBufferfv(GL_COLOR, 2, clear_color2); glClear(GL_COLOR_BUFFER_BIT);
+	float clear_color0[] = { 0.1f, 0.1f, 0.2f, 1.0f}; glClearBufferfv(GL_COLOR, 0, clear_color0);
+	float clear_color1[] = { 0.0f, 0.0f, 0.0f, 0.0f}; glClearBufferfv(GL_COLOR, 1, clear_color1);
+	float clear_color2[] = { 0.0f, 0.0f, 0.0f, 0.0f}; glClearBufferfv(GL_COLOR, 2, clear_color2);
 	glClearDepth(1.0); glClear(GL_DEPTH_BUFFER_BIT);
 
 	if (input_held(PAD_SELECT, 0)) memcpy(view_matrix, view_matrix_third_person, sizeof(view_matrix_third_person));
@@ -589,6 +589,8 @@ void renderer_end_frame(void) {
 int32_t max_dot_value = 0;
 void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform, int local, int facing_camera) {
 	++n_meshes_drawn;
+
+	renderer_set_drawing_id(0, 4);
 
 	// Calculate model matrix
 	mat4 model_matrix;
@@ -652,6 +654,8 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	}
 
 	glUniform1i(glGetUniformLocation(shader_vertex_pick, "curr_depth_bias"), -64);
+	glUniform1i(glGetUniformLocation(shader_vertex_pick, "drawing_id"), drawing_id);
+	glUniform1i(glGetUniformLocation(shader_vertex_pick, "drawing_what"), drawing_what);
 
 	glPointSize(50.0f);
 	glDepthMask(GL_FALSE);
@@ -719,11 +723,6 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	glUniform1i(glGetUniformLocation(shader_gouraud, "tex_category"), (GLint)mesh->tex_category);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "vertex_lighting"), 0);
 	glUniform1f(glGetUniformLocation(shader_gouraud, "alpha"), 1.0f);
-
-#ifdef _LEVEL_EDITOR
-	glUniform1i(glGetUniformLocation(shader_gouraud, "drawing_id"), drawing_id);
-	glUniform1i(glGetUniformLocation(shader_gouraud, "drawing_what"), drawing_what);
-#endif
 
 	// Enable depth, culling
 	glEnable(GL_DEPTH_TEST);

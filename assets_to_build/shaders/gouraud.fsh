@@ -168,9 +168,4 @@ void main() {
     // Gamma correction - roughly converts 2.2 gamma to 2.8 gamma, which is closer to how it looks on my ps1
     frag_color.xyz = pow(frag_color.xyz, vec3(2.8 / 2.2));
     frag_color.w = pow(tex_color.a * alpha, 1.0 / 1.5);
-
-    // For editor
-    // todo(gouraud_obj_picking_fix): desc: verify object picking correctness
-    object_picking.x = float(drawing_id) / 255.0;
-    object_picking.y = float(drawing_what) / 255.0;
 }

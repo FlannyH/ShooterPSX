@@ -28,6 +28,8 @@
 // todo(debug_renderer_fix): desc: fix debug renderers for collision, nav, etc
 
 static model_t* gizmos = nullptr;
+static bool vertex_selected = false;
+static vec3_t selected_vertex_position = {0};
 
 extern const char* entity_names[];
 const char* light_type_names[] = {
@@ -297,10 +299,19 @@ void inspect_shape(level_t* curr_level, size_t shape_id) {
     }
     else if (shape_type == SHAPE_AABB) {
         inspect_vec3(&curr_level->shapes[shape_id].aabb.min, "Min");
+        ImGui::SameLine();
+        if (ImGui::Button("Min to selected vtx")) {
+            curr_level->shapes[shape_id].aabb.min = selected_vertex_position;
+        }
+
         inspect_vec3(&curr_level->shapes[shape_id].aabb.max, "Max");
+        ImGui::SameLine();
+        if (ImGui::Button("Max to selected vtx")) {
+            curr_level->shapes[shape_id].aabb.max = selected_vertex_position;
+        }
+
         renderer_debug_draw_aabb(&curr_level->shapes[shape_id].aabb, {255, 255, 127, 255}, &id_transform);
     }
-
 }
 
 void draw_texture_category(const char* name, texture_category_t category, bool show_detail) {
@@ -410,7 +421,15 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             node_handle_ptr = (node_handle_ptr + 1) % 2048;
         }
     }
-
+    if (vertex_selected) {
+        transform_t trans = {
+            .position = selected_vertex_position,
+            .rotation = vec3_from_scalar(0),
+            .scale = vec3_from_scalar(SCALAR(16.0 / 1024)), // 1024 because the model is scaled by 1024 for precision
+        };
+        renderer_set_drawing_id(0, 0);
+        renderer_draw_mesh_shaded(&gizmos->meshes[2], &trans, 0, 0);
+    }
 
     if (!initialized) {
         level_path[0] = 0;
@@ -764,7 +783,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         if (ImGui::Button("Spawn")) {
             // Figure out where to spawn - in front of the camera
             const vec3_t forward = renderer_get_forward_vector();
-            const vec3_t spawn_pos = vec3_add(camera->position, vec3_muls(forward, 80 * ONE));
+            const vec3_t spawn_pos = vec3_add((vertex_selected) ? (selected_vertex_position) : (camera->position), vec3_muls(forward, 80 * ONE));
 
             entity_header_t* entity;
 
@@ -853,7 +872,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         if (ImGui::Button("Spawn")) {
             // Figure out where to spawn - in front of the camera
             const vec3_t forward = renderer_get_forward_vector();
-            const vec3_t spawn_pos = vec3_add(camera->position, vec3_muls(forward, 80 * ONE));
+            const vec3_t spawn_pos = vec3_add((vertex_selected) ? (selected_vertex_position) : (camera->position), vec3_muls(forward, 80 * ONE));
 
             for (size_t i = 0; i < MAX_LIGHT_COUNT; ++i) {
                 if (curr_level->lights[i].type == LIGHT_NONE) {
@@ -899,7 +918,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         if (ImGui::Button("Spawn")) {
             // Figure out where to spawn - in front of the camera
             const vec3_t forward = renderer_get_forward_vector();
-            const vec3_t spawn_pos = vec3_add(camera->position, vec3_muls(forward, 80 * ONE));
+            const vec3_t spawn_pos = vec3_add((vertex_selected) ? (selected_vertex_position) : (camera->position), vec3_muls(forward, 80 * ONE));
 
             for (size_t i = 0; i < MAX_SHAPE_COUNT; ++i) {
                 if (curr_level->shapes[i].type == SHAPE_NONE) {
@@ -909,8 +928,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                         curr_level->shapes[i].sphere.radius_squared = scalar_mul(curr_level->shapes[i].sphere.radius, curr_level->shapes[i].sphere.radius);
                     }
                     else if (curr_selected_shape_type == SHAPE_AABB) {
-                        curr_level->shapes[i].aabb.min = vec3_sub(spawn_pos, vec3_from_scalar(SCALAR(100.0)));
-                        curr_level->shapes[i].aabb.max = vec3_add(spawn_pos, vec3_from_scalar(SCALAR(100.0)));
+                        curr_level->shapes[i].aabb.min = spawn_pos;
+                        curr_level->shapes[i].aabb.max = vec3_add(spawn_pos, vec3_from_scalar(SCALAR(250.0)));
                     }
                     curr_level->shapes[i].type = curr_selected_shape_type;
                     break;
@@ -1293,9 +1312,18 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                     *selected_light_slot = -1;
                     *selected_shape_slot = -1;
                     *selected_entity_slot = -1;
+                    vertex_selected = false;
+
                     if (pick_info.what == 1) *selected_entity_slot = pick_info.index;
                     else if (pick_info.what == 2) *selected_light_slot = pick_info.index;
                     else if (pick_info.what == 3) *selected_shape_slot = pick_info.index;
+                    else if (pick_info.what == 4) {
+                        float vertex_pos_float[3] = {0};
+                        glReadBuffer(GL_COLOR_ATTACHMENT2);
+                        glReadPixels((GLint)rel_mouse_pos.x, (GLint)(renderer_height() - rel_mouse_pos.y), 1, 1, GL_RGB, GL_FLOAT, &vertex_pos_float);
+                        vertex_selected = true;
+                        selected_vertex_position = vec3_from_floats(vertex_pos_float[0], vertex_pos_float[1], vertex_pos_float[2]);
+                    }
                 }
             }
         }
