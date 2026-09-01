@@ -5,6 +5,53 @@
 
 extern state_vars_t state;
 
+void entity_trigger_update_text(int slot, int dt) {
+    entity_trigger_t* trigger = (entity_trigger_t*)entity_get_header(slot);
+
+    // display text for a specified amount of time
+    if (trigger->data_text.curr_display_time_ms > 0) {
+        trigger->data_text.curr_display_time_ms -= dt;
+        const char* text = state.in_game.level.text_entries[trigger->data_text.id];
+        renderer_draw_text((vec2_t){256 * ONE, 176 * ONE}, text, 2, 1, trigger->data_text.color);
+    }
+
+    // if the timer is up, either destroy the trigger, or reset it
+    else if (trigger->destroy_on_player_intersect) {
+        entity_kill(slot);
+    }
+    else {
+        trigger->activated = 0;
+    }
+}
+
+void entity_trigger_update_signal(int slot) {
+    entity_trigger_t* trigger = (entity_trigger_t*)entity_get_header(slot);
+
+    entity_set_signal(trigger->signal.id, trigger->signal.value_to_send);
+
+    // if the timer is up, either destroy the trigger, or reset it
+    if (trigger->destroy_on_player_intersect) {
+        entity_kill(slot);
+    }
+    else {
+        trigger->activated = 0;
+    }
+}
+
+void entity_trigger_update_teleport(int slot, player_t* player) {
+    entity_trigger_t* trigger = (entity_trigger_t*)entity_get_header(slot);
+
+    player->position = trigger->teleport.destination_pos;
+
+    // if the timer is up, either destroy the trigger, or reset it
+    if (trigger->destroy_on_player_intersect) {
+        entity_kill(slot);
+    }
+    else {
+        trigger->activated = 0;
+    }
+}
+
 entity_trigger_t* entity_trigger_new(void) {
     entity_trigger_t* entity = (entity_trigger_t*)entity_get_header(entity_alloc(ENTITY_TRIGGER));
     entity->entity_header.position = (vec3_t){0, 0, 0};

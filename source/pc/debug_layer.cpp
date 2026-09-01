@@ -241,6 +241,10 @@ void inspect_entity(size_t entity_id) {
                 ImGui::InputInt("Signal ID", &trigger->signal.id, 1, 5);
                 ImGui::InputInt("Value to send", &trigger->signal.value_to_send, 1, 100);
             }
+            else if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TELEPORT) {
+                inspect_vec3(&trigger->teleport.destination_pos, "Destination position");
+                inspect_vec3(&trigger->teleport.destination_rotation_offset, "Destination rotation offset");
+            }
         }
 
         ImGui::TreePop();

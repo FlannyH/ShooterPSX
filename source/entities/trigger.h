@@ -10,6 +10,7 @@ typedef enum {
     ENTITY_TRIGGER_TYPE_NONE,
     ENTITY_TRIGGER_TYPE_TEXT,
     ENTITY_TRIGGER_TYPE_SIGNAL,
+    ENTITY_TRIGGER_TYPE_TELEPORT,
 } entity_trigger_type_t;
 
 #ifdef _LEVEL_EDITOR
@@ -22,7 +23,7 @@ typedef struct {
     uint8_t destroy_on_player_intersect : 1;
     uint8_t intersecting_curr : 1;
     uint8_t intersecting_prev : 1;
-    uint8_t is_busy : 1;
+    uint8_t activated : 1;
     union {
         struct {
             pixel32_t color;
@@ -34,6 +35,10 @@ typedef struct {
             int id;
             int value_to_send;
         } signal;
+        struct {
+            vec3_t destination_pos;
+            vec3_t destination_rotation_offset;
+        } teleport;
     };
 } entity_trigger_t;
 
