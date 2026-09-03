@@ -75,7 +75,8 @@ level_t level_load(const char* level_path, const uint32_t flags) {
 #endif
         .transform = (transform_t){{0, 0, 0}, {0, 0, 0}, {ONE, ONE, ONE}},
         .vislist = vislist_load(path_vislist, 1, STACK_LEVEL),
-        .collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL),
+        // .collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL),
+        .collision_bvh = NULL, // todo
         .n_level_textures = n_level_textures,
         .player_spawn_position = level_header->player_spawn_position,
         .player_spawn_rotation = level_header->player_spawn_rotation,

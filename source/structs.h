@@ -14,9 +14,33 @@ typedef enum {
 } texture_category_t;
 
 typedef struct {
-    vec3_t min;
-    vec3_t max;
+    vec3_t center;
+    scalar_t radius;
+    scalar_t radius_squared;
+} sphere_t;
+
+typedef struct {
+    vec3_t a, b;
+    scalar_t radius;
+} capsule_t;
+
+typedef struct {
+    vec3_t min, max;
 } aabb_t;
+
+typedef struct {
+    vec3_t v0, v1, v2;
+} triangle_t;
+
+typedef struct {
+    uint8_t type;
+    union {
+        sphere_t sphere;
+        capsule_t capsule;
+        triangle_t triangle;
+        aabb_t aabb;
+    };
+} shape_t;
 
 typedef struct {
     aabb_t bounds; // Axis aligned bounding box around all primitives inside this node
@@ -30,12 +54,6 @@ typedef struct {
     vec3_t inv_direction;
     scalar_t length;
 } ray_t;
-
-typedef struct {
-    vec3_t center;
-    scalar_t radius;
-    scalar_t radius_squared;
-} sphere_t;
 
 typedef struct {
     vec3_t bottom;

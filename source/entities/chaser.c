@@ -8,7 +8,7 @@
 extern state_vars_t state;
 #define CHASER_BEHAVIOUR_PERIOD 16
 #define CHASER_REACTION_TIME_MIN 200 // in milliseconds
-#define CHASER_REACTION_TIME_MAX 400 
+#define CHASER_REACTION_TIME_MAX 400
 #define CHASER_AGGRO_DISTANCE_SQUARED (320000*1000)
 #define CHASER_STRAFE_DISTANCE_SQUARED (112000*1000)
 #define CHASER_FLEE_DISTANCE_SQUARED (68000*1000)
@@ -43,6 +43,8 @@ void decide_action(entity_chaser_t* chaser, const vec3_t player_pos) {
 	const scalar_t dist_chaser_to_player_squared = vec3_magnitude_squared(chaser_to_player);
 
 	// If the player is within aggro distance, do a raycast to see if the enemy can see the player
+	// todo(chaser_logic): desc rework this to new collision engine
+	/*
 	if (dist_chaser_to_player_squared < CHASER_AGGRO_DISTANCE_SQUARED) {
 		ray_t ray = {
 			.position = vec3_add(chaser_pos, vec3_from_scalars(0, SCALAR(285), 0)),
@@ -53,19 +55,20 @@ void decide_action(entity_chaser_t* chaser, const vec3_t player_pos) {
 
 		rayhit_t hit = {0};
 		bvh_intersect_ray(&state.in_game.level.collision_bvh, ray, &hit);
-		chaser->last_known_player_pos = hit.position;
 
 		// If the ray didn't hit anything, the player is visible
-		if (is_infinity(hit.distance)) 
+		if (is_infinity(hit.distance))
 			player_visible = 1;
+		else
+		    chaser->last_known_player_pos = hit.position;
 
 		// If the ray hit something that's further away from the enemy than the player is, the player is visible
 		else if (scalar_mul(hit.distance, hit.distance) > dist_chaser_to_player_squared)
 			player_visible = 1;
 	}
+	*/
 
 	if (player_visible) {
-
 		if (dist_chaser_to_player_squared < CHASER_FLEE_DISTANCE_SQUARED) {
 			chaser->state = CHASER_FLEE;
 		}
@@ -106,7 +109,7 @@ void find_target_node(entity_chaser_t* chaser, vec3_t target_position, find_targ
 
 			const vec3_t node_position = vec3_from_svec3(nav_graph_nodes[neighbor_id].position);
 			const scalar_t distance_from_node_to_target_position_squared = vec3_magnitude_squared(vec3_sub(node_position, target_position));
-		
+
 			switch (target_operator) {
 				case FURTHEST:
 					if (distance_from_node_to_target_position_squared > fav_distance_squared) {
@@ -123,7 +126,7 @@ void find_target_node(entity_chaser_t* chaser, vec3_t target_position, find_targ
 				case STRAFE:
 					const scalar_t distance_from_enemy_to_target = vec3_magnitude_squared(vec3_sub(chaser->entity_header.position, target_position));
 					const scalar_t distance_difference = scalar_abs(distance_from_node_to_target_position_squared - distance_from_enemy_to_target);
-					
+
 					if (distance_difference < fav_distance_squared){
 						fav_distance_squared = distance_difference;
 						chaser->target_navmesh_node = neighbor_id;
@@ -150,25 +153,25 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 
 	// Register hitboxes
 	const aabb_t bounds_body = (aabb_t){
-		.min = (vec3_t){ 
-			chaser_pos.x - SCALAR(69), 
-			chaser_pos.y - SCALAR(0), 
+		.min = (vec3_t){
+			chaser_pos.x - SCALAR(69),
+			chaser_pos.y - SCALAR(0),
 			chaser_pos.z - SCALAR(69)
 		},
 		.max = (vec3_t){
-			chaser_pos.x - SCALAR(-69), 
-			chaser_pos.y - SCALAR(-230), 
+			chaser_pos.x - SCALAR(-69),
+			chaser_pos.y - SCALAR(-230),
 			chaser_pos.z - SCALAR(-69 )},
 	};
 	const aabb_t bounds_head = (aabb_t){
-		.min = (vec3_t){ 
-			chaser_pos.x - SCALAR(25), 
-			chaser_pos.y - SCALAR(-230), 
+		.min = (vec3_t){
+			chaser_pos.x - SCALAR(25),
+			chaser_pos.y - SCALAR(-230),
 			chaser_pos.z - SCALAR(35)
 		},
 		.max = (vec3_t){
-			chaser_pos.x - SCALAR(-35), 
-			chaser_pos.y - SCALAR(-340), 
+			chaser_pos.x - SCALAR(-35),
+			chaser_pos.y - SCALAR(-340),
 			chaser_pos.z - SCALAR(-35 )},
 	};
 	const entity_collision_box_t box_body = {
@@ -206,33 +209,33 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 	else {
 		chaser->behavior_timer = random_range(CHASER_REACTION_TIME_MIN, CHASER_REACTION_TIME_MAX);
 		switch (chaser->state) {
-			case CHASER_WAIT: 			
-				decide_action(chaser, player->position);				
+			case CHASER_WAIT:
+				decide_action(chaser, player->position);
 				break;
-			case CHASER_RETURN_HOME: 	
+			case CHASER_RETURN_HOME:
 				if (vec3_magnitude_squared(vec3_sub(chaser_pos, chaser->home_position)) > CHASER_NODE_REACH_DISTANCE_SQUARED) {
 					find_target_node(chaser, chaser->home_position, CLOSEST);
 				}
-				decide_action(chaser, player->position);		
+				decide_action(chaser, player->position);
 				break;
-			case CHASER_CHASE: 			
+			case CHASER_CHASE:
 				find_target_node(chaser, player->position, CLOSEST);
-				decide_action(chaser, player->position);		
+				decide_action(chaser, player->position);
 				break;
-			case CHASER_FLEE: 			
+			case CHASER_FLEE:
 				find_target_node(chaser, player->position, FURTHEST);
-				decide_action(chaser, player->position);		
+				decide_action(chaser, player->position);
 				break;
 			case CHASER_STRAFE:
 				find_target_node(chaser, player->position, STRAFE);
-				decide_action(chaser, player->position);		
+				decide_action(chaser, player->position);
 				break;
-			case CHASER_SHOOT: 			
+			case CHASER_SHOOT:
 				// TODO
-				decide_action(chaser, player->position);				
+				decide_action(chaser, player->position);
 				break;
-			default: 					
-				chaser->state = CHASER_WAIT; /* Failsafe */	
+			default:
+				chaser->state = CHASER_WAIT; /* Failsafe */
 				break;
 		}
 	}

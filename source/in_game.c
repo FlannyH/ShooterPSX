@@ -355,6 +355,9 @@ void update_screen_shake_intensity(int dt) {
 }
 
 void shoot(const transform_t camera_transform) {
+    (void)camera_transform;
+    // todo(shoot): desc: shooting
+/*
 	// Construct gun ray
 	const scalar_t cosx = trig_cos(camera_transform.rotation.x);
 	const scalar_t sinx = trig_sin(camera_transform.rotation.x);
@@ -424,6 +427,7 @@ void shoot(const transform_t camera_transform) {
 
 	// Reduce ammo count
 	state.in_game.player.ammo--;
+*/
 }
 
 void state_exit_in_game(void) {

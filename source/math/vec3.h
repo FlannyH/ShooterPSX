@@ -164,20 +164,6 @@ ALWAYS_INLINE static scalar_t vec3_magnitude_squared(const vec3_t a) {
     return x2 + y2 + z2;
 }
 
-ALWAYS_INLINE static scalar_t vec3_magnitude(const vec3_t a) {
-    return scalar_sqrt(vec3_magnitude_squared(a));
-}
-
-ALWAYS_INLINE static vec3_t vec3_normalize(const vec3_t a) {
-    const scalar_t magnitude_squared = vec3_magnitude_squared(a);
-    const scalar_t magnitude = scalar_sqrt(magnitude_squared);
-    if (magnitude == 0) {
-        return vec3_from_int32s(0, 0, 0);
-    }
-    const vec3_t a_normalized = vec3_divs(a, magnitude);
-    return a_normalized;
-}
-
 ALWAYS_INLINE static vec3_t vec3_cross(vec3_t a, vec3_t b) {
     return (vec3_t) {
         scalar_mul(a.y, b.z) - scalar_mul(a.z, b.y),
@@ -200,6 +186,27 @@ ALWAYS_INLINE static vec3_t vec3_shift_left(vec3_t a, int amount) {
         scalar_shift_left(a.y, amount),
         scalar_shift_left(a.z, amount),
     };
+}
+
+
+ALWAYS_INLINE static scalar_t vec3_magnitude(const vec3_t a) {
+    return scalar_sqrt(vec3_magnitude_squared(a));
+}
+
+ALWAYS_INLINE static vec3_t vec3_normalize(vec3_t a) {
+    // avoid overflows
+    while ((a.x > (4*ONE)) || (a.y > (4*ONE)) || (a.z > (4*ONE))) {
+        a = vec3_shift_right(a, 1);
+    }
+
+    scalar_t magnitude = vec3_magnitude_squared(a);
+    if (magnitude == 0) {
+        return vec3_from_int32s(0, 0, 0);
+    }
+    magnitude = scalar_sqrt(magnitude);
+
+    const vec3_t a_normalized = vec3_divs(a, magnitude);
+    return a_normalized;
 }
 
 ALWAYS_INLINE vec3_t vec3_neg(vec3_t a) {

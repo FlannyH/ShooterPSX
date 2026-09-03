@@ -1,28 +1,12 @@
 #ifndef COLLISION_H
 #define COLLISION_H
 
-#include "math/scalar.h"
 #include "structs.h"
 #include "texture.h"
+#include "math/vec3.h"
 
 #include <stdint.h>
 
-// BVH construction
-level_collision_t bvh_from_file(const char* path, int on_stack, stack_t stack);
-void bvh_debug_draw(const level_collision_t* bvh, int min_depth, int max_depth, pixel32_t color);
-void bvh_debug_draw_nav_graph(const level_collision_t* bvh);
-
-// BVH intersection
-void bvh_intersect_ray(level_collision_t* self, ray_t ray, rayhit_t* hit);
-void bvh_intersect_vertical_cylinder(level_collision_t* bvh, vertical_cylinder_t ray, rayhit_t* hit);
-
-// Primitive intersection
-int point_aabb_intersect(const aabb_t* aabb, vec3_t point);
-int ray_aabb_intersect(const aabb_t* aabb, ray_t ray);
-int ray_aabb_intersect_fancy(const aabb_t* aabb, ray_t ray, rayhit_t* hit);
-int ray_triangle_intersect(collision_triangle_3d_t* triangle, ray_t ray, rayhit_t* hit);
-int vertical_capsule_aabb_intersect(const aabb_t* aabb, vertical_capsule_t vertical_cylinder);
-int vertical_capsule_aabb_intersect_fancy(const aabb_t* aabb, const vertical_capsule_t vertical_cylinder, rayhit_t* hit);
-int vertical_capsule_triangle_intersect(collision_triangle_3d_t* triangle, vertical_capsule_t vertical_cylinder, rayhit_t* hit);
+int gjk(shape_t* shape1, shape_t* shape2);
 
 #endif // COLLISION_H

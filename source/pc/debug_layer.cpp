@@ -27,24 +27,6 @@
 
 // todo(debug_renderer_fix): desc: fix debug renderers for collision, nav, etc
 
-static model_t* gizmos = nullptr;
-static bool vertex_selected = false;
-static vec3_t selected_vertex_position = {0};
-
-extern const char* entity_names[];
-const char* light_type_names[] = {
-    "None",
-    "Directional light",
-    "Point light",
-    NULL
-};
-const char* shape_type_names[] = {
-    "None",
-    "Sphere",
-    "AABB",
-    NULL
-};
-
 void debug_layer_init(GLFWwindow* window) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
@@ -86,6 +68,26 @@ extern "C" {
     extern GLuint fb_texture;
     extern GLuint fbo;
 }
+
+static model_t* gizmos = nullptr;
+static bool vertex_selected = false;
+static vec3_t selected_vertex_position = {0, 0, 0};
+
+extern const char* entity_names[];
+const char* light_type_names[] = {
+    "None",
+    "Directional light",
+    "Point light",
+    NULL
+};
+const char* shape_type_names[] = {
+    "None",
+    "Sphere",
+    "Capsule (wip)",
+    "Triangle (wip)",
+    "AABB",
+    NULL
+};
 
 float scalar_to_float(scalar_t a) {
     return (float)a / (float)ONE;
@@ -350,7 +352,7 @@ void draw_texture_category(const char* name, texture_category_t category, bool s
                 ImGui::SameLine();
             }
             ImGui::Image(
-                (ImTextureID)renderer_debug_fetch_atlas(),
+                reinterpret_cast<ImTextureID>(renderer_debug_fetch_atlas()),
                 ImVec2(64, 64),
                 ImVec2(u0, v0),
                 ImVec2(u1, v1)
@@ -402,8 +404,9 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
     if (render_level_graphics) renderer_draw_model_shaded(curr_level->graphics, &curr_level->transform, NULL);
     if (render_level_collision) renderer_draw_model_shaded(curr_level->collision_mesh_debug, &id_transform, NULL);
-    if (render_level_bvh) bvh_debug_draw(&curr_level->collision_bvh, render_level_bvh_start_depth, render_level_bvh_end_depth, (pixel32_t){ .r = 160, .g = 240, .b = 80, .a = 255 });
-    if (render_level_nav_graph) bvh_debug_draw_nav_graph(&curr_level->collision_bvh);
+    // todo(editor_render_level_bvh): desc: render level bvh and nav graph in the editor
+    // if (render_level_bvh) bvh_debug_draw(&curr_level->collision_bvh, render_level_bvh_start_depth, render_level_bvh_end_depth, (pixel32_t){ .r = 160, .g = 240, .b = 80, .a = 255 });
+    // if (render_level_nav_graph) bvh_debug_draw_nav_graph(&curr_level->collision_bvh);
     if (render_level_vislist_regions) {
         uint32_t node_stack[2048] = {0};
         uint32_t node_handle_ptr = 0;
@@ -736,7 +739,9 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             curr_level->transform = { {0, 0, 0}, {0, 0, 0}, {ONE, ONE, ONE} };
             curr_level->vislist = vislist_load(path_vislist, 1, STACK_LEVEL);
 
-            curr_level->collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL);
+            // todo(editor_collision_bvh_load): desc: update editor to new collision system
+            // curr_level->collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL);
+            memset(&curr_level->collision_bvh, 0, sizeof(curr_level->collision_bvh));
 
             player->position = player_spawn_position;
             player->rotation = player_spawn_rotation;
@@ -1002,13 +1007,13 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         ImGui::Spacing();
         if (ImGui::TreeNode("All shapes")) {
             for (size_t i = 0; i < MAX_SHAPE_COUNT && curr_level->shapes; ++i) {
-                if (curr_level->shapes[i].type != SHAPE_NONE) {
-                    static std::string tree_nodes[MAX_SHAPE_COUNT];
-                    tree_nodes[i] = std::format("{} - {}", i, shape_type_names[curr_level->shapes[i].type]);
-                    if (ImGui::TreeNode(tree_nodes[i].c_str())) {
-                        inspect_shape(curr_level, i);
-                        ImGui::TreePop();
-                    }
+                if (curr_level->shapes[i].type == SHAPE_NONE) continue;
+
+                static std::string tree_nodes[MAX_SHAPE_COUNT];
+                tree_nodes[i] = std::format("{} - {}", i, shape_type_names[curr_level->shapes[i].type]);
+                if (ImGui::TreeNode(tree_nodes[i].c_str())) {
+                    inspect_shape(curr_level, i);
+                    ImGui::TreePop();
                 }
             }
             ImGui::TreePop();
@@ -1037,7 +1042,23 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     }
     renderer_update_lights(curr_level->lights);
 
+    static int counter = 0;
+    counter += 1;
+
     for (int i = 0; i < MAX_SHAPE_COUNT && curr_level->shapes; ++i) {
+        bool dont_draw = false;
+
+        // check if collision
+        for (size_t j = 0; j < MAX_SHAPE_COUNT && curr_level->shapes; ++j) {
+            if (i == j) continue;
+            if (curr_level->shapes[i].type == SHAPE_NONE) continue;
+            if (gjk(&curr_level->shapes[i], &curr_level->shapes[j])) {
+                if ((counter % 5) > 2) dont_draw = true;
+            }
+        }
+
+        if (dont_draw) continue;
+
         if (curr_level->shapes[i].type == SHAPE_SPHERE) {
             transform_t trans = {
                 .position = curr_level->shapes[i].sphere.center,
@@ -1113,7 +1134,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         if (ImGui::TreeNode("Texture Atlas")) {
             auto avail = ImGui::GetContentRegionAvail().x;
             ImGui::Image(
-                (ImTextureID)renderer_debug_fetch_atlas(),
+                reinterpret_cast<ImTextureID>(renderer_debug_fetch_atlas()),
                 ImVec2(avail, avail)
             );
             ImGui::TreePop();

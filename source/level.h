@@ -50,18 +50,12 @@ typedef enum {
     LIGHT_POINT = 2,
 } light_type_t;
 
-typedef struct {
-    uint8_t type;
-    union {
-        sphere_t sphere;
-        aabb_t aabb;
-    };
-} shape_t;
-
 typedef enum {
     SHAPE_NONE = 0,
     SHAPE_SPHERE = 1,
-    SHAPE_AABB = 2,
+    SHAPE_CAPSULE = 2,
+    SHAPE_TRIANGLE = 3,
+    SHAPE_AABB = 4,
 } shape_type_t;
 
 typedef struct {
