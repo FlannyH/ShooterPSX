@@ -60,7 +60,7 @@ entity_trigger_t* entity_trigger_new(void) {
     entity->destroy_on_player_intersect = 1;
     entity->intersecting_curr = 0;
     entity->intersecting_prev = 0;
-    entity->is_busy = 0;
+    entity->activated = 0;
     entity->trigger_type = ENTITY_TRIGGER_TYPE_NONE;
     return entity;
 }
@@ -69,7 +69,19 @@ void entity_trigger_update(int slot, player_t* player, int dt) {
     (void)player;
     entity_trigger_t* trigger = (entity_trigger_t*)entity_get_header(slot);
 
-    if (!trigger->is_busy) {
+    // when the trigger is idle, detect player collision
+    if (trigger->activated) {
+        switch (trigger->trigger_type) {
+            case ENTITY_TRIGGER_TYPE_NONE:     entity_trigger_update_text(slot, dt);         break;
+            case ENTITY_TRIGGER_TYPE_TEXT:     entity_trigger_update_text(slot, dt);         break;
+            case ENTITY_TRIGGER_TYPE_SIGNAL:   entity_trigger_update_signal(slot);           break;
+            case ENTITY_TRIGGER_TYPE_TELEPORT: entity_trigger_update_teleport(slot, player); break;
+        }
+
+        return;
+    }
+    else {
+        // throw this trigger into the collision universe
         const vec3_t trigger_pos = trigger->entity_header.position;
         const vec3_t trigger_scale_half = vec3_muls(trigger->entity_header.scale, ONE/2);
 
@@ -85,48 +97,18 @@ void entity_trigger_update(int slot, player_t* player, int dt) {
         };
         entity_register_collision_box(&box);
 
+        // activate on enter
         if (trigger->intersecting_curr && !trigger->intersecting_prev) {
-            trigger->is_busy = 1;
-            
+            trigger->activated = 1;
+
             if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TEXT) {
                 trigger->data_text.curr_display_time_ms = trigger->data_text.total_display_time_ms;
             }
         }
-        
+
         trigger->intersecting_prev = trigger->intersecting_curr;
         trigger->intersecting_curr = 0;
-        
-        return;
     }
-
-    if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TEXT) {
-        trigger->data_text.curr_display_time_ms -= dt;
-        if (trigger->data_text.curr_display_time_ms > 0) {
-            const char* text = state.in_game.level.text_entries[trigger->data_text.id];
-            renderer_draw_text((vec2_t){256 * ONE, 176 * ONE}, text, 2, 1, trigger->data_text.color);
-        }
-        else if (trigger->destroy_on_player_intersect) {
-            entity_kill(slot);
-        }
-        else {
-            trigger->is_busy = 0;
-        }
-
-        return;
-    }
-
-    if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_SIGNAL) {
-        entity_set_signal(trigger->signal.id, trigger->signal.value_to_send);
-        if (trigger->destroy_on_player_intersect) {
-            entity_kill(slot);
-        }
-        else {
-            trigger->is_busy = 0;
-        }
-    }
-
-    // Return to not busy by default
-    trigger->is_busy = 0;
 }
 
 void entity_trigger_on_hit(int slot, int hitbox_index) {
@@ -141,7 +123,7 @@ void entity_trigger_player_intersect(int slot, player_t* player) {
     trigger->intersecting_curr = 1;
 }
 
-#ifdef _LEVEL_EDITOR 
+#ifdef _LEVEL_EDITOR
 const char* entity_trigger_type_names[] = {
     "ENTITY_TRIGGER_TYPE_NONE",
     "ENTITY_TRIGGER_TYPE_TEXT",
