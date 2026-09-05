@@ -192,6 +192,10 @@ static inline scalar_t vec3_magnitude(vec3_t a) {
     return scalar_sqrt(magnitude);
 }
 
+static inline scalar_t vec3_distance(vec3_t a, vec3_t b) {
+    return vec3_magnitude(vec3_sub(a, b));
+}
+
 static inline vec3_t vec3_cross(vec3_t a, vec3_t b) {
     return (vec3_t) {
         scalar_mul(a.y, b.z) - scalar_mul(a.z, b.y),

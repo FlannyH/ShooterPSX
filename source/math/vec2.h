@@ -169,6 +169,10 @@ static inline scalar_t vec2_magnitude(vec2_t a) {
     return scalar_sqrt(magnitude);
 }
 
+static inline scalar_t vec2_distance(vec2_t a, vec2_t b) {
+    return vec2_magnitude(vec2_sub(a, b));
+}
+
 static inline scalar_t vec2_cross(const vec2_t a, const vec2_t b) {
     return (scalar_mul(a.x, b.y) - scalar_mul(a.y, b.x));
 }
