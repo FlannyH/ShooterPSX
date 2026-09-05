@@ -1,6 +1,9 @@
 #ifndef FIXED_POINT_H
 #define FIXED_POINT_H
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 #include "common.h"
 #include "../lut.h"
 
@@ -18,17 +21,17 @@ typedef fixed20_12_t scalar_t;
 #define SCALAR(a) ((int32_t)(((a) * (ONE)) + (((a) >= 0.0f) ? 0.5f : -0.5f)))
 
 // Let's hope and pray that this will be compile-time evaluated
-ALWAYS_INLINE fixed20_12_t scalar_from_float(const float a) {
+static inline fixed20_12_t scalar_from_float(const float a) {
     fixed20_12_t result;
     result = (int32_t)((a * (ONE)) + ((a >= 0.0f) ? 0.5f : -0.5f));
     return result;
 }
 
-ALWAYS_INLINE scalar_t fixed_to_scalar(int fixed20_12) {
+static inline scalar_t fixed_to_scalar(int fixed20_12) {
     return fixed20_12;
 }
 
-ALWAYS_INLINE void print_fixed_point(scalar_t a) {
+static inline void print_fixed_point(scalar_t a) {
     if (a < 0) {
         a = -a;
         printf("-");
@@ -39,7 +42,7 @@ ALWAYS_INLINE void print_fixed_point(scalar_t a) {
     printf("%li.%03li", integer, (fractional * 1000) / (1 << n_fractional_bits));
 }
 
-ALWAYS_INLINE void scalar_debug(const scalar_t a) {
+static inline void scalar_debug(const scalar_t a) {
     if (a == INT32_MAX) {
         printf("+inf\n");
         return;
@@ -60,7 +63,7 @@ ALWAYS_INLINE void scalar_debug(const scalar_t a) {
 #include <stdlib.h>
 
 #ifdef _PSX
-ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
+static inline fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
     register fixed20_12_t temp, result;
     __asm__ volatile (
         // shift the bits into the right place
@@ -91,7 +94,7 @@ ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20
     return result;
 }
 #else
-ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
+static inline fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
     int64_t result32 = ((int64_t)a * ((int64_t)b)) >> 12;
 
     // todo(fixed_point_overflow_check): desc: make overflow check default, and add this check in the ps1 code
@@ -112,7 +115,7 @@ ALWAYS_INLINE static fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20
 #endif
 
 // todo(fixed_point_ps1_asm_opt): desc: should this be optimized with assembly on ps1?
-ALWAYS_INLINE fixed20_12_t scalar_div(const fixed20_12_t a, const fixed20_12_t b) {
+static inline fixed20_12_t scalar_div(const fixed20_12_t a, const fixed20_12_t b) {
     int64_t result32 = (int64_t)a * ONE;
     if (b != 0) {
         result32 /= b;
@@ -125,15 +128,16 @@ ALWAYS_INLINE fixed20_12_t scalar_div(const fixed20_12_t a, const fixed20_12_t b
     return (int32_t)result32;
 }
 
-ALWAYS_INLINE fixed20_12_t scalar_min(const fixed20_12_t a, const fixed20_12_t b) {
+static inline fixed20_12_t scalar_min(const fixed20_12_t a, const fixed20_12_t b) {
     return (a < b) ? a : b;
 }
 
-ALWAYS_INLINE fixed20_12_t scalar_max(const fixed20_12_t a, const fixed20_12_t b) {
+static inline fixed20_12_t scalar_max(const fixed20_12_t a, const fixed20_12_t b) {
     return (a > b) ? a : b;
 }
 
-ALWAYS_INLINE fixed20_12_t scalar_sqrt(fixed20_12_t a) {
+// todo(scalar_sqrt_optimization): desc: optimize sqrt with luts
+static inline fixed20_12_t scalar_sqrt(fixed20_12_t a) {
 #ifdef _PSX
     return SquareRoot12(a);
 #else
@@ -141,14 +145,14 @@ ALWAYS_INLINE fixed20_12_t scalar_sqrt(fixed20_12_t a) {
 #endif
 }
 
-ALWAYS_INLINE fixed20_12_t scalar_abs(fixed20_12_t a) {
+static inline fixed20_12_t scalar_abs(fixed20_12_t a) {
     if (a < 0) {
         a = -a;
     }
     return a;
 }
 
-ALWAYS_INLINE fixed20_12_t scalar_clamp(fixed20_12_t a, const fixed20_12_t min, const fixed20_12_t max) {
+static inline fixed20_12_t scalar_clamp(fixed20_12_t a, const fixed20_12_t min, const fixed20_12_t max) {
     if (a < min) {
         a = min;
     }
@@ -158,27 +162,27 @@ ALWAYS_INLINE fixed20_12_t scalar_clamp(fixed20_12_t a, const fixed20_12_t min, 
     return a;
 }
 
-ALWAYS_INLINE static fixed20_12_t scalar_lerp(const fixed20_12_t a, const fixed20_12_t b, const fixed20_12_t t) {
+static inline fixed20_12_t scalar_lerp(const fixed20_12_t a, const fixed20_12_t b, const fixed20_12_t t) {
 	return a + scalar_mul(b-a, t);
 }
 
-ALWAYS_INLINE static fixed20_12_t scalar_shift_left(const fixed20_12_t a, uint32_t shift) {
+static inline fixed20_12_t scalar_shift_left(const fixed20_12_t a, uint32_t shift) {
     return a << shift;
 }
 
-ALWAYS_INLINE static fixed20_12_t scalar_shift_right(const fixed20_12_t a, uint32_t shift) {
+static inline fixed20_12_t scalar_shift_right(const fixed20_12_t a, uint32_t shift) {
     return a >> shift;
 }
 
-ALWAYS_INLINE int is_infinity(const fixed20_12_t a) {
+static inline int is_infinity(const fixed20_12_t a) {
     return (a == INT32_MAX || a == -INT32_MAX);
 }
 
-ALWAYS_INLINE int int_from_scalar(scalar_t scalar) {
+static inline int int_from_scalar(scalar_t scalar) {
     return scalar / ONE;
 }
 
-ALWAYS_INLINE static scalar_t trig_sin(scalar_t angle) {
+static inline scalar_t trig_sin(scalar_t angle) {
     // |  XXX  |   |
     // |XX | XX|   |
     // X - - - X - - -
@@ -196,7 +200,7 @@ ALWAYS_INLINE static scalar_t trig_sin(scalar_t angle) {
     else /*if (quadrant == 3)*/ return -(lut_quarter_sine[255 - lut_entry] / (65536 / ONE));
 }
 
-ALWAYS_INLINE static scalar_t trig_cos(scalar_t angle) {
+static inline scalar_t trig_cos(scalar_t angle) {
     // XX  |   |   |  X
     // | XX|   |   |XX
     // - - X - - - X -
@@ -205,5 +209,8 @@ ALWAYS_INLINE static scalar_t trig_cos(scalar_t angle) {
     // 0   1   2   3
     return trig_sin(angle + scalar_from_float(0.25f));
 }
+
+
+#pragma GCC diagnostic pop
 
 #endif // FIXED_POINT_H
