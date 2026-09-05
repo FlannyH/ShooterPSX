@@ -5,6 +5,7 @@
 #include <psxpad.h>
 #endif
 
+#include "common.h"
 #include "input.h"
 #include "entity.h"
 #include "common.h"
@@ -349,14 +350,16 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
 #endif
     handle_movement(self, level_bvh, dt_ms);
 
+    const vec2_t vel_2d = {self->velocity.x, self->velocity.z};
+    const scalar_t speed_1d = vec2_magnitude(vel_2d) / PLAYER_VELOCITY_PRECISION;
+
 #ifdef _DEBUG_CAMERA
     (void)time_counter;
     self->position.y += 1000 * ((dt_ms * (input_held(PAD_UP, 0) != 0)) - (dt_ms * (input_held(PAD_DOWN, 0) != 0)));
     self->transform.position.y = self->position.y;
+
 #else
-    const vec2_t vel_2d = {self->velocity.x, self->velocity.z};
-    const scalar_t speed_1d = vec2_magnitude(vel_2d) / PLAYER_VELOCITY_PRECISION;
-    self->transform.position.y = self->position.y + isin(time_counter * 12) * speed_1d / 64;
+    self->transform.position.y = self->position.y + trig_sin(time_counter * 12) * speed_1d / 64;
 
     self->footstep_timer += dt_ms;
     if (self->footstep_timer >= FOOTSTEP_TIMER_MAX) {
@@ -366,9 +369,6 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
         }
     }
 #endif
-
-    const vec2_t vel_2d = {self->velocity.x, self->velocity.z};
-    const scalar_t speed_1d = vec2_magnitude(vel_2d) / PLAYER_VELOCITY_PRECISION;
 
     self->transform.position.x = self->position.x;
     self->transform.position.y = self->position.y + trig_sin(time_counter * 12) * speed_1d / 64;
