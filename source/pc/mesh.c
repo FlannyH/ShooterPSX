@@ -1,8 +1,10 @@
 #include "mesh.h"
 #include "file.h"
 
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 model_t* model_load(const char* path, int on_stack, stack_t stack, texture_category_t tex_category, int optimize_for_single_render_per_frame) {
     (void)optimize_for_single_render_per_frame;
@@ -221,4 +223,106 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
     if (!on_stack) mem_free(file_data);
 
     return model;
+}
+
+mesh_t* create_debug_mesh_from_raw_triangles(triangle_t* tri, size_t count) {
+    mesh_t* mesh = NULL;
+    mesh = mem_alloc(sizeof(mesh_t), MEM_CAT_MESH);
+    if (!mesh) return NULL;
+
+    mesh->n_quads = 0;
+    mesh->n_triangles = count;
+    mesh->vbo_vertices = 0;
+    mesh->vbo_normals = 0;
+    mesh->vao = 0;
+    mesh->vertices = malloc(sizeof(triangle_t) * count);
+    mesh->normals = malloc(sizeof(normal_t) * count);
+
+    printf("debug_mesh:\n");
+    for (size_t tri_i = 0; tri_i < count; ++tri_i) {
+        const vec3_t a = tri->v0;
+        const vec3_t b = tri->v1;
+        const vec3_t c = tri->v2;
+        printf("\ta:"); vec3_debug(a);
+        printf("\tb:"); vec3_debug(b);
+        printf("\tc:"); vec3_debug(c);
+
+        // position
+        size_t index = tri_i * 3;
+        svec3_t sa = svec3_from_vec3(a);
+        svec3_t sb = svec3_from_vec3(b);
+        svec3_t sc = svec3_from_vec3(c);
+        memcpy(&mesh->vertices[index + 0].x, &sa.x, sizeof(int16_t) * 3);
+        memcpy(&mesh->vertices[index + 1].x, &sb.x, sizeof(int16_t) * 3);
+        memcpy(&mesh->vertices[index + 2].x, &sc.x, sizeof(int16_t) * 3);
+        mesh->vertices[index + 0].tex_id = 255;
+        mesh->vertices[index + 1].tex_id = 255;
+        mesh->vertices[index + 2].tex_id = 255;
+
+        // normal
+        const vec3_t ab = vec3_normalize(vec3_sub(b, a));
+        const vec3_t ac = vec3_normalize(vec3_sub(c, a));
+        vec3_t normal = vec3_normalize(vec3_cross(ab, ac));
+        mesh->normals[tri_i].x = ((normal.x + ONE) * 255) / (2*ONE);
+        mesh->normals[tri_i].y = ((normal.y + ONE) * 255) / (2*ONE);
+        mesh->normals[tri_i].z = ((normal.z + ONE) * 255) / (2*ONE);
+    }
+
+    return mesh;
+}
+
+mesh_t* create_convex_hull_from_point_cloud(vec3_t* points, size_t count) {
+    if (count < 3) return NULL; // only triangles and hulls
+
+    triangle_t tris[128] = {0};
+    size_t n_tris = 0;
+
+    // find 2 furthest apart points
+    size_t closest_pair[2] = { 0, 1 };
+    scalar_t closest_distance = INT32_MAX;
+    for (size_t i = 0; i < count; ++i) {
+        for (size_t j = i + 1; j < count; ++j) {
+            if (i == j) continue;
+            const scalar_t distance = vec3_distance(points[i], points[j]);
+            if (distance < closest_distance) {
+                closest_distance = distance;
+                closest_pair[0] = i;
+                closest_pair[1] = j;
+            }
+        }
+    }
+
+    // find 3rd point that's most perpendicular to these 2 points to form a triangle
+    scalar_t min_dot = INT32_MAX;
+    vec3_t ab = vec3_sub(points[closest_pair[1]], points[closest_pair[0]]);
+    size_t k = 0;
+    for (size_t i = 0; i < count; ++i) {
+        if (i == closest_pair[0]) continue;
+        if (i == closest_pair[1]) continue;
+        vec3_t ap = vec3_sub(points[closest_pair[i]], points[closest_pair[0]]);
+        const scalar_t dot_ab_ap = scalar_abs(vec3_dot(ab, ap));
+        if (dot_ab_ap < min_dot) {
+            min_dot = dot_ab_ap;
+            k = i;
+        }
+    }
+
+    // we have a triangle now
+    tris[n_tris++] = (triangle_t) {
+        points[closest_pair[0]],
+        points[closest_pair[1]],
+        points[k],
+    };
+
+    // we can now create a convex hull if we have more points, or we create the mesh here
+
+    // create mesh
+    printf("tris:\n");
+    for (size_t i = 0; i < n_tris; ++i) {
+        printf("\t%3i: \n", i);
+        printf("\t\t"); vec3_debug(tris[i].v0);
+        printf("\t\t"); vec3_debug(tris[i].v1);
+        printf("\t\t"); vec3_debug(tris[i].v2);
+    }
+    return create_debug_mesh_from_raw_triangles(tris, n_tris);
 }

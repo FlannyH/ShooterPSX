@@ -74,14 +74,31 @@ vec3_t support_aabb(aabb_t aabb, vec3_t direction) {
     return result;
 }
 
+vec3_t support_convex_hull(convex_hull_t convex_hull, vec3_t direction) {
+    direction = vec3_normalize(direction);
+    scalar_t highest_dot = 0;
+    vec3_t result = vec3_from_scalar(0);
+
+    for (size_t i = 0; i < convex_hull.n_points; ++i) {
+        const scalar_t dot = vec3_dot(convex_hull.points[i], direction);
+        if (dot > highest_dot) {
+            highest_dot = dot;
+            result = convex_hull.points[i];
+        }
+    }
+
+    return result;
+}
+
 vec3_t support_shape(shape_t* shape, vec3_t direction) {
     switch (shape->type) {
         case SHAPE_NONE:     return (vec3_t){0};
-        case SHAPE_SPHERE:   return support_sphere(shape->sphere, direction);
-        case SHAPE_CAPSULE:  return support_capsule(shape->capsule, direction);
-        case SHAPE_AABB:     return support_aabb(shape->aabb, direction);
-        case SHAPE_TRIANGLE: return support_triangle(shape->triangle, direction);
-        default:             return (vec3_t){0};
+        case SHAPE_SPHERE:      return support_sphere(shape->sphere, direction);
+        case SHAPE_CAPSULE:     return support_capsule(shape->capsule, direction);
+        case SHAPE_TRIANGLE:    return support_triangle(shape->triangle, direction);
+        case SHAPE_AABB:        return support_aabb(shape->aabb, direction);
+        case SHAPE_CONVEX_HULL: return support_convex_hull(shape->convex_hull, direction);
+        default:                return (vec3_t){0};
     }
 }
 
@@ -348,12 +365,19 @@ void move_aabb(aabb_t* shape, vec3_t move_by) {
     shape->max = vec3_add(shape->max, move_by);
 }
 
+void move_convex_hull(convex_hull_t* shape, vec3_t move_by) {
+    for (size_t i = 0; i < shape->n_points; ++i) {
+        shape->points[i] = vec3_add(shape->points[i], move_by);
+    }
+}
+
 void move_shape(shape_t* shape, vec3_t move_by) {
     switch (shape->type) {
         case SHAPE_SPHERE: move_sphere(&shape->sphere, move_by); break;
         case SHAPE_CAPSULE: move_capsule(&shape->capsule, move_by); break;
         case SHAPE_TRIANGLE: move_triangle(&shape->triangle, move_by); break;
         case SHAPE_AABB: move_aabb(&shape->aabb, move_by); break;
+        case SHAPE_CONVEX_HULL: move_convex_hull(&shape->convex_hull, move_by); break;
         default: break;
     }
 }

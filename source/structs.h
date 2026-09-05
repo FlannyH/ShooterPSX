@@ -25,12 +25,17 @@ typedef struct {
 } capsule_t;
 
 typedef struct {
+    vec3_t v0, v1, v2;
+} triangle_t;
+
+typedef struct {
     vec3_t min, max;
 } aabb_t;
 
 typedef struct {
-    vec3_t v0, v1, v2;
-} triangle_t;
+    vec3_t* points;
+    size_t n_points;
+} convex_hull_t;
 
 typedef struct {
     uint8_t type;
@@ -39,6 +44,7 @@ typedef struct {
         capsule_t capsule;
         triangle_t triangle;
         aabb_t aabb;
+        convex_hull_t convex_hull;
     };
 } shape_t;
 

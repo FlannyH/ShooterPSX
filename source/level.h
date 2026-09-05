@@ -56,6 +56,7 @@ typedef enum {
     SHAPE_CAPSULE = 2,
     SHAPE_TRIANGLE = 3,
     SHAPE_AABB = 4,
+    SHAPE_CONVEX_HULL = 5,
 } shape_type_t;
 
 typedef struct {

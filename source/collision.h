@@ -14,6 +14,7 @@ void move_sphere(sphere_t* shape, vec3_t move_by);
 void move_capsule(capsule_t* shape, vec3_t move_by);
 void move_triangle(triangle_t* shape, vec3_t move_by);
 void move_aabb(aabb_t* shape, vec3_t move_by);
+void move_convex_hull(convex_hull_t* shape, vec3_t move_by);
 void move_shape(shape_t* shape, vec3_t move_by);
 
 #endif // COLLISION_H

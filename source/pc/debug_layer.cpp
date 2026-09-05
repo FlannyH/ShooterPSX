@@ -73,6 +73,8 @@ static model_t* gizmos = nullptr;
 static bool vertex_selected = false;
 static vec3_t selected_vertex_position = {0, 0, 0};
 
+static mesh_t* specialized_meshes[MAX_SHAPE_COUNT] = {0};
+
 extern const char* entity_names[];
 const char* light_type_names[] = {
     "None",
@@ -86,6 +88,7 @@ const char* shape_type_names[] = {
     "Capsule (wip)",
     "Triangle (wip)",
     "AABB",
+    "Convex Hull",
     NULL
 };
 
@@ -326,6 +329,42 @@ void inspect_shape(level_t* curr_level, size_t shape_id) {
         }
 
         renderer_debug_draw_aabb(&curr_level->shapes[shape_id].aabb, {255, 255, 127, 255}, &id_transform);
+    }
+    else if (shape_type == SHAPE_CONVEX_HULL) {
+        if (ImGui::TreeNode("Points")) {
+            for (size_t i = 0; i < curr_level->shapes[shape_id].convex_hull.n_points; ++i) {
+                ImGui::PushID((int)i);
+                inspect_vec3(&curr_level->shapes[shape_id].convex_hull.points[i], "Pos");
+                ImGui::SameLine();
+                if (ImGui::Button("To selected vertex")) {
+                    curr_level->shapes[shape_id].convex_hull.points[i] = selected_vertex_position;
+                }
+                ImGui::PopID();
+            }
+            ImGui::TreePop();
+        }
+        if (ImGui::Button("Add point")) {
+            size_t index = curr_level->shapes[shape_id].convex_hull.n_points++;
+            curr_level->shapes[shape_id].convex_hull.points[index] = selected_vertex_position;
+            mem_free(specialized_meshes[shape_id]);
+            printf("curr_level->shapes[shape_id].convex_hull.n_points:\n");
+            for (size_t i = 0; i < curr_level->shapes[shape_id].convex_hull.n_points; ++i) {
+                printf("\t%3i: ", i); vec3_debug(curr_level->shapes[shape_id].convex_hull.points[i]);
+            }
+            specialized_meshes[shape_id] = create_convex_hull_from_point_cloud(
+                curr_level->shapes[shape_id].convex_hull.points,
+                curr_level->shapes[shape_id].convex_hull.n_points
+            );
+        }
+
+        const vec3_t initial_point = curr_level->shapes[shape_id].convex_hull.points[0];
+        aabb_t aabb = (aabb_t){initial_point, initial_point};
+        for (size_t i = 1; i < curr_level->shapes[shape_id].convex_hull.n_points; ++i) {
+            const vec3_t point = curr_level->shapes[shape_id].convex_hull.points[i];
+            aabb.min = vec3_min(aabb.min, point);
+            aabb.max = vec3_max(aabb.max, point);
+        }
+        renderer_debug_draw_aabb(&aabb, {255, 255, 127, 255}, &id_transform);
     }
 }
 
@@ -949,6 +988,10 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                         curr_level->shapes[i].aabb.min = spawn_pos;
                         curr_level->shapes[i].aabb.max = vec3_add(spawn_pos, vec3_from_scalar(SCALAR(250.0)));
                     }
+                    else if (curr_selected_shape_type == SHAPE_CONVEX_HULL) {
+                        curr_level->shapes[i].convex_hull.points = (vec3_t*)mem_alloc(256 * sizeof(vec3_t), MEM_CAT_MESH);
+                        curr_level->shapes[i].convex_hull.n_points = 0;
+                    }
                     curr_level->shapes[i].type = curr_selected_shape_type;
                     break;
                 }
@@ -1083,6 +1126,10 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
             renderer_set_drawing_id(i, 3);
             renderer_draw_mesh_shaded(&gizmos->meshes[3], &trans, 0, 0);
+        }
+        else if (curr_level->shapes[i].type == SHAPE_CONVEX_HULL) {
+            renderer_set_drawing_id(i, 3);
+            renderer_draw_mesh_shaded(specialized_meshes[i], &id_transform, 0, 0);
         }
     }
 
