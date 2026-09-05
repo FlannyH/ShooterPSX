@@ -316,6 +316,11 @@ vec3_t epa(shape_t* shape1, shape_t* shape2) {
                 s.faces[new_face_i].b = s.edges[edge_i].b;
                 s.faces[new_face_i].c = new_vtx_i;
                 s.faces[new_face_i].normal = calculate_normal(new_face_i);
+                if (vec3_dot(s.faces[new_face_i].normal, s.vertices[s.faces[new_face_i].a]) < 0) {
+                    s.faces[new_face_i].b = new_vtx_i;
+                    s.faces[new_face_i].c = s.edges[edge_i].b;
+                    s.faces[new_face_i].normal = vec3_neg(s.faces[new_face_i].normal);
+                }
             }
         }
     }
