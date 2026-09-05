@@ -2,7 +2,7 @@
 
 #include "../common.h"
 #include "structs.h"
-#include "vec2.h"
+#include "../math/vec2.h"
 
 #include <gl2d.h>
 #include <nds.h>
@@ -54,7 +54,7 @@ void renderer_init(void) {
     glClearPolyID(63);
     glClearDepth(0x7FFF);
     glViewport(0, 0, 255, 191);
-    vramSetBankA(VRAM_A_TEXTURE);    
+    vramSetBankA(VRAM_A_TEXTURE);
     vramSetBankB(VRAM_B_TEXTURE);
     vramSetBankD(VRAM_D_TEXTURE);
     vramSetBankF(VRAM_F_TEX_PALETTE);
@@ -97,8 +97,8 @@ void renderer_end_frame(void) {
 }
 
 void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform, int local, int facing_camera) {
-    ++n_meshes_drawn; 
-    
+    ++n_meshes_drawn;
+
     // Set up model view matrix
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -255,7 +255,7 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 }
 
 void renderer_apply_fade(scalar_t fade_level) {
-    if (fade_level <= 0) return; 
+    if (fade_level <= 0) return;
 
     // Reset all matrices
     glMatrixMode(GL_MODELVIEW);
@@ -280,7 +280,7 @@ void renderer_apply_fade(scalar_t fade_level) {
         glTexCoord2i(0, 0);
         glVertex3v16(-ONE, ONE, 0);
     glEnd();
-    
+
     // Put the matrices back
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix(1);
@@ -306,7 +306,7 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
     textures[tex_index].height = texture->height;
     textures[tex_index].texture_entry_id = tex_entry_id;
     textures[tex_index].allocated = 1;
-    
+
     if (glTexImage2D(0, 0, GL_RGB16, texture->width, texture->height, 0, TEXGEN_OFF | ((texture->palette[0].a == 0) ? GL_TEXTURE_COLOR0_TRANSPARENT : 0), texture->data) == 0) {
         printf("Error loading category %i texture %i pixels\n", (int)category, index);
     }

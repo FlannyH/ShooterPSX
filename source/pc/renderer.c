@@ -590,7 +590,9 @@ int32_t max_dot_value = 0;
 void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform, int local, int facing_camera) {
 	++n_meshes_drawn;
 
+#ifdef _LEVEL_EDITOR
 	renderer_set_drawing_id(0, 4);
+#endif
 
 	// Calculate model matrix
 	mat4 model_matrix;

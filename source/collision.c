@@ -5,6 +5,7 @@
 #include "math/vec3.h"
 
 #include <string.h>
+#define MAX_EPA_TRIES 32
 
 // directions are normalized to make it more predictable with fixed point precision
 
@@ -174,7 +175,7 @@ int gjk(shape_t* shape1, shape_t* shape2) {
     s.c = vec3_sub(support_shape(shape1, s.dir), support_shape(shape2, vec3_neg(s.dir)));
 
     // next point is towards the origin
-    s.dir = vec3_neg(s.c);
+    s.dir = vec3_normalize(vec3_neg(s.c));
     s.b = vec3_sub(support_shape(shape1, s.dir), support_shape(shape2, vec3_neg(s.dir)));
 
     // didn't pass the origin -> no collision
@@ -239,17 +240,19 @@ int find_in_edges(size_t* index, const edge_t edge) {
 }
 
 vec3_t calculate_normal(size_t face_id) {
-    const vec3_t ab = vec3_sub(s.vertices[s.faces[face_id].b], s.vertices[s.faces[face_id].a]);
-    const vec3_t ac = vec3_sub(s.vertices[s.faces[face_id].c], s.vertices[s.faces[face_id].a]);
+    const vec3_t ab = vec3_normalize(vec3_sub(s.vertices[s.faces[face_id].b], s.vertices[s.faces[face_id].a]));
+    const vec3_t ac = vec3_normalize(vec3_sub(s.vertices[s.faces[face_id].c], s.vertices[s.faces[face_id].a]));
     return vec3_normalize(vec3_cross(ab, ac));
 }
 
 void epa_unique_edge(edge_t edge) {
     size_t index = 0;
-    if (find_in_edges(&index, (edge_t){edge.b, edge.a}))
+    if (find_in_edges(&index, (edge_t){edge.b, edge.a})) {
         remove_edge_at_index(index);
-    else
+    }
+    else {
         s.edges[s.n_edges++] = edge;
+    }
 }
 
 vec3_t epa(shape_t* shape1, shape_t* shape2) {
@@ -285,16 +288,16 @@ vec3_t epa(shape_t* shape1, shape_t* shape2) {
         }
 
         // if the support point tells us there's more minkowski diff in that direction -> extendo
-        const vec3_t support = vec3_sub(support_shape(shape1, min_normal), support_shape(shape2, min_normal));
+        const vec3_t support = vec3_sub(support_shape(shape1, min_normal), support_shape(shape2, vec3_neg(min_normal)));
         const scalar_t distance = vec3_dot(min_normal, support);
-        if (scalar_abs(distance - min_distance) > SCALAR(0.004f)) {
+        if (scalar_abs(distance - min_distance) > SCALAR(1.0f)) {
             min_distance = INT32_MAX;
 
             // remove all faces in the same direction and rebuild polytope
             s.n_edges = 0;
             size_t i_face = 0;
             while (i_face < s.n_faces) {
-                if (vec3_dot(s.faces[i_face].normal, support) > 0) {
+                if (vec3_dot(s.faces[i_face].normal, vec3_sub(support, s.vertices[s.faces[i_face].a])) > 0) {
                     epa_unique_edge((edge_t){s.faces[i_face].a, s.faces[i_face].b});
                     epa_unique_edge((edge_t){s.faces[i_face].b, s.faces[i_face].c});
                     epa_unique_edge((edge_t){s.faces[i_face].c, s.faces[i_face].a});
@@ -304,10 +307,10 @@ vec3_t epa(shape_t* shape1, shape_t* shape2) {
                 ++i_face;
             }
 
-            for (size_t edge_i = 0; edge_i < s.n_edges; ++edge_i) {
-                const size_t new_vtx_i = s.n_vertices++;
-                s.vertices[new_vtx_i] = support;
+            const size_t new_vtx_i = s.n_vertices++;
+            s.vertices[new_vtx_i] = support;
 
+            for (size_t edge_i = 0; edge_i < s.n_edges; ++edge_i) {
                 const size_t new_face_i = s.n_faces++;
                 s.faces[new_face_i].a = s.edges[edge_i].a;
                 s.faces[new_face_i].b = s.edges[edge_i].b;

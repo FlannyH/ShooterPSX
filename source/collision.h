@@ -8,5 +8,6 @@
 #include <stdint.h>
 
 int gjk(shape_t* shape1, shape_t* shape2);
+vec3_t epa(shape_t* shape1, shape_t* shape2);
 
 #endif // COLLISION_H
