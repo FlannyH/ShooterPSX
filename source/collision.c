@@ -25,11 +25,11 @@ typedef struct {
     scalar_t next_vtx_count;
 
     // epa
-    vec3_t vertices[32];
+    vec3_t vertices[320];
     size_t n_vertices;
-    face_t faces[32];
+    face_t faces[320];
     size_t n_faces;
-    edge_t edges[32];
+    edge_t edges[320];
     size_t n_edges;
 } gjk_state_t;
 
