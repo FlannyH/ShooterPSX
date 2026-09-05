@@ -322,3 +322,33 @@ vec3_t epa(shape_t* shape1, shape_t* shape2) {
 
     return vec3_muls(min_normal, min_distance + SCALAR(0.003f));
 }
+
+void move_sphere(sphere_t* shape, vec3_t move_by) {
+    shape->center = vec3_add(shape->center, move_by);
+}
+
+void move_capsule(capsule_t* shape, vec3_t move_by) {
+    shape->a = vec3_add(shape->a, move_by);
+    shape->b = vec3_add(shape->b, move_by);
+}
+
+void move_triangle(triangle_t* shape, vec3_t move_by) {
+    shape->v0 = vec3_add(shape->v0, move_by);
+    shape->v1 = vec3_add(shape->v1, move_by);
+    shape->v2 = vec3_add(shape->v2, move_by);
+}
+
+void move_aabb(aabb_t* shape, vec3_t move_by) {
+    shape->min = vec3_add(shape->min, move_by);
+    shape->max = vec3_add(shape->max, move_by);
+}
+
+void move_shape(shape_t* shape, vec3_t move_by) {
+    switch (shape->type) {
+        case SHAPE_SPHERE: move_sphere(&shape->sphere, move_by); break;
+        case SHAPE_CAPSULE: move_capsule(&shape->capsule, move_by); break;
+        case SHAPE_TRIANGLE: move_triangle(&shape->triangle, move_by); break;
+        case SHAPE_AABB: move_aabb(&shape->aabb, move_by); break;
+        default: break;
+    }
+}

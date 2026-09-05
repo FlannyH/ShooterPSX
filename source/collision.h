@@ -10,4 +10,10 @@
 int gjk(shape_t* shape1, shape_t* shape2);
 vec3_t epa(shape_t* shape1, shape_t* shape2);
 
+void move_sphere(sphere_t* shape, vec3_t move_by);
+void move_capsule(capsule_t* shape, vec3_t move_by);
+void move_triangle(triangle_t* shape, vec3_t move_by);
+void move_aabb(aabb_t* shape, vec3_t move_by);
+void move_shape(shape_t* shape, vec3_t move_by);
+
 #endif // COLLISION_H
