@@ -195,8 +195,8 @@ ALWAYS_INLINE static scalar_t vec3_magnitude(const vec3_t a) {
 
 ALWAYS_INLINE static vec3_t vec3_normalize(vec3_t a) {
     // avoid overflows
-    while ((a.x > (4*ONE)) || (a.y > (4*ONE)) || (a.z > (4*ONE))) {
-        a = vec3_shift_right(a, 1);
+    while ((scalar_abs(a.x) > (2*ONE)) || (scalar_abs(a.y) > (2*ONE)) || (scalar_abs(a.z) > (2*ONE))) {
+        a = vec3_shift_right(a, 2);
     }
 
     scalar_t magnitude = vec3_magnitude_squared(a);
