@@ -1053,14 +1053,16 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             if (i == j) continue;
             if (curr_level->shapes[i].type == SHAPE_NONE) continue;
             if (gjk(&curr_level->shapes[i], &curr_level->shapes[j])) {
-                if ((counter % 5) > 2) dont_draw = true;
+                const vec3_t penetration = epa(&curr_level->shapes[i], &curr_level->shapes[j]);
+                move_shape(&curr_level->shapes[j], vec3_shift_right(penetration, 1));
+                move_shape(&curr_level->shapes[i], vec3_neg(vec3_shift_right(penetration, 1)));
             }
         }
 
         if (dont_draw) continue;
 
         if (curr_level->shapes[i].type == SHAPE_SPHERE) {
-            transform_t trans = {
+            const transform_t trans = {
                 .position = curr_level->shapes[i].sphere.center,
                 .rotation = vec3_from_scalar(0),
                 .scale = vec3_from_scalar(curr_level->shapes[i].sphere.radius / 1024), // 1024 because the model is scaled by 1024 for precision
@@ -1070,9 +1072,9 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             renderer_draw_mesh_shaded(&gizmos->meshes[2], &trans, 0, 0);
         }
         else if (curr_level->shapes[i].type == SHAPE_AABB) {
-            vec3_t min = curr_level->shapes[i].aabb.min;
-            vec3_t max = curr_level->shapes[i].aabb.max;
-            vec3_t size = vec3_sub(max, min);
+            const vec3_t min = curr_level->shapes[i].aabb.min;
+            const vec3_t max = curr_level->shapes[i].aabb.max;
+            const vec3_t size = vec3_sub(max, min);
             transform_t trans = {
                 .position = min,
                 .rotation = vec3_from_scalar(0),

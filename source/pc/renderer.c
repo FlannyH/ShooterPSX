@@ -588,6 +588,7 @@ void renderer_end_frame(void) {
 
 int32_t max_dot_value = 0;
 void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform, int local, int facing_camera) {
+    if (!mesh) return;
 	++n_meshes_drawn;
 
 #ifdef _LEVEL_EDITOR
