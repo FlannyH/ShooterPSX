@@ -76,10 +76,10 @@ vec3_t support_aabb(aabb_t aabb, vec3_t direction) {
 
 vec3_t support_convex_hull(convex_hull_t convex_hull, vec3_t direction) {
     direction = vec3_normalize(direction);
-    scalar_t highest_dot = 0;
-    vec3_t result = vec3_from_scalar(0);
+    scalar_t highest_dot = vec3_dot(convex_hull.points[0], direction);
+    vec3_t result = convex_hull.points[0];
 
-    for (size_t i = 0; i < convex_hull.n_points; ++i) {
+    for (size_t i = 1; i < convex_hull.n_points; ++i) {
         const scalar_t dot = vec3_dot(convex_hull.points[i], direction);
         if (dot > highest_dot) {
             highest_dot = dot;
@@ -91,6 +91,9 @@ vec3_t support_convex_hull(convex_hull_t convex_hull, vec3_t direction) {
 }
 
 vec3_t support_shape(shape_t* shape, vec3_t direction) {
+    // direction with magnitude 0 is sus, but let's not crash and just return zero
+    if (direction.x == 0 && direction.y == 0 && direction.z == 0) return (vec3_t){0};
+
     switch (shape->type) {
         case SHAPE_NONE:     return (vec3_t){0};
         case SHAPE_SPHERE:      return support_sphere(shape->sphere, direction);
@@ -303,6 +306,9 @@ vec3_t epa(shape_t* shape1, shape_t* shape2) {
                 min_normal = nrm;
             }
         }
+
+        // if there is no distance, do nothing
+        if (min_distance == 0) return (vec3_t){0};
 
         // if the support point tells us there's more minkowski diff in that direction -> extendo
         const vec3_t support = vec3_sub(support_shape(shape1, min_normal), support_shape(shape2, vec3_neg(min_normal)));
