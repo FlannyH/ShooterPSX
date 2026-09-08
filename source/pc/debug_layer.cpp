@@ -96,7 +96,8 @@ float scalar_to_float(scalar_t a) {
     return (float)a / (float)ONE;
 }
 
-void inspect_vec3(vec3_t* vec, const char* label) {
+// returns whether data changed
+bool inspect_vec3(vec3_t* vec, const char* label) {
     float vec_float[] =  {
         scalar_to_float(vec->x),
         scalar_to_float(vec->y),
@@ -105,10 +106,13 @@ void inspect_vec3(vec3_t* vec, const char* label) {
 
     if (ImGui::DragFloat3(label, vec_float)) {
         *vec = vec3_from_floats(vec_float[0], vec_float[1], vec_float[2]);
+        return true;
     }
+    return false;
 }
 
-void inspect_svec3_4_12(svec3_t* vec, const char* label) {
+// returns whether data changed
+bool inspect_svec3_4_12(svec3_t* vec, const char* label) {
     float vec_float[] =  {
         (float)vec->x,
         (float)vec->y,
@@ -119,15 +123,20 @@ void inspect_svec3_4_12(svec3_t* vec, const char* label) {
         vec->x = (int16_t)vec_float[0];
         vec->y = (int16_t)vec_float[1];
         vec->z = (int16_t)vec_float[2];
+        return true;
     }
+    return false;
 }
 
-void inspect_scalar(scalar_t* scalar, const char* label) {
+// returns whether data changed
+bool inspect_scalar(scalar_t* scalar, const char* label) {
     float scalar_float = scalar_to_float(*scalar);
 
     if (ImGui::DragFloat(label, &scalar_float)) {
         *scalar = scalar_from_float(scalar_float);
+        return true;
     }
+    return false;
 }
 
 size_t inspect_enum(size_t value, const char** names, const char* label) {
@@ -146,17 +155,20 @@ size_t inspect_enum(size_t value, const char** names, const char* label) {
     return new_value;
 }
 
-void inspect_entity(size_t entity_id) {
+// returns whether data changed
+bool inspect_entity(size_t entity_id) {
     const uint8_t entity_type = entity_get_type(entity_id);
-    if (entity_type == ENTITY_NONE) return;
+    if (entity_type == ENTITY_NONE) return false;
 
     entity_header_t* entity_data = entity_get_header(entity_id);
 
+    bool result = false;
+
     if (ImGui::TreeNodeEx("Entity Header", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (entity_data->mesh) ImGui::Text("Mesh: %s", entity_data->mesh->name);
-        inspect_vec3(&entity_data->position, "Position");
-        inspect_vec3(&entity_data->rotation, "Rotation");
-        inspect_vec3(&entity_data->scale, "Scale");
+        result |= inspect_vec3(&entity_data->position, "Position");
+        result |= inspect_vec3(&entity_data->rotation, "Rotation");
+        result |= inspect_vec3(&entity_data->scale, "Scale");
         ImGui::TreePop();
     }
     if (ImGui::TreeNodeEx("Entity Data", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -168,10 +180,10 @@ void inspect_entity(size_t entity_id) {
             bool is_big_door = (bool)door->is_big_door;
             bool is_rotated = (bool)door->is_rotated;
             bool open_by_signal = (bool)door->open_by_signal;
-            if (ImGui::Checkbox("Locked", &is_locked)) { door->is_locked = (int)is_locked; door->state_changed = 1; }
-            if (ImGui::Checkbox("Big door", &is_big_door)) { door->is_big_door = (int)is_big_door; door->state_changed = 1; }
-            if (ImGui::Checkbox("Rotated", &is_rotated)) { door->is_rotated = (int)is_rotated; door->state_changed = 1; }
-            if (ImGui::Checkbox("Open by signal", &open_by_signal)) { door->open_by_signal = (int)open_by_signal; door->state_changed = 1; }
+            if (ImGui::Checkbox("Locked", &is_locked)) { door->is_locked = (int)is_locked; door->state_changed = 1; result |= true;}
+            if (ImGui::Checkbox("Big door", &is_big_door)) { door->is_big_door = (int)is_big_door; door->state_changed = 1; result |= true;}
+            if (ImGui::Checkbox("Rotated", &is_rotated)) { door->is_rotated = (int)is_rotated; door->state_changed = 1; result |= true;}
+            if (ImGui::Checkbox("Open by signal", &open_by_signal)) { door->open_by_signal = (int)open_by_signal; door->state_changed = 1; result |= true;}
         }
 
         else if (entity_type == ENTITY_PICKUP) {
@@ -181,33 +193,39 @@ void inspect_entity(size_t entity_id) {
             if (old_type != new_type) {
                 pickup->type = new_type;
                 pickup->entity_header.mesh = NULL; // force refresh mesh data
+                result |= 1;
             }
         }
 
         else if (entity_type == ENTITY_CRATE) {
             entity_crate_t* crate = (entity_crate_t*)entity_data;
+            const uint8_t old_val = crate->pickup_to_spawn;
             crate->pickup_to_spawn = inspect_enum((size_t)crate->pickup_to_spawn, pickup_names, "Pickup type to spawn");
+            const uint8_t new_val = crate->pickup_to_spawn;
+            if (old_val != new_val) {
+                result |= 1;
+            }
         }
 
         else if (entity_type == ENTITY_PLATFORM) {
             entity_platform_t* platform = (entity_platform_t*)entity_data;
-            inspect_vec3(&platform->position_start, "Start position");
-            inspect_vec3(&platform->position_end, "End position");
-            inspect_scalar(&platform->velocity, "Velocity");
-            ImGui::DragInt("Current timer value (ms)", &platform->curr_timer_value);
-            ImGui::DragInt("Auto start to end timer (ms)", &platform->auto_start_timer);
-            ImGui::DragInt("Auto end to start timer (ms)", &platform->auto_return_timer);
-            ImGui::DragInt("Signal ID", &platform->signal_id);
+            result |= inspect_vec3(&platform->position_start, "Start position");
+            result |= inspect_vec3(&platform->position_end, "End position");
+            result |= inspect_scalar(&platform->velocity, "Velocity");
+            result |= ImGui::DragInt("Current timer value (ms)", &platform->curr_timer_value);
+            result |= ImGui::DragInt("Auto start to end timer (ms)", &platform->auto_start_timer);
+            result |= ImGui::DragInt("Auto end to start timer (ms)", &platform->auto_return_timer);
+            result |= ImGui::DragInt("Signal ID", &platform->signal_id);
             bool listen_to_signal = (bool)platform->listen_to_signal;
             bool target_is_end = (bool)platform->target_is_end;
             bool auto_start = (bool)platform->auto_start;
             bool auto_return = (bool)platform->auto_return;
             bool move_on_player_collision = (bool)platform->move_on_player_collision;
-            if (ImGui::Checkbox("Listen to signal", &listen_to_signal)) { platform->listen_to_signal = (int)listen_to_signal; }
-            if (ImGui::Checkbox("Target is end position", &target_is_end)) { platform->target_is_end = (int)target_is_end; }
-            if (ImGui::Checkbox("Start automatically", &auto_start)) { platform->auto_start = (int)auto_start; }
-            if (ImGui::Checkbox("Return automatically", &auto_return)) { platform->auto_return = (int)auto_return; }
-            if (ImGui::Checkbox("Move on player collision", &move_on_player_collision)) { platform->move_on_player_collision = (int)move_on_player_collision; }
+            if (ImGui::Checkbox("Listen to signal", &listen_to_signal)) { platform->listen_to_signal = (int)listen_to_signal; result |= 1; }
+            if (ImGui::Checkbox("Target is end position", &target_is_end)) { platform->target_is_end = (int)target_is_end; result |= 1; }
+            if (ImGui::Checkbox("Start automatically", &auto_start)) { platform->auto_start = (int)auto_start; result |= 1; }
+            if (ImGui::Checkbox("Return automatically", &auto_return)) { platform->auto_return = (int)auto_return; result |= 1; }
+            if (ImGui::Checkbox("Move on player collision", &move_on_player_collision)) { platform->move_on_player_collision = (int)move_on_player_collision; result |= 1; }
 
             const aabb_t start_pos_debug = (aabb_t) {
                 .min = vec3_sub(platform->position_start, vec3_from_scalar(ONE / 2)),
@@ -239,16 +257,16 @@ void inspect_entity(size_t entity_id) {
                     trigger->data_text.color.g = (uint8_t)(rgb[1] * 255.f);
                     trigger->data_text.color.b = (uint8_t)(rgb[2] * 255.f);
                 }
-                ImGui::InputInt("Text entry ID", &trigger->data_text.id, 1, 5);
-                ImGui::InputInt("Display time", &trigger->data_text.total_display_time_ms, 1, 100);
+                result |= ImGui::InputInt("Text entry ID", &trigger->data_text.id, 1, 5);
+                result |= ImGui::InputInt("Display time", &trigger->data_text.total_display_time_ms, 1, 100);
             }
             else if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_SIGNAL) {
-                ImGui::InputInt("Signal ID", &trigger->signal.id, 1, 5);
-                ImGui::InputInt("Value to send", &trigger->signal.value_to_send, 1, 100);
+                result |= ImGui::InputInt("Signal ID", &trigger->signal.id, 1, 5);
+                result |= ImGui::InputInt("Value to send", &trigger->signal.value_to_send, 1, 100);
             }
             else if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TELEPORT) {
-                inspect_vec3(&trigger->teleport.destination_pos, "Destination position");
-                inspect_vec3(&trigger->teleport.destination_rotation_offset, "Destination rotation offset");
+                result |= inspect_vec3(&trigger->teleport.destination_pos, "Destination position");
+                result |= inspect_vec3(&trigger->teleport.destination_rotation_offset, "Destination rotation offset");
             }
         }
 
@@ -257,6 +275,7 @@ void inspect_entity(size_t entity_id) {
 
     if (ImGui::Button("Delete")) {
         entity_kill(entity_id);
+        return true;
     }
 
     // Render its registered bounding boxes
@@ -267,16 +286,22 @@ void inspect_entity(size_t entity_id) {
         const pixel32_t color = (box->is_solid) ? (red) : ((box->is_trigger) ? green : blue);
         renderer_debug_draw_aabb(&box->aabb, color, &id_transform);
     }
+
+    return result;
 }
 
-void inspect_light(level_t* curr_level, size_t light_id) {
+// returns whether data changed
+bool inspect_light(level_t* curr_level, size_t light_id) {
     const uint8_t light_type = curr_level->lights[light_id].type;
-    if (light_type == LIGHT_NONE) return;
+    if (light_type == LIGHT_NONE) return false;
+
+    bool result = false;
 
     inspect_svec3_4_12(&curr_level->lights[light_id].direction_position, (light_type == LIGHT_DIRECTIONAL)? "Direction" : "Position");
     float intensity = (curr_level->lights[light_id].intensity) / 256.0f;
     if (ImGui::DragFloat("Intensity", &intensity, 0.05, 0.0f, 127.0f)) {
         curr_level->lights[light_id].intensity = (int16_t)(intensity * 256.0);
+        result |= true;
     }
     float color[3] = {
         ((float)curr_level->lights[light_id].color_r) / 255.0f,
@@ -287,24 +312,32 @@ void inspect_light(level_t* curr_level, size_t light_id) {
         curr_level->lights[light_id].color_r = (color[0] * 255.0f);
         curr_level->lights[light_id].color_g = (color[1] * 255.0f);
         curr_level->lights[light_id].color_b = (color[2] * 255.0f);
+        result |= true;
     }
 
     if (ImGui::Button("Delete")) {
         curr_level->lights[light_id].type = LIGHT_NONE;
+        result |= true;
     }
+
+    return result;
 }
 
-void inspect_shape(level_t* curr_level, size_t shape_id) {
+// returns if the shape changed
+bool inspect_shape(level_t* curr_level, size_t shape_id) {
+    bool result = false;
+
     const uint8_t shape_type = curr_level->shapes[shape_id].type;
-    if (shape_type == SHAPE_NONE) return;
+    if (shape_type == SHAPE_NONE) return false;
     else if (shape_type == SHAPE_SPHERE) {
         inspect_vec3(&curr_level->shapes[shape_id].sphere.center, "Center");
         ImGui::SameLine();
         if (ImGui::Button("Center to selected vtx")) {
             curr_level->shapes[shape_id].sphere.center = selected_vertex_position;
+            result |= true;
         }
 
-        inspect_scalar(&curr_level->shapes[shape_id].sphere.radius, "Radius");
+        result |= inspect_scalar(&curr_level->shapes[shape_id].sphere.radius, "Radius");
         ImGui::SameLine();
         if (ImGui::Button("Fit to selected vtx")) {
             curr_level->shapes[shape_id].sphere.radius = vec3_magnitude(vec3_sub(selected_vertex_position, curr_level->shapes[shape_id].sphere.center));
@@ -320,12 +353,14 @@ void inspect_shape(level_t* curr_level, size_t shape_id) {
         ImGui::SameLine();
         if (ImGui::Button("Min to selected vtx")) {
             curr_level->shapes[shape_id].aabb.min = selected_vertex_position;
+            result |= true;
         }
 
-        inspect_vec3(&curr_level->shapes[shape_id].aabb.max, "Max");
+        result |= inspect_vec3(&curr_level->shapes[shape_id].aabb.max, "Max");
         ImGui::SameLine();
         if (ImGui::Button("Max to selected vtx")) {
             curr_level->shapes[shape_id].aabb.max = selected_vertex_position;
+            result |= true;
         }
 
         renderer_debug_draw_aabb(&curr_level->shapes[shape_id].aabb, {255, 255, 127, 255}, &id_transform);
@@ -334,10 +369,13 @@ void inspect_shape(level_t* curr_level, size_t shape_id) {
         if (ImGui::TreeNode("Points")) {
             for (size_t i = 0; i < curr_level->shapes[shape_id].convex_hull.n_points; ++i) {
                 ImGui::PushID((int)i);
-                inspect_vec3(&curr_level->shapes[shape_id].convex_hull.points[i], "Pos");
+                if (inspect_vec3(&curr_level->shapes[shape_id].convex_hull.points[i], "Pos")) {
+                    result |= true;
+                }
                 ImGui::SameLine();
-                if (ImGui::Button("To selected vertex")) {
+                if (ImGui::Button("Align to selected")) {
                     curr_level->shapes[shape_id].convex_hull.points[i] = selected_vertex_position;
+                    result |= true;
                 }
                 ImGui::PopID();
             }
@@ -355,6 +393,7 @@ void inspect_shape(level_t* curr_level, size_t shape_id) {
                 curr_level->shapes[shape_id].convex_hull.points,
                 curr_level->shapes[shape_id].convex_hull.n_points
             );
+            result |= true;
         }
 
         const vec3_t initial_point = curr_level->shapes[shape_id].convex_hull.points[0];
@@ -366,6 +405,8 @@ void inspect_shape(level_t* curr_level, size_t shape_id) {
         }
         renderer_debug_draw_aabb(&aabb, {255, 255, 127, 255}, &id_transform);
     }
+
+    return result;
 }
 
 void draw_texture_category(const char* name, texture_category_t category, bool show_detail) {
