@@ -236,16 +236,13 @@ mesh_t* create_debug_mesh_from_raw_triangles(triangle_t* tri, size_t count) {
     mesh->vbo_normals = 0;
     mesh->vao = 0;
     mesh->vertices = malloc(sizeof(triangle_t) * count);
-    mesh->normals = malloc(sizeof(normal_t) * count);
+    mesh->normals = malloc(sizeof(normal_t) * count * 3);
 
     printf("debug_mesh:\n");
     for (size_t tri_i = 0; tri_i < count; ++tri_i) {
-        const vec3_t a = tri->v0;
-        const vec3_t b = tri->v1;
-        const vec3_t c = tri->v2;
-        printf("\ta:"); vec3_debug(a);
-        printf("\tb:"); vec3_debug(b);
-        printf("\tc:"); vec3_debug(c);
+        const vec3_t a = tri[tri_i].v0;
+        const vec3_t b = tri[tri_i].v1;
+        const vec3_t c = tri[tri_i].v2;
 
         // position
         size_t index = tri_i * 3;
@@ -262,10 +259,25 @@ mesh_t* create_debug_mesh_from_raw_triangles(triangle_t* tri, size_t count) {
         // normal
         const vec3_t ab = vec3_normalize(vec3_sub(b, a));
         const vec3_t ac = vec3_normalize(vec3_sub(c, a));
-        vec3_t normal = vec3_normalize(vec3_cross(ab, ac));
-        mesh->normals[tri_i].x = ((normal.x + ONE) * 255) / (2*ONE);
-        mesh->normals[tri_i].y = ((normal.y + ONE) * 255) / (2*ONE);
-        mesh->normals[tri_i].z = ((normal.z + ONE) * 255) / (2*ONE);
+        const vec3_t normal = vec3_normalize(vec3_cross(ab, ac));
+
+        uint8_t rgb[3] = {
+            scalar_min(ONE-1, scalar_abs(normal.x)) >> 4,
+            scalar_min(ONE-1, scalar_abs(normal.y)) >> 4,
+            scalar_min(ONE-1, scalar_abs(normal.z)) >> 4,
+        };
+        memcpy(&mesh->vertices[index + 0].r, &rgb, sizeof(rgb));
+        memcpy(&mesh->vertices[index + 1].r, &rgb, sizeof(rgb));
+        memcpy(&mesh->vertices[index + 2].r, &rgb, sizeof(rgb));
+        mesh->normals[3*tri_i + 2].x =
+        mesh->normals[3*tri_i + 1].x =
+        mesh->normals[3*tri_i].x = (normal.x * 127) / ONE;
+        mesh->normals[3*tri_i + 2].y =
+        mesh->normals[3*tri_i + 1].y =
+        mesh->normals[3*tri_i].y = (normal.y * 127) / ONE;
+        mesh->normals[3*tri_i + 2].z =
+        mesh->normals[3*tri_i + 1].z =
+        mesh->normals[3*tri_i].z = (normal.z * 127) / ONE;
     }
 
     return mesh;
@@ -274,55 +286,62 @@ mesh_t* create_debug_mesh_from_raw_triangles(triangle_t* tri, size_t count) {
 mesh_t* create_convex_hull_from_point_cloud(vec3_t* points, size_t count) {
     if (count < 3) return NULL; // only triangles and hulls
 
-    triangle_t tris[128] = {0};
+    triangle_t tris[2048] = {0};
     size_t n_tris = 0;
 
-    // find 2 furthest apart points
-    size_t closest_pair[2] = { 0, 1 };
-    scalar_t closest_distance = INT32_MAX;
     for (size_t i = 0; i < count; ++i) {
-        for (size_t j = i + 1; j < count; ++j) {
+        for (size_t j = 0; j < count; ++j) {
             if (i == j) continue;
-            const scalar_t distance = vec3_distance(points[i], points[j]);
-            if (distance < closest_distance) {
-                closest_distance = distance;
-                closest_pair[0] = i;
-                closest_pair[1] = j;
+            for (size_t k = 0; k < count; ++k) {
+                if (i == k) continue;
+                if (j == k) continue;
+                // check if this combo of points already exists
+                int exists = 0;
+                for (size_t tri_i = 0; tri_i < n_tris; ++tri_i) {
+                    int contains_i = 0;
+                    int contains_j = 0;
+                    int contains_k = 0;
+                    if      (vec3_equal(tris[tri_i].v0, points[i])) contains_i = 1;
+                    else if (vec3_equal(tris[tri_i].v1, points[i])) contains_i = 1;
+                    else if (vec3_equal(tris[tri_i].v2, points[i])) contains_i = 1;
+                    if      (vec3_equal(tris[tri_i].v0, points[j])) contains_j = 1;
+                    else if (vec3_equal(tris[tri_i].v1, points[j])) contains_j = 1;
+                    else if (vec3_equal(tris[tri_i].v2, points[j])) contains_j = 1;
+                    if      (vec3_equal(tris[tri_i].v0, points[k])) contains_k = 1;
+                    else if (vec3_equal(tris[tri_i].v1, points[k])) contains_k = 1;
+                    else if (vec3_equal(tris[tri_i].v2, points[k])) contains_k = 1;
+                    if (contains_i && contains_j && contains_k) {
+                        exists = 1;
+                        break;
+                    }
+                }
+                if (exists) continue;
+                tris[n_tris] = (triangle_t){ points[i], points[j], points[k] };
+                n_tris++;
             }
         }
     }
 
-    // find 3rd point that's most perpendicular to these 2 points to form a triangle
-    scalar_t min_dot = INT32_MAX;
-    vec3_t ab = vec3_sub(points[closest_pair[1]], points[closest_pair[0]]);
-    size_t k = 0;
-    for (size_t i = 0; i < count; ++i) {
-        if (i == closest_pair[0]) continue;
-        if (i == closest_pair[1]) continue;
-        vec3_t ap = vec3_sub(points[closest_pair[i]], points[closest_pair[0]]);
-        const scalar_t dot_ab_ap = scalar_abs(vec3_dot(ab, ap));
-        if (dot_ab_ap < min_dot) {
-            min_dot = dot_ab_ap;
-            k = i;
+    // find internal point
+    vec3_t center = {0};
+    for (size_t point_i = 0; point_i < count; ++point_i) {
+        center = vec3_add(center, vec3_divs(points[point_i], SCALAR(count)));
+    }
+
+    // recalculate winding order
+    for (size_t tri_i = 0; tri_i < n_tris; ++tri_i) {
+        const vec3_t to_center = vec3_normalize(vec3_sub(center, tris[tri_i].v0));
+        const vec3_t ab = vec3_normalize(vec3_sub(tris[tri_i].v1, tris[tri_i].v0));
+        const vec3_t ac = vec3_normalize(vec3_sub(tris[tri_i].v2, tris[tri_i].v0));
+        const vec3_t n = vec3_normalize(vec3_cross(ab, ac));
+
+        // if oriented towards the center, flip winding order
+        if (vec3_dot(n, to_center) <= 0) {
+            vec3_t tmp = tris[tri_i].v1;
+            tris[tri_i].v1 = tris[tri_i].v2;
+            tris[tri_i].v2 = tmp;
         }
     }
 
-    // we have a triangle now
-    tris[n_tris++] = (triangle_t) {
-        points[closest_pair[0]],
-        points[closest_pair[1]],
-        points[k],
-    };
-
-    // we can now create a convex hull if we have more points, or we create the mesh here
-
-    // create mesh
-    printf("tris:\n");
-    for (size_t i = 0; i < n_tris; ++i) {
-        printf("\t%3i: \n", i);
-        printf("\t\t"); vec3_debug(tris[i].v0);
-        printf("\t\t"); vec3_debug(tris[i].v1);
-        printf("\t\t"); vec3_debug(tris[i].v2);
-    }
     return create_debug_mesh_from_raw_triangles(tris, n_tris);
 }

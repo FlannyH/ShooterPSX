@@ -370,6 +370,11 @@ bool inspect_shape(level_t* curr_level, size_t shape_id) {
             for (size_t i = 0; i < curr_level->shapes[shape_id].convex_hull.n_points; ++i) {
                 ImGui::PushID((int)i);
                 if (inspect_vec3(&curr_level->shapes[shape_id].convex_hull.points[i], "Pos")) {
+                    mem_free(specialized_meshes[shape_id]);
+                    specialized_meshes[shape_id] = create_convex_hull_from_point_cloud(
+                        curr_level->shapes[shape_id].convex_hull.points,
+                        curr_level->shapes[shape_id].convex_hull.n_points
+                    );
                     result |= true;
                 }
                 ImGui::SameLine();
@@ -380,29 +385,57 @@ bool inspect_shape(level_t* curr_level, size_t shape_id) {
                 ImGui::PopID();
             }
             ImGui::TreePop();
-        }
-        if (ImGui::Button("Add point")) {
-            size_t index = curr_level->shapes[shape_id].convex_hull.n_points++;
-            curr_level->shapes[shape_id].convex_hull.points[index] = selected_vertex_position;
+
             mem_free(specialized_meshes[shape_id]);
-            printf("curr_level->shapes[shape_id].convex_hull.n_points:\n");
-            for (size_t i = 0; i < curr_level->shapes[shape_id].convex_hull.n_points; ++i) {
-                printf("\t%3i: ", i); vec3_debug(curr_level->shapes[shape_id].convex_hull.points[i]);
-            }
             specialized_meshes[shape_id] = create_convex_hull_from_point_cloud(
                 curr_level->shapes[shape_id].convex_hull.points,
                 curr_level->shapes[shape_id].convex_hull.n_points
             );
             result |= true;
         }
+        if (ImGui::Button("Add point")) {
+            size_t index = curr_level->shapes[shape_id].convex_hull.n_points++;
+            curr_level->shapes[shape_id].convex_hull.points[index] = selected_vertex_position;
+        }
 
         const vec3_t initial_point = curr_level->shapes[shape_id].convex_hull.points[0];
         aabb_t aabb = (aabb_t){initial_point, initial_point};
         for (size_t i = 1; i < curr_level->shapes[shape_id].convex_hull.n_points; ++i) {
             const vec3_t point = curr_level->shapes[shape_id].convex_hull.points[i];
+
+            // expand aabb
             aabb.min = vec3_min(aabb.min, point);
             aabb.max = vec3_max(aabb.max, point);
+
+            // render point
+            transform_t trans = {
+                .position = point,
+                .rotation = vec3_from_scalar(0),
+                .scale = vec3_from_scalar(SCALAR(16.0 / 1024)), // 1024 because the model is scaled by 1024 for precision
+            };
+            renderer_set_drawing_id(0, 0);
+            renderer_draw_mesh_shaded(&gizmos->meshes[2], &trans, 0, 0);
         }
+
+        if (specialized_meshes[shape_id]) {
+            for (size_t i = 0; i < specialized_meshes[shape_id]->n_triangles; ++i) {
+                assert(specialized_meshes[shape_id]->vertices != NULL);
+                assert(specialized_meshes[shape_id]->normals != NULL);
+                const vertex_3d_t* vertices = &specialized_meshes[shape_id]->vertices[3*i + 0];
+                const vec3_t a = vec3_from_svec3(*(svec3_t*)&vertices[0]);
+                const vec3_t b = vec3_from_svec3(*(svec3_t*)&vertices[1]);
+                const vec3_t c = vec3_from_svec3(*(svec3_t*)&vertices[2]);
+                const vec3_t ab = vec3_sub(b, a);
+                const vec3_t ac = vec3_sub(c, a);
+                const vec3_t center = vec3_add(a, vec3_divs(vec3_add(ab, ac), SCALAR(3.0)));
+                const vec3_t normal = (vec3_t) {
+                    .x = (scalar_t)specialized_meshes[shape_id]->normals[3*i].x * (ONE / 127),
+                    .y = (scalar_t)specialized_meshes[shape_id]->normals[3*i].y * (ONE / 127),
+                    .z = (scalar_t)specialized_meshes[shape_id]->normals[3*i].z * (ONE / 127),
+                };
+            }
+        }
+
         renderer_debug_draw_aabb(&aabb, {255, 255, 127, 255}, &id_transform);
     }
 
