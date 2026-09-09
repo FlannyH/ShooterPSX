@@ -16,8 +16,6 @@
 
 #define FOOTSTEP_TIMER_MAX 350
 
-static scalar_t player_radius_squared = ((int64_t)player_radius * (int64_t)player_radius) >> 12;
-
 void player_init(player_t* player, vec3_t position, vec3_t rotation, int health, int armor, int ammo) {
     player->transform = (transform_t){
         .position = vec3_from_scalar(0),
@@ -42,7 +40,6 @@ void player_init(player_t* player, vec3_t position, vec3_t rotation, int health,
 }
 
 void check_ground_collision(player_t* self, level_collision_t* level_bvh, const int dt_ms) {
-    WARN_IF("player radius squared was not computed, and is equal to 0", player_radius_squared == 0);
     if (self->ground_entity_id_curr != -1) {
         const entity_header_t* entity = entity_get_header(self->ground_entity_id_curr);
         self->ground_entity_prev = self->ground_entity_curr;
@@ -81,7 +78,6 @@ void check_ground_collision(player_t* self, level_collision_t* level_bvh, const 
         .bottom = vec3_sub(self->position, vec3_from_int32s(0, distance_to_check, 0)),
         .height = distance_to_check + step_height,
         .radius = player_radius,
-        .radius_squared = player_radius_squared,
         .is_wall_check = 0,
     };
     bvh_intersect_vertical_cylinder(level_bvh, player, &hit);
@@ -277,7 +273,6 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
             .bottom = (vec3_t){self->position.x, self->position.y - eye_height - ONE + step_height, self->position.z},
             .height = eye_height + ONE - step_height,
             .radius = player_radius,
-            .radius_squared = player_radius_squared,
             .is_wall_check = 1,
         };
         // bvh_intersect_vertical_cylinder(level_bvh, cyl, &hit);
@@ -334,10 +329,6 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
     };
     audio_update_listener(self->position, player_right);
 
-    if (player_radius_squared == 0) {
-        const scalar_t player_radius_scalar = player_radius;
-        player_radius_squared = scalar_mul(player_radius_scalar, player_radius_scalar);
-    }
     self->is_grounded = 0;
 #ifndef _DEBUG_CAMERA
     apply_gravity(self, dt_ms);

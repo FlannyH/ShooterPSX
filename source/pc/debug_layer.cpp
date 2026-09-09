@@ -1056,7 +1056,6 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                     if (curr_selected_shape_type == SHAPE_SPHERE) {
                         curr_level->shapes[i].sphere.center = spawn_pos;
                         curr_level->shapes[i].sphere.radius = scalar_from_float(100.0);
-                        curr_level->shapes[i].sphere.radius_squared = scalar_mul(curr_level->shapes[i].sphere.radius, curr_level->shapes[i].sphere.radius);
                     }
                     else if (curr_selected_shape_type == SHAPE_AABB) {
                         curr_level->shapes[i].aabb.min = spawn_pos;

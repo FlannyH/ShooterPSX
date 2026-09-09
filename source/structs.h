@@ -16,7 +16,6 @@ typedef enum {
 typedef struct {
     vec3_t center;
     scalar_t radius;
-    scalar_t radius_squared;
 } sphere_t;
 
 typedef struct {
@@ -64,7 +63,6 @@ typedef struct {
 typedef struct {
     vec3_t bottom;
     scalar_t radius;
-    scalar_t radius_squared;
     scalar_t height;
     int is_wall_check;
 } vertical_cylinder_t;
