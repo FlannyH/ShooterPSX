@@ -1,13 +1,102 @@
 #include "level.h"
 
+#include "memory.h"
 #include "renderer.h"
 #include "texture.h"
 #include "music.h"
 #include "mesh.h"
 #include "file.h"
 
+#include <assert.h>
 #include <entity.h>
 #include <string.h>
+
+void serialize_shape(uint8_t* shapes, size_t* cursor, const shape_t* shape) {
+    // align to word
+    while (*cursor % 4 != 0) {
+        (*cursor)++;
+    }
+
+    void* where_to = &shapes[*cursor];
+
+    switch (shape->type) {
+    case SHAPE_NONE:
+        *(uint32_t*)(&shapes[*cursor]) = SHAPE_NONE;                  *cursor += sizeof(uint32_t);
+        break;
+    case SHAPE_SPHERE:
+        *(uint32_t*)(&shapes[*cursor]) = SHAPE_SPHERE;                *cursor += sizeof(uint32_t);
+        *(vec3_t*)(&shapes[*cursor]) = shape->sphere.center;          *cursor += sizeof(vec3_t);
+        *(scalar_t*)(&shapes[*cursor]) = shape->sphere.radius;        *cursor += sizeof(scalar_t);
+        break;
+    case SHAPE_CAPSULE:
+        *(uint32_t*)(&shapes[*cursor]) = SHAPE_CAPSULE;               *cursor += sizeof(uint32_t);
+        *(vec3_t*)(&shapes[*cursor]) = shape->capsule.a;              *cursor += sizeof(vec3_t);
+        *(vec3_t*)(&shapes[*cursor]) = shape->capsule.b;              *cursor += sizeof(vec3_t);
+        *(scalar_t*)(&shapes[*cursor]) = shape->capsule.radius;       *cursor += sizeof(scalar_t);
+        break;
+    case SHAPE_TRIANGLE:
+        *(uint32_t*)(&shapes[*cursor]) = SHAPE_TRIANGLE;              *cursor += sizeof(uint32_t);
+        *(vec3_t*)(&shapes[*cursor]) = shape->triangle.v0;            *cursor += sizeof(vec3_t);
+        *(vec3_t*)(&shapes[*cursor]) = shape->triangle.v1;            *cursor += sizeof(vec3_t);
+        *(vec3_t*)(&shapes[*cursor]) = shape->triangle.v2;            *cursor += sizeof(vec3_t);
+        break;
+    case SHAPE_AABB:
+        *(uint32_t*)(&shapes[*cursor]) = SHAPE_AABB;                  *cursor += sizeof(uint32_t);
+        *(vec3_t*)(&shapes[*cursor]) = shape->aabb.min;               *cursor += sizeof(vec3_t);
+        *(vec3_t*)(&shapes[*cursor]) = shape->aabb.max;               *cursor += sizeof(vec3_t);
+        break;
+    case SHAPE_CONVEX_HULL:
+        *(uint32_t*)(&shapes[*cursor]) = SHAPE_CONVEX_HULL;           *cursor += sizeof(uint32_t);
+        *(uint32_t*)(&shapes[*cursor]) = shape->convex_hull.n_points; *cursor += sizeof(uint32_t);
+        for (size_t i = 0; i < shape->convex_hull.n_points; ++i) {
+            *(vec3_t*)(&shapes[*cursor]) = shape->convex_hull.points[i];
+            *cursor += sizeof(vec3_t);
+        }
+        break;
+    }
+}
+
+void deserialize_shape(const uint8_t* data, size_t* offset, shape_t* shape) {
+    assert(shape != NULL);
+    assert((*offset % 4) == 0);
+
+    const uint32_t type = *(uint32_t*)(&data[*offset]);                *offset += sizeof(uint32_t);
+    shape->type = (uint8_t)type;
+
+    switch(type) {
+    case SHAPE_NONE:
+        break;
+    case SHAPE_SPHERE:
+        shape->sphere.center = *(vec3_t*)(&data[*offset]);             *offset += sizeof(vec3_t);
+        shape->sphere.radius = *(scalar_t*)(&data[*offset]);           *offset += sizeof(scalar_t);
+        break;
+    case SHAPE_CAPSULE:
+        shape->capsule.a = *(vec3_t*)(&data[*offset]);                 *offset += sizeof(vec3_t);
+        shape->capsule.b = *(vec3_t*)(&data[*offset]);                 *offset += sizeof(vec3_t);
+        shape->capsule.radius = *(scalar_t*)(&data[*offset]);          *offset += sizeof(scalar_t);
+        break;
+    case SHAPE_TRIANGLE:
+        shape->triangle.v0 = *(vec3_t*)(&data[*offset]);               *offset += sizeof(vec3_t);
+        shape->triangle.v1 = *(vec3_t*)(&data[*offset]);               *offset += sizeof(vec3_t);
+        shape->triangle.v2 = *(vec3_t*)(&data[*offset]);               *offset += sizeof(vec3_t);
+        break;
+    case SHAPE_AABB:
+        shape->aabb.min = *(vec3_t*)(&data[*offset]);                  *offset += sizeof(vec3_t);
+        shape->aabb.max = *(vec3_t*)(&data[*offset]);                  *offset += sizeof(vec3_t);
+        break;
+    case SHAPE_CONVEX_HULL:
+        shape->convex_hull.n_points = *(uint32_t*)(&data[*offset]);    *offset += sizeof(uint32_t);
+#ifdef _LEVEL_EDITOR
+        shape->convex_hull.points = mem_stack_alloc(shape->convex_hull.n_points * sizeof(vec3_t), STACK_LEVEL);
+#else
+        shape->convex_hull.points = mem_stack_alloc(shape->convex_hull.n_points * sizeof(vec3_t), STACK_LEVEL);
+#endif
+        for (size_t i = 0; i < shape->convex_hull.n_points; ++i) {
+            shape->convex_hull.points[i] = *(vec3_t*)(&data[*offset]); *offset += sizeof(vec3_t);
+        }
+        break;
+    }
+}
 
 level_t level_load(const char* level_path, const uint32_t flags) {
 #ifdef _PSX
@@ -50,7 +139,7 @@ level_t level_load(const char* level_path, const uint32_t flags) {
     const char* level_entity_pool = (const char*)((binary_section + level_header->entity_pool_offset));
     const uint8_t* level_entity_types = (const uint8_t*)((binary_section + level_header->entity_types_offset));
     const light_t* lights = (const light_t*)((binary_section + level_header->light_data_offset));
-    const shape_t* shapes = (const shape_t*)((binary_section + level_header->shape_data_offset));
+    const uint8_t* shapes = (const uint8_t*)((binary_section + level_header->shape_data_offset));
     const char* text = (const char*)((binary_section + level_header->text_offset));
 
     // We gotta do some specific memory management if we want to fit as much into the temporary stack as we can
@@ -95,7 +184,10 @@ level_t level_load(const char* level_path, const uint32_t flags) {
 #else
         level.shapes = mem_stack_alloc(level.n_shapes * sizeof(shape_t), STACK_LEVEL);
 #endif
-        memcpy(level.shapes, shapes, level.n_shapes * sizeof(shape_t));
+        size_t offset = 0;
+        for (size_t i = 0; i < level.n_shapes; ++i) {
+            deserialize_shape(shapes, &offset, &level.shapes[i]);
+        }
     }
 
     if (flags & LEVEL_LOAD_ENTITIES) {

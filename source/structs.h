@@ -33,7 +33,7 @@ typedef struct {
 
 typedef struct {
     vec3_t* points;
-    size_t n_points;
+    uint32_t n_points;
 } convex_hull_t;
 
 typedef struct {

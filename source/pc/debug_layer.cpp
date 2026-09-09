@@ -700,9 +700,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             }
 
             light_t lights[MAX_LIGHT_COUNT];
-            shape_t shapes[MAX_SHAPE_COUNT];
             memset(lights, 0, sizeof(lights));
-            memset(shapes, 0, sizeof(shapes));
 
             int n_lights = 0;
             for (int i = 0; i < MAX_LIGHT_COUNT; ++i) {
@@ -711,11 +709,14 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 }
             }
 
-            int n_shapes = 0;
+            // serialize shapes
+            uint8_t* shapes = (uint8_t*)mem_alloc(1 * MiB, MEM_CAT_UNDEFINED); // 1 MB should be overkill
+            size_t shape_cursor = 0;
+            size_t n_shapes = 0;
             for (int i = 0; i < MAX_SHAPE_COUNT; ++i) {
-                if (curr_level->shapes[i].type != SHAPE_NONE) {
-                    shapes[n_shapes++] = curr_level->shapes[i];
-                }
+                if (curr_level->shapes[i].type == SHAPE_NONE) continue;
+                serialize_shape(shapes, &shape_cursor, &curr_level->shapes[i]);
+                ++n_shapes;
             }
 
             level_header_t header = {
@@ -730,7 +731,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_types, (n_entities + 3) & ~0x03), // 4-byte padding
                 .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_data_serialized.data(), entity_data_serialized.size() * sizeof(entity_data_serialized[0])),
                 .light_data_offset =  (uint32_t)write_data_and_get_offset(binary_section, lights, n_lights * sizeof(light_t)),
-                .shape_data_offset =  (uint32_t)write_data_and_get_offset(binary_section, shapes, n_shapes * sizeof(shape_t)),
+                .shape_data_offset =  (uint32_t)write_data_and_get_offset(binary_section, shapes, shape_cursor),
                 .level_name_offset = (uint32_t)write_text_and_get_offset(binary_section, level_name),
                 .text_offset = (uint32_t)write_data_and_get_offset(binary_section, text_data_serialized.data(), text_data_serialized.size()),
                 .n_text_entries = (uint32_t)curr_level->n_text_entries,
