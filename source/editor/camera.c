@@ -13,8 +13,8 @@ debug_camera_t debug_camera_new(void) {
         },
         .velocity = vec3_from_scalar(0),
         .max_speed = 32768,
-        .drag = 128,
-        .acceleration = 128,
+        .drag = 1024,
+        .acceleration = 512,
     };
 }
 
