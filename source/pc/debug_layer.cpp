@@ -324,7 +324,7 @@ bool inspect_light(level_t* curr_level, size_t light_id) {
 }
 
 // returns if the shape changed
-bool inspect_shape(level_t* curr_level, size_t shape_id) {
+bool inspect_shape(level_t* curr_level, size_t shape_id, int& render_hull_build_set_cap) {
     bool result = false;
 
     const uint8_t shape_type = curr_level->shapes[shape_id].type;
@@ -369,17 +369,26 @@ bool inspect_shape(level_t* curr_level, size_t shape_id) {
         if (ImGui::TreeNode("Points")) {
             for (size_t i = 0; i < curr_level->shapes[shape_id].convex_hull.n_points; ++i) {
                 ImGui::PushID((int)i);
+                if (ImGui::Button("Remove")) {
+                    curr_level->shapes[shape_id].convex_hull.n_points--;
+                    for (size_t si = i; si < curr_level->shapes[shape_id].convex_hull.n_points; ++si) {
+                        curr_level->shapes[shape_id].convex_hull.points[si] = curr_level->shapes[shape_id].convex_hull.points[si+1];
+                    }
+                    result |= true;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("To selected vtx")) {
+                    curr_level->shapes[shape_id].convex_hull.points[i] = selected_vertex_position;
+                    result |= true;
+                }
+                ImGui::SameLine();
                 if (inspect_vec3(&curr_level->shapes[shape_id].convex_hull.points[i], "Pos")) {
                     mem_free(specialized_meshes[shape_id]);
                     specialized_meshes[shape_id] = create_convex_hull_from_point_cloud(
                         curr_level->shapes[shape_id].convex_hull.points,
-                        curr_level->shapes[shape_id].convex_hull.n_points
+                        curr_level->shapes[shape_id].convex_hull.n_points,
+                        render_hull_build_set_cap
                     );
-                    result |= true;
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("Align to selected")) {
-                    curr_level->shapes[shape_id].convex_hull.points[i] = selected_vertex_position;
                     result |= true;
                 }
                 ImGui::PopID();
@@ -389,7 +398,8 @@ bool inspect_shape(level_t* curr_level, size_t shape_id) {
             mem_free(specialized_meshes[shape_id]);
             specialized_meshes[shape_id] = create_convex_hull_from_point_cloud(
                 curr_level->shapes[shape_id].convex_hull.points,
-                curr_level->shapes[shape_id].convex_hull.n_points
+                curr_level->shapes[shape_id].convex_hull.n_points,
+                render_hull_build_set_cap
             );
             result |= true;
         }
@@ -514,6 +524,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     static bool render_level_vislist_regions = false;
     static int render_level_bvh_start_depth = 0;
     static int render_level_bvh_end_depth = 6;
+    static int render_hull_build_set_cap = 1;
 
     if (render_level_graphics) renderer_draw_model_shaded(curr_level->graphics, &curr_level->transform, NULL);
     if (render_level_collision) renderer_draw_model_shaded(curr_level->collision_mesh_debug, &id_transform, NULL);
@@ -885,6 +896,11 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         if (ImGui::TreeNodeEx("Debug Render Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
             ImGui::Checkbox("Render level graphics", &render_level_graphics);
             ImGui::Checkbox("Render level collision", &render_level_collision);
+            if (ImGui::Button("-")) render_hull_build_set_cap--;
+            ImGui::SameLine();
+            if (ImGui::Button("+")) render_hull_build_set_cap++;
+            ImGui::SameLine();
+            ImGui::DragInt("Hull build step cap", &render_hull_build_set_cap);
             ImGui::Checkbox("Render level BVH", &render_level_bvh);
             ImGui::DragInt("Min level", &render_level_bvh_start_depth);
             ImGui::DragInt("Max level", &render_level_bvh_end_depth);
@@ -1114,7 +1130,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         if (selected_shape_slot != NULL && *selected_shape_slot >= 0) {
             ImGui::Text("Selected shape");
             ImGui::Spacing();
-            inspect_shape(curr_level, *selected_shape_slot);
+            inspect_shape(curr_level, *selected_shape_slot, render_hull_build_set_cap);
 
             // If deleted, deselect it
             if (!curr_level->shapes || curr_level->shapes[*selected_shape_slot].type == SHAPE_NONE) {
@@ -1129,7 +1145,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 static std::string tree_nodes[MAX_SHAPE_COUNT];
                 tree_nodes[i] = std::format("{} - {}", i, shape_type_names[curr_level->shapes[i].type]);
                 if (ImGui::TreeNode(tree_nodes[i].c_str())) {
-                    inspect_shape(curr_level, i);
+                    inspect_shape(curr_level, i, render_hull_build_set_cap);
                     ImGui::TreePop();
                 }
             }
@@ -1162,6 +1178,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     static int counter = 0;
     counter += 1;
 
+    convex_hull_mesh_t polytope = {0};
+
     for (int i = 0; i < MAX_SHAPE_COUNT && curr_level->shapes; ++i) {
         bool dont_draw = false;
 
@@ -1169,10 +1187,8 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         for (size_t j = 0; j < MAX_SHAPE_COUNT && curr_level->shapes; ++j) {
             if (i == j) continue;
             if (curr_level->shapes[i].type == SHAPE_NONE) continue;
-            if (gjk(&curr_level->shapes[i], &curr_level->shapes[j])) {
-                const vec3_t penetration = epa(&curr_level->shapes[i], &curr_level->shapes[j]);
-                move_shape(&curr_level->shapes[j], vec3_shift_right(penetration, 1));
-                move_shape(&curr_level->shapes[i], vec3_neg(vec3_shift_right(penetration, 1)));
+            if (gjk(&polytope, &curr_level->shapes[i], &curr_level->shapes[j])) {
+                const vec3_t penetration = epa(&polytope, &curr_level->shapes[i], &curr_level->shapes[j]);
             }
         }
 
