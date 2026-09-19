@@ -284,65 +284,131 @@ mesh_t* create_debug_mesh_from_raw_triangles(triangle_t* tri, size_t count) {
     return mesh;
 }
 
-mesh_t* create_convex_hull_from_point_cloud(vec3_t* points, size_t count) {
-    if (count < 3) return NULL; // only triangles and hulls
+typedef struct {
+    int a, b, c; // vertex indices
+    vec3_t normal;
+} face_ext_t;
 
-    triangle_t tris[2048] = {0};
-    size_t n_tris = 0;
+mesh_t* create_convex_hull_from_point_cloud(vec3_t* points, size_t count, size_t step_limit) {
+    if (count < 3) return NULL;
+    if (step_limit < 3) return NULL;
 
-    for (size_t i = 0; i < count; ++i) {
-        for (size_t j = 0; j < count; ++j) {
-            if (i == j) continue;
-            for (size_t k = 0; k < count; ++k) {
-                if (i == k) continue;
-                if (j == k) continue;
-                // check if this combo of points already exists
-                int exists = 0;
-                for (size_t tri_i = 0; tri_i < n_tris; ++tri_i) {
-                    int contains_i = 0;
-                    int contains_j = 0;
-                    int contains_k = 0;
-                    if      (vec3_equal(tris[tri_i].v0, points[i])) contains_i = 1;
-                    else if (vec3_equal(tris[tri_i].v1, points[i])) contains_i = 1;
-                    else if (vec3_equal(tris[tri_i].v2, points[i])) contains_i = 1;
-                    if      (vec3_equal(tris[tri_i].v0, points[j])) contains_j = 1;
-                    else if (vec3_equal(tris[tri_i].v1, points[j])) contains_j = 1;
-                    else if (vec3_equal(tris[tri_i].v2, points[j])) contains_j = 1;
-                    if      (vec3_equal(tris[tri_i].v0, points[k])) contains_k = 1;
-                    else if (vec3_equal(tris[tri_i].v1, points[k])) contains_k = 1;
-                    else if (vec3_equal(tris[tri_i].v2, points[k])) contains_k = 1;
-                    if (contains_i && contains_j && contains_k) {
-                        exists = 1;
-                        break;
-                    }
-                }
-                if (exists) continue;
-                tris[n_tris] = (triangle_t){ points[i], points[j], points[k] };
-                n_tris++;
+    convex_hull_mesh_t hull = {0};
+    uint8_t visit_list[1024] = {0};
+
+    // pick 2 points furthest apart
+    int furthest_pair[2] = { 0, 1 };
+    scalar_t furthest_distance = 0;
+    for (int i = 0; i < count; ++i) {
+        for (int j = i + 1; j < count; ++j) {
+            const scalar_t distance = vec3_distance(points[i], points[j]);
+            if (distance > furthest_distance) {
+                furthest_distance = distance;
+                furthest_pair[0] = i;
+                furthest_pair[1] = j;
             }
         }
     }
 
-    // find internal point
-    vec3_t center = {0};
-    for (size_t point_i = 0; point_i < count; ++point_i) {
-        center = vec3_add(center, vec3_divs(points[point_i], SCALAR(count)));
+    // degenerate case: point
+    if (furthest_distance == 0) {
+        return NULL;
     }
 
-    // recalculate winding order
-    for (size_t tri_i = 0; tri_i < n_tris; ++tri_i) {
-        const vec3_t to_center = vec3_normalize(vec3_sub(center, tris[tri_i].v0));
-        const vec3_t ab = vec3_normalize(vec3_sub(tris[tri_i].v1, tris[tri_i].v0));
-        const vec3_t ac = vec3_normalize(vec3_sub(tris[tri_i].v2, tris[tri_i].v0));
-        const vec3_t n = vec3_normalize(vec3_cross(ab, ac));
-
-        // if oriented towards the center, flip winding order
-        if (vec3_dot(n, to_center) <= 0) {
-            vec3_t tmp = tris[tri_i].v1;
-            tris[tri_i].v1 = tris[tri_i].v2;
-            tris[tri_i].v2 = tmp;
+    // create triangle using furthest point along the perpendicular
+    scalar_t max_score = INT32_MIN;
+    vec3_t ab = vec3_sub(points[furthest_pair[1]], points[furthest_pair[0]]);
+    vec3_t ap = { 0, 0, 0 };
+    size_t k = 0;
+    for (size_t i = 0; i < count; ++i) {
+        if (i == furthest_pair[0]) continue;
+        if (i == furthest_pair[1]) continue;
+        ap = vec3_sub(points[i], points[furthest_pair[0]]);
+        const scalar_t score = vec3_magnitude(vec3_cross_lh(vec3_normalize(ab), vec3_normalize(ap)));
+        if (score > max_score) {
+            max_score = score;
+            k = i;
         }
     }
 
-    return create_debug_mesh_from_raw_triangles(tris, n_tris);
+    if (max_score <= 0) return NULL;
+
+    hull.vertices[0] = points[furthest_pair[0]];
+    hull.vertices[1] = points[furthest_pair[1]];
+    hull.vertices[2] = points[k];
+    hull.n_vertices = 3;
+
+    visit_list[furthest_pair[0]] = 1;
+    visit_list[furthest_pair[1]] = 1;
+    visit_list[k] = 1;
+
+    hull.faces[0] = (face_t){
+        0, 1, 2,
+        vec3_normalize(vec3_cross_lh(vec3_normalize(ab), vec3_normalize(ap)))
+    };
+    hull.n_faces = 1;
+
+    if ((count == 3) || (step_limit == 3)) {
+        triangle_t triangle = {
+            hull.vertices[hull.faces[0].a],
+            hull.vertices[hull.faces[0].b],
+            hull.vertices[hull.faces[0].c]
+        };
+        return create_debug_mesh_from_raw_triangles(&triangle, 1);
+    }
+
+    // make it a tetrahedron by finding the furthest point along the normal in either direction
+    size_t furthest_point_from_triangle_id = 0;
+    furthest_distance = 0;
+
+    for (size_t i = 0; i < count; ++i) {
+        if (visit_list[i]) continue;
+
+        scalar_t distance = scalar_abs(vec3_dot(points[i], hull.faces[0].normal));
+        if (distance > furthest_distance) {
+            furthest_distance = distance;
+            furthest_point_from_triangle_id = i;
+        }
+    }
+
+    // extend to point
+    hull.faces[1] = (face_t){ 0, 3, 1, {0} };
+    hull.faces[2] = (face_t){ 0, 2, 3, {0} };
+    hull.faces[3] = (face_t){ 1, 3, 2, {0} };
+    hull.n_faces = 4;
+
+    hull.vertices[3] = points[furthest_point_from_triangle_id];
+    hull.n_vertices = 4;
+
+    visit_list[furthest_point_from_triangle_id] = 1;
+
+    // calculate normals based on any internal point of the shape
+    vec3_t internal_point =                   vec3_shift_right(hull.vertices[0], 2);
+    internal_point = vec3_add(internal_point, vec3_shift_right(hull.vertices[1], 2));
+    internal_point = vec3_add(internal_point, vec3_shift_right(hull.vertices[2], 2));
+    internal_point = vec3_add(internal_point, vec3_shift_right(hull.vertices[3], 2));
+    get_face_normals(&hull, 0, internal_point);
+
+    int points_left = step_limit - 4;
+    for (size_t i = 0; i < count; ++i) {
+        if (visit_list[i]) continue;
+        if (points_left-- == 0) break;
+
+        convex_hull_expand(&hull, points[i]);
+        get_face_normals(&hull, 0, internal_point);
+        visit_list[i] = 1;
+    }
+
+    triangle_t tri[1024] ={0};
+    for (size_t i = 0; i < hull.n_faces; ++i) {
+        tri[i].v0 = hull.vertices[hull.faces[i].a];
+        tri[i].v1 = hull.vertices[hull.faces[i].b];
+        tri[i].v2 = hull.vertices[hull.faces[i].c];
+
+        if (i >= 1024) {
+            break;
+        }
+    }
+
+    return create_debug_mesh_from_raw_triangles(tri, hull.n_faces);
 }
