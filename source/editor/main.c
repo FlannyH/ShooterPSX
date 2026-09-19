@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
     memset(level.shapes, 0, MAX_SHAPE_COUNT * sizeof(shape_t));
 
     player_t player; player_init(&player, vec3_from_scalar(0), vec3_from_scalar(0), 40, 0, 0);
-    player_update(&player, &level.collision_bvh, 0, 0);
+    player_update(&player, &level, 0, 0);
     debug_camera_t camera = debug_camera_new();
 
     int dt = 40;

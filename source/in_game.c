@@ -148,7 +148,7 @@ void state_update_in_game(int dt) {
 		// In benchmark mode the world should be paused, so dt = 0
 		player_update(&state.in_game.player, &state.in_game.level.collision_bvh, 0, state.global.time_counter);
 #else
-		player_update(&state.in_game.player, &state.in_game.level.collision_bvh, dt, state.global.time_counter);
+		player_update(&state.in_game.player, &state.in_game.level, dt, state.global.time_counter);
 #endif
 #if defined(_DEBUG) && defined(_PSX)
 	}
@@ -237,7 +237,7 @@ void draw_debug_info(int dt, const int n_sections) {
     PROFILE("input", input_update(), 1);
     PROFILE("lvl_gfx", renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists), 1);
     PROFILE("entity", entity_update_all(&state.in_game.player, dt), 1);
-    PROFILE("player", player_update(&state.in_game.player, &state.in_game.level.collision_bvh, dt, state.global.time_counter), 1);
+    PROFILE("player", player_update(&state.in_game.player, &state.in_game.level, dt, state.global.time_counter), 1);
 
     // Print some useful debug info to the screen
     FntPrint(-1, "\n");

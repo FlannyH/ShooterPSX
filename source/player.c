@@ -1,4 +1,5 @@
 #include "player.h"
+#include "collision.h"
 #include "common.h"
 
 #ifdef _PSX
@@ -39,92 +40,32 @@ void player_init(player_t* player, vec3_t position, vec3_t rotation, int health,
     player->is_grounded = 1;
 }
 
-void check_ground_collision(player_t* self, level_collision_t* level_bvh, const int dt_ms) {
-    if (self->ground_entity_id_curr != -1) {
-        const entity_header_t* entity = entity_get_header(self->ground_entity_id_curr);
-        self->ground_entity_prev = self->ground_entity_curr;
-        self->ground_entity_curr = (transform_t){
-            .position = entity->position,
-            .rotation = entity->rotation,
-            .scale = entity->scale,
-        };
-    }
-    (void)level_bvh;
-    (void)dt_ms;
+void collide(player_t* self, level_t* level) {
+    // player - level collision
+    shape_t player = {0};
+    player.type = SHAPE_CAPSULE;
+    player.capsule.a = self->position;
+    player.capsule.a.y -= player_radius;
+    player.capsule.b = self->position;
+    player.capsule.b.y += player_height + player_radius;
+    player.capsule.radius = player_radius;
 
-    /*
-    // If we entered the entity this frame, notify the entity
-    if (self->ground_entity_id_prev == -1 && self->ground_entity_id_curr != -1) {
-        entity_send_player_intersect(self->ground_entity_id_curr, self);
-    }
+    convex_hull_mesh_t polytope = {0};
 
-    // If we're on an entity this frame, move the player along with it
-    if (self->ground_entity_id_prev == self->ground_entity_id_curr && self->ground_entity_id_curr != -1) {
-        self->position = vec3_add(self->position, vec3_sub(self->ground_entity_curr.position, self->ground_entity_prev.position));
-        self->rotation = vec3_add(self->rotation, vec3_sub(self->ground_entity_curr.rotation, self->ground_entity_prev.rotation));
-    }
-    // If we left the entity this frame, add momentum to the player
-    else if (self->ground_entity_id_prev != -1 && self->ground_entity_id_curr == -1) {
-        self->velocity = vec3_add(self->velocity, vec3_sub(self->ground_entity_curr.position, self->ground_entity_prev.position));
-    }
-
-    self->ground_entity_id_prev = self->ground_entity_id_curr;
-    self->ground_entity_id_curr = -1;
-
-    // Cast a cylinder from the player's feet + step height, down to the ground
-    const int32_t distance_to_check = 120000;
-    rayhit_t hit = { 0 };
-    const vertical_cylinder_t player = {
-        .bottom = vec3_sub(self->position, vec3_from_int32s(0, distance_to_check, 0)),
-        .height = distance_to_check + step_height,
-        .radius = player_radius,
-        .is_wall_check = 0,
-    };
-    bvh_intersect_vertical_cylinder(level_bvh, player, &hit);
-
-    const size_t n_active_aabb = entity_get_n_active_aabb();
-    for (size_t i = 0; i < n_active_aabb; ++i) {
-        const entity_collision_box_t* const box = entity_get_aabb_queue_entry(i);
-        rayhit_t curr_hit;
-        if (!box->is_solid && !box->is_trigger) continue;
-
-        int intersect = vertical_cylinder_aabb_intersect_fancy(&box->aabb, player, &curr_hit);
-        if (intersect && box->is_trigger) {
-            entity_send_player_intersect(box->entity_index, self);
+    for (size_t i = 0; (i < level->n_shapes) && level->shapes; ++i) {
+        if (level->shapes[i].type == SHAPE_NONE) continue;
+        if (gjk(&polytope, &level->shapes[i], &player)) {
+            printf("colliding with shape %i\n", i);
+            const vec3_t penetration = epa(&polytope, &level->shapes[i], &player);
+            // const vec3_t old_pos = player.capsule.a;
+            move_shape(&player, penetration);
         }
-        if (!box->is_solid) continue;
-        if (!vertical_cylinder_aabb_intersect_fancy(&box->aabb, player, &curr_hit)) continue;
-        if (!intersect) continue;
-        if (curr_hit.distance < hit.distance) memcpy(&hit, &curr_hit, sizeof(rayhit_t));
-        hit.type = RAY_HIT_TYPE_ENTITY_HITBOX;
-        hit.entity_hitbox.entity_index = box->entity_index;
-        hit.entity_hitbox.box_index = box->box_index;
-        hit.entity_hitbox.not_move_player_along = box->not_move_player_along;
     }
 
-    // If nothing was hit, there is no ground below the player. Ignore the rest of this function
-    self->is_grounded = 0;
-    if (hit.distance == INT32_MAX)
-        return;
+    // todo: entity collision
 
-    // If the player is standing on an entity, move the player along with the entity
-    if (hit.type == RAY_HIT_TYPE_ENTITY_HITBOX && !hit.entity_hitbox.not_move_player_along) {
-        self->ground_entity_id_curr = hit.entity_hitbox.entity_index;
-    }
-
-    // Check the Y distance from the ground to the player's feet
-    const scalar_t distance = self->position.y - eye_height - hit.position.y;
-    if (distance <= (-self->velocity.y * dt_ms)) {
-        // Set speed to 0
-        if (self->velocity.y < 0)
-            self->velocity.y = 0;
-
-        // Set player camera height to eye_height units above the ground
-        self->position.y = (hit.position.y + eye_height);
-
-        self->is_grounded = 1;
-    }
-*/
+    self->position = player.capsule.a;
+    self->position.y += player_radius;
 }
 
 void apply_gravity(player_t* self, const int dt_ms) {
@@ -177,17 +118,17 @@ void handle_stick_input(player_t* self, const int dt_ms) {
 
         // Look up and down
         self->rotation.x -= (int32_t)(input_right_stick_y(0)) * (stick_sensitivity * dt_ms) >> 12;
-        if (self->rotation.x > 32768) {
-            self->rotation.x = 32768;
+        if (self->rotation.x > SCALAR(0.22)) {
+            self->rotation.x = SCALAR(0.22);
         }
-        if (self->rotation.x < -32768) {
-            self->rotation.x = -32768;
+        if (self->rotation.x < -SCALAR(0.22)) {
+            self->rotation.x = -SCALAR(0.22);
         }
 
         // Look left and right
         self->rotation.y += (int32_t)(input_right_stick_x(0)) * (stick_sensitivity * dt_ms) >> 12;
 
-        // Debug
+#ifdef _DEBUG
         if (input_held(PAD_UP, 0)) {
             self->position.y += ONE * dt_ms;
             self->velocity.y = 0;
@@ -196,6 +137,7 @@ void handle_stick_input(player_t* self, const int dt_ms) {
             self->position.y -= ONE * dt_ms;
             self->velocity.y = 0;
         }
+#endif
     } else {
         // Look left and right
         const int32_t dpad_x = ((int32_t)(input_held(PAD_RIGHT, 0) != 0) * 127) + ((int32_t)(input_held(PAD_LEFT, 0) != 0) * -127);
@@ -259,8 +201,8 @@ void handle_jump(player_t* self) {
     was_grounded = self->is_grounded;
 }
 
-void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_ms) {
-    (void)level_bvh;
+void handle_movement(player_t* self, level_t* level, const int dt_ms) {
+    (void)level;
     // Move the player, ask questions later
     self->position.x += self->velocity.x * dt_ms / PLAYER_VELOCITY_PRECISION;
     self->position.z += self->velocity.z * dt_ms / PLAYER_VELOCITY_PRECISION;
@@ -293,7 +235,7 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
             // if (curr_hit.distance < hit.distance) memcpy(&hit, &curr_hit, sizeof(rayhit_t));
         }
 #else
-        (void)level_bvh;
+        (void)level;
         hit.distance = INT32_MAX;
 #endif
 
@@ -318,9 +260,9 @@ void handle_movement(player_t* self, level_collision_t* level_bvh, const int dt_
     self->position.y += self->velocity.y * dt_ms;
 }
 
-void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms, const int time_counter) {
+void player_update(player_t* self, level_t* level, const int dt_ms, const int time_counter) {
     if (!self) return;
-    if (!level_bvh) return;
+    if (!level) return;
 
     const vec3_t player_right = (vec3_t) {
         -trig_cos(self->rotation.y),
@@ -334,12 +276,13 @@ void player_update(player_t* self, level_collision_t* level_bvh, const int dt_ms
     apply_gravity(self, dt_ms);
 #endif
     // check_ground_collision(self, level_bvh, dt_ms);
+    collide(self, level);
     handle_stick_input(self, dt_ms);
     handle_drag(self, dt_ms);
 #ifndef _DEBUG_CAMERA
     handle_jump(self);
 #endif
-    handle_movement(self, level_bvh, dt_ms);
+    handle_movement(self, level, dt_ms);
 
     const vec2_t vel_2d = {self->velocity.x, self->velocity.z};
     const scalar_t speed_1d = vec2_magnitude(vel_2d) / PLAYER_VELOCITY_PRECISION;
