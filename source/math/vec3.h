@@ -196,12 +196,24 @@ static inline scalar_t vec3_distance(vec3_t a, vec3_t b) {
     return vec3_magnitude(vec3_sub(a, b));
 }
 
+static inline vec3_t vec3_neg(vec3_t a) {
+    return (vec3_t) {
+        -a.x,
+        -a.y,
+        -a.z,
+    };
+}
+
 static inline vec3_t vec3_cross(vec3_t a, vec3_t b) {
     return (vec3_t) {
         scalar_mul(a.y, b.z) - scalar_mul(a.z, b.y),
         scalar_mul(a.z, b.x) - scalar_mul(a.x, b.z),
         scalar_mul(a.x, b.y) - scalar_mul(a.y, b.x),
     };
+}
+
+static inline vec3_t vec3_cross_lh(vec3_t a, vec3_t b) {
+    return vec3_neg(vec3_cross(a, b));
 }
 
 static inline vec3_t vec3_normalize(vec3_t a) {
@@ -218,14 +230,6 @@ static inline vec3_t vec3_normalize(vec3_t a) {
 
     const vec3_t a_normalized = vec3_divs(a, magnitude);
     return a_normalized;
-}
-
-static inline vec3_t vec3_neg(vec3_t a) {
-    return (vec3_t) {
-        -a.x,
-        -a.y,
-        -a.z,
-    };
 }
 
 // per-component scalar_clamp
