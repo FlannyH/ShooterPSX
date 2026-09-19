@@ -1,6 +1,7 @@
 #include "mesh.h"
 #include "file.h"
 
+#include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -235,7 +236,7 @@ mesh_t* create_debug_mesh_from_raw_triangles(triangle_t* tri, size_t count) {
     mesh->vbo_vertices = 0;
     mesh->vbo_normals = 0;
     mesh->vao = 0;
-    mesh->vertices = malloc(sizeof(triangle_t) * count);
+    mesh->vertices = malloc(sizeof(vertex_3d_t) * count * 3);
     mesh->normals = malloc(sizeof(normal_t) * count * 3);
 
     printf("debug_mesh:\n");
@@ -259,16 +260,16 @@ mesh_t* create_debug_mesh_from_raw_triangles(triangle_t* tri, size_t count) {
         // normal
         const vec3_t ab = vec3_normalize(vec3_sub(b, a));
         const vec3_t ac = vec3_normalize(vec3_sub(c, a));
-        const vec3_t normal = vec3_normalize(vec3_cross(ab, ac));
+        const vec3_t normal = vec3_normalize(vec3_cross_lh(ab, ac));
 
         uint8_t rgb[3] = {
-            scalar_min(ONE-1, scalar_abs(normal.x)) >> 4,
-            scalar_min(ONE-1, scalar_abs(normal.y)) >> 4,
-            scalar_min(ONE-1, scalar_abs(normal.z)) >> 4,
+            scalar_clamp(((normal.x + ONE) * 127) / (2 * ONE), 0, 255),
+            scalar_clamp(((normal.y + ONE) * 127) / (2 * ONE), 0, 255),
+            scalar_clamp(((normal.z + ONE) * 127) / (2 * ONE), 0, 255),
         };
-        memcpy(&mesh->vertices[index + 0].r, &rgb, sizeof(rgb));
-        memcpy(&mesh->vertices[index + 1].r, &rgb, sizeof(rgb));
-        memcpy(&mesh->vertices[index + 2].r, &rgb, sizeof(rgb));
+        memcpy(&mesh->vertices[index + 0].r, rgb, sizeof(rgb));
+        memcpy(&mesh->vertices[index + 1].r, rgb, sizeof(rgb));
+        memcpy(&mesh->vertices[index + 2].r, rgb, sizeof(rgb));
         mesh->normals[3*tri_i + 2].x =
         mesh->normals[3*tri_i + 1].x =
         mesh->normals[3*tri_i].x = (normal.x * 127) / ONE;
