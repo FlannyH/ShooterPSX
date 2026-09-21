@@ -122,9 +122,10 @@ size_t get_face_normals(convex_hull_mesh_t* polytope, size_t start_index, vec3_t
     scalar_t min_distance = INT32_MAX;
 
     for (size_t i = start_index; i < polytope->n_faces; ++i) {
-        const vec3_t a = polytope->vertices[polytope->faces[i].a];
-        const vec3_t b = polytope->vertices[polytope->faces[i].b];
-        const vec3_t c = polytope->vertices[polytope->faces[i].c];
+        face_t* face = &polytope->faces[i];
+        const vec3_t a = polytope->vertices[face->a];
+        const vec3_t b = polytope->vertices[face->b];
+        const vec3_t c = polytope->vertices[face->c];
 
         const vec3_t ab = vec3_normalize(vec3_sub(b, a));
         const vec3_t ac = vec3_sub(c, a);
