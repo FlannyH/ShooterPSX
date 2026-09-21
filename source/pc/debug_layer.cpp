@@ -529,7 +529,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     static int render_hull_build_set_cap = 1;
 
     if (render_level_graphics) renderer_draw_model_shaded(curr_level->graphics, &curr_level->transform, NULL);
-    if (render_level_collision) renderer_draw_model_shaded(curr_level->collision_mesh_debug, &id_transform, NULL);
+
     // todo(editor_render_level_bvh): desc: render level bvh and nav graph in the editor
     // if (render_level_bvh) bvh_debug_draw(&curr_level->collision_bvh, render_level_bvh_start_depth, render_level_bvh_end_depth, (pixel32_t){ .r = 160, .g = 240, .b = 80, .a = 255 });
     // if (render_level_nav_graph) bvh_debug_draw_nav_graph(&curr_level->collision_bvh);
@@ -1182,46 +1182,49 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
 
     convex_hull_mesh_t polytope = {0};
 
-    for (int i = 0; i < MAX_SHAPE_COUNT && curr_level->shapes; ++i) {
-        bool dont_draw = false;
+    if (render_level_collision) {
+        for (int i = 0; i < MAX_SHAPE_COUNT && curr_level->shapes; ++i) {
+            if (curr_level->shapes[i].type == SHAPE_SPHERE) {
+                const transform_t trans = {
+                    .position = curr_level->shapes[i].sphere.center,
+                    .rotation = vec3_from_scalar(0),
+                    .scale = vec3_from_scalar(curr_level->shapes[i].sphere.radius / 1024), // 1024 because the model is scaled by 1024 for precision
+                };
 
-        // check if collision
-        for (size_t j = 0; j < MAX_SHAPE_COUNT && curr_level->shapes; ++j) {
-            if (i == j) continue;
-            if (curr_level->shapes[i].type == SHAPE_NONE) continue;
-            if (gjk(&polytope, &curr_level->shapes[i], &curr_level->shapes[j])) {
-                const vec3_t penetration = epa(&polytope, &curr_level->shapes[i], &curr_level->shapes[j]);
+                renderer_set_drawing_id(i, 3);
+                renderer_draw_mesh_shaded(&gizmos->meshes[2], &trans, 0, 0);
+            }
+            else if (curr_level->shapes[i].type == SHAPE_AABB) {
+                const vec3_t min = curr_level->shapes[i].aabb.min;
+                const vec3_t max = curr_level->shapes[i].aabb.max;
+                const vec3_t size = vec3_sub(max, min);
+                transform_t trans = {
+                    .position = min,
+                    .rotation = vec3_from_scalar(0),
+                    .scale = {size.x / -1024, size.y / 1024, size.z / -1024}, // 1024 because the model is scaled by 1024 for precision
+                };
+
+                renderer_set_drawing_id(i, 3);
+                renderer_draw_mesh_shaded(&gizmos->meshes[3], &trans, 0, 0);
+            }
+            else if (curr_level->shapes[i].type == SHAPE_CONVEX_HULL) {
+                renderer_set_drawing_id(i, 3);
+                renderer_draw_mesh_shaded(specialized_meshes[i], &id_transform, 0, 0);
             }
         }
+    }
 
-        if (dont_draw) continue;
-
-        if (curr_level->shapes[i].type == SHAPE_SPHERE) {
-            const transform_t trans = {
-                .position = curr_level->shapes[i].sphere.center,
-                .rotation = vec3_from_scalar(0),
-                .scale = vec3_from_scalar(curr_level->shapes[i].sphere.radius / 1024), // 1024 because the model is scaled by 1024 for precision
-            };
-
-            renderer_set_drawing_id(i, 3);
-            renderer_draw_mesh_shaded(&gizmos->meshes[2], &trans, 0, 0);
-        }
-        else if (curr_level->shapes[i].type == SHAPE_AABB) {
-            const vec3_t min = curr_level->shapes[i].aabb.min;
-            const vec3_t max = curr_level->shapes[i].aabb.max;
-            const vec3_t size = vec3_sub(max, min);
-            transform_t trans = {
-                .position = min,
-                .rotation = vec3_from_scalar(0),
-                .scale = {size.x / -1024, size.y / 1024, size.z / -1024}, // 1024 because the model is scaled by 1024 for precision
-            };
-
-            renderer_set_drawing_id(i, 3);
-            renderer_draw_mesh_shaded(&gizmos->meshes[3], &trans, 0, 0);
-        }
-        else if (curr_level->shapes[i].type == SHAPE_CONVEX_HULL) {
-            renderer_set_drawing_id(i, 3);
-            renderer_draw_mesh_shaded(specialized_meshes[i], &id_transform, 0, 0);
+    if (curr_level && (curr_level->n_shapes > 0)) {
+        static int lazy_update_convex_hulls = 0;
+        lazy_update_convex_hulls++;
+        lazy_update_convex_hulls %= curr_level->n_shapes;
+        if (curr_level->shapes[lazy_update_convex_hulls].type == SHAPE_CONVEX_HULL) {
+            mem_free(specialized_meshes[lazy_update_convex_hulls]);
+            specialized_meshes[lazy_update_convex_hulls] = create_convex_hull_from_point_cloud(
+                curr_level->shapes[lazy_update_convex_hulls].convex_hull.points,
+                curr_level->shapes[lazy_update_convex_hulls].convex_hull.n_points,
+                render_hull_build_set_cap
+            );
         }
     }
 
