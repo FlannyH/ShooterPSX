@@ -157,8 +157,7 @@ size_t get_face_normals(convex_hull_mesh_t* polytope, size_t start_index, vec3_t
     return min_face;
 }
 
-// returns first new face id
-size_t convex_hull_expand(convex_hull_mesh_t* shape, vec3_t new_point) {
+void convex_hull_expand(convex_hull_mesh_t* shape, vec3_t new_point) {
     size_t n_faces_added = 0;
     face_t faces_added[CONVEX_HULL_LIMIT] = {0};
 
