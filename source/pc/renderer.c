@@ -255,7 +255,6 @@ int renderer_height(void) {
 }
 
 void renderer_init(void) {
-	// Create OpenGL window
 	glfwInit();
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
