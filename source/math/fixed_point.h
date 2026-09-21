@@ -1,6 +1,10 @@
 #ifndef FIXED_POINT_H
 #define FIXED_POINT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 
@@ -212,5 +216,9 @@ static inline scalar_t trig_cos(scalar_t angle) {
 
 
 #pragma GCC diagnostic pop
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // FIXED_POINT_H

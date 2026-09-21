@@ -1,14 +1,15 @@
 #ifndef ENTITY_H
 #define ENTITY_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "structs.h"
 #include "player.h"
 
 #include <stdint.h>
 #include <stdio.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define ENTITY_NOT_SECTION_BOUND 255
 #define ENTITY_AABB_QUEUE_LENGTH 256
@@ -74,7 +75,7 @@ typedef struct {
 } entity_header_serialized_t;
 
 typedef struct {
-	aabb_t aabb; 
+	aabb_t aabb;
 	uint8_t entity_index; // which entity this box belongs to, so a signal can be sent to the entity when this box is hit
 	uint8_t box_index; // used to differentiate between different hitboxes, like body shot and headshot for enemies
 	unsigned int is_solid : 1; // can the player move through it or not?

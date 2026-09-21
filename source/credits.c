@@ -52,7 +52,7 @@ void state_update_credits(int dt) {
 	input_update();
 
 	// If any input is pressed or the credits text is over, go back to title screen
-	if (input_pressed(0xFFFF, 0) || state.credits.scroll < -5800000) {
+	if (input_pressed(0xFFFF, 0) || state.credits.scroll < SCALAR(-1415)) {
 		set_current_state(STATE_TITLE_SCREEN);
 	}
 	return;
@@ -71,7 +71,7 @@ void state_exit_credits(void) {
 		}
 
 		// In case the player skipped the credits by pressing a button, tick the input
-		// system. That way the button isn't registered as released on frame 1 on the 
+		// system. That way the button isn't registered as released on frame 1 on the
 		// title screen, fixing a bug where it'd immediately press the credits button again
 		input_update();
 

@@ -1,8 +1,9 @@
 #include "camera.h"
 
-#include "../common.h"
 #include "../player.h"
 #include "../input.h"
+#include "math/vec3.h"
+#include "math/vec2.h"
 
 debug_camera_t debug_camera_new(void) {
     return (debug_camera_t) {

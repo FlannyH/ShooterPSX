@@ -3,6 +3,7 @@
 #include "lut.h"
 #include "common.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
@@ -197,7 +198,7 @@ void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const
             pos.y += font_dst_height * ONE;
             goto end;
         }
-        
+
         if (text[text_cursor] == '\r') {
             pos.x = start_pos.x;
             goto end;
@@ -231,7 +232,7 @@ void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const
 }
 
 scalar_t fade_level = 0; // 255.0 means black, 0.0 means no fade
-scalar_t fade_speed = 0; 
+scalar_t fade_speed = 0;
 
 void renderer_start_fade_in(scalar_t seconds) {
     fade_level = MAX_FADE_LEVEL;

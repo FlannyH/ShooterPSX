@@ -191,8 +191,6 @@ size_t convex_hull_expand(convex_hull_mesh_t* shape, vec3_t new_point) {
 
     // then close the gap by extruding the edges to the new point
     for (size_t i = 0; i < n_edges; ++i) {
-        const vec3_t edge_a = shape->vertices[edges[i].a];
-        const vec3_t edge_b = shape->vertices[edges[i].b];
         faces_added[n_faces_added++] = (face_t){ edges[i].a, edges[i].b, new_point_i };
         assert(n_faces_added <= CONVEX_HULL_LIMIT);
     }

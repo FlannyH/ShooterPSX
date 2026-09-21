@@ -1,5 +1,10 @@
 #ifndef COMMON_H
 #define COMMON_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -85,6 +90,10 @@ inline static void warn_if(const char* error_if_false, const int condition, cons
 
 #ifdef _PSX
     #define SCRATCHPAD ((void*)0x1F800000)
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

@@ -1,10 +1,11 @@
 #ifndef PICKUP_H
 #define PICKUP_H
-#include "../entity.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "../entity.h"
 
 typedef enum {
 	PICKUP_TYPE_NONE,
@@ -38,4 +39,5 @@ void entity_pickup_player_intersect(int slot, player_t* player);
 #ifdef __cplusplus
 }
 #endif
+
 #endif

@@ -1,6 +1,10 @@
 #ifndef TEXT_H
 #define TEXT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // todo(text_asset): desc: put text entries in a separate asset instead of hardcoding them into the code
 
 extern const char* text_main_menu[];
@@ -18,5 +22,9 @@ extern int n_text_credits;
 extern int n_text_debug_menu_main;
 extern int n_text_debug_menu_music;
 extern int n_text_debug_menu_level;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

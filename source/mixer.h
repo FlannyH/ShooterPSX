@@ -1,6 +1,10 @@
 #ifndef MIXER_H
 #define MIXER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include "math/scalar.h"
 
@@ -27,5 +31,9 @@ void mixer_channel_set_sample(size_t channel_index, size_t sample_source, size_t
 void mixer_channel_key_on(uint32_t channel_bits);
 void mixer_channel_key_off(uint32_t channel_bits);
 int mixer_channel_is_idle(size_t channel_index);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

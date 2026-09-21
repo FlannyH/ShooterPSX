@@ -7,6 +7,7 @@
 #include "entities/chaser.h"
 #include "entities/crate.h"
 #include "entities/door.h"
+#include "math/fixed_point.h"
 #include "renderer.h"
 #include "entity.h"
 #include "random.h"

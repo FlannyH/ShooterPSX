@@ -1,7 +1,7 @@
 #include "chaser.h"
 
 #include "../random.h"
-#include "../common.h"
+#include "../renderer.h"
 #include "../mesh.h"
 #include "../main.h"
 

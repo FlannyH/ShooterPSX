@@ -1,6 +1,6 @@
 #include "main.h"
-#include "common.h"
 
+#include "renderer.h"
 #include "memory.h"
 #include "input.h"
 #include "text.h"
@@ -40,9 +40,9 @@ void state_update_debug_menu_level(int dt) {
 	(void)dt;
 	renderer_begin_frame(&id_transform);
 	input_update();
-    
+
     ui_render_background();
-	
+
 	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_debug_menu_level[0], 1, 1, white);
 
 	// Draw settings text and box
@@ -86,15 +86,15 @@ void state_update_debug_menu_level(int dt) {
 			"levels/level1.lvl",
 			"levels/level2.lvl",
 		};
-		
+
 		state.debug_menu_level.button_pressed = 0;
 
 		switch (state.debug_menu_level.button_selected) {
 			case 0:
-			case 1: 
-			case 2: 
-			case 3: 
-			case 4: 
+			case 1:
+			case 2:
+			case 3:
+			case 4:
 				mem_stack_release(STACK_TEMP);
 				state.in_game.level_load_path = levels[state.debug_menu_level.button_selected];
 				set_current_state(STATE_IN_GAME);

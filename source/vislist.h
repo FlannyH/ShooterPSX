@@ -1,6 +1,12 @@
 #ifndef VISLIST_H
 #define VISLIST_H
-#include "structs.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "stdint.h"
+#include "math/vec3.h"
 #include "memory.h"
 
 typedef struct {
@@ -22,5 +28,9 @@ typedef struct {
 } vislist_t;
 
 vislist_t vislist_load(const char* path, int on_stack, stack_t stack);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

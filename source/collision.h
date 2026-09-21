@@ -1,6 +1,10 @@
 #ifndef COLLISION_H
 #define COLLISION_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "structs.h"
 #include "texture.h"
 #include "math/vec3.h"
@@ -34,5 +38,9 @@ void move_triangle(triangle_t* shape, vec3_t move_by);
 void move_aabb(aabb_t* shape, vec3_t move_by);
 void move_convex_hull(convex_hull_t* shape, vec3_t move_by);
 void move_shape(shape_t* shape, vec3_t move_by);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // COLLISION_H

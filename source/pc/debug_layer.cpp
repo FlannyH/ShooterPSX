@@ -7,6 +7,8 @@
 #include <backends/imgui_impl_glfw.h>
 #include <GL/gl3w.h>
 
+#include "../texture.h"
+
 #ifdef _LEVEL_EDITOR
 #include "../entities/platform.h"
 #include "../entities/trigger.h"

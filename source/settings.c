@@ -1,6 +1,6 @@
 #include "main.h"
-#include "common.h"
 
+#include "renderer.h"
 #include "input.h"
 #include "text.h"
 #include "ui.h"
@@ -38,9 +38,9 @@ void state_update_settings(int dt) {
 	(void)dt;
 	renderer_begin_frame(&id_transform);
 	input_update();
-    
+
     ui_render_background();
-	
+
 	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_settings[0], 1, 1, white);
 
 	// Draw settings text and box
@@ -69,11 +69,11 @@ void state_update_settings(int dt) {
 	if (vsync_enable == 1) {
 		if (is_pal) fps_text = "50 FPS";
 		else fps_text = "60 FPS";
-	} 
+	}
 	else if (vsync_enable == 2) {
 		if (is_pal) fps_text = "25 FPS";
 		else fps_text = "30 FPS";
-	} 
+	}
 	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 0))*ONE}, fps_text, 1, 0, white);
 	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 1))*ONE}, is_pal ? "PAL" : "NTSC", 1, 0, white);
 	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 2))*ONE}, widescreen ? "16:9" : "4:3", 1, 0, white);
@@ -127,7 +127,7 @@ void state_exit_settings(void) {
 		renderer_begin_frame(&id_transform);
 		input_update();
 		ui_render_background();
-		
+
 		renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_settings[0], 1, 1, white);
 
 		// Draw settings text and box

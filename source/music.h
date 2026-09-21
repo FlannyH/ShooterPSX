@@ -1,6 +1,10 @@
 #ifndef MUSIC_H
 #define MUSIC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mixer.h"
 #include "math/vec3.h"
 
@@ -170,5 +174,9 @@ void music_stop(void);
 
 // Sound effects
 void audio_update_listener(const vec3_t position, const vec3_t right);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

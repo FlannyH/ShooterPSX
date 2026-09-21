@@ -6,7 +6,6 @@ extern "C" {
 #endif
 
 #include "collision.h"
-#include "renderer.h"
 
 #include <stdint.h>
 
@@ -25,8 +24,8 @@ size_t convex_hull_expand(convex_hull_mesh_t* shape, vec3_t support);
 
 mesh_t* create_convex_hull_from_point_cloud(vec3_t* points, size_t count, size_t step_limit);
 
-#endif
-
 #ifdef __cplusplus
 }
+#endif
+
 #endif

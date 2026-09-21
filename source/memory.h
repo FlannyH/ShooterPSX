@@ -1,5 +1,10 @@
 #ifndef MEMORY_H
 #define MEMORY_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 
 typedef enum {
@@ -37,6 +42,10 @@ void mem_debug(void);
 
 #ifdef _DEBUG
 char* mem_stack_get_name(int i);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

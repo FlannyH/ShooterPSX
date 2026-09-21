@@ -33,7 +33,7 @@ void state_enter_title_screen(void) {
 		// Wait for rendering to finish
 		renderer_begin_frame(&id_transform);
 		renderer_end_frame();
-		
+
 		for (uint8_t i = 0; i < MAX_TEXTURE_COUNT; ++i) {
 			renderer_free_texture(i, TEX_CAT_MISC);
 		}

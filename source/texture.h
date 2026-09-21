@@ -1,5 +1,10 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "memory.h"
 
 #include <stdint.h>
@@ -48,7 +53,7 @@ typedef struct {
     uint8_t texture_width;         // Texture width in pixels.
     uint8_t texture_height;        // Texture height in pixels.
     uint8_t bits_per_pixel;        // Valid values are 4, 8, or 16. In the case of 16bpp, palette will be ignored
-    uint8_t palette_count;         // How many palettes this texture has 
+    uint8_t palette_count;         // How many palettes this texture has
     uint8_t reserved[2];
     pixel32_t avg_color;           // Average value of every pixel
 } texture_cell_desc_t;
@@ -65,5 +70,9 @@ typedef struct {
 #pragma pack(pop)
 
 uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures, int on_stack, stack_t stack);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

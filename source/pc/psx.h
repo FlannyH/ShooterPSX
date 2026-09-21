@@ -1,6 +1,10 @@
 #ifndef WIN_GTE_H
 #define WIN_GTE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // This entire document is a duct tape fix for the PC debug version
 #include <stdint.h>
 typedef struct {
@@ -49,5 +53,8 @@ typedef enum {
     GCON_B = 1 << 14
 } PadButton;
 
-#else
+#ifdef __cplusplus
+}
+#endif
+
 #endif

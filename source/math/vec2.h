@@ -1,6 +1,10 @@
 #ifndef VEC2_H
 #define VEC2_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "scalar.h"
 
 #pragma GCC diagnostic push
@@ -220,5 +224,9 @@ static inline int vec2_equal(vec2_t a, vec2_t b) {
 }
 
 #pragma GCC diagnostic pop
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

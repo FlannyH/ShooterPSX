@@ -1,6 +1,10 @@
 #ifndef VEC3_H
 #define VEC3_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "scalar.h"
 
 #pragma GCC diagnostic push
@@ -254,5 +258,9 @@ static inline int vec3_equal(vec3_t a, vec3_t b) {
 }
 
 #pragma GCC diagnostic pop
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // VEC3_H

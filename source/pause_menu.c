@@ -38,7 +38,7 @@ void state_update_pause_menu(int dt) {
 	if (input_pressed(PAD_START, 0)) {
 		set_current_state(STATE_IN_GAME);
 	}
-	
+
 	// Check cheats
 	if (input_check_cheat_buffer(sizeof(cheat_doom_mode) / sizeof(uint16_t), cheat_doom_mode)) {
 		state.cheats.doom_mode = 1;

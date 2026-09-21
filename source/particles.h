@@ -1,6 +1,10 @@
 #ifndef PARTICLES_H
 #define PARTICLES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "texture.h"
 #include "structs.h"
 #include "random.h"
@@ -74,5 +78,9 @@ particle_system_t* particle_system_new(particle_system_params_t* params) {
 }
 
 void particle_system_update(particle_system_t* system, transform_t* transform);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

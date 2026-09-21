@@ -1,6 +1,10 @@
 #ifndef RENDERER_PSX_H
 #define RENDERER_PSX_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 #include "../texture.h"
@@ -8,5 +12,9 @@
 #include "../math/vec2.h"
 
 void renderer_psx_clear_vram(svec2_t top_left, svec2_t size, pixel32_t color);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

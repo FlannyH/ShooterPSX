@@ -1,6 +1,6 @@
 #include "main.h"
-#include "common.h"
 
+#include "renderer.h"
 #include "input.h"
 #include "text.h"
 #include "ui.h"
@@ -39,9 +39,9 @@ void state_update_debug_menu_main(int dt) {
 	(void)dt;
 	renderer_begin_frame(&id_transform);
 	input_update();
-    
+
     ui_render_background();
-	
+
 	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_debug_menu_main[0], 1, 1, white);
 
 	// Draw settings text and box
@@ -83,7 +83,7 @@ void state_update_debug_menu_main(int dt) {
 			case 0:
 				set_current_state(STATE_DEBUG_MENU_MUSIC);
 				break;
-			case 1: 
+			case 1:
 				set_current_state(STATE_DEBUG_MENU_LEVEL);
 				break;
 			case 2:

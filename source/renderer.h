@@ -113,7 +113,9 @@ vec3_t renderer_get_forward_vector(void); // Used in the level editor to determi
 
 extern int vsync_enable;
 extern int is_pal;
+
 #ifdef __cplusplus
 }
 #endif
+
 #endif

@@ -1,7 +1,10 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include "renderer.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "player.h"
 #include "level.h"
 #include "math/vec3.h"
@@ -126,5 +129,9 @@ void state_exit_debug_menu_music(void);
 void state_enter_debug_menu_level(void);
 void state_update_debug_menu_level(int dt);
 void state_exit_debug_menu_level(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

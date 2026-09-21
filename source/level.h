@@ -4,6 +4,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 #include "structs.h"
 #include "vislist.h"
 #include "math/vec3.h"
@@ -103,4 +104,5 @@ level_t level_load(const char* level_path, const uint32_t flags);
 #ifdef __cplusplus
 }
 #endif
+
 #endif

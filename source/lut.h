@@ -1,5 +1,10 @@
 #ifndef LUT_H
 #define LUT_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 // Q20.12 fixed point multiplier for panning.
@@ -125,5 +130,9 @@ static const uint16_t lut_quarter_sine[] = {
     0xfec4, 0xfeeb, 0xff0e, 0xff30, 0xff4e, 0xff6b, 0xff85, 0xff9c,
     0xffb1, 0xffc4, 0xffd4, 0xffe1, 0xffec, 0xfff5, 0xfffb, 0xffff
 };
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

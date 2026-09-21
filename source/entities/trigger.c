@@ -1,6 +1,6 @@
 #include "trigger.h"
 
-#include "../common.h"
+#include "../renderer.h"
 #include "../main.h"
 
 extern state_vars_t state;

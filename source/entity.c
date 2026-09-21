@@ -1,5 +1,4 @@
 #include "entity.h"
-#include "common.h"
 
 #include "entities/platform.h"
 #include "entities/trigger.h"
@@ -7,6 +6,7 @@
 #include "entities/chaser.h"
 #include "entities/crate.h"
 #include "entities/door.h"
+#include "renderer.h"
 #include "mesh.h"
 #include "main.h"
 
@@ -133,7 +133,7 @@ void entity_defragment(void) {
 	}
 }
 
-// Sets the mesh pointer, which is only valid for the runtime of this program, to null. 
+// Sets the mesh pointer, which is only valid for the runtime of this program, to null.
 // It will be recalculated in the entity code later
 void entity_sanitize(void) {
 	entity_union* pool = (entity_union*)entity_pool;

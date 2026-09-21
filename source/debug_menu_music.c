@@ -1,6 +1,6 @@
 #include "main.h"
-#include "common.h"
 
+#include "renderer.h"
 #include "input.h"
 #include "music.h"
 #include "text.h"
@@ -33,7 +33,7 @@ void state_enter_debug_menu_music(void) {
 		renderer_begin_frame(&id_transform);
 		ui_render_background();
 		renderer_end_frame();
-	} 
+	}
 }
 
 extern volume_env_t vol_envs[N_SPU_CHANNELS];
@@ -68,9 +68,9 @@ void state_update_debug_menu_music(int dt) {
 		state.debug_menu_music.button_pressed = 0;
 		switch (state.debug_menu_music.button_selected) {
 			case 0:
-			case 1: 
-			case 2: 
-			case 3: 
+			case 1:
+			case 2:
+			case 3:
 				music_stop();
 				mem_stack_release(STACK_TEMP);
 				mem_stack_release(STACK_MUSIC);
@@ -114,9 +114,9 @@ void state_update_debug_menu_music(int dt) {
 	}
 
 	renderer_begin_frame(&id_transform);
-    
+
     ui_render_background();
-	
+
 	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_debug_menu_music[0], 1, 1, white);
 
 	// Draw settings text and box

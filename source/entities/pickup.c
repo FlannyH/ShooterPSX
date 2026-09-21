@@ -1,6 +1,6 @@
 #include "pickup.h"
 
-#include "../common.h"
+#include "../renderer.h"
 #include "../mesh.h"
 #include "../main.h"
 
@@ -70,16 +70,16 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
     if (close_enough_to_collect) {
         int sfx_to_play = sfx_generic;
         switch (pickup->type) {
-            case PICKUP_TYPE_AMMO_SMALL:    sfx_to_play = sfx_ammo; player->ammo += 5; break;          
-            case PICKUP_TYPE_AMMO_BIG:      sfx_to_play = sfx_ammo; player->ammo += 40; break;         
-            case PICKUP_TYPE_ARMOR_SMALL:   sfx_to_play = sfx_generic; player->armor += 5; break;         
-            case PICKUP_TYPE_ARMOR_BIG:     sfx_to_play = sfx_armor_big; player->armor += 15; break;        
-            case PICKUP_TYPE_HEALTH_SMALL:  sfx_to_play = sfx_health_small; player->health += 15; break;       
-            case PICKUP_TYPE_HEALTH_BIG:    sfx_to_play = sfx_health_large; player->health += 40; break;       
-            case PICKUP_TYPE_KEY_BLUE:      sfx_to_play = sfx_key; player->has_key_blue = 1; break;   
-            case PICKUP_TYPE_KEY_YELLOW:    sfx_to_play = sfx_key; player->has_key_yellow = 1; break; 
+            case PICKUP_TYPE_AMMO_SMALL:    sfx_to_play = sfx_ammo; player->ammo += 5; break;
+            case PICKUP_TYPE_AMMO_BIG:      sfx_to_play = sfx_ammo; player->ammo += 40; break;
+            case PICKUP_TYPE_ARMOR_SMALL:   sfx_to_play = sfx_generic; player->armor += 5; break;
+            case PICKUP_TYPE_ARMOR_BIG:     sfx_to_play = sfx_armor_big; player->armor += 15; break;
+            case PICKUP_TYPE_HEALTH_SMALL:  sfx_to_play = sfx_health_small; player->health += 15; break;
+            case PICKUP_TYPE_HEALTH_BIG:    sfx_to_play = sfx_health_large; player->health += 40; break;
+            case PICKUP_TYPE_KEY_BLUE:      sfx_to_play = sfx_key; player->has_key_blue = 1; break;
+            case PICKUP_TYPE_KEY_YELLOW:    sfx_to_play = sfx_key; player->has_key_yellow = 1; break;
         }
-        audio_play_sound(sfx_to_play, 0, 0, (vec3_t){0, 0, 0}, 1); 
+        audio_play_sound(sfx_to_play, 0, 0, (vec3_t){0, 0, 0}, 1);
         entity_kill(slot);
     }
 }
@@ -94,7 +94,7 @@ void entity_pickup_player_intersect(int slot, player_t *player) {
     (void)player;
 }
 
-#ifdef _LEVEL_EDITOR 
+#ifdef _LEVEL_EDITOR
 const char* pickup_names[] = {
     "PICKUP_TYPE_NONE",
     "PICKUP_TYPE_AMMO_SMALL",

@@ -1,10 +1,11 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
-#include "../entity.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "../entity.h"
 
 typedef struct {
 	entity_header_t entity_header;
@@ -12,7 +13,7 @@ typedef struct {
     vec3_t position_end;
     scalar_t velocity;
     int curr_timer_value;
-    int auto_start_timer; // Time (milliseconds) to wait before automatically going from start to end 
+    int auto_start_timer; // Time (milliseconds) to wait before automatically going from start to end
     int auto_return_timer; // Time (milliseconds) to wait before automatically going from end to start
     int signal_id;
     unsigned int listen_to_signal : 1;
@@ -30,4 +31,5 @@ void entity_platform_player_intersect(int slot, player_t* player);
 #ifdef __cplusplus
 }
 #endif
+
 #endif

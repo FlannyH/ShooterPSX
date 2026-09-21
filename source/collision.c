@@ -12,6 +12,7 @@
 #define MAX_EPA_TRIES 8
 
 void dump_current_simplex(size_t i, convex_hull_mesh_t* polytope, size_t closest_face) {
+#ifdef _PC
     char path[1024] = {0};
     snprintf(path, 1023, "simplex_%i.obj", i);
     FILE* o = fopen(&path[0], "wb");
@@ -61,6 +62,7 @@ void dump_current_simplex(size_t i, convex_hull_mesh_t* polytope, size_t closest
     );
     fprintf(o, "f 1//1 2//1 3//1\n");
     fclose(o);
+#endif
 }
 
 // directions are normalized to make it more predictable with fixed point precision

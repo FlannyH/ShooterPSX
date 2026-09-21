@@ -1,10 +1,12 @@
 #ifndef TRIGGER_H
 #define TRIGGER_H
-#include "../entity.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "../entity.h"
+#include "../texture.h"
 
 typedef enum {
     ENTITY_TRIGGER_TYPE_NONE,
@@ -50,4 +52,5 @@ void entity_trigger_player_intersect(int slot, player_t* player);
 #ifdef __cplusplus
 }
 #endif
+
 #endif

@@ -1,10 +1,9 @@
 #include "main.h"
-#include "common.h"
-
 
 #include "input.h"
 #include "music.h"
 #include "file.h"
+#include "renderer.h"
 
 #ifdef _DEBUG
 #include "test/test.h"

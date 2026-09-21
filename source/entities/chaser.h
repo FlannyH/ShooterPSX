@@ -1,10 +1,11 @@
 #ifndef CHASER_H
 #define CHASER_H
-#include "../entity.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "../entity.h"
 
 typedef enum {
     CHASER_WAIT,
@@ -38,4 +39,5 @@ const static int32_t chaser_drag = 100;
 #ifdef __cplusplus
 }
 #endif
+
 #endif

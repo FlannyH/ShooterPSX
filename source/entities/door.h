@@ -1,10 +1,11 @@
 #ifndef DOOR_H
 #define DOOR_H
-#include "../entity.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "../entity.h"
 
 typedef struct {
 	entity_header_t entity_header;
@@ -27,4 +28,5 @@ void entity_door_player_intersect(int slot, player_t* player);
 #ifdef __cplusplus
 }
 #endif
+
 #endif

@@ -1,6 +1,10 @@
 #ifndef WIN_GTE_H
 #define WIN_GTE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // This entire document is a duct tape fix for the NDS version
 #ifdef _NDS
 #include <stdint.h>
@@ -52,4 +56,9 @@ typedef enum {
 
 #else
 #endif
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif
