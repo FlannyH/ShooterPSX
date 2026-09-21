@@ -54,8 +54,8 @@ int main(int argc, char** argv) {
     player_update(&player, &level, 0, 0);
     debug_camera_t camera = debug_camera_new();
 
-    int dt = 40;
-    int time_counter = 0;
+    scalar_t dt = SCALAR(1.0/ 24.0);
+    scalar_t time_counter = 0;
     int mouse_lock = 0;
     input_unlock_mouse();
 
@@ -68,8 +68,8 @@ int main(int argc, char** argv) {
 	    mem_stack_release(STACK_TEMP);
 
         // Delta time
-        dt = renderer_delta_time_ms(DT_TICK);
-        dt = scalar_min(dt, 40);
+        dt = renderer_delta_time(DT_TICK);
+        dt = scalar_min(dt, SCALAR(1.0 / 24.0));
         time_counter += dt;
 
         // Allow locking and unlocking the mouse

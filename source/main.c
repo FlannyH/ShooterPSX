@@ -79,9 +79,9 @@ int main(void) {
 	current_state = STATE_DEBUG_MENU_MAIN;
 
     while (!renderer_should_close()) {
-        int delta_time = renderer_delta_time_ms(DT_TICK);
+        scalar_t delta_time = renderer_delta_time(DT_TICK);
 #ifndef BENCHMARK_MODE
-        delta_time = scalar_min(delta_time, 40);
+        delta_time = scalar_min(delta_time, SCALAR(1.0 / 25.0));
 #endif
 		state.global.time_counter += delta_time;
 

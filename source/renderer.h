@@ -81,8 +81,7 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 void renderer_free_texture(int index, texture_category_t category);
 void renderer_free_texture_category(texture_category_t category);
 void renderer_set_video_mode(int is_pal);
-int renderer_delta_time_ms(dt_flags_t flags);
-int renderer_convert_dt_raw_to_ms(int dt_raw);
+scalar_t renderer_delta_time(dt_flags_t flags);
 int renderer_should_close(void);
 void renderer_set_depth_bias(int bias);
 int renderer_n_meshes_drawn(void);

@@ -68,7 +68,7 @@ mesh_t* update_mesh(entity_door_t* door) {
 	return mesh;
 }
 
-void entity_door_update(int slot, player_t* player, int dt) {
+void entity_door_update(int slot, player_t* player, scalar_t dt) {
 	(void)dt;
 	entity_door_t* door = (entity_door_t*)entity_get_header(slot);
 

@@ -38,7 +38,7 @@ void state_enter_debug_menu_music(void) {
 
 extern volume_env_t vol_envs[N_SPU_CHANNELS];
 
-void state_update_debug_menu_music(int dt) {
+void state_update_debug_menu_music_main(scalar_t dt) {
 	(void)dt;
 	input_update();
 

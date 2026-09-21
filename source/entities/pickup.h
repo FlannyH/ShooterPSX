@@ -32,7 +32,7 @@ typedef struct {
 } entity_pickup_t;
 
 entity_pickup_t* entity_pickup_new(void);
-void entity_pickup_update(int slot, player_t* player, int dt);
+void entity_pickup_update(int slot, player_t* player, scalar_t dt);
 void entity_pickup_on_hit(int slot, int hitbox_index);
 void entity_pickup_player_intersect(int slot, player_t* player);
 

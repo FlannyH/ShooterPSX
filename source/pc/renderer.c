@@ -37,8 +37,8 @@ GLuint vbo;
 clock_t dt_clock;
 GLuint textures;
 clock_t dt = 0;
-float dt_ms_float = 0;
-int dt_ms_int = 0;
+float dt_float = 0;
+scalar_t delta_time = 0;
 uint32_t n_total_triangles = 0;
 int render_w = 512;
 int render_h = 240;
@@ -159,19 +159,6 @@ static void DebugCallbackFunc(GLenum source, GLenum type, GLuint id, GLenum seve
 	printf("GL Debug Callback:\n\tsource: %i:%s\n\ttype: %i:%s\n\tid: %i\n\tseverity: %i:%s\n\tmessage: %s",
 			source, sourceString, type, typeString, id, severity, severityString, message);
 	return; // this is just here so you can put a breakpoint
-}
-
-void update_delta_time_ms(void) {
-	clock_t new_dt;
-	do {
-		new_dt = clock();
-		dt = new_dt - dt_clock;
-		dt_clock = new_dt;
-		dt_ms_float += ((float)dt * 1000.0f) / (float)CLOCKS_PER_SEC;
-	} while (dt_ms_float < 1);
-
-	dt_ms_int = (int)dt_ms_float;
-	dt_ms_float -= (float)dt_ms_int;
 }
 
 bool load_shader_part(char *path, const ShaderType type, const GLuint *program) {
@@ -1002,11 +989,24 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 	mem_free(pixels);
 }
 
-int renderer_delta_time_ms(dt_flags_t flags) {
+void update_delta_time(void) {
+	clock_t new_dt;
+	do {
+		new_dt = clock();
+		dt = new_dt - dt_clock;
+		dt_clock = new_dt;
+		dt_float += (float)dt / (float)CLOCKS_PER_SEC;
+	} while (dt_float < 0.004f);
+
+	delta_time = SCALAR(dt_float);
+	dt_float -= (float)delta_time / ONE;
+}
+
+scalar_t renderer_delta_time(dt_flags_t flags) {
 	if (flags == DT_TICK) {
-		update_delta_time_ms();
+		update_delta_time();
 	}
-	return dt_ms_int;
+	return delta_time;
 }
 
 uint32_t renderer_get_n_total_triangles(void) { return n_total_triangles; }

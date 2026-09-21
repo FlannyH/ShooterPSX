@@ -77,7 +77,7 @@ void state_enter_title_screen(void) {
 	renderer_start_fade_in(FADE_SPEED);
 }
 
-void state_update_title_screen(int dt) {
+void state_update_title_screen(scalar_t dt) {
     (void)dt;
 	renderer_begin_frame(&id_transform);
 	input_update();

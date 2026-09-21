@@ -35,7 +35,7 @@ void state_enter_debug_menu_main(void) {
 	}
 }
 
-void state_update_debug_menu_main(int dt) {
+void state_update_debug_menu_main(scalar_t dt) {
 	(void)dt;
 	renderer_begin_frame(&id_transform);
 	input_update();

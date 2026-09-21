@@ -30,8 +30,8 @@ typedef struct {
         struct {
             pixel32_t color;
             int id; // Which level text entry to use for this
-            int total_display_time_ms;
-            int curr_display_time_ms;
+            scalar_t total_display_time;
+            scalar_t curr_display_time;
         } data_text;
         struct {
             int id;
@@ -45,7 +45,7 @@ typedef struct {
 } entity_trigger_t;
 
 entity_trigger_t* entity_trigger_new(void);
-void entity_trigger_update(int slot, player_t* player, int dt);
+void entity_trigger_update(int slot, player_t* player, scalar_t dt);
 void entity_trigger_on_hit(int slot, int hitbox_index);
 void entity_trigger_player_intersect(int slot, player_t* player);
 

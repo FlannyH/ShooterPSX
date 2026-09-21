@@ -1,7 +1,7 @@
 #include "crate.h"
 
 #include "pickup.h"
-#include "../common.h"
+#include "../renderer.h"
 #include "../mesh.h"
 #include "../main.h"
 
@@ -16,7 +16,7 @@ entity_crate_t* entity_crate_new(void) {
 	return entity;
 }
 
-void entity_crate_update(int slot, player_t* player, int dt) {
+void entity_crate_update(int slot, player_t* player, scalar_t dt) {
 	PANIC_IF("entity_models is null!", entity_get_models() == NULL);
 	PANIC_IF("entity_models->meshes is null!", entity_get_models()->meshes == NULL);
 	PANIC_IF("entity_models does not contain enough meshes!", entity_get_models()->n_meshes < N_ENTITY_MESH_IDS);

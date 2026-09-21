@@ -17,7 +17,7 @@ entity_pickup_t* entity_pickup_new(void) {
     return entity;
 }
 
-void entity_pickup_update(int slot, player_t* player, int dt) {
+void entity_pickup_update(int slot, player_t* player, scalar_t dt) {
 	entity_pickup_t* pickup = (entity_pickup_t*)entity_get_header(slot);
 	const vec3_t pickup_pos = pickup->entity_header.position;
 	const vec3_t player_pos = vec3_sub(player->position, (vec3_t){0, SCALAR(200), 0});
@@ -43,7 +43,8 @@ void entity_pickup_update(int slot, player_t* player, int dt) {
     }
 
     // Rotate
-    pickup->entity_header.rotation.y += dt * 50;
+    #define PICKUP_SPIN_SPEED SCALAR(0.5f)
+    pickup->entity_header.rotation.y += scalar_mul(dt, PICKUP_SPIN_SPEED);
 
 	transform_t render_transform;
     render_transform.position.x = pickup_pos.x;

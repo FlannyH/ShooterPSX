@@ -90,7 +90,7 @@ void entity_deserialize_and_write_slot(int slot, const entity_header_serialized_
 void entity_register_collision_box(const entity_collision_box_t* box); // (*box) gets copied, can safely be freed after calling this function
 void entity_defragment(void);
 void entity_sanitize(void);
-void entity_update_all(player_t* player, int dt);
+void entity_update_all(player_t* player, scalar_t dt);
 void entity_kill(int slot);
 void entity_send_player_intersect(int slot, player_t* player);
 uint8_t entity_get_type(int index);

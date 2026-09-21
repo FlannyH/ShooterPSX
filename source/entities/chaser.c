@@ -137,7 +137,7 @@ void find_target_node(entity_chaser_t* chaser, vec3_t target_position, find_targ
 	}
 }
 
-void entity_chaser_update(int slot, player_t* player, int dt) {
+void entity_chaser_update(int slot, player_t* player, scalar_t dt) {
 	entity_chaser_t* chaser = (entity_chaser_t*)entity_get_header(slot);
 	const vec3_t chaser_pos = chaser->entity_header.position;
 
@@ -253,21 +253,19 @@ void entity_chaser_update(int slot, player_t* player, int dt) {
 		if (velocity_scalar > chaser_max_speed) {
 			velocity_scalar = chaser_max_speed;
 		}
-		if (velocity_scalar > chaser_drag * dt) {
-			velocity_scalar -= chaser_drag * dt;
+		if (velocity_scalar > scalar_mul(chaser_drag, dt)) {
+			velocity_scalar -= scalar_mul(chaser_drag, dt);
 		}
 		chaser->velocity = vec3_muls(velocity_normalized, velocity_scalar);
 
-		chaser->entity_header.position.x += (chaser->velocity.x / 256) * dt;
-		chaser->entity_header.position.y += (chaser->velocity.y / 256) * dt;
-		chaser->entity_header.position.z += (chaser->velocity.z / 256) * dt;
+		chaser->entity_header.position = vec3_add(chaser->entity_header.position, vec3_muls(chaser->velocity, dt));
 	}
 
 	// Add a force towards the target node
 	if (chaser->target_navmesh_node >= 0 && chaser->target_navmesh_node < n_nav_graph_nodes) {
 		const vec3_t target_pos = vec3_from_svec3(nav_graph_nodes[chaser->target_navmesh_node].position);
 		const vec3_t target_dir = vec3_normalize(vec3_sub(target_pos, chaser_pos));
-		chaser->velocity = vec3_add(chaser->velocity, vec3_muls(target_dir, chaser_acceleration * dt));
+		chaser->velocity = vec3_add(chaser->velocity, vec3_muls(target_dir, scalar_mul(chaser_acceleration, dt)));
 
 		// If we're close to the target node, set that node as the current node
 		const scalar_t distance_to_target_node_squared = vec3_magnitude_squared(vec3_sub(chaser_pos, target_pos));

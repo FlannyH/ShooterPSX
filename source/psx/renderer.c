@@ -8,6 +8,7 @@
 
 #include "../common.h"
 
+#include "math/fixed_point.h"
 #include "texture_pool.h"
 #include "collision.h"
 #include "particles.h"
@@ -531,34 +532,33 @@ int renderer_get_delta_time_raw(void) {
     }
 }
 
-int curr_dt_ms = 33;
+int renderer_convert_dt_raw_to_sec(int dt_raw) {
+    scalar_t dt;
+    if (vsync_enable) { // dt_raw is frames
+        if (is_pal)
+            dt = SCALAR((float)dt_raw / 50.0);
+        else
+            dt = SCALAR((float)dt_raw / 60.0);
+    }
+    else { // dt_raw is hblanks
+        dt = SCALAR((float)dt_raw / 15625.0); // Somehow this works for both PAL and NTSC
+    }
 
-int renderer_delta_time_ms(dt_flags_t flags) {
+    return dt;
+}
+
+scalar_t curr_dt = SCALAR(1.0 / 30.0);
+
+scalar_t renderer_delta_time(dt_flags_t flags) {
     if (flags == DT_TICK) {
         int dt_raw = renderer_get_delta_time_raw();
-        curr_dt_ms = renderer_convert_dt_raw_to_ms(dt_raw);
+        curr_dt = renderer_convert_dt_raw_to_sec(dt_raw);
+        printf("dt: "); scalar_debug(curr_dt);
     }
-    return curr_dt_ms;
+    return curr_dt;
 }
 
 int renderer_n_meshes_drawn(void) { return n_meshes_drawn; }
-
-int renderer_convert_dt_raw_to_ms(int dt_raw) {
-    int dt_ms;
-    if (vsync_enable) {
-        if (is_pal)
-            dt_ms = 20 * dt_raw;
-        else
-            dt_ms = (16666 * dt_raw) / 1000;
-    }
-    else {
-        dt_ms = (1000 * dt_raw) / 15625; // Somehow this works for both PAL and NTSC
-    }
-    if (dt_ms == 0) {
-        dt_ms = 1;
-    }
-    return dt_ms;
-}
 
 int renderer_should_close(void) {
     return 0;

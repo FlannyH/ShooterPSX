@@ -24,7 +24,7 @@ typedef enum {
 typedef struct {
 	struct {
 		int frame_counter;
-		int time_counter;
+		scalar_t time_counter;
 		int show_debug;
 		state_t state_to_return_to;
 	} global;
@@ -81,7 +81,7 @@ typedef struct {
 
 extern state_vars_t state;
 
-#define FADE_SPEED (ONE / 4)
+#define FADE_SPEED SCALAR(0.25)
 
 #define DEPTH_BIAS_VIEWMODELS 64
 #define DEPTH_BIAS_LEVEL 256
@@ -92,42 +92,42 @@ state_t get_prev_state(void);
 
 // Title screen
 void state_enter_title_screen(void);
-void state_update_title_screen(int dt);
+void state_update_title_screen(scalar_t dt);
 void state_exit_title_screen(void);
 
 // Settings
 void state_enter_settings(void);
-void state_update_settings(int dt);
+void state_update_settings(scalar_t dt);
 void state_exit_settings(void);
 
 // Credits
 void state_enter_credits(void);
-void state_update_credits(int dt);
+void state_update_credits(scalar_t dt);
 void state_exit_credits(void);
 
 // In game
 void state_enter_in_game(void);
-void state_update_in_game(int dt);
+void state_update_in_game(scalar_t dt);
 void state_exit_in_game(void);
 
 // Pause menu
 void state_enter_pause_menu(void);
-void state_update_pause_menu(int dt);
+void state_update_pause_menu(scalar_t dt);
 void state_exit_pause_menu(void);
 
 // Debug menu main
 void state_enter_debug_menu_main(void);
-void state_update_debug_menu_main(int dt);
+void state_update_debug_menu_main(scalar_t dt);
 void state_exit_debug_menu_main(void);
 
 // Debug menu music
 void state_enter_debug_menu_music(void);
-void state_update_debug_menu_music(int dt);
+void state_update_debug_menu_music(scalar_t dt);
 void state_exit_debug_menu_music(void);
 
 // Debug menu level
 void state_enter_debug_menu_level(void);
-void state_update_debug_menu_level(int dt);
+void state_update_debug_menu_level(scalar_t dt);
 void state_exit_debug_menu_level(void);
 
 #ifdef __cplusplus

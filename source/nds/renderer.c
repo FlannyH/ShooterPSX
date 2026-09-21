@@ -326,20 +326,20 @@ int renderer_get_delta_time_raw(void) {
     return result; // todo(nds_renderer_get_delta_time_raw): desc: return actual number of vblanks this frame took, probably with a vblank interrupt
 }
 
-int dt_ms = 0;
-int renderer_delta_time_ms(dt_flags_t flags) {
+int renderer_convert_dt_raw_to_sec(int dt_raw) {
+    return SCALAR((float)dt_raw / 60.0);
+}
+
+scalar_t dt = 0;
+scalar_t renderer_delta_time(dt_flags_t flags) {
     if (flags == DT_TICK) {
         int dt_raw = renderer_get_delta_time_raw();
-        dt_ms = renderer_convert_dt_raw_to_ms(dt_raw);
+        dt = renderer_convert_dt_raw_to_sec(dt_raw);
     }
-    return dt_ms;
+    return dt;
 }
 
 int renderer_n_meshes_drawn(void) { return n_meshes_drawn; }
-
-int renderer_convert_dt_raw_to_ms(int dt_raw) {
-    return (1666 * dt_raw) / 100;
-}
 
 int renderer_should_close(void) {
     return 0;

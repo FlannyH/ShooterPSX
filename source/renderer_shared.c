@@ -236,12 +236,12 @@ scalar_t fade_speed = 0;
 
 void renderer_start_fade_in(scalar_t seconds) {
     fade_level = MAX_FADE_LEVEL;
-    fade_speed = (MAX_FADE_LEVEL) / (-seconds);
+    fade_speed = -scalar_div(MAX_FADE_LEVEL, seconds);
 }
 
 void renderer_start_fade_out(scalar_t seconds) {
     fade_level = 0;
-    fade_speed = (MAX_FADE_LEVEL) / (seconds);
+    fade_speed = scalar_div((MAX_FADE_LEVEL), (seconds));
 }
 
 int renderer_is_fading(void) {
@@ -251,7 +251,7 @@ int renderer_is_fading(void) {
 }
 
 void renderer_tick_fade(void) {
-    fade_level += fade_speed * ((renderer_delta_time_ms(DT_NO_TICK) * ONE) / 1000);
+    fade_level += scalar_mul(fade_speed, renderer_delta_time(DT_NO_TICK));
     if (fade_level > MAX_FADE_LEVEL) fade_level = MAX_FADE_LEVEL;
     if (fade_level < 0) fade_level = 0;
     renderer_apply_fade(fade_level);

@@ -5,12 +5,12 @@
 
 extern state_vars_t state;
 
-void entity_trigger_update_text(int slot, int dt) {
+void entity_trigger_update_text(int slot, scalar_t dt) {
     entity_trigger_t* trigger = (entity_trigger_t*)entity_get_header(slot);
 
     // display text for a specified amount of time
-    if (trigger->data_text.curr_display_time_ms > 0) {
-        trigger->data_text.curr_display_time_ms -= dt;
+    if (trigger->data_text.curr_display_time > 0) {
+        trigger->data_text.curr_display_time -= dt;
         const char* text = state.in_game.level.text_entries[trigger->data_text.id];
         renderer_draw_text((vec2_t){256 * ONE, 176 * ONE}, text, 2, 1, trigger->data_text.color);
     }
@@ -65,7 +65,7 @@ entity_trigger_t* entity_trigger_new(void) {
     return entity;
 }
 
-void entity_trigger_update(int slot, player_t* player, int dt) {
+void entity_trigger_update(int slot, player_t* player, scalar_t dt) {
     (void)player;
     entity_trigger_t* trigger = (entity_trigger_t*)entity_get_header(slot);
 
@@ -102,7 +102,7 @@ void entity_trigger_update(int slot, player_t* player, int dt) {
             trigger->activated = 1;
 
             if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TEXT) {
-                trigger->data_text.curr_display_time_ms = trigger->data_text.total_display_time_ms;
+                trigger->data_text.curr_display_time = trigger->data_text.total_display_time;
             }
         }
 

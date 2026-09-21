@@ -39,12 +39,12 @@
 
 // todo(in_game_cleanup): desc: separate big functions into multiple smaller ones to make it easier to read
 
-void update_screen_shake_intensity(int dt);
+void update_screen_shake_intensity(scalar_t dt);
 void load_weapon_textures(void);
 void benchmark_mode(void);
-void fps_counter(int dt);
+void fps_counter(scalar_t dt);
 void draw_hud(void);
-void draw_debug_info(int dt, const int n_sections);
+void draw_debug_info(scalar_t dt, const int n_sections);
 void shoot(const transform_t camera_transform);
 char debug_text_buffer[64] = {0};
 int fps = 0;
@@ -89,7 +89,7 @@ void load_weapon_textures(void) {
     }
 }
 
-void state_update_in_game(int dt) {
+void state_update_in_game(scalar_t dt) {
     update_screen_shake_intensity(dt);
 
     // Apply screen shake to camera transform, then begin graphics frame
@@ -185,17 +185,17 @@ void state_update_in_game(int dt) {
 
 	// Animate and render gun
 	const vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
-	const scalar_t speed_1d = vec2_magnitude(vel_2d) / PLAYER_VELOCITY_PRECISION;
+	const scalar_t speed_1d = vec2_magnitude(vel_2d);
 	if (state.in_game.player.has_gun || 1) {
 
 		transform_t gun_transform;
 		if (state.cheats.doom_mode) {
-			gun_transform.position.x = SCALAR(0) + (trig_sin(state.global.time_counter * 6) * speed_1d) / (40 * ONE);
-			gun_transform.position.y = SCALAR(-165) + (trig_cos(state.global.time_counter * 12) * speed_1d) / (80 * ONE);
+			gun_transform.position.x = SCALAR(0);// + (trig_sin(state.global.time_counter * 6) * speed_1d) / (40 * ONE);
+			gun_transform.position.y = SCALAR(-165);// + (trig_cos(state.global.time_counter * 12) * speed_1d) / (80 * ONE);
 			gun_transform.position.z = SCALAR(110);
 		} else {
-			gun_transform.position.x = SCALAR(145) + (trig_sin(state.global.time_counter * 6) * speed_1d) / (40 * ONE);
-			gun_transform.position.y = SCALAR(-135) + (trig_cos(state.global.time_counter * 12) * speed_1d) / (80 * ONE) + scalar_mul(state.in_game.gun_animation_timer_sqrt, 50);
+			gun_transform.position.x = SCALAR(145);// + (trig_sin(state.global.time_counter * 6) * speed_1d) / (40 * ONE);
+			gun_transform.position.y = SCALAR(-135);// + (trig_cos(state.global.time_counter * 12) * speed_1d) / (80 * ONE) + scalar_mul(state.in_game.gun_animation_timer_sqrt, 50);
 			gun_transform.position.z = SCALAR(125) - scalar_mul(state.in_game.gun_animation_timer_sqrt, 225);
 		}
 		if (widescreen) gun_transform.position.x += 30;
@@ -232,7 +232,7 @@ void state_update_in_game(int dt) {
 	mem_stack_release(STACK_TEMP);
 }
 
-void draw_debug_info(int dt, const int n_sections) {
+void draw_debug_info(scalar_t dt, const int n_sections) {
 #if defined(_DEBUG) && defined(_PSX)
     // Run the game logic within PROFILE calls, which prints the time (in hblanks) a function took to complete
     PROFILE("input", input_update(), 1);
@@ -306,18 +306,18 @@ void draw_hud(void) {
         renderer_draw_2d_quad_axis_aligned((vec2_t){(256 + 80) * ONE, 210 * ONE}, (vec2_t){31 * ONE, 20 * ONE}, (vec2_t){130 * ONE, 0 * ONE}, (vec2_t){193 * ONE, 40 * ONE}, (pixel32_t){128, 128, 128, 255}, 3, 5, TEX_CAT_MISC);
 }
 
-void fps_counter(int dt) {
-    static int timer = 0;
+void fps_counter(scalar_t dt) {
+    static scalar_t timer = 0;
     static int prev_frame_counter = 0;
 
     // Format and render fps counter
     timer += dt;
-    if (timer > 1000) {
-        timer -= 1000;
+    if (timer > SCALAR(1.0)) {
+        timer -= SCALAR(1.0);
         fps = state.global.frame_counter - prev_frame_counter;
         prev_frame_counter = state.global.frame_counter;
     }
-    if (state.global.frame_counter) snprintf(debug_text_buffer, 64, "%i fps\n%i ms", fps, dt);
+    if (state.global.frame_counter) snprintf(debug_text_buffer, 64, "%i fps\n%i ms", fps, (dt * 1000) / SCALAR(1.0));
     renderer_draw_text((vec2_t){32 * ONE, 32 * ONE}, debug_text_buffer, 0, 0, (fps >= 30) ? green : red);
 }
 
@@ -333,22 +333,22 @@ void benchmark_mode(void) {
     };
 
     // Teleport to each position for 5 sec
-    const int teleport_index = state.global.time_counter / (1000 * 5);
+    const int teleport_index = state.global.time_counter / SCALAR(5);
     if (teleport_index < 4) {
         state.in_game.player.position = benchmark_positions[teleport_index].position;
         state.in_game.player.rotation = benchmark_positions[teleport_index].rotation;
     }
 }
 
-void update_screen_shake_intensity(int dt) {
+void update_screen_shake_intensity(scalar_t dt) {
     if (state.in_game.screen_shake_intensity_position > 0) {
-        state.in_game.screen_shake_intensity_position -= state.in_game.screen_shake_dampening_position * dt;
+        state.in_game.screen_shake_intensity_position -= scalar_mul(state.in_game.screen_shake_dampening_position, dt);
         if (state.in_game.screen_shake_intensity_position < 0) {
             state.in_game.screen_shake_intensity_position = 0;
         }
     }
     if (state.in_game.screen_shake_intensity_rotation > 0) {
-        state.in_game.screen_shake_intensity_rotation -= state.in_game.screen_shake_dampening_rotation * dt;
+        state.in_game.screen_shake_intensity_rotation -= scalar_mul(state.in_game.screen_shake_dampening_rotation, dt);
         if (state.in_game.screen_shake_intensity_rotation < 0) {
             state.in_game.screen_shake_intensity_rotation = 0;
         }

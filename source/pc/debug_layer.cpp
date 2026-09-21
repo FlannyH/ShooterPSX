@@ -260,7 +260,7 @@ bool inspect_entity(size_t entity_id) {
                     trigger->data_text.color.b = (uint8_t)(rgb[2] * 255.f);
                 }
                 result |= ImGui::InputInt("Text entry ID", &trigger->data_text.id, 1, 5);
-                result |= ImGui::InputInt("Display time", &trigger->data_text.total_display_time_ms, 1, 100);
+                result |= inspect_scalar(&trigger->data_text.total_display_time, "Display time");
             }
             else if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_SIGNAL) {
                 result |= ImGui::InputInt("Signal ID", &trigger->signal.id, 1, 5);

@@ -24,7 +24,7 @@ int entity_signals[ENTITY_SIGNAL_COUNT];
 
 // todo(entity_overflow): desc:figure out what i meant by "figure out why entities seem to overflow"
 
-void entity_update_all(player_t* player, int dt) {
+void entity_update_all(player_t* player, scalar_t dt) {
 	// Reset counters
 	entity_n_active_aabb = 0;
 

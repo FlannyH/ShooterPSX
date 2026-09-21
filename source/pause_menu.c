@@ -31,7 +31,7 @@
 
 void state_enter_pause_menu(void) {}
 
-void state_update_pause_menu(int dt) {
+void state_update_pause_menu(scalar_t dt) {
 	(void)dt;
 	renderer_begin_frame(&id_transform);
 	input_update();

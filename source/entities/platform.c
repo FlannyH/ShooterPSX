@@ -25,7 +25,7 @@ entity_platform_t* entity_platform_new(void) {
 	return entity;
 }
 
-void entity_platform_update(int slot, player_t* player, int dt) {
+void entity_platform_update(int slot, player_t* player, scalar_t dt) {
 	(void)player;
 	(void)dt;
 

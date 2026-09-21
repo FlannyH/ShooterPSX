@@ -39,7 +39,7 @@ void state_enter_credits(void) {
 	return;
 }
 
-void state_update_credits(int dt) {
+void state_update_credits(scalar_t dt) {
 	renderer_begin_frame(&id_transform);
 	ui_render_background();
 
@@ -47,7 +47,7 @@ void state_update_credits(int dt) {
 		renderer_draw_text((vec2_t){256 * ONE, (state.credits.scroll + i * 16 * ONE) + (256 * ONE)}, text_credits[i], 1, 1, white);
 	}
 
-	state.credits.scroll -= dt * 140;
+	state.credits.scroll -= dt * 32;
 	renderer_end_frame();
 	input_update();
 
