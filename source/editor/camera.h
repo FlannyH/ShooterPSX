@@ -18,7 +18,7 @@ typedef struct {
 } debug_camera_t;
 
 debug_camera_t debug_camera_new(void);
-void debug_camera_update(debug_camera_t* self, const int dt_ms, const int register_input);
+void debug_camera_update(debug_camera_t* self, const scalar_t dt, const int register_input);
 
 #ifdef __cplusplus
 }

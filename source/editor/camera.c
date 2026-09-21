@@ -13,13 +13,13 @@ debug_camera_t debug_camera_new(void) {
             .scale = vec3_from_scalar(ONE)
         },
         .velocity = vec3_from_scalar(0),
-        .max_speed = 32768,
-        .drag = 1024,
-        .acceleration = 512,
+        .max_speed = SCALAR(100),
+        .drag = SCALAR(7),
+        .acceleration = SCALAR(14),
     };
 }
 
-void debug_camera_update(debug_camera_t* self, const int dt_ms, const int register_input) {
+void debug_camera_update(debug_camera_t* self, const scalar_t dt, const int register_input) {
     // Change max move speed based on scroll input
     if (input_mouse_scroll() > 0) {
         self->max_speed = scalar_mul(self->max_speed, scalar_from_float(1.1f));
@@ -30,71 +30,72 @@ void debug_camera_update(debug_camera_t* self, const int dt_ms, const int regist
 
     if (register_input) {
         // Moving forwards and backwards
-        self->velocity.x += trig_sin(self->transform.rotation.y) * input_left_stick_y(0) * (self->acceleration * dt_ms) >> 16;
-        self->velocity.z += trig_cos(self->transform.rotation.y) * input_left_stick_y(0) * (self->acceleration * dt_ms) >> 16;
+        const vec3_t forward = (vec3_t) {
+            trig_sin(self->transform.rotation.y),
+            0,
+            trig_cos(self->transform.rotation.y)
+        };
 
-        // Strafing left and right
-        self->velocity.x += trig_cos(self->transform.rotation.y) * input_left_stick_x(0) * (self->acceleration * dt_ms) >> 16;
-        self->velocity.z -= trig_sin(self->transform.rotation.y) * input_left_stick_x(0) * (self->acceleration * dt_ms) >> 16;
+        const vec3_t right = (vec3_t) {
+            forward.z,
+            0,
+            -forward.x
+        };
+
+        const vec2_t stick_left = (vec2_t) {
+            SCALAR((float)input_left_stick_x(0) / 127.0f),
+            SCALAR((float)input_left_stick_y(0) / 127.0f)
+        };
+
+        const vec2_t stick_right = (vec2_t) {
+            SCALAR((float)input_right_stick_x(0) / 127.0f),
+            SCALAR((float)input_right_stick_y(0) / 127.0f)
+        };
+
+        const vec2_t mouse_delta = (vec2_t) {
+            SCALAR(input_mouse_movement_x()),
+            SCALAR(input_mouse_movement_y())
+        };
+
+        // Moving horizontally
+        self->velocity = vec3_add(self->velocity, vec3_muls(forward, scalar_mul(scalar_mul(stick_left.y, self->acceleration * PLAYER_VELOCITY_PRECISION), dt)));
+        self->velocity = vec3_add(self->velocity, vec3_muls(right, scalar_mul(scalar_mul(stick_left.x, self->acceleration * PLAYER_VELOCITY_PRECISION), dt)));
 
         // Moving up and down
-        self->velocity.y -= input_held(PAD_SQUARE, 0) ? self->acceleration * dt_ms * 127 : 0;
-        self->velocity.y += input_held(PAD_CROSS, 0) ? self->acceleration * dt_ms * 127 : 0;
+        if (input_held(PAD_SQUARE, 0)) self->velocity.y -= scalar_mul(self->acceleration * PLAYER_VELOCITY_PRECISION, dt);
+        if (input_held(PAD_CROSS, 0))  self->velocity.y += scalar_mul(self->acceleration * PLAYER_VELOCITY_PRECISION, dt);
+
+        // Looking up and down
+        self->transform.rotation.x += scalar_mul(scalar_mul(-stick_right.y, dt), stick_sensitivity);
+        self->transform.rotation.x += scalar_mul(scalar_mul(-mouse_delta.y, dt), mouse_sensitivity);
+        self->transform.rotation.x = scalar_clamp(self->transform.rotation.x, SCALAR(-0.22), SCALAR(0.22));
+
+        // Looking left and right
+        self->transform.rotation.y += scalar_mul(scalar_mul(-stick_right.x, dt), stick_sensitivity);
+        self->transform.rotation.y += scalar_mul(scalar_mul(-mouse_delta.x, dt), mouse_sensitivity);
     }
 
     // Implement drag
     {
-        // Calculate magnitude for velocity on X and Z axes
-        const scalar_t max_speed = self->max_speed;
-        const scalar_t drag = self->drag * dt_ms;
-        scalar_t velocity_x = self->velocity.x;
-        scalar_t velocity_z = self->velocity.z;
-        const scalar_t velocity_x2 = scalar_mul(velocity_x, velocity_x);
-        const scalar_t velocity_z2 = scalar_mul(velocity_z, velocity_z);
-        const scalar_t velocity_magnitude_squared = (velocity_x2 + velocity_z2);
-        scalar_t velocity_scalar = scalar_sqrt(velocity_magnitude_squared);
+        scalar_t curr_drag = scalar_mul(drag, dt);
 
-        // Normalize the speed
-        velocity_x = scalar_div(velocity_x, velocity_scalar);
-        velocity_z = scalar_div(velocity_z, velocity_scalar);
-
-        // Clamp magnitude
-        if (velocity_scalar > max_speed) {
-            velocity_scalar = max_speed - drag;
+        const scalar_t length = vec3_magnitude(self->velocity);
+        const vec3_t dir = vec3_divs(self->velocity, length);
+        if (length > (walking_max_speed * PLAYER_VELOCITY_PRECISION)) {
+            self->velocity = vec3_muls(dir, length);
         }
-        // Apply drag
-        else if (velocity_scalar > drag) {
-            velocity_scalar -= drag;
+        else if (length > (curr_drag * PLAYER_VELOCITY_PRECISION)) {
+            self->velocity = vec3_sub(self->velocity, vec3_muls(dir, curr_drag * PLAYER_VELOCITY_PRECISION));
         }
         else {
-            velocity_scalar = 0;
+            self->velocity.x = 0;
+            self->velocity.y = 0;
+            self->velocity.z = 0;
         }
-
-        // Apply new magnitude to the velocity
-        velocity_x = scalar_mul(velocity_x, (velocity_scalar));
-        velocity_z = scalar_mul(velocity_z, (velocity_scalar));
-
-        // Put it back in the velocity component
-        self->velocity.x = velocity_x;
-        self->velocity.z = velocity_z;
-
-        // Now for the Y axis
-        scalar_t velocity_y_scalar = abs(self->velocity.y);
-        if (velocity_y_scalar > max_speed) {
-            velocity_y_scalar = max_speed - drag;
-        }
-        else if (velocity_y_scalar > drag) {
-            velocity_y_scalar -= drag;
-        }
-        else {
-            velocity_y_scalar = 0;
-        }
-        if (self->velocity.y < 0) velocity_y_scalar *= -1;
-        self->velocity.y = velocity_y_scalar;
     }
 
     // Move the player based on velocity
-    self->transform.position = vec3_add(self->transform.position, vec3_muls(self->velocity, dt_ms * ONE));
+    self->transform.position = vec3_add(self->transform.position, vec3_divs(vec3_muls(self->velocity, dt), PLAYER_VELOCITY_PRECISION));
 
     if (register_input) {
         // Look up and down
