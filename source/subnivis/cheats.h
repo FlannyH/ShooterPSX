@@ -10,9 +10,9 @@ extern "C" {
 #ifdef _PSX
 #include <psxpad.h>
 #elif defined(_NDS)
-#include "nds/psx.h"
+#include "engine/nds/psx.h"
 #else
-#include "pc/psx.h"
+#include "engine/pc/psx.h"
 #endif
 
 // Cheats are defined in reverse order, it was easier to implement that way

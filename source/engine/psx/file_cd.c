@@ -1,7 +1,7 @@
 #ifdef _PSX
 #include "../common.h"
-#include "file.h"
-#include "memory.h"
+#include "../file.h"
+#include "../memory.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -29,7 +29,7 @@ void seek_in_archive(int offset_bytes) {
 
 void file_init(const char* path) {
 	CdInit();
-    
+
     // Convert to upper case
     const size_t length = strlen(path) + 1; // Include the null terminator
     char* new_path = mem_stack_alloc(length, STACK_TEMP);

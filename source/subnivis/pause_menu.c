@@ -1,15 +1,15 @@
 #include "main.h"
-#include "common.h"
+#include "engine/common.h"
 
 #include <string.h>
 
-#include "renderer.h"
-#include "memory.h"
-#include "cheats.h"
+#include "engine/renderer.h"
+#include "engine/memory.h"
+#include "subnivis/cheats.h"
 #include "subnivis/input_map.h"
-#include "input_mapping.h"
-#include "music.h"
-#include "text.h"
+#include "engine/input_mapping.h"
+#include "engine/music.h"
+#include "subnivis/text.h"
 #include "ui.h"
 
 #ifdef _PSX
@@ -21,12 +21,12 @@
 #endif
 
 #ifdef _PC
-#include "pc/psx.h"
-#include "pc/debug_layer.h"
+#include "engine/pc/psx.h"
+#include "engine/pc/debug_layer.h"
 #endif
 
 #ifdef _NDS
-#include "nds/psx.h"
+#include "engine/nds/psx.h"
 #include <filesystem.h>
 #endif
 

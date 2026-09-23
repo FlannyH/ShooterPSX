@@ -6,9 +6,9 @@
 #include "music.h"
 #include "mesh.h"
 #include "file.h"
+#include "entity.h"
 
 #include <assert.h>
-#include <entity.h>
 #include <string.h>
 
 void serialize_shape(uint8_t* shapes, size_t* cursor, const shape_t* shape) {

@@ -54,60 +54,60 @@ PATH_LIB_PSX = $(PSN00BSDK_LIBS)/release
 PATH_LIB_NDS = $(BLOCKSDS)/libs/libnds/lib
 
 # Source files shared by all targets
-CODE_ENGINE_SHARED_C = collision.c \
-			  	  	   level.c \
-			  	  	   memory.c \
-			  	  	   mesh.c \
-			  	  	   music.c \
-			  	  	   input_mapping.c \
-			  	  	   renderer_shared.c \
-					   texture.c \
-					   texture_pool.c \
-					   text.c \
+CODE_ENGINE_SHARED_C = engine/collision.c \
+			  	  	   engine/level.c \
+			  	  	   engine/memory.c \
+			  	  	   engine/mesh.c \
+			  	  	   engine/music.c \
+			  	  	   engine/input_mapping.c \
+			  	  	   engine/renderer_shared.c \
+					   engine/texture.c \
+					   engine/texture_pool.c \
 			  	  	   ui.c \
-			  	  	   entity.c \
-			  	  	   vislist.c \
+			  	  	   engine/entity.c \
+			  	  	   engine/vislist.c \
 					   test/test.c
 
-CODE_GAME_C = 		   debug_menu_main.c \
-					   debug_menu_music.c \
-					   debug_menu_level.c \
-					   title_screen.c \
-					   pause_menu.c \
-					   settings.c \
-					   credits.c \
-					   in_game.c \
-			  	  	   player.c \
+CODE_GAME_C = 		   subnivis/debug_menu_main.c \
+					   subnivis/debug_menu_music.c \
+					   subnivis/debug_menu_level.c \
+					   subnivis/title_screen.c \
+					   subnivis/pause_menu.c \
+					   subnivis/settings.c \
+					   subnivis/credits.c \
+					   subnivis/in_game.c \
+			  	  	   subnivis/player.c \
 				  	   entities/platform.c \
 				  	   entities/trigger.c \
 				  	   entities/pickup.c \
 				  	   entities/chaser.c \
 				  	   entities/crate.c \
+					   subnivis/text.c \
 				  	   entities/door.c
 
 # Source files specific to PSX
-CODE_ENGINE_PSX_C = psx/file.c \
-				    psx/input.c \
-				    psx/mesh.c \
-				    psx/mixer.c \
-				    psx/renderer.c
+CODE_ENGINE_PSX_C = engine/psx/file.c \
+				    engine/psx/input.c \
+				    engine/psx/mesh.c \
+				    engine/psx/mixer.c \
+				    engine/psx/renderer.c
 
 # Source files specific to PC
-CODE_ENGINE_PC_C =   pc/file.c \
-				     pc/input.c \
-				     pc/mesh.c \
-				     pc/mixer.c \
-				     pc/psx.c \
-				     pc/renderer.c
-CODE_ENGINE_PC_CPP = pc/debug_layer.cpp
+CODE_ENGINE_PC_C =   engine/pc/file.c \
+				     engine/pc/input.c \
+				     engine/pc/mesh.c \
+				     engine/pc/mixer.c \
+				     engine/pc/psx.c \
+				     engine/pc/renderer.c
+CODE_ENGINE_PC_CPP = engine/pc/debug_layer.cpp
 
 # Source files specific to NDS
-CODE_ENGINE_NDS_C = nds/psx.c \
-				    nds/file.c \
-				    nds/input.c \
-				    nds/mesh.c \
-				    nds/mixer.c \
-				    nds/renderer.c
+CODE_ENGINE_NDS_C = engine/nds/psx.c \
+				    engine/nds/file.c \
+				    engine/nds/input.c \
+				    engine/nds/mesh.c \
+				    engine/nds/mixer.c \
+				    engine/nds/renderer.c
 
 # Where the object files go
 PATH_OBJ_PSX = $(PATH_TEMP_PSX)/obj

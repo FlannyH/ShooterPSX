@@ -1,24 +1,24 @@
 #include "player.h"
-#include "collision.h"
-#include "math/vec2.h"
-#include "math/vec3.h"
+#include "engine/collision.h"
+#include "engine/math/vec2.h"
+#include "engine/math/vec3.h"
 
 #ifdef _PSX
 #include <psxpad.h>
 #endif
 
 #ifdef _PC
-#include "pc/psx.h"
+#include "engine/pc/psx.h"
 #endif
 
 #ifdef _NDS
-#include "nds/psx.h"
+#include "engine/nds/psx.h"
 #endif
 
 #include "subnivis/input_map.h"
-#include "input_mapping.h"
-#include "music.h"
-#include "random.h"
+#include "engine/input_mapping.h"
+#include "engine/music.h"
+#include "engine/random.h"
 
 #define FOOTSTEP_TIMER_MAX 350
 

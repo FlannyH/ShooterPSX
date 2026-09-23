@@ -1,8 +1,7 @@
 #include "ui.h"
-#include "common.h"
 
-#include "renderer.h"
-#include "math/vec2.h"
+#include "engine/renderer.h"
+#include "engine/math/vec2.h"
 
 void ui_render_background() {
 #if defined(_PSX) || defined(_PC)

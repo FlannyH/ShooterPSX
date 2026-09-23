@@ -1,10 +1,10 @@
 #include "pickup.h"
 
-#include "../renderer.h"
-#include "../mesh.h"
-#include "../main.h"
+#include "engine/renderer.h"
+#include "engine/mesh.h"
+#include "subnivis/main.h"
 
-#include "../music.h"
+#include "engine/music.h"
 
 entity_pickup_t* entity_pickup_new(void) {
 	// Allocate memory for the entity

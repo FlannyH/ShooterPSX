@@ -1,9 +1,9 @@
 #include "main.h"
 
 #include "subnivis/input_map.h"
-#include "input_mapping.h"
-#include "renderer.h"
-#include "text.h"
+#include "engine/input_mapping.h"
+#include "engine/renderer.h"
+#include "subnivis/text.h"
 #include "ui.h"
 
 #ifdef _PSX
@@ -15,12 +15,12 @@
 #endif
 
 #ifdef _PC
-#include "pc/psx.h"
-#include "pc/debug_layer.h"
+#include "engine/pc/psx.h"
+#include "engine/pc/debug_layer.h"
 #endif
 
 #ifdef _NDS
-#include "nds/psx.h"
+#include "engine/nds/psx.h"
 #include <filesystem.h>
 #endif
 

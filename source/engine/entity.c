@@ -8,7 +8,7 @@
 #include "entities/door.h"
 #include "renderer.h"
 #include "mesh.h"
-#include "main.h"
+#include "subnivis/main.h"
 
 #include <string.h>
 extern state_vars_t state;

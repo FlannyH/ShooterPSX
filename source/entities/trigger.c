@@ -1,7 +1,7 @@
 #include "trigger.h"
 
-#include "../renderer.h"
-#include "../main.h"
+#include "engine/renderer.h"
+#include "subnivis/main.h"
 
 extern state_vars_t state;
 

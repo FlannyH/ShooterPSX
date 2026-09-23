@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "../entity.h"
+#include "engine/entity.h"
 
 typedef struct {
 	entity_header_t entity_header;

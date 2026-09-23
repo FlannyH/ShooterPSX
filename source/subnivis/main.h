@@ -6,8 +6,8 @@ extern "C" {
 #endif
 
 #include "player.h"
-#include "level.h"
-#include "math/vec3.h"
+#include "engine/level.h"
+#include "engine/math/vec3.h"
 
 typedef enum {
     STATE_NONE,

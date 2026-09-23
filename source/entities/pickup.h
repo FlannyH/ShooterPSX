@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "../entity.h"
+#include "engine/entity.h"
 
 typedef enum {
 	PICKUP_TYPE_NONE,

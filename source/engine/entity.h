@@ -1,12 +1,12 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
+#include "subnivis/player.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "structs.h"
-#include "player.h"
 
 #include <stdint.h>
 #include <stdio.h>

@@ -6,8 +6,8 @@ extern "C" {
 #endif
 
 #define GLFW_INCLUDE_NONE
-#include "../level.h"
-#include "../player.h"
+#include "engine/level.h"
+#include "subnivis/player.h"
 
 #include <GLFW/glfw3.h>
 

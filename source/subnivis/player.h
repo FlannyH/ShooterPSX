@@ -5,10 +5,10 @@
 extern "C" {
 #endif
 
-#include "math/scalar.h"
-#include "structs.h"
-#include "level.h"
-#include "math/vec3.h"
+#include "engine/math/scalar.h"
+#include "engine/structs.h"
+#include "engine/level.h"
+#include "engine/math/vec3.h"
 
 #define MAX_HEALTH 100
 #define MAX_ARMOR 50

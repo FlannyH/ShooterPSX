@@ -1,4 +1,4 @@
-#include "input.h"
+#include "../input.h"
 #include "../common.h"
 
 #include "../math/scalar.h"

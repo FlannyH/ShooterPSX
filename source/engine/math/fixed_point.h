@@ -8,7 +8,7 @@ extern "C" {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 
-#include "common.h"
+#include "../common.h"
 #include "../lut.h"
 
 #include <stdint.h>

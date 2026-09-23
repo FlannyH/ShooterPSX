@@ -1,5 +1,5 @@
-#include "mesh.h"
-#include "file.h"
+#include "../mesh.h"
+#include "../file.h"
 
 #include <assert.h>
 #include <stddef.h>

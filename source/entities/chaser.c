@@ -1,9 +1,9 @@
 #include "chaser.h"
 
-#include "../random.h"
-#include "../renderer.h"
-#include "../mesh.h"
-#include "../main.h"
+#include "engine/random.h"
+#include "engine/renderer.h"
+#include "engine/mesh.h"
+#include "subnivis/main.h"
 
 extern state_vars_t state;
 #define CHASER_BEHAVIOUR_PERIOD 16

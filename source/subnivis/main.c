@@ -1,12 +1,12 @@
 #include "main.h"
 
-#include "input.h"
-#include "input_mapping.h"
-#include "input_map.h"
-#include "music.h"
-#include "file.h"
-#include "player.h"
-#include "renderer.h"
+#include "engine/input.h"
+#include "engine/input_mapping.h"
+#include "engine/music.h"
+#include "engine/file.h"
+#include "engine/renderer.h"
+#include "subnivis/player.h"
+#include "subnivis/input_map.h"
 
 #ifdef _DEBUG
 #include "test/test.h"
@@ -21,8 +21,8 @@
 #endif
 
 #ifdef _PC
-#include "pc/psx.h"
-#include "pc/debug_layer.h"
+#include "engine/pc/psx.h"
+#include "engine/pc/debug_layer.h"
 #endif
 
 #ifdef _NDS

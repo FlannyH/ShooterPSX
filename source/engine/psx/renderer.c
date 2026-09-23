@@ -8,11 +8,11 @@
 
 #include "../common.h"
 
-#include "math/fixed_point.h"
-#include "texture_pool.h"
-#include "collision.h"
-#include "particles.h"
-#include "lut.h"
+#include "../math/fixed_point.h"
+#include "../texture_pool.h"
+#include "../collision.h"
+#include "../particles.h"
+#include "../lut.h"
 
 #define TRI_THRESHOLD_MUL_SUB2_30 3
 #define TRI_THRESHOLD_MUL_SUB1_30 7

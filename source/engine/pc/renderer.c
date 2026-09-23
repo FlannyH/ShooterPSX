@@ -15,12 +15,12 @@
 #include "../texture_pool.h"
 #include "../common.h"
 #include "debug_layer.h"
-#include "renderer.h"
-#include "memory.h"
-#include "input.h"
-#include "file.h"
-#include "math/vec3.h"
-#include "lut.h"
+#include "../renderer.h"
+#include "../memory.h"
+#include "../input.h"
+#include "../file.h"
+#include "../math/vec3.h"
+#include "../lut.h"
 
 #define PI 3.14159265358979f
 #define RESOLUTION_SCALING 4

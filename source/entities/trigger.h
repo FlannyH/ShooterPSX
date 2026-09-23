@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-#include "../entity.h"
-#include "../texture.h"
+#include "engine/entity.h"
+#include "engine/texture.h"
 
 typedef enum {
     ENTITY_TRIGGER_TYPE_NONE,

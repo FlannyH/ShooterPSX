@@ -1,5 +1,5 @@
 #include "main.h"
-#include "common.h"
+#include "engine/common.h"
 
 #include "entities/platform.h"
 #include "entities/trigger.h"
@@ -8,16 +8,16 @@
 #include "entities/crate.h"
 #include "entities/door.h"
 #include "subnivis/input_map.h"
-#include "math/fixed_point.h"
-#include "input_mapping.h"
-#include "renderer.h"
-#include "entity.h"
-#include "random.h"
-#include "memory.h"
-#include "level.h"
-#include "music.h"
-#include "mesh.h"
-#include "text.h"
+#include "engine/math/fixed_point.h"
+#include "engine/input_mapping.h"
+#include "engine/renderer.h"
+#include "engine/entity.h"
+#include "engine/random.h"
+#include "engine/memory.h"
+#include "engine/level.h"
+#include "engine/music.h"
+#include "engine/mesh.h"
+#include "subnivis/text.h"
 
 #ifdef _PSX
 #include <psxcd.h>
@@ -28,12 +28,12 @@
 #endif
 
 #ifdef _PC
-#include "pc/psx.h"
-#include "pc/debug_layer.h"
+#include "engine/pc/psx.h"
+#include "engine/pc/debug_layer.h"
 #endif
 
 #ifdef _NDS
-#include "nds/psx.h"
+#include "engine/nds/psx.h"
 #include <nds.h>
 #include <filesystem.h>
 #endif

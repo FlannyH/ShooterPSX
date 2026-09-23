@@ -1,5 +1,5 @@
-#include "music.h"
-#include "memory.h"
+#include "../music.h"
+#include "../memory.h"
 #include <portaudio.h>
 #include <string.h>
 #include <math.h>

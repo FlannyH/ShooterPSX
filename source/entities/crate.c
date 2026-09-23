@@ -1,9 +1,9 @@
 #include "crate.h"
 
 #include "pickup.h"
-#include "../renderer.h"
-#include "../mesh.h"
-#include "../main.h"
+#include "engine/renderer.h"
+#include "engine/mesh.h"
+#include "subnivis/main.h"
 
 entity_crate_t* entity_crate_new(void) {
 	// Allocate memory for the entity

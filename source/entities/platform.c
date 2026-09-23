@@ -1,8 +1,8 @@
 #include "platform.h"
 
-#include "../renderer.h"
-#include "../mesh.h"
-#include "../main.h"
+#include "engine/renderer.h"
+#include "engine/mesh.h"
+#include "subnivis/main.h"
 
 entity_platform_t* entity_platform_new(void) {
 	// Allocate memory for the entity

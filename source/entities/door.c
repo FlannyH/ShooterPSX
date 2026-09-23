@@ -1,11 +1,11 @@
 #include "door.h"
 
-#include "../renderer.h"
-#include "../common.h"
-#include "../music.h"
-#include "../mesh.h"
-#include "../main.h"
-#include "../math/vec3.h"
+#include "engine/renderer.h"
+#include "engine/common.h"
+#include "engine/music.h"
+#include "engine/mesh.h"
+#include "subnivis/main.h"
+#include "engine/math/vec3.h"
 
 entity_door_t* entity_door_new(void) {
 	// Allocate memory for the entity
