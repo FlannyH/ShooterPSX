@@ -334,7 +334,7 @@ vec3_t epa(convex_hull_mesh_t* polytope, shape_t* shape1, shape_t* shape2) {
 
         dump_current_simplex(attempt, polytope, closest_face_index);
 
-        if ((distance_support_to_origin - closest_face.distance) < SCALAR(0.1f)) {
+        if ((distance_support_to_origin - closest_face.distance) < SCALAR(0.4f)) {
             goto eh_close_enough;
         }
 

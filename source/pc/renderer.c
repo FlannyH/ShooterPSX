@@ -255,6 +255,8 @@ int renderer_height(void) {
 }
 
 void renderer_init(void) {
+   	// workaround to make renderdoc capture things properly on my wayland setup
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
 	glfwInit();
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);

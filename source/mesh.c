@@ -135,7 +135,7 @@ size_t get_face_normals(convex_hull_mesh_t* polytope, size_t start_index, vec3_t
         vec3_t normal = vec3_normalize(vec3_cross_lh(ab, ac));
         scalar_t distance = vec3_dot(normal, center_to_a);
         if (normal.x == 0 && normal.z == 0 && normal.y == 0) {
-            normal = vec3_normalize(vec3_cross_lh(ab, ac));
+            normal = vec3_cross_lh(ab, ac);
         }
 
         if (distance < 0) {
