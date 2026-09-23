@@ -1,303 +1,216 @@
 #include "input.h"
-
-#include "pc/psx.h"
-
-#include <GL/gl3w.h>
-
-#include <GLFW/glfw3.h>
-#include <stdio.h>
+#include "GLFW/glfw3.h"
+#include <string.h>
 
 extern GLFWwindow* window;
-int16_t left_stick_x[2] = { 0, 0 };
-int16_t left_stick_y[2] = { 0, 0 };
-int16_t right_stick_x[2] = { 0, 0 };
-int16_t right_stick_y[2] = { 0, 0 };
-uint16_t button_prev[2] = { 0, 0 };
-uint16_t button_curr[2] = { 0, 0 };
 int8_t deadzone = 24;
-int8_t currently_active_deadzone = 24;
-int keyboard_focus = 1;
-int player1_index = -1;
-int player2_index = -1;
-int button_pressed_this_frame = 0;
 int mouse_lock = 0;
 int mouse_lock_prev = 0;
-double cursor_pos_prev_x = 0.0;
-double cursor_pos_prev_y = 0.0;
-double cursor_pos_x = 0.0;
-double cursor_pos_y = 0.0;
-double mouse_scroll_incoming = 0.0;
-double mouse_scroll_curr = 0.0;
-double mouse_scroll_prev = 0.0;
-uint16_t input_buffer[32];
 
-void input_scroll_callback(GLFWwindow* window, double x_offset, double y_offset) {
+#define MAX_CONTROLLERS 4
+
+// callbacks write here
+scalar_t state_new_gamepad[N_INPUT_GAMEPAD][MAX_CONTROLLERS];
+scalar_t state_new_keyboard[N_INPUT_KEY];
+scalar_t state_new_mouse[N_INPUT_MOUSE];
+
+// then move down here the next input_update()
+scalar_t state_curr_gamepad[N_INPUT_GAMEPAD][MAX_CONTROLLERS];
+scalar_t state_curr_keyboard[N_INPUT_KEY];
+scalar_t state_curr_mouse[N_INPUT_MOUSE];
+
+// which then moves down here the next frame, so we can check presses and releases
+scalar_t state_prev_gamepad[N_INPUT_GAMEPAD][MAX_CONTROLLERS];
+scalar_t state_prev_keyboard[N_INPUT_KEY];
+scalar_t state_prev_mouse[N_INPUT_MOUSE];
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     (void)window;
-    (void)x_offset;
-    mouse_scroll_incoming += y_offset;
+    (void)mods;
+
+    // convert mouse button to our own enum
+    size_t state_mouse_index = 0;
+    switch (button) {
+        default: return;
+        case GLFW_MOUSE_BUTTON_LEFT: state_mouse_index = INPUT_MOUSE_BUTTON_LEFT; break;
+        case GLFW_MOUSE_BUTTON_RIGHT: state_mouse_index = INPUT_MOUSE_BUTTON_RIGHT; break;
+        case GLFW_MOUSE_BUTTON_MIDDLE: state_mouse_index = INPUT_MOUSE_BUTTON_MIDDLE; break;
+    }
+
+    // what did we do with the button?
+    switch (action) {
+        default: return;
+        case GLFW_PRESS: state_new_mouse[state_mouse_index] = SCALAR(1.0); break;
+        case GLFW_RELEASE: state_new_mouse[state_mouse_index] = SCALAR(0.0); break;
+    }
+}
+
+void scroll_callback(GLFWwindow* window, double x, double y) {
+    (void)window;
+
+    state_new_mouse[INPUT_MOUSE_WHEEL_X] += SCALAR(x);
+    state_new_mouse[INPUT_MOUSE_WHEEL_Y] += SCALAR(y);
+}
+
+void mouse_pos_callback(GLFWwindow* window, double x, double y) {
+    (void)window;
+
+    state_new_mouse[INPUT_MOUSE_POS_X] = SCALAR(x);
+    state_new_mouse[INPUT_MOUSE_POS_Y] = SCALAR(y);
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    (void)window;
+    (void)scancode;
+    (void)mods;
+
+    size_t state_keyboard_index = 0;
+    switch (key) {
+        case GLFW_KEY_ESCAPE: state_keyboard_index = INPUT_KEY_ESC; break;
+        case GLFW_KEY_F1: state_keyboard_index = INPUT_KEY_F1; break;
+        case GLFW_KEY_F2: state_keyboard_index = INPUT_KEY_F2; break;
+        case GLFW_KEY_F3: state_keyboard_index = INPUT_KEY_F3; break;
+        case GLFW_KEY_F4: state_keyboard_index = INPUT_KEY_F4; break;
+        case GLFW_KEY_F5: state_keyboard_index = INPUT_KEY_F5; break;
+        case GLFW_KEY_F6: state_keyboard_index = INPUT_KEY_F6; break;
+        case GLFW_KEY_F7: state_keyboard_index = INPUT_KEY_F7; break;
+        case GLFW_KEY_F8: state_keyboard_index = INPUT_KEY_F8; break;
+        case GLFW_KEY_F9: state_keyboard_index = INPUT_KEY_F9; break;
+        case GLFW_KEY_F10: state_keyboard_index = INPUT_KEY_F10; break;
+        case GLFW_KEY_F11: state_keyboard_index = INPUT_KEY_F11; break;
+        case GLFW_KEY_F12: state_keyboard_index = INPUT_KEY_F12; break;
+        case GLFW_KEY_GRAVE_ACCENT: state_keyboard_index = INPUT_KEY_BACKTICK; break;
+        case GLFW_KEY_MINUS: state_keyboard_index = INPUT_KEY_MINUS; break;
+        case GLFW_KEY_EQUAL: state_keyboard_index = INPUT_KEY_EQUALS; break;
+        case GLFW_KEY_BACKSPACE: state_keyboard_index = INPUT_KEY_BACKSPACE; break;
+        case GLFW_KEY_INSERT: state_keyboard_index = INPUT_KEY_INSERT; break;
+        case GLFW_KEY_HOME: state_keyboard_index = INPUT_KEY_HOME; break;
+        case GLFW_KEY_PAGE_UP: state_keyboard_index = INPUT_KEY_PAGE_UP; break;
+        case GLFW_KEY_TAB: state_keyboard_index = INPUT_KEY_TAB; break;
+        case GLFW_KEY_LEFT_BRACKET: state_keyboard_index = INPUT_KEY_BRACKET_OPEN; break;
+        case GLFW_KEY_RIGHT_BRACKET: state_keyboard_index = INPUT_KEY_BRACKET_CLOSE; break;
+        case GLFW_KEY_BACKSLASH: state_keyboard_index = INPUT_KEY_BACKSLASH; break;
+        case GLFW_KEY_CAPS_LOCK: state_keyboard_index = INPUT_KEY_CAPS_LOCK; break;
+        case GLFW_KEY_SEMICOLON: state_keyboard_index = INPUT_KEY_SEMICOLON; break;
+        case GLFW_KEY_APOSTROPHE: state_keyboard_index = INPUT_KEY_QUOTE; break;
+        case GLFW_KEY_ENTER: state_keyboard_index = INPUT_KEY_ENTER; break;
+        case GLFW_KEY_LEFT_SHIFT: state_keyboard_index = INPUT_KEY_LEFT_SHIFT; break;
+        case GLFW_KEY_COMMA: state_keyboard_index = INPUT_KEY_COMMA; break;
+        case GLFW_KEY_PERIOD: state_keyboard_index = INPUT_KEY_DOT; break;
+        case GLFW_KEY_SLASH: state_keyboard_index = INPUT_KEY_SLASH; break;
+        case GLFW_KEY_RIGHT_SHIFT: state_keyboard_index = INPUT_KEY_RIGHT_SHIFT; break;
+        case GLFW_KEY_LEFT_CONTROL: state_keyboard_index = INPUT_KEY_LEFT_CTRL; break;
+        case GLFW_KEY_LEFT_ALT: state_keyboard_index = INPUT_KEY_LEFT_ALT; break;
+        case GLFW_KEY_SPACE: state_keyboard_index = INPUT_KEY_SPACE; break;
+        case GLFW_KEY_RIGHT_ALT: state_keyboard_index = INPUT_KEY_RIGHT_ALT; break;
+        case GLFW_KEY_RIGHT_CONTROL: state_keyboard_index = INPUT_KEY_RIGHT_CTRL; break;
+        case GLFW_KEY_UP: state_keyboard_index = INPUT_KEY_UP; break;
+        case GLFW_KEY_DOWN: state_keyboard_index = INPUT_KEY_DOWN; break;
+        case GLFW_KEY_LEFT: state_keyboard_index = INPUT_KEY_LEFT; break;
+        case GLFW_KEY_RIGHT: state_keyboard_index = INPUT_KEY_RIGHT; break;
+        case GLFW_KEY_1: state_keyboard_index = INPUT_KEY_1; break;
+        case GLFW_KEY_2: state_keyboard_index = INPUT_KEY_2; break;
+        case GLFW_KEY_3: state_keyboard_index = INPUT_KEY_3; break;
+        case GLFW_KEY_4: state_keyboard_index = INPUT_KEY_4; break;
+        case GLFW_KEY_5: state_keyboard_index = INPUT_KEY_5; break;
+        case GLFW_KEY_6: state_keyboard_index = INPUT_KEY_6; break;
+        case GLFW_KEY_7: state_keyboard_index = INPUT_KEY_7; break;
+        case GLFW_KEY_8: state_keyboard_index = INPUT_KEY_8; break;
+        case GLFW_KEY_9: state_keyboard_index = INPUT_KEY_9; break;
+        case GLFW_KEY_0: state_keyboard_index = INPUT_KEY_0; break;
+        case GLFW_KEY_Q: state_keyboard_index = INPUT_KEY_Q; break;
+        case GLFW_KEY_W: state_keyboard_index = INPUT_KEY_W; break;
+        case GLFW_KEY_E: state_keyboard_index = INPUT_KEY_E; break;
+        case GLFW_KEY_R: state_keyboard_index = INPUT_KEY_R; break;
+        case GLFW_KEY_T: state_keyboard_index = INPUT_KEY_T; break;
+        case GLFW_KEY_Y: state_keyboard_index = INPUT_KEY_Y; break;
+        case GLFW_KEY_U: state_keyboard_index = INPUT_KEY_U; break;
+        case GLFW_KEY_I: state_keyboard_index = INPUT_KEY_I; break;
+        case GLFW_KEY_O: state_keyboard_index = INPUT_KEY_O; break;
+        case GLFW_KEY_P: state_keyboard_index = INPUT_KEY_P; break;
+        case GLFW_KEY_A: state_keyboard_index = INPUT_KEY_A; break;
+        case GLFW_KEY_S: state_keyboard_index = INPUT_KEY_S; break;
+        case GLFW_KEY_D: state_keyboard_index = INPUT_KEY_D; break;
+        case GLFW_KEY_F: state_keyboard_index = INPUT_KEY_F; break;
+        case GLFW_KEY_G: state_keyboard_index = INPUT_KEY_G; break;
+        case GLFW_KEY_H: state_keyboard_index = INPUT_KEY_H; break;
+        case GLFW_KEY_J: state_keyboard_index = INPUT_KEY_J; break;
+        case GLFW_KEY_K: state_keyboard_index = INPUT_KEY_K; break;
+        case GLFW_KEY_L: state_keyboard_index = INPUT_KEY_L; break;
+        case GLFW_KEY_Z: state_keyboard_index = INPUT_KEY_Z; break;
+        case GLFW_KEY_X: state_keyboard_index = INPUT_KEY_X; break;
+        case GLFW_KEY_C: state_keyboard_index = INPUT_KEY_C; break;
+        case GLFW_KEY_V: state_keyboard_index = INPUT_KEY_V; break;
+        case GLFW_KEY_B: state_keyboard_index = INPUT_KEY_B; break;
+        case GLFW_KEY_N: state_keyboard_index = INPUT_KEY_N; break;
+        case GLFW_KEY_M: state_keyboard_index = INPUT_KEY_M; break;
+    }
+
+    switch (action) {
+        default: return;
+        case GLFW_PRESS: state_new_keyboard[state_keyboard_index] = SCALAR(1.0); break;
+        case GLFW_RELEASE: state_new_keyboard[state_keyboard_index] = SCALAR(0.0); break;
+    }
+}
+
+void joystick_callback(int jid, int event) {
+    printf("joystick with jid %i triggered event %i\n", jid, event);
+    // todo
 }
 
 void input_init(void) {
-    glfwSetScrollCallback(window, input_scroll_callback);
+    memset(state_prev_gamepad, 0, sizeof(state_prev_gamepad));
+    memset(state_prev_keyboard, 0, sizeof(state_prev_keyboard));
+    memset(state_prev_mouse, 0, sizeof(state_prev_mouse));
+    memset(state_curr_gamepad, 0, sizeof(state_curr_gamepad));
+    memset(state_curr_keyboard, 0, sizeof(state_curr_keyboard));
+    memset(state_curr_mouse, 0, sizeof(state_curr_mouse));
+    memset(state_new_gamepad, 0, sizeof(state_new_gamepad));
+    memset(state_new_keyboard, 0, sizeof(state_new_keyboard));
+    memset(state_new_mouse, 0, sizeof(state_new_mouse));
+
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetCursorPosCallback(window, mouse_pos_callback);
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetJoystickCallback(joystick_callback);
 }
 
 void input_update(void) {
-    // Detect controllers
-    for (int i = 0; i < 8; ++i) {
-        if (i == player1_index || i == player2_index)
-            continue;
+    // prev = curr
+    memcpy(state_prev_gamepad, state_curr_gamepad, sizeof(state_prev_gamepad));
+    memcpy(state_prev_keyboard, state_curr_keyboard, sizeof(state_prev_keyboard));
+    memcpy(state_prev_mouse, state_curr_mouse, sizeof(state_prev_mouse));
 
-        GLFWgamepadstate state;
-        if (glfwGetGamepadState(i, &state)) {
-            if (player1_index == -1)
-                player1_index = i;
-            else if (player2_index == -1) {
-                player2_index = i;
-                break;
-            }
-        }
-    }
+    // curr = new
+    memcpy(state_curr_gamepad, state_new_gamepad, sizeof(state_curr_gamepad));
+    memcpy(state_curr_keyboard, state_new_keyboard, sizeof(state_curr_keyboard));
+    memcpy(state_curr_mouse, state_new_mouse, sizeof(state_curr_mouse));
 
-    if (player1_index == -1) player1_index = 0;
-    if (player2_index == -1) player2_index = 0;
-
-    // Reset buttons
-    button_prev[0] = button_curr[0];
-    button_prev[1] = button_curr[1];
-    button_curr[0] = 0;
-    button_curr[1] = 0;
-
-    // Update analog sticks
-    left_stick_y[0] = 0;
-    left_stick_x[0] = 0;
-    right_stick_y[0] = 0;
-    right_stick_x[0] = 0;
-    left_stick_y[1] = 0;
-    left_stick_x[1] = 0;
-    right_stick_y[1] = 0;
-    right_stick_x[1] = 0;
-    GLFWgamepadstate state1;
-    GLFWgamepadstate state2;
-    glfwGetGamepadState(player1_index, &state1);
-    glfwGetGamepadState(player2_index, &state2);
-
-    // Gamepad
-    if (glfwGetGamepadState(player1_index, &state1)) {
-        left_stick_x[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_LEFT_X] * 127.f);
-        left_stick_y[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] * -127.f);
-        right_stick_x[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_RIGHT_X] * 127.f);
-        right_stick_y[0] = (int8_t)(state1.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y] * -127.f);
-        button_curr[0] |= (PAD_L2)*(state1.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] > 0.0f ? 1 : 0);
-        button_curr[0] |= (PAD_R2)*(state1.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] > 0.0f ? 1 : 0);
-        button_curr[0] |= (PAD_SELECT)*     state1.buttons[GLFW_GAMEPAD_BUTTON_BACK];
-        button_curr[0] |= (PAD_L3)*         state1.buttons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB];
-        button_curr[0] |= (PAD_R3)*         state1.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB];
-        button_curr[0] |= (PAD_START)*      state1.buttons[GLFW_GAMEPAD_BUTTON_START];
-        button_curr[0] |= (PAD_UP)*         state1.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP];
-        button_curr[0] |= (PAD_RIGHT)*      state1.buttons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT];
-        button_curr[0] |= (PAD_DOWN)*       state1.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN];
-        button_curr[0] |= (PAD_LEFT)*       state1.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT];
-        button_curr[0] |= (PAD_L1)*         state1.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER];
-        button_curr[0] |= (PAD_R1)*         state1.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER];
-        button_curr[0] |= (PAD_TRIANGLE)*   state1.buttons[GLFW_GAMEPAD_BUTTON_TRIANGLE];
-        button_curr[0] |= (PAD_CIRCLE)*     state1.buttons[GLFW_GAMEPAD_BUTTON_CIRCLE];
-        button_curr[0] |= (PAD_CROSS)*      state1.buttons[GLFW_GAMEPAD_BUTTON_CROSS];
-        button_curr[0] |= (PAD_SQUARE)*     state1.buttons[GLFW_GAMEPAD_BUTTON_SQUARE];
-        if (button_curr[0]) keyboard_focus = 0;
-        if (abs(left_stick_x[0]) > deadzone) keyboard_focus = 0;
-        if (abs(left_stick_y[0]) > deadzone) keyboard_focus = 0;
-        if (abs(right_stick_x[0]) > deadzone) keyboard_focus = 0;
-        if (abs(right_stick_y[0]) > deadzone) keyboard_focus = 0;
-    }
-    if (glfwGetGamepadState(player2_index, &state2)) {
-        left_stick_x[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_LEFT_X] * 127.f);
-        left_stick_y[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_LEFT_Y] * -127.f);
-        right_stick_x[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_RIGHT_X] * 127.f);
-        right_stick_y[1] = (int8_t)(state2.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y] * -127.f);
-        button_curr[1] |= (PAD_L2)*(state2.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] > 0.0f ? 1 : 0);
-        button_curr[1] |= (PAD_R2)*(state2.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] > 0.0f ? 1 : 0);
-        button_curr[1] |= (PAD_SELECT)*     state2.buttons[GLFW_GAMEPAD_BUTTON_BACK];
-        button_curr[1] |= (PAD_L3)*         state2.buttons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB];
-        button_curr[1] |= (PAD_R3)*         state2.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB];
-        button_curr[1] |= (PAD_START)*      state2.buttons[GLFW_GAMEPAD_BUTTON_START];
-        button_curr[1] |= (PAD_UP)*         state2.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP];
-        button_curr[1] |= (PAD_RIGHT)*      state2.buttons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT];
-        button_curr[1] |= (PAD_DOWN)*       state2.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN];
-        button_curr[1] |= (PAD_LEFT)*       state2.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT];
-        button_curr[1] |= (PAD_L1)*         state2.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER];
-        button_curr[1] |= (PAD_R1)*         state2.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER];
-        button_curr[1] |= (PAD_TRIANGLE)*   state2.buttons[GLFW_GAMEPAD_BUTTON_TRIANGLE];
-        button_curr[1] |= (PAD_CIRCLE)*     state2.buttons[GLFW_GAMEPAD_BUTTON_CIRCLE];
-        button_curr[1] |= (PAD_CROSS)*      state2.buttons[GLFW_GAMEPAD_BUTTON_CROSS];
-        button_curr[1] |= (PAD_SQUARE)*     state2.buttons[GLFW_GAMEPAD_BUTTON_SQUARE];
-    }
-
-    // Keyboard & mouse input
-    mouse_scroll_prev = mouse_scroll_curr;
-    mouse_scroll_curr = mouse_scroll_incoming;
-    glfwGetCursorPos(window, &cursor_pos_x, &cursor_pos_y);
-
-    if (mouse_lock) {
-        int w, h;
-        glfwGetWindowSize(window, &w, &h);
-        w /= 2;
-        h /= 2;
-        glfwSetCursorPos(window, w, h);
-        cursor_pos_prev_x = w;
-        cursor_pos_prev_y = h;
-        if (!mouse_lock_prev && mouse_lock) {
-            cursor_pos_x = w;
-            cursor_pos_y = h;
-        }
-    }
-    else {
-        cursor_pos_prev_x = cursor_pos_x;
-        cursor_pos_prev_y = cursor_pos_y;
-    }
-    mouse_lock_prev = mouse_lock;
-
-    if (glfwGetKey(window, GLFW_KEY_W)) { left_stick_y[0] = +127; }
-    if (glfwGetKey(window, GLFW_KEY_A)) { left_stick_x[0] = -127; }
-    if (glfwGetKey(window, GLFW_KEY_S)) { left_stick_y[0] = -127; }
-    if (glfwGetKey(window, GLFW_KEY_D)) { left_stick_x[0] = +127; }
-    button_curr[0] |= (PAD_SELECT)*glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT);
-    //button_curr[0] |= (PAD_L3)*       glfwGetKey(window, GLFW_KEY_)
-    //button_curr[0] |= (PAD_R3)*       glfwGetKey(window, GLFW_KEY_)
-    button_curr[0] |= (PAD_START)*glfwGetKey(window, GLFW_KEY_ESCAPE);
-    button_curr[0] |= (PAD_UP)*glfwGetKey(window, GLFW_KEY_UP);
-    button_curr[0] |= (PAD_RIGHT)*glfwGetKey(window, GLFW_KEY_RIGHT);
-    button_curr[0] |= (PAD_DOWN)*glfwGetKey(window, GLFW_KEY_DOWN);
-    button_curr[0] |= (PAD_LEFT)*glfwGetKey(window, GLFW_KEY_LEFT);
-    //button_curr[0] |= (PAD_L1)*glfwGetKey(window, GLFW_KEY_)
-    //button_curr[0] |= (PAD_R1)*glfwGetKey(window, GLFW_KEY_)
-    button_curr[0] |= (PAD_L2)*glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-    button_curr[0] |= (PAD_R2)*glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
-    button_curr[0] |= (PAD_TRIANGLE)* glfwGetKey(window, GLFW_KEY_LEFT_CONTROL);
-    button_curr[0] |= (PAD_CIRCLE)*glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL);
-    button_curr[0] |= (PAD_CROSS)*glfwGetKey(window, GLFW_KEY_SPACE);
-    button_curr[0] |= (PAD_SQUARE)*glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
-
-    currently_active_deadzone = keyboard_focus ? 0 : deadzone;
-
-    // Update cheat buffer
-    button_pressed_this_frame = 0;
-    const uint16_t buttons_pressed = (button_curr[0] ^ button_prev[0]) & button_curr[0];
-    if (buttons_pressed) {
-        for (size_t i = 31; i > 0; --i) input_buffer[i] = input_buffer[i-1];
-        input_buffer[0] = buttons_pressed;
-        button_pressed_this_frame = 1;
-    }
+    state_curr_mouse[INPUT_MOUSE_DELTA_X] = state_curr_mouse[INPUT_MOUSE_POS_X] - state_prev_mouse[INPUT_MOUSE_POS_X];
+    state_curr_mouse[INPUT_MOUSE_DELTA_Y] = state_curr_mouse[INPUT_MOUSE_POS_Y] - state_prev_mouse[INPUT_MOUSE_POS_Y];
 }
 
-void input_set_stick_deadzone(int8_t new_deadzone) {
-    deadzone = new_deadzone;
+scalar_t input_value_gamepad(input_gamepad_t input, int player_id) {
+    return state_curr_gamepad[input][player_id];
 }
 
-int input_has_analog(int player_id) {
-    (void)player_id;
-    return 1;
+scalar_t input_value_keyboard(input_keyboard_t input) {
+    return state_curr_keyboard[input];
 }
 
-int input_is_connected(int player_id) {
-    (void)player_id;
-    return 1;
+scalar_t input_value_mouse(input_mouse_t input) {
+    return state_curr_mouse[input];
 }
 
-// Returns non-zero if held
-int input_held(const uint16_t button_mask, const int player_id) {
-    const uint16_t all_button = button_curr[player_id];
-    return (all_button & button_mask);
+scalar_t input_value_gamepad_prev(input_gamepad_t input, int player_id) {
+    return state_prev_gamepad[input][player_id];
 }
-
-// Returns non-zero if pressed this frame
-int input_pressed(const uint16_t button_mask, const int player_id) {
-    const uint16_t all_button = (button_curr[player_id] ^ button_prev[player_id]) & button_curr[player_id];
-    return (all_button & button_mask);
+scalar_t input_value_keyboard_prev(input_keyboard_t input) {
+    return state_prev_keyboard[input];
 }
-
-// Returns non-zero if released this frame
-int input_released(const uint16_t button_mask, const int player_id) {
-    const uint16_t all_button = (button_curr[player_id] ^ button_prev[player_id]) & button_prev[player_id];
-    return (all_button & button_mask);
-}
-
-int8_t input_left_stick_x(const int player_id) {
-    const int8_t value = left_stick_x[player_id];
-    int16_t value16 = 0;
-    if (value < -currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    if (value > currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    if (value16 > 127) return 127;
-    if (value16 < -127) return -127;
-    return (int8_t)value16;
-}
-
-int8_t input_left_stick_x_relative(int player_id) {
-    (void)player_id;
-    return 0;
-}
-
-int8_t input_left_stick_y(const int player_id) {
-    const int8_t value = left_stick_y[player_id];
-    int16_t value16 = 0;
-    if (value < -currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    if (value > currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    if (value16 > 127) return 127;
-    if (value16 < -127) return -127;
-    return (int8_t)value16;
-}
-
-int8_t input_left_stick_y_relative(int player_id) {
-    (void)player_id;
-    return 0;
-}
-
-int8_t input_right_stick_x(const int player_id) {
-    const int8_t value = right_stick_x[player_id];
-    int16_t value16 = 0;
-    if (value < -currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    if (value > currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    if (value16 > 127) return 127;
-    if (value16 < -127) return -127;
-    return (int8_t)value16;
-}
-
-int8_t input_right_stick_x_relative(int player_id) {
-    (void)player_id;
-    return 0;
-}
-
-int8_t input_right_stick_y(const int player_id) {
-    const int8_t value = right_stick_y[player_id];
-    int16_t value16 = 0;
-    if (value < -currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value + (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    if (value > currently_active_deadzone) value16 = (int16_t)(127 * ((int16_t)value - (int16_t)currently_active_deadzone) / (127 - (int16_t)currently_active_deadzone));
-    if (value16 > 127) return 127;
-    if (value16 < -127) return -127;
-    return (int8_t)value16;
-}
-
-int8_t input_right_stick_y_relative(int player_id) {
-    (void)player_id;
-    return 0;
-}
-
-int input_check_cheat_buffer(int n_inputs, const uint16_t* inputs_to_check) {\
-    int match = button_pressed_this_frame;
-    for (int i = 0; i < n_inputs; ++i) {
-        if (inputs_to_check[i] != input_buffer[i]) {
-            match = 0;
-        }
-    }
-    return match;
-}
-
-void input_rumble(uint8_t left_strength, uint8_t right_enable) {
-    (void)left_strength;
-    (void)right_enable;
-}
-
-int input_mouse_connected(void) {
-    return keyboard_focus;
+scalar_t input_value_mouse_prev(input_mouse_t input) {
+    return state_prev_mouse[input];
 }
 
 void input_lock_mouse(void) {
@@ -310,14 +223,12 @@ void input_unlock_mouse(void) {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
-int input_mouse_movement_x(void) {
-    return (int)(cursor_pos_prev_x - cursor_pos_x);
+void input_rumble(scalar_t left_strength, scalar_t right_enable) {
+    // todo: move to different controller library because no rumble support
+    (void)left_strength;
+    (void)right_enable;
 }
 
-int input_mouse_movement_y(void) {
-    return (int)(cursor_pos_prev_y - cursor_pos_y);
-}
-
-int input_mouse_scroll(void) {
-    return (int)(mouse_scroll_curr - mouse_scroll_prev);
+void input_set_gamepad_stick_deadzone(scalar_t new_deadzone) {
+    deadzone = new_deadzone;
 }

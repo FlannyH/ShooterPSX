@@ -34,6 +34,7 @@ typedef struct {
 } player_t;
 
 #define PLAYER_VELOCITY_PRECISION 4
+#define PLAYER_ROTATION_PRECISION 4
 const static scalar_t eye_height = SCALAR(200);
 const static scalar_t player_height = SCALAR(230);
 const static scalar_t player_radius = SCALAR(320);
@@ -45,7 +46,7 @@ const static scalar_t walking_acceleration = SCALAR(50);
 const static scalar_t air_acceleration_divider = SCALAR(2);
 const static scalar_t walking_max_speed = SCALAR(80);
 const static scalar_t stick_sensitivity = SCALAR(1.0);
-const static scalar_t mouse_sensitivity = SCALAR(0.2);
+const static scalar_t mouse_sensitivity = SCALAR(0.01);
 const static scalar_t drag = SCALAR(10);
 const static scalar_t jump_drag_divider = SCALAR(2);
 const static int32_t initial_jump_velocity = SCALAR(750);

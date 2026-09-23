@@ -1,7 +1,8 @@
 #include "main.h"
 
+#include "subnivis/input_map.h"
+#include "input_mapping.h"
 #include "renderer.h"
-#include "input.h"
 #include "music.h"
 #include "text.h"
 #include "ui.h"
@@ -31,6 +32,7 @@ void state_enter_debug_menu_music(void) {
 	renderer_start_fade_in(FADE_SPEED);
 	while (renderer_is_fading()) {
 		renderer_begin_frame(&id_transform);
+		input_update();
 		ui_render_background();
 		renderer_end_frame();
 	}
@@ -51,20 +53,20 @@ void state_update_debug_menu_music_main(scalar_t dt) {
 	};
 
 	// Handle button navigation
-	if (input_pressed(PAD_UP, 0) && state.debug_menu_music.button_selected > 0) {
+	if (input_mapping_pressed(IM_MENU_UP, 0) && state.debug_menu_music.button_selected > 0) {
 		state.debug_menu_music.button_selected--;
 		state.debug_menu_music.button_pressed = 0;
 	}
-	if (input_pressed(PAD_DOWN, 0) && state.debug_menu_music.button_selected < 5) {
+	if (input_mapping_pressed(IM_MENU_DOWN, 0) && state.debug_menu_music.button_selected < 5) {
 		state.debug_menu_music.button_selected++;
 		state.debug_menu_music.button_pressed = 0;
 	}
-	if (input_pressed(PAD_CROSS, 0)) {
+	if (input_mapping_pressed(IM_MENU_GO, 0)) {
 		state.debug_menu_music.button_pressed = 1;
 	}
 
 	// Handle button presses
-	if (input_released(PAD_CROSS, 0)) {
+	if (input_mapping_released(IM_MENU_GO, 0)) {
 		state.debug_menu_music.button_pressed = 0;
 		switch (state.debug_menu_music.button_selected) {
 			case 0:
@@ -102,14 +104,14 @@ void state_update_debug_menu_music_main(scalar_t dt) {
 	}
 
 	// SFX debug
-	if (input_pressed(PAD_LEFT, 0)) {
+	if (input_mapping_pressed(IM_MENU_LEFT, 0)) {
 		state.debug_menu_music.sfx_id--;
 		if (state.debug_menu_music.sfx_id < 0) state.debug_menu_music.sfx_id = 0;
 	}
-	if (input_pressed(PAD_RIGHT, 0)) {
+	if (input_mapping_pressed(IM_MENU_RIGHT, 0)) {
 		state.debug_menu_music.sfx_id++;
 	}
-	if (input_pressed(PAD_SQUARE, 0)) {
+	if (input_mapping_pressed(IM_MENU_PREVIEW, 0)) {
 		audio_play_sound(state.debug_menu_music.sfx_id, 0, 1, (vec3_t){0, 0, 0}, ONE * 16);
 	}
 

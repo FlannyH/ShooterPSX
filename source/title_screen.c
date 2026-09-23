@@ -1,9 +1,10 @@
 #include "main.h"
 #include "common.h"
 
+#include "subnivis/input_map.h"
+#include "input_mapping.h"
 #include "renderer.h"
 #include "memory.h"
-#include "input.h"
 #include "music.h"
 #include "text.h"
 #include "ui.h"
@@ -108,20 +109,20 @@ void state_update_title_screen(scalar_t dt) {
 	}
 
 	// Handle button navigation
-	if (input_pressed(PAD_UP, 0) && state.title_screen.button_selected > 0) {
+	if (input_mapping_pressed(IM_MENU_UP, 0) && state.title_screen.button_selected > 0) {
 		state.title_screen.button_selected--;
 		state.title_screen.button_pressed = 0;
 	}
-	if (input_pressed(PAD_DOWN, 0) && state.title_screen.button_selected < 2) {
+	if (input_mapping_pressed(IM_MENU_DOWN, 0) && state.title_screen.button_selected < 2) {
 		state.title_screen.button_selected++;
 		state.title_screen.button_pressed = 0;
 	}
-	if (input_pressed(PAD_CROSS, 0)) {
+	if (input_mapping_pressed(IM_MENU_GO, 0)) {
 		state.title_screen.button_pressed = 1;
 	}
 
 	// Handle button presses
-	if (input_released(PAD_CROSS, 0)) {
+	if (input_mapping_released(IM_MENU_GO, 0)) {
 		state.title_screen.button_pressed = 0;
 		switch (state.title_screen.button_selected) {
 			case 0: // start game
@@ -154,7 +155,7 @@ void state_update_title_screen(scalar_t dt) {
 	renderer_draw_text((vec2_t){32*ONE, 192*ONE}, debug_text, 0, 0, white);
 #endif
 
-	if (input_pressed(PAD_START, 0)) {
+	if (input_mapping_pressed(IM_START_PAUSE, 0)) {
 		set_current_state(STATE_IN_GAME);
 	}
 	renderer_end_frame();

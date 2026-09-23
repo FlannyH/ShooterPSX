@@ -1,7 +1,8 @@
 #include "main.h"
 
+#include "subnivis/input_map.h"
+#include "input_mapping.h"
 #include "renderer.h"
-#include "input.h"
 #include "text.h"
 #include "ui.h"
 
@@ -80,20 +81,20 @@ void state_update_settings(scalar_t dt) {
 	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 3))*ONE}, num_display, 1, 0, white);
 
 	// Handle button navigation
-	if (input_pressed(PAD_UP, 0) && state.settings.button_selected > 0) {
+	if (input_mapping_pressed(IM_MENU_UP, 0) && state.settings.button_selected > 0) {
 		state.settings.button_selected--;
 		state.settings.button_pressed = 0;
 	}
-	if (input_pressed(PAD_DOWN, 0) && state.settings.button_selected < 4) {
+	if (input_mapping_pressed(IM_MENU_DOWN, 0) && state.settings.button_selected < 4) {
 		state.settings.button_selected++;
 		state.settings.button_pressed = 0;
 	}
-	if (input_pressed(PAD_CROSS, 0)) {
+	if (input_mapping_pressed(IM_MENU_GO, 0)) {
 		state.settings.button_pressed = 1;
 	}
 
 	// Handle button presses
-	if (input_released(PAD_CROSS, 0)) {
+	if (input_mapping_released(IM_MENU_GO, 0)) {
 		state.settings.button_pressed = 0;
 		switch (state.settings.button_selected) {
 			case 0: // frame rate limit

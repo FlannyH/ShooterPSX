@@ -59,6 +59,7 @@ CODE_ENGINE_SHARED_C = collision.c \
 			  	  	   memory.c \
 			  	  	   mesh.c \
 			  	  	   music.c \
+			  	  	   input_mapping.c \
 			  	  	   renderer_shared.c \
 					   texture.c \
 					   texture_pool.c \
@@ -115,7 +116,7 @@ PATH_OBJ_NDS = $(PATH_TEMP_NDS)/obj
 PATH_OBJ_LEVEL_EDITOR = $(PATH_TEMP_LEVEL_EDITOR)/obj
 
 # Misc source file definitions
-CODE_GAME_MAIN = main.c
+CODE_GAME_MAIN = subnivis/main.c
 CODE_LEVEL_EDITOR = editor/main.c editor/camera.c
 
 # Create code sets and object sets

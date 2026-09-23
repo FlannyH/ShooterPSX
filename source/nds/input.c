@@ -31,7 +31,7 @@ void input_update(void) {
     if (key_state & KEY_R) button_curr |= PAD_R1;
     if (key_state & KEY_START) button_curr |= PAD_START;
     if (key_state & KEY_SELECT) button_curr |= PAD_SELECT;
-    
+
     // Update cheat buffer
     button_pressed_this_frame = 0;
     uint16_t buttons_pressed = (button_curr ^ button_prev) & button_curr;
@@ -120,7 +120,7 @@ int8_t input_right_stick_y_relative(int player_id) {
     return 0;
 }
 
-void input_rumble(uint8_t left_strength, uint8_t right_enable) {
+void input_rumble(scalar_t left_strength, scalar_t right_enable) {
     (void)left_strength;
     (void)right_enable;
 }

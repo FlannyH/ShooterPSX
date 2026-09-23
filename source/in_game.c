@@ -7,12 +7,13 @@
 #include "entities/chaser.h"
 #include "entities/crate.h"
 #include "entities/door.h"
+#include "subnivis/input_map.h"
 #include "math/fixed_point.h"
+#include "input_mapping.h"
 #include "renderer.h"
 #include "entity.h"
 #include "random.h"
 #include "memory.h"
-#include "input.h"
 #include "level.h"
 #include "music.h"
 #include "mesh.h"
@@ -155,7 +156,7 @@ void state_update_in_game(scalar_t dt) {
 	}
 #endif
 
-	if (input_pressed(PAD_START, 0)) {
+	if (input_mapping_pressed(IM_START_PAUSE, 0)) {
 		set_current_state(STATE_PAUSE_MENU);
 	}
 
@@ -168,7 +169,7 @@ void state_update_in_game(scalar_t dt) {
 		state.in_game.gun_animation_timer_sqrt = scalar_mul(state.in_game.gun_animation_timer, state.in_game.gun_animation_timer);
 	}
 	else {
-		if (input_held(PAD_R2, 0) && state.in_game.player.ammo > 0) {
+		if (input_mapping_held(IM_SHOOT, 0) && state.in_game.player.ammo > 0) {
 			shoot(camera_transform);
 		}
 		if (state.global.show_debug) {
@@ -207,7 +208,7 @@ void state_update_in_game(scalar_t dt) {
 		gun_transform.scale.z = ONE;
 
 		renderer_draw_mesh_shaded(&state.in_game.m_weapons->meshes[1], &gun_transform, 1, 0);
-        input_rumble(state.in_game.gun_animation_timer_sqrt > 0 * 255, 0);
+        input_rumble(state.in_game.gun_animation_timer_sqrt > 0 * SCALAR(1.0f), 0);
 	}
 
 	// Animate and render sword

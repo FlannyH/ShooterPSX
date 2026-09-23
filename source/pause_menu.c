@@ -6,7 +6,8 @@
 #include "renderer.h"
 #include "memory.h"
 #include "cheats.h"
-#include "input.h"
+#include "subnivis/input_map.h"
+#include "input_mapping.h"
 #include "music.h"
 #include "text.h"
 #include "ui.h"
@@ -35,20 +36,21 @@ void state_update_pause_menu(scalar_t dt) {
 	(void)dt;
 	renderer_begin_frame(&id_transform);
 	input_update();
-	if (input_pressed(PAD_START, 0)) {
+	if (input_mapping_pressed(IM_START_PAUSE, 0)) {
 		set_current_state(STATE_IN_GAME);
 	}
 
 	// Check cheats
-	if (input_check_cheat_buffer(sizeof(cheat_doom_mode) / sizeof(uint16_t), cheat_doom_mode)) {
-		state.cheats.doom_mode = 1;
-		music_stop();
-		mem_stack_release(STACK_MUSIC);
-		audio_load_soundbank("audio/instr.sbk", SOUNDBANK_TYPE_MUSIC);
-		audio_load_soundbank("audio/sfx.sbk", SOUNDBANK_TYPE_SFX);
-		music_load_sequence("audio/music/justice.dss");
-		music_play_sequence(0);
-	}
+	// fix cheats
+	// if (input_check_cheat_buffer(sizeof(cheat_doom_mode) / sizeof(uint16_t), cheat_doom_mode)) {
+	// 	state.cheats.doom_mode = 1;
+	// 	music_stop();
+	// 	mem_stack_release(STACK_MUSIC);
+	// 	audio_load_soundbank("audio/instr.sbk", SOUNDBANK_TYPE_MUSIC);
+	// 	audio_load_soundbank("audio/sfx.sbk", SOUNDBANK_TYPE_SFX);
+	// 	music_load_sequence("audio/music/justice.dss");
+	// 	music_play_sequence(0);
+	// }
 
 	// Paused text
 	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_pause_menu[0], 1, 1, white);
@@ -78,20 +80,20 @@ void state_update_pause_menu(scalar_t dt) {
 	}
 
 	// Handle button navigation
-	if (input_pressed(PAD_UP, 0) && state.pause_menu.button_selected > 0) {
+	if (input_mapping_pressed(IM_MENU_UP, 0) && state.pause_menu.button_selected > 0) {
 		state.pause_menu.button_selected--;
 		state.pause_menu.button_pressed = 0;
 	}
-	if (input_pressed(PAD_DOWN, 0) && state.pause_menu.button_selected < 2) {
+	if (input_mapping_pressed(IM_MENU_DOWN, 0) && state.pause_menu.button_selected < 2) {
 		state.pause_menu.button_selected++;
 		state.pause_menu.button_pressed = 0;
 	}
-	if (input_pressed(PAD_CROSS, 0)) {
+	if (input_mapping_pressed(IM_MENU_GO, 0)) {
 		state.pause_menu.button_pressed = 1;
 	}
 
 	// Handle button presses
-	if (input_released(PAD_CROSS, 0)) {
+	if (input_mapping_released(IM_MENU_GO, 0)) {
 		state.pause_menu.button_pressed = 0;
 		switch (state.pause_menu.button_selected) {
 			case 0: // continue

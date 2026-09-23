@@ -15,7 +15,8 @@
 #include "nds/psx.h"
 #endif
 
-#include "input.h"
+#include "subnivis/input_map.h"
+#include "input_mapping.h"
 #include "music.h"
 #include "random.h"
 
@@ -112,43 +113,29 @@ void handle_stick_input(player_t* self, const scalar_t dt) {
         -forward.x
     };
 
-    const vec2_t stick_left = (vec2_t) {
-        SCALAR((float)input_left_stick_x(0) / 127.0f),
-        SCALAR((float)input_left_stick_y(0) / 127.0f)
+    const vec2_t move = (vec2_t) {
+        input_mapping_value(IM_MOVE_X, 0),
+        input_mapping_value(IM_MOVE_Y, 0)
     };
 
-    const vec2_t stick_right = (vec2_t) {
-        SCALAR((float)input_right_stick_x(0) / 127.0f),
-        SCALAR((float)input_right_stick_y(0) / 127.0f)
+    const vec2_t look = (vec2_t) {
+        input_mapping_value(IM_LOOK_MOUSE_X, 0),
+        input_mapping_value(IM_LOOK_MOUSE_Y, 0)
     };
-
-    const vec2_t mouse_delta = (vec2_t) {
-        SCALAR(input_mouse_movement_x()),
-        SCALAR(input_mouse_movement_y())
-    };
-
-    printf("forward: "); vec3_debug(forward);
-    printf("right: "); vec3_debug(right);
-    printf("stick_left: "); vec2_debug(stick_left);
-    printf("stick_right: "); vec2_debug(stick_right);
-    printf("mouse_delta: "); vec2_debug(mouse_delta);
-    printf("scalar_mul(scalar_mul(-stick_right.y, dt), stick_sensitivity): "); scalar_debug(scalar_mul(scalar_mul(-stick_right.y, dt), stick_sensitivity));
 
     // Moving horizontally
-    self->velocity = vec3_add(self->velocity, vec3_muls(forward, scalar_mul(stick_left.y, walking_acceleration * PLAYER_VELOCITY_PRECISION)));
-    self->velocity = vec3_add(self->velocity, vec3_muls(right, scalar_mul(stick_left.x, walking_acceleration * PLAYER_VELOCITY_PRECISION)));
+    self->velocity = vec3_add(self->velocity, vec3_muls(forward, scalar_mul(move.y, walking_acceleration * PLAYER_VELOCITY_PRECISION)));
+    self->velocity = vec3_add(self->velocity, vec3_muls(right, scalar_mul(move.x, walking_acceleration * PLAYER_VELOCITY_PRECISION)));
 
     // Looking up and down
-    self->transform.rotation.x += scalar_mul(scalar_mul(-stick_right.y, dt), stick_sensitivity);
-    self->transform.rotation.x += scalar_mul(scalar_mul(-mouse_delta.y, dt), mouse_sensitivity);
-    self->transform.rotation.x = scalar_clamp(self->transform.rotation.x, SCALAR(-0.22), SCALAR(0.22));
+    self->rotation.x += look.y;
+    self->rotation.x = scalar_clamp(self->rotation.x, SCALAR(-0.22 * PLAYER_ROTATION_PRECISION), SCALAR(0.22 * PLAYER_ROTATION_PRECISION));
 
     // Looking left and right
-    self->transform.rotation.y += scalar_mul(scalar_mul(-stick_right.x, stick_sensitivity), dt);
-    self->transform.rotation.y += scalar_mul(scalar_mul(-mouse_delta.x, mouse_sensitivity), dt);
+    self->rotation.y += look.x;
 }
 
-void handle_drag(player_t* self, const scalar_t dt) {
+void player_handle_drag(player_t* self, const scalar_t dt) {
     scalar_t curr_drag = scalar_mul(drag, dt);
     if (self->is_grounded) {
         curr_drag = scalar_div(drag, jump_drag_divider);
@@ -175,7 +162,7 @@ void handle_drag(player_t* self, const scalar_t dt) {
 int was_grounded = 0;
 
 void handle_jump(player_t* self) {
-    if (self->is_grounded && input_pressed(PAD_CROSS, 0)) {
+    if (self->is_grounded && input_mapping_pressed(IM_JUMP, 0)) {
         self->velocity.y = initial_jump_velocity;
         audio_play_sound(sfx_jump_land1, 0, 0, (vec3_t){}, 1);
     }
@@ -190,8 +177,8 @@ void update_transform(player_t* self, scalar_t dt, scalar_t time_counter) {
     #ifdef _DEBUG_CAMERA
     (void)time_counter;
     // Moving up and down
-    if (input_held(PAD_SQUARE, 0)) self->position.y -= scalar_mul(SCALAR(100), dt);
-    if (input_held(PAD_CROSS, 0))  self->position.y += scalar_mul(SCALAR(100), dt);
+    if (input_mapping_held(IM_DEBUG_DOWN, 0)) self->position.y -= scalar_mul(SCALAR(100), dt);
+    if (input_mapping_held(IM_DEBUG_UP, 0))  self->position.y += scalar_mul(SCALAR(100), dt);
     self->transform.position.y = self->position.y;
 
     #else
@@ -209,9 +196,9 @@ void update_transform(player_t* self, scalar_t dt, scalar_t time_counter) {
     self->transform.position.x = self->position.x;
     self->transform.position.z = self->position.z;
 
-    self->transform.rotation.x = self->rotation.x;
-    self->transform.rotation.y = self->rotation.y;
-    self->transform.rotation.z = self->rotation.z;
+    self->transform.rotation.x = self->rotation.x / PLAYER_ROTATION_PRECISION;
+    self->transform.rotation.y = self->rotation.y / PLAYER_ROTATION_PRECISION;
+    self->transform.rotation.z = self->rotation.z / PLAYER_ROTATION_PRECISION;
 }
 
 void player_update(player_t* self, level_t* level, const scalar_t dt, const scalar_t time_counter) {
@@ -226,10 +213,8 @@ void player_update(player_t* self, level_t* level, const scalar_t dt, const scal
     self->is_grounded = 0;
     apply_gravity(self, dt);
     handle_stick_input(self, dt);
-    handle_drag(self, dt);
+    player_handle_drag(self, dt);
     handle_jump(self);
-
-    printf("velocity: "); vec3_debug(vec3_divs(self->velocity, SCALAR(PLAYER_VELOCITY_PRECISION)));
 
     self->position = vec3_add(self->position, vec3_muls(vec3_divs(self->velocity, SCALAR(PLAYER_VELOCITY_PRECISION)), dt));
 

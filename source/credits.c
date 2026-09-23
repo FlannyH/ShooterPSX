@@ -1,9 +1,9 @@
 #include "main.h"
 #include "common.h"
 
+#include "subnivis/input_map.h"
+#include "input_mapping.h"
 #include "renderer.h"
-#include "memory.h"
-#include "input.h"
 #include "music.h"
 #include "text.h"
 #include "ui.h"
@@ -51,8 +51,7 @@ void state_update_credits(scalar_t dt) {
 	renderer_end_frame();
 	input_update();
 
-	// If any input is pressed or the credits text is over, go back to title screen
-	if (input_pressed(0xFFFF, 0) || state.credits.scroll < SCALAR(-1415)) {
+	if (input_mapping_pressed(IM_MENU_GO, 0) || state.credits.scroll < SCALAR(-1415)) {
 		set_current_state(STATE_TITLE_SCREEN);
 	}
 	return;

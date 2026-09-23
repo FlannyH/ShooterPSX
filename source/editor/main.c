@@ -1,13 +1,14 @@
 #include "../main.h"
 
 #include "camera.h"
+#include "../editor/input_map.h"
 #include "../pc/debug_layer.h"
 #include "../pc/psx.h"
+#include "../input_mapping.h"
 #include "../renderer.h"
 #include "../entity.h"
 #include "../player.h"
 #include "../common.h"
-#include "../input.h"
 #include "../level.h"
 #include "../file.h"
 
@@ -37,8 +38,9 @@ int main(int argc, char** argv) {
     mem_init();
     renderer_init();
     input_init();
+    input_mapping_init();
 	entity_init();
-    input_set_stick_deadzone(36);
+    input_set_gamepad_stick_deadzone(SCALAR(36.0/255));
 
     const int n_failed_tests = test();
     printf("Unit tests finished with %i errors\n", n_failed_tests);
@@ -73,11 +75,11 @@ int main(int argc, char** argv) {
         time_counter += dt;
 
         // Allow locking and unlocking the mouse
-        if (input_pressed(PAD_R2, 0) && mouse_over_viewport) {
+        if (input_mapping_pressed(IM_CAMERA_LOCK, 0) && mouse_over_viewport) {
             mouse_lock = 1;
             input_lock_mouse();
         }
-        if (input_released(PAD_R2, 0)) {
+        if (input_mapping_released(IM_CAMERA_LOCK, 0)) {
             mouse_lock = 0;
             input_unlock_mouse();
         }

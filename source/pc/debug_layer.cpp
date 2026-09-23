@@ -16,9 +16,10 @@
 #include "../entities/chaser.h"
 #include "../entities/crate.h"
 #include "../entities/door.h"
+#include "../editor/input_map.h"
+#include "../input_mapping.h"
 #include "../renderer.h"
 #include "../common.h"
-#include "../input.h"
 #include "../mesh.h"
 #include "../file.h"
 
@@ -1476,7 +1477,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         ) {
             *mouse_over_viewport = 1;
 
-            if (input_pressed(PAD_L2, 0)) {
+            if (input_mapping_pressed(IM_PICK, 0)) {
                 // Read picking buffer
                 struct {
                     uint8_t index;

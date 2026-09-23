@@ -519,8 +519,7 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 	float clear_color2[] = { 0.0f, 0.0f, 0.0f, 0.0f}; glClearBufferfv(GL_COLOR, 2, clear_color2);
 	glClearDepth(1.0); glClear(GL_DEPTH_BUFFER_BIT);
 
-	if (input_held(PAD_SELECT, 0)) memcpy(view_matrix, view_matrix_third_person, sizeof(view_matrix_third_person));
-	else memcpy(view_matrix, view_matrix_normal, sizeof(view_matrix_normal));
+	memcpy(view_matrix, view_matrix_normal, sizeof(view_matrix_normal));
 
 	camera_dir.x = view_matrix_normal[2][0] * ONE;
 	camera_dir.y = view_matrix_normal[2][1] * ONE;
@@ -528,23 +527,6 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 	memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
 
 	n_total_triangles = 0;
-
-	if (input_held(PAD_SELECT, 0) && input_pressed(PAD_UP, 0)) {
-		++int_mode;
-		printf("int_mode: %i\n", int_mode);
-	}
-	if (input_held(PAD_SELECT, 0) && input_pressed(PAD_DOWN, 0)) {
-		--int_mode;
-		printf("int_mode: %i\n", int_mode);
-	}
-	if (input_held(PAD_SELECT, 0) && input_pressed(PAD_LEFT, 0)) {
-		--edge_mode;
-		printf("edge_mode: %i\n", edge_mode);
-	}
-	if (input_held(PAD_SELECT, 0) && input_pressed(PAD_RIGHT, 0)) {
-		++edge_mode;
-		printf("edge_mode: %i\n", edge_mode);
-	}
 }
 
 void renderer_end_frame(void) {

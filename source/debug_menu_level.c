@@ -1,8 +1,9 @@
 #include "main.h"
 
+#include "subnivis/input_map.h"
+#include "input_mapping.h"
 #include "renderer.h"
 #include "memory.h"
-#include "input.h"
 #include "text.h"
 #include "ui.h"
 
@@ -65,20 +66,20 @@ void state_update_debug_menu_level(scalar_t dt) {
 	}
 
 	// Handle button navigation
-	if (input_pressed(PAD_UP, 0) && state.debug_menu_level.button_selected > 0) {
+	if (input_mapping_pressed(IM_MENU_UP, 0) && state.debug_menu_level.button_selected > 0) {
 		state.debug_menu_level.button_selected--;
 		state.debug_menu_level.button_pressed = 0;
 	}
-	if (input_pressed(PAD_DOWN, 0) && state.debug_menu_level.button_selected < 4) {
+	if (input_mapping_pressed(IM_MENU_DOWN, 0) && state.debug_menu_level.button_selected < 4) {
 		state.debug_menu_level.button_selected++;
 		state.debug_menu_level.button_pressed = 0;
 	}
-	if (input_pressed(PAD_CROSS, 0)) {
+	if (input_mapping_pressed(IM_MENU_GO, 0)) {
 		state.debug_menu_level.button_pressed = 1;
 	}
 
 	// Handle button presses
-	if (input_released(PAD_CROSS, 0)) {
+	if (input_mapping_released(IM_MENU_GO, 0)) {
 		char* levels[] = {
 			"levels/test.lvl",
 			"levels/test2.lvl",
