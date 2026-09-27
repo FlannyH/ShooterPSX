@@ -539,6 +539,7 @@ void renderer_end_frame(void) {
 #ifndef _LEVEL_EDITOR
 	// Blit framebuffer to window
 	glUseProgram(shader_blit);
+	glUniform1f(glGetUniformLocation(shader_blit, "time_since_start"), (float)time_since_start / ONE);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_STENCIL_TEST);
@@ -973,16 +974,18 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 }
 
 void update_delta_time(void) {
-	clock_t new_dt;
-	do {
-		new_dt = clock();
-		dt = new_dt - dt_clock;
-		dt_clock = new_dt;
-		dt_float += (float)dt / (float)CLOCKS_PER_SEC;
-	} while (dt_float < 0.004f);
+    // keep waiting so we don't exceed 300 fps
+	double new_dt;
+	double curr_delta = 0.0f;
 
-	delta_time = SCALAR(dt_float);
-	dt_float -= (float)delta_time / ONE;
+	do {
+		new_dt = glfwGetTime();
+		curr_delta = new_dt - dt_clock;
+	} while (curr_delta <= (1.0 / 300.0));
+
+	dt_clock = new_dt;
+	delta_time = SCALAR(curr_delta);
+	time_since_start += delta_time;
 }
 
 scalar_t renderer_delta_time(dt_flags_t flags) {
