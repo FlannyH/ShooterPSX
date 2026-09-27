@@ -94,12 +94,12 @@ CODE_ENGINE_PSX_C = engine/psx/file.c \
 
 # Source files specific to PC
 CODE_ENGINE_PC_C =   engine/pc/file.c \
-				     engine/pc/input.c \
 				     engine/pc/mesh.c \
 				     engine/pc/mixer.c \
 				     engine/pc/psx.c \
 				     engine/pc/renderer.c
-CODE_ENGINE_PC_CPP = engine/pc/debug_layer.cpp
+CODE_ENGINE_PC_CPP = engine/pc/debug_layer.cpp \
+					 engine/pc/input.cpp
 
 # Source files specific to NDS
 CODE_ENGINE_NDS_C = engine/nds/psx.c \
