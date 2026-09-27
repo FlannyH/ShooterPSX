@@ -13,6 +13,7 @@ typedef enum {
     IM_MENU_PREVIEW,
     IM_MENU_TAB,
     IM_START_PAUSE,
+    IM_FULL_SCREEN,
     IM_SHOOT,
 
     IM_DEBUG_DOWN,
