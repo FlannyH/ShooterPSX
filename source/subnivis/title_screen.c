@@ -81,7 +81,6 @@ void state_enter_title_screen(void) {
 void state_update_title_screen(scalar_t dt) {
     (void)dt;
 	renderer_begin_frame(&id_transform);
-	input_update();
 	ui_render_background();
     ui_render_logo();
 
@@ -164,7 +163,6 @@ void state_exit_title_screen(void) {
 	renderer_start_fade_out(FADE_SPEED);
 	while (renderer_is_fading()) {
 		renderer_begin_frame(&id_transform);
-		input_update();
         ui_render_background();
         ui_render_logo();
 		renderer_end_frame();

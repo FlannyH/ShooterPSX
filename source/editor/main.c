@@ -71,6 +71,8 @@ int main(int argc, char** argv) {
         dt = scalar_min(dt, SCALAR(1.0 / 24.0));
         time_counter += dt;
 
+        input_update();
+
         // Allow locking and unlocking the mouse
         if (input_mapping_pressed(IM_CAMERA_LOCK, 0) && mouse_over_viewport) {
             mouse_lock = 1;
@@ -81,7 +83,6 @@ int main(int argc, char** argv) {
             input_unlock_mouse();
         }
 
-        input_update();
         debug_camera_update(&camera, dt, mouse_lock);
 
         renderer_begin_frame(&camera.transform);

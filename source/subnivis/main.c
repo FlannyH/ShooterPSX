@@ -113,6 +113,8 @@ int main(void) {
 #endif
 		state.global.time_counter += delta_time;
 
+		input_update();
+
 		// If a state change happened, transition between them
 		if (current_state != prev_state) {
 			// Exit the previous state

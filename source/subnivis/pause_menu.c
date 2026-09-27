@@ -35,7 +35,7 @@ void state_enter_pause_menu(void) {}
 void state_update_pause_menu(scalar_t dt) {
 	(void)dt;
 	renderer_begin_frame(&id_transform);
-	input_update();
+
 	if (input_mapping_pressed(IM_START_PAUSE, 0)) {
 		set_current_state(STATE_IN_GAME);
 	}

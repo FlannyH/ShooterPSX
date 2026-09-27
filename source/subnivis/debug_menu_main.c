@@ -39,7 +39,6 @@ void state_enter_debug_menu_main(void) {
 void state_update_debug_menu_main(scalar_t dt) {
 	(void)dt;
 	renderer_begin_frame(&id_transform);
-	input_update();
 
     ui_render_background();
 
@@ -101,7 +100,6 @@ void state_exit_debug_menu_main(void) {
 
 	while (renderer_is_fading()) {
 		renderer_begin_frame(&id_transform);
-		input_update();
 		ui_render_background();
 		renderer_end_frame();
 	}

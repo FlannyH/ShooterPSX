@@ -38,7 +38,6 @@ void state_enter_settings(void) {
 void state_update_settings(scalar_t dt) {
 	(void)dt;
 	renderer_begin_frame(&id_transform);
-	input_update();
 
     ui_render_background();
 
@@ -126,7 +125,6 @@ void state_exit_settings(void) {
 
 	while (renderer_is_fading()) {
 		renderer_begin_frame(&id_transform);
-		input_update();
 		ui_render_background();
 
 		renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_settings[0], 1, 1, white);

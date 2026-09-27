@@ -32,7 +32,6 @@ void state_enter_debug_menu_music(void) {
 	renderer_start_fade_in(FADE_SPEED);
 	while (renderer_is_fading()) {
 		renderer_begin_frame(&id_transform);
-		input_update();
 		ui_render_background();
 		renderer_end_frame();
 	}
@@ -42,7 +41,6 @@ extern volume_env_t vol_envs[N_SPU_CHANNELS];
 
 void state_update_debug_menu_music(scalar_t dt) {
 	(void)dt;
-	input_update();
 
 	char* songs[] = {
 		"audio/music/level1.dss",
@@ -189,7 +187,6 @@ void state_exit_debug_menu_music(void) {
 
 	while (renderer_is_fading()) {
 		renderer_begin_frame(&id_transform);
-		input_update();
 		ui_render_background();
 		renderer_end_frame();
 	}

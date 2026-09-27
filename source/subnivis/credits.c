@@ -49,7 +49,6 @@ void state_update_credits(scalar_t dt) {
 
 	state.credits.scroll -= dt * 32;
 	renderer_end_frame();
-	input_update();
 
 	if (input_mapping_pressed(IM_MENU_GO, 0) || state.credits.scroll < SCALAR(-1415)) {
 		set_current_state(STATE_TITLE_SCREEN);
@@ -68,11 +67,6 @@ void state_exit_credits(void) {
 		for (int i = 0; i < n_text_credits; ++i) {
 			renderer_draw_text((vec2_t){256 * ONE, (state.credits.scroll + i * 16 * ONE) + (256 * ONE)}, text_credits[i], 1, 1, white);
 		}
-
-		// In case the player skipped the credits by pressing a button, tick the input
-		// system. That way the button isn't registered as released on frame 1 on the
-		// title screen, fixing a bug where it'd immediately press the credits button again
-		input_update();
 
 		renderer_end_frame();
 	}
