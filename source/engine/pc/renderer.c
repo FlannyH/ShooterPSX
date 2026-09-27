@@ -1,3 +1,4 @@
+#include "engine/math/fixed_point.h"
 #define CGLM_FORCE_LEFT_HANDED
 #include <cglm/cam.h>
 
@@ -34,10 +35,11 @@ GLuint shader_gouraud;
 GLuint shader_blit;
 GLuint vao;
 GLuint vbo;
-clock_t dt_clock;
+double dt_clock;
 GLuint textures;
 clock_t dt = 0;
 float dt_float = 0;
+scalar_t time_since_start = 0;
 scalar_t delta_time = 0;
 uint32_t n_total_triangles = 0;
 int render_w = 512;
@@ -306,7 +308,7 @@ void renderer_init(void) {
 	glVertexAttribPointer(3, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(vertex_3d_t), (const void *)offsetof(vertex_3d_t, tex_id));
 
 	// Initialize delta time clock
-	dt_clock = clock();
+	dt_clock = glfwGetTime();
 
 	// Initialize ImGui
 	debug_layer_init(window);
