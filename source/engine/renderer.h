@@ -55,6 +55,23 @@ typedef enum {
     DT_TICK = 1,
 } dt_flags_t;
 
+typedef enum {
+    BIT_OP_NONE = 0,
+    BIT_OP_AND = 1, // for resetting bits
+    BIT_OP_OR = 2, // for setting bits
+    BIT_OP_XOR = 3, // for toggling bits
+} bit_op_t;
+
+typedef enum {
+    // only relevant on ps1
+    VIDEO_MODE_NTSC = (0 << 0),
+    VIDEO_MODE_PAL = (1 << 0),
+
+    // only relevant on pc
+    VIDEO_MODE_WINDOW = (0 << 1),
+    VIDEO_MODE_FULLSCREEN = (1 << 1),
+} video_mode_t;
+
 // todo(renderer_coordinate_system): desc: pick one coordinate system
 //                                   and make it consistent across graphics, physics, and model spaces, and then make it correct for each platform with a view matrix
 
@@ -80,7 +97,7 @@ void renderer_debug_draw_sphere(sphere_t sphere);
 void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_category_t category);
 void renderer_free_texture(int index, texture_category_t category);
 void renderer_free_texture_category(texture_category_t category);
-void renderer_set_video_mode(int is_pal);
+void renderer_set_video_mode(uint32_t video_mode_bitmask, bit_op_t bit_operation);
 scalar_t renderer_delta_time(dt_flags_t flags);
 int renderer_should_close(void);
 void renderer_set_depth_bias(int bias);

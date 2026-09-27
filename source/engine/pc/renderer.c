@@ -1108,8 +1108,45 @@ void renderer_apply_fade(scalar_t fade_level) {
 	);
 }
 
-void renderer_set_video_mode(int is_pal) {
-	(void)is_pal;
+uint32_t video_mode = 0;
+
+void renderer_set_video_mode(uint32_t video_mode_bitmask, bit_op_t bit_operation) {
+    uint32_t old_video_mode = video_mode;
+
+    switch (bit_operation) {
+    case BIT_OP_AND: video_mode &= video_mode_bitmask; break;
+    case BIT_OP_OR: video_mode |= video_mode_bitmask; break;
+    case BIT_OP_XOR: video_mode ^= video_mode_bitmask; break;
+    default: break;
+    }
+
+    const uint32_t set = video_mode & (~old_video_mode);
+    const uint32_t reset = old_video_mode & (~video_mode);
+
+    printf("set, reset, video_mode, old_video_mode: %02X, %02X, %02X, %02X\n", set, reset, video_mode, old_video_mode);
+
+    if (set & VIDEO_MODE_FULLSCREEN) {
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        glfwSetWindowMonitor(
+            window,
+            monitor,
+            0, 0,
+            mode->width,
+            mode->height,
+            mode->refreshRate
+        );
+    }
+    else if (reset & VIDEO_MODE_FULLSCREEN) {
+        glfwSetWindowMonitor(
+            window,
+            NULL,
+            100, 100,
+            320 * RESOLUTION_SCALING,
+            240 * RESOLUTION_SCALING,
+            0
+        );
+    }
 }
 
 void renderer_set_depth_bias(int bias) {

@@ -104,7 +104,8 @@ void state_update_settings(scalar_t dt) {
 				break;
 			case 1: // video mode pal or ntsc
 				is_pal = !is_pal;
-				renderer_set_video_mode(is_pal);
+				if (is_pal) renderer_set_video_mode(VIDEO_MODE_PAL, BIT_OP_OR);
+				else renderer_set_video_mode(~VIDEO_MODE_PAL, BIT_OP_AND);
 				break;
 			case 2: // aspect ratio
 				widescreen = !widescreen;
