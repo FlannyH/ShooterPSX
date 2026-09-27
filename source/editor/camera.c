@@ -1,10 +1,10 @@
 #include "camera.h"
 
-#include "../input_mapping.h"
-#include "../player.h"
+#include "engine/input_mapping.h"
+#include "subnivis/player.h"
 #include "input_map.h"
-#include "math/vec3.h"
-#include "math/vec2.h"
+#include "engine/math/vec3.h"
+#include "engine/math/vec2.h"
 
 debug_camera_t debug_camera_new(void) {
     return (debug_camera_t) {

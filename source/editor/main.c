@@ -1,18 +1,15 @@
-#include "../main.h"
+#include "../subnivis/main.h"
 
 #include "camera.h"
-#include "../editor/input_map.h"
-#include "../pc/debug_layer.h"
-#include "../pc/psx.h"
-#include "../input_mapping.h"
-#include "../renderer.h"
-#include "../entity.h"
-#include "../player.h"
-#include "../common.h"
-#include "../level.h"
-#include "../file.h"
+#include "editor/input_map.h"
+#include "engine/pc/debug_layer.h"
+#include "engine/input_mapping.h"
+#include "engine/renderer.h"
+#include "engine/entity.h"
+#include "subnivis/player.h"
+#include "engine/level.h"
 
-#include "../test/test.h"
+#include "test/test.h"
 
 #include <string.h>
 #include <unistd.h>

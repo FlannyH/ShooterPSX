@@ -10,13 +10,13 @@
 #include "../texture.h"
 
 #ifdef _LEVEL_EDITOR
-#include "../entities/platform.h"
-#include "../entities/trigger.h"
-#include "../entities/pickup.h"
-#include "../entities/chaser.h"
-#include "../entities/crate.h"
-#include "../entities/door.h"
-#include "../editor/input_map.h"
+#include "entities/platform.h"
+#include "entities/trigger.h"
+#include "entities/pickup.h"
+#include "entities/chaser.h"
+#include "entities/crate.h"
+#include "entities/door.h"
+#include "editor/input_map.h"
 #include "../input_mapping.h"
 #include "../renderer.h"
 #include "../common.h"
@@ -65,8 +65,8 @@ void debug_layer_end(void) {
 #ifdef _LEVEL_EDITOR
 #include <cglm/types.h>
 #include <cglm/affine.h>
-#include <level.h>
-#include <file.h>
+#include "engine/level.h"
+#include "engine/file.h"
 extern "C" {
     extern GLuint fb_texture;
     extern GLuint fbo;
