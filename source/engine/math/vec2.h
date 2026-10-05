@@ -1,11 +1,14 @@
 #ifndef VEC2_H
 #define VEC2_H
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "scalar.h"
+#include <assert.h>
+#include <stddef.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
@@ -23,15 +26,15 @@ typedef struct {
 
 static inline vec2_t vec2_from_floats(const float x, const float y) {
     return (vec2_t) {
-        scalar_from_float(x),
-        scalar_from_float(y),
+        SCALAR(x),
+        SCALAR(y),
     };
 }
 
 static inline void vec2_debug(const vec2_t a) {
-    print_fixed_point(a.x);
+    print_scalar(a.x);
     printf(", ");
-    print_fixed_point(a.y);
+    print_scalar(a.y);
     printf("\n");
 }
 
@@ -177,7 +180,18 @@ static inline scalar_t vec2_distance(vec2_t a, vec2_t b) {
     return vec2_magnitude(vec2_sub(a, b));
 }
 
+static inline vec2_t vec2_neg(vec2_t a) {
+    return (vec2_t) {
+        -a.x,
+        -a.y,
+    };
+}
+
 static inline scalar_t vec2_cross(const vec2_t a, const vec2_t b) {
+    return (scalar_mul(a.x, b.y) - scalar_mul(a.y, b.x));
+}
+
+static inline scalar_t vec2_cross_lh(const vec2_t a, const vec2_t b) {
     return (scalar_mul(a.x, b.y) - scalar_mul(a.y, b.x));
 }
 
@@ -197,14 +211,6 @@ static inline vec2_t vec2_normalize(vec2_t a) {
     return a_normalized;
 }
 
-static inline vec2_t vec2_neg(vec2_t a) {
-    return (vec2_t) {
-        -a.x,
-        -a.y,
-    };
-}
-
-// per-component scalar_clamp
 static inline vec2_t vec2_clamp(vec2_t a, vec2_t min, vec2_t max) {
     return (vec2_t) {
         scalar_clamp(a.x, min.x, max.x),
@@ -221,6 +227,22 @@ static inline vec2_t vec2_lerp(vec2_t a, vec2_t b, scalar_t t) {
 
 static inline int vec2_equal(vec2_t a, vec2_t b) {
     return (a.x == b.x) && (a.y == b.y);
+}
+
+static inline size_t serialize_vec2(void* destination, vec2_t vec) {
+    intptr_t dest_i = (intptr_t)destination;
+    serialize_scalar((void*)(dest_i + offsetof(vec2_t, x)), vec.x);
+    serialize_scalar((void*)(dest_i + offsetof(vec2_t, y)), vec.y);
+    return sizeof(vec);
+}
+
+static inline size_t deserialize_vec2(const void *const source, vec2_t* vec) {
+    assert(source);
+    assert(vec);
+    intptr_t src_i = (intptr_t)source;
+    deserialize_scalar((void*)(src_i + offsetof(vec2_t, x)), &vec->x);
+    deserialize_scalar((void*)(src_i + offsetof(vec2_t, y)), &vec->y);
+    return sizeof(*vec);
 }
 
 #pragma GCC diagnostic pop

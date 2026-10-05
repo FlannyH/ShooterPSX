@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 
-#include "math/fixed_point.h"
+#include "math/scalar.h"
 #include "input.h"
 
 void input_mapping_init(void);

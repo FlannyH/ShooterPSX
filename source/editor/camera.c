@@ -20,9 +20,7 @@ debug_camera_t debug_camera_new(void) {
     };
 }
 
-void move_look(debug_camera_t* self, const scalar_t dt, const int register_input) {
-    if (!register_input) return;
-
+void move_look(debug_camera_t* self, const scalar_t dt) {
     // Moving forwards and backwards
     const vec3_t forward = (vec3_t) {
         trig_sin(self->transform.rotation.y),
@@ -45,6 +43,9 @@ void move_look(debug_camera_t* self, const scalar_t dt, const int register_input
         input_mapping_value(IM_LOOK_X, 0),
         input_mapping_value(IM_LOOK_Y, 0)
     };
+
+    printf("move: "); vec2_debug(move);
+    printf("look: "); vec2_debug(look);
 
     // Moving horizontally
     self->velocity = vec3_add(self->velocity, vec3_muls(forward, scalar_mul(scalar_mul(move.y, self->acceleration * PLAYER_VELOCITY_PRECISION), dt)));
@@ -69,7 +70,7 @@ void move_look(debug_camera_t* self, const scalar_t dt, const int register_input
     }
 }
 
-void handle_drag(debug_camera_t* self, const scalar_t dt, const int register_input) {
+void handle_drag(debug_camera_t* self, const scalar_t dt) {
     scalar_t curr_drag = scalar_mul(drag, dt);
 
     const scalar_t length = vec3_magnitude(self->velocity);
@@ -90,15 +91,16 @@ void handle_drag(debug_camera_t* self, const scalar_t dt, const int register_inp
 void debug_camera_update(debug_camera_t* self, const scalar_t dt, const int register_input) {
     // Change max move speed based on scroll input
     if (input_mapping_value(IM_CAMERA_SPEED_UP, 0) > 0) {
-        self->max_speed = scalar_mul(self->max_speed, scalar_from_float(1.1f));
+        self->max_speed = scalar_mul(self->max_speed, SCALAR(1.1f));
     }
     if (input_mapping_value(IM_CAMERA_SPEED_DOWN, 0) > 0) {
-        self->max_speed = scalar_mul(self->max_speed, scalar_from_float(1.0f / 1.1f));
+        self->max_speed = scalar_mul(self->max_speed, SCALAR(1.0f / 1.1f));
     }
 
-    move_look(self, dt, register_input);
-
-    handle_drag(self, dt, register_input);
+    if (register_input) {
+        move_look(self, dt);
+        handle_drag(self, dt);
+    }
 
     // Move the player based on velocity
     self->transform.position = vec3_add(self->transform.position, vec3_divs(vec3_muls(self->velocity, dt), PLAYER_VELOCITY_PRECISION));

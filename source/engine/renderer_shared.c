@@ -251,7 +251,9 @@ int renderer_is_fading(void) {
 }
 
 void renderer_tick_fade(void) {
-    fade_level += scalar_mul(fade_speed, renderer_delta_time(DT_NO_TICK));
+    if (fade_speed != 0) {
+        fade_level += scalar_mul(fade_speed, renderer_delta_time(DT_NO_TICK));
+    }
     if (fade_level > MAX_FADE_LEVEL) fade_level = MAX_FADE_LEVEL;
     if (fade_level < 0) fade_level = 0;
     renderer_apply_fade(fade_level);

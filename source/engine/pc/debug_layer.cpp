@@ -133,10 +133,10 @@ bool inspect_svec3_4_12(svec3_t* vec, const char* label) {
 
 // returns whether data changed
 bool inspect_scalar(scalar_t* scalar, const char* label) {
-    float scalar_float = scalar_to_float(*scalar);
+    float scalar_float = SCALAR(*scalar);
 
     if (ImGui::DragFloat(label, &scalar_float)) {
-        *scalar = scalar_from_float(scalar_float);
+        *scalar = SCALAR(scalar_float);
         return true;
     }
     return false;
@@ -1075,7 +1075,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 if (curr_level->shapes[i].type == SHAPE_NONE) {
                     if (curr_selected_shape_type == SHAPE_SPHERE) {
                         curr_level->shapes[i].sphere.center = spawn_pos;
-                        curr_level->shapes[i].sphere.radius = scalar_from_float(100.0);
+                        curr_level->shapes[i].sphere.radius = SCALAR(100.0);
                     }
                     else if (curr_selected_shape_type == SHAPE_AABB) {
                         curr_level->shapes[i].aabb.min = spawn_pos;

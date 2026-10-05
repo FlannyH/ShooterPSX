@@ -5,12 +5,13 @@
 extern "C" {
 #endif
 
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 
-#include "../common.h"
 #include "../lut.h"
 
+#include <string.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -24,18 +25,15 @@ typedef fixed20_12_t scalar_t;
 
 #define SCALAR(a) ((int32_t)(((a) * (ONE)) + (((a) >= 0.0f) ? 0.5f : -0.5f)))
 
-// Let's hope and pray that this will be compile-time evaluated
-static inline fixed20_12_t scalar_from_float(const float a) {
-    fixed20_12_t result;
-    result = (int32_t)((a * (ONE)) + ((a >= 0.0f) ? 0.5f : -0.5f));
-    return result;
+static inline scalar_t fixed_to_scalar(int32_t a) {
+    return a;
 }
 
-static inline scalar_t fixed_to_scalar(int fixed20_12) {
-    return fixed20_12;
+static inline int int_from_scalar(scalar_t scalar) {
+    return (scalar + SCALAR(0.5)) / ONE;
 }
 
-static inline void print_fixed_point(scalar_t a) {
+static inline void print_scalar(scalar_t a) {
     if (a < 0) {
         a = -a;
         printf("-");
@@ -55,7 +53,7 @@ static inline void scalar_debug(const scalar_t a) {
         printf("-inf\n");
         return;
     }
-    print_fixed_point(a);
+    print_scalar(a);
     printf("\n");
 }
 
@@ -99,10 +97,10 @@ static inline fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b
 }
 #else
 static inline fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
-    int64_t result32 = ((int64_t)a * ((int64_t)b)) >> 12;
+    int64_t result32 = (((int64_t)a * ((int64_t)b)) + SCALAR(0.5)) / ONE;
 
     // todo(fixed_point_overflow_check): desc: make overflow check default, and add this check in the ps1 code
-#ifdef _DEBUG
+// #ifdef _DEBUG
     // overflow check
     if (result32 > INT32_MAX) {
         result32 = INT32_MAX;
@@ -112,7 +110,12 @@ static inline fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b
         result32 = -INT32_MAX;
         printf("scalar_mul resulted in infinity, check overflow!\n");
     }
-#endif
+
+    // precision check
+    if ((result32 < SCALAR(0.01)) && (result32 > SCALAR(-0.01)) && a != 0 && b != 0) {
+        printf("potential precision problem\n");
+    }
+// #endif
 
     return (fixed20_12_t)result32;
 }
@@ -142,10 +145,11 @@ static inline fixed20_12_t scalar_max(const fixed20_12_t a, const fixed20_12_t b
 
 // todo(scalar_sqrt_optimization): desc: optimize sqrt with luts
 static inline fixed20_12_t scalar_sqrt(fixed20_12_t a) {
+    if (a < 0) return 0;
 #ifdef _PSX
     return SquareRoot12(a);
 #else
-    return scalar_from_float(sqrtf((float)a / (ONE)));
+    return SCALAR(sqrtf((float)a / (ONE)));
 #endif
 }
 
@@ -170,20 +174,16 @@ static inline fixed20_12_t scalar_lerp(const fixed20_12_t a, const fixed20_12_t 
 	return a + scalar_mul(b-a, t);
 }
 
-static inline fixed20_12_t scalar_shift_left(const fixed20_12_t a, uint32_t shift) {
-    return a << shift;
+static inline fixed20_12_t scalar_shift_left(const fixed20_12_t a, uint32_t amount) {
+    return a << amount;
 }
 
-static inline fixed20_12_t scalar_shift_right(const fixed20_12_t a, uint32_t shift) {
-    return a >> shift;
+static inline fixed20_12_t scalar_shift_right(const fixed20_12_t a, uint32_t amount) {
+    return a >> amount;
 }
 
 static inline int is_infinity(const fixed20_12_t a) {
     return (a == INT32_MAX || a == -INT32_MAX);
-}
-
-static inline int int_from_scalar(scalar_t scalar) {
-    return scalar / ONE;
 }
 
 static inline scalar_t trig_sin(scalar_t angle) {
@@ -211,9 +211,18 @@ static inline scalar_t trig_cos(scalar_t angle) {
     // |   |XX | XX|
     // |   |  XXX  |
     // 0   1   2   3
-    return trig_sin(angle + scalar_from_float(0.25f));
+    return trig_sin(angle + SCALAR(0.25));
 }
 
+static inline size_t serialize_scalar(void* destination, scalar_t scalar) {
+    memcpy(destination, &scalar, sizeof(scalar));
+    return sizeof(scalar);
+}
+
+static inline size_t deserialize_scalar(const void *const source, scalar_t* scalar) {
+    memcpy(scalar, source, sizeof(*scalar));
+    return sizeof(*scalar);
+}
 
 #pragma GCC diagnostic pop
 

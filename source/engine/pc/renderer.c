@@ -1,4 +1,4 @@
-#include "engine/math/fixed_point.h"
+#include "engine/math/scalar.h"
 #define CGLM_FORCE_LEFT_HANDED
 #include <cglm/cam.h>
 

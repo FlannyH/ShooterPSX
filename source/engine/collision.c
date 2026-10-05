@@ -3,7 +3,7 @@
 #include "collision.h"
 #include "level.h"
 #include "mesh.h"
-#include "math/fixed_point.h"
+#include "math/scalar.h"
 #include "structs.h"
 #include "math/vec3.h"
 

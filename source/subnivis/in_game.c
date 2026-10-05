@@ -8,7 +8,7 @@
 #include "entities/crate.h"
 #include "entities/door.h"
 #include "subnivis/input_map.h"
-#include "engine/math/fixed_point.h"
+#include "engine/math/scalar.h"
 #include "engine/input_mapping.h"
 #include "engine/renderer.h"
 #include "engine/entity.h"

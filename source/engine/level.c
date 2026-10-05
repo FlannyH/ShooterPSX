@@ -1,5 +1,7 @@
 #include "level.h"
 
+#include "engine/math/scalar.h"
+#include "engine/math/vec3.h"
 #include "memory.h"
 #include "renderer.h"
 #include "texture.h"
@@ -25,32 +27,31 @@ void serialize_shape(uint8_t* shapes, size_t* cursor, const shape_t* shape) {
         break;
     case SHAPE_SPHERE:
         *(uint32_t*)(&shapes[*cursor]) = SHAPE_SPHERE;                *cursor += sizeof(uint32_t);
-        *(vec3_t*)(&shapes[*cursor]) = shape->sphere.center;          *cursor += sizeof(vec3_t);
-        *(scalar_t*)(&shapes[*cursor]) = shape->sphere.radius;        *cursor += sizeof(scalar_t);
+        *cursor += serialize_vec3(&shapes[*cursor], shape->sphere.center);
+        *cursor += serialize_scalar(&shapes[*cursor], shape->sphere.radius);
         break;
     case SHAPE_CAPSULE:
         *(uint32_t*)(&shapes[*cursor]) = SHAPE_CAPSULE;               *cursor += sizeof(uint32_t);
-        *(vec3_t*)(&shapes[*cursor]) = shape->capsule.a;              *cursor += sizeof(vec3_t);
-        *(vec3_t*)(&shapes[*cursor]) = shape->capsule.b;              *cursor += sizeof(vec3_t);
-        *(scalar_t*)(&shapes[*cursor]) = shape->capsule.radius;       *cursor += sizeof(scalar_t);
+        *cursor += serialize_vec3(&shapes[*cursor], shape->capsule.a);
+        *cursor += serialize_vec3(&shapes[*cursor], shape->capsule.b);
+        *cursor += serialize_scalar(&shapes[*cursor], shape->capsule.radius);
         break;
     case SHAPE_TRIANGLE:
         *(uint32_t*)(&shapes[*cursor]) = SHAPE_TRIANGLE;              *cursor += sizeof(uint32_t);
-        *(vec3_t*)(&shapes[*cursor]) = shape->triangle.v0;            *cursor += sizeof(vec3_t);
-        *(vec3_t*)(&shapes[*cursor]) = shape->triangle.v1;            *cursor += sizeof(vec3_t);
-        *(vec3_t*)(&shapes[*cursor]) = shape->triangle.v2;            *cursor += sizeof(vec3_t);
+        *cursor += serialize_vec3(&shapes[*cursor], shape->triangle.v0);
+        *cursor += serialize_vec3(&shapes[*cursor], shape->triangle.v1);
+        *cursor += serialize_vec3(&shapes[*cursor], shape->triangle.v2);
         break;
     case SHAPE_AABB:
         *(uint32_t*)(&shapes[*cursor]) = SHAPE_AABB;                  *cursor += sizeof(uint32_t);
-        *(vec3_t*)(&shapes[*cursor]) = shape->aabb.min;               *cursor += sizeof(vec3_t);
-        *(vec3_t*)(&shapes[*cursor]) = shape->aabb.max;               *cursor += sizeof(vec3_t);
+        *cursor += serialize_vec3(&shapes[*cursor], shape->aabb.min);
+        *cursor += serialize_vec3(&shapes[*cursor], shape->aabb.max);
         break;
     case SHAPE_CONVEX_HULL:
         *(uint32_t*)(&shapes[*cursor]) = SHAPE_CONVEX_HULL;           *cursor += sizeof(uint32_t);
         *(uint32_t*)(&shapes[*cursor]) = shape->convex_hull.n_points; *cursor += sizeof(uint32_t);
         for (size_t i = 0; i < shape->convex_hull.n_points; ++i) {
-            *(vec3_t*)(&shapes[*cursor]) = shape->convex_hull.points[i];
-            *cursor += sizeof(vec3_t);
+            *cursor += serialize_vec3(&shapes[*cursor], shape->convex_hull.points[i]);
         }
         break;
     }
@@ -68,21 +69,21 @@ void deserialize_shape(const uint8_t* data, size_t* offset, shape_t* shape) {
         break;
     case SHAPE_SPHERE:
         shape->sphere.center = *(vec3_t*)(&data[*offset]);             *offset += sizeof(vec3_t);
-        shape->sphere.radius = *(scalar_t*)(&data[*offset]);           *offset += sizeof(scalar_t);
+        *offset += deserialize_scalar(&data[*offset], &shape->sphere.radius);
         break;
     case SHAPE_CAPSULE:
-        shape->capsule.a = *(vec3_t*)(&data[*offset]);                 *offset += sizeof(vec3_t);
-        shape->capsule.b = *(vec3_t*)(&data[*offset]);                 *offset += sizeof(vec3_t);
-        shape->capsule.radius = *(scalar_t*)(&data[*offset]);          *offset += sizeof(scalar_t);
+        *offset += deserialize_vec3(&data[*offset], &shape->capsule.a);
+        *offset += deserialize_vec3(&data[*offset], &shape->capsule.b);
+        *offset += deserialize_scalar(&data[*offset], &shape->capsule.radius);
         break;
     case SHAPE_TRIANGLE:
-        shape->triangle.v0 = *(vec3_t*)(&data[*offset]);               *offset += sizeof(vec3_t);
-        shape->triangle.v1 = *(vec3_t*)(&data[*offset]);               *offset += sizeof(vec3_t);
-        shape->triangle.v2 = *(vec3_t*)(&data[*offset]);               *offset += sizeof(vec3_t);
+        *offset += deserialize_vec3(&data[*offset], &shape->triangle.v0);
+        *offset += deserialize_vec3(&data[*offset], &shape->triangle.v1);
+        *offset += deserialize_vec3(&data[*offset], &shape->triangle.v2);
         break;
     case SHAPE_AABB:
-        shape->aabb.min = *(vec3_t*)(&data[*offset]);                  *offset += sizeof(vec3_t);
-        shape->aabb.max = *(vec3_t*)(&data[*offset]);                  *offset += sizeof(vec3_t);
+        *offset += deserialize_vec3(&data[*offset], &shape->aabb.min);
+        *offset += deserialize_vec3(&data[*offset], &shape->aabb.max);
         break;
     case SHAPE_CONVEX_HULL:
         shape->convex_hull.n_points = *(uint32_t*)(&data[*offset]);    *offset += sizeof(uint32_t);
@@ -92,7 +93,7 @@ void deserialize_shape(const uint8_t* data, size_t* offset, shape_t* shape) {
         shape->convex_hull.points = mem_stack_alloc(shape->convex_hull.n_points * sizeof(vec3_t), STACK_LEVEL);
 #endif
         for (size_t i = 0; i < shape->convex_hull.n_points; ++i) {
-            shape->convex_hull.points[i] = *(vec3_t*)(&data[*offset]); *offset += sizeof(vec3_t);
+            *offset += deserialize_vec3(&data[*offset], &shape->convex_hull.points[i]);
         }
         break;
     }

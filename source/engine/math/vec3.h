@@ -6,6 +6,8 @@ extern "C" {
 #endif
 
 #include "scalar.h"
+#include <stddef.h>
+#include <assert.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
@@ -23,18 +25,18 @@ typedef struct {
 
 static inline vec3_t vec3_from_floats(const float x, const float y, const float z) {
     return (vec3_t) {
-        scalar_from_float(x),
-        scalar_from_float(y),
-        scalar_from_float(z),
+        SCALAR(x),
+        SCALAR(y),
+        SCALAR(z),
     };
 }
 
 static inline void vec3_debug(const vec3_t a) {
-    print_fixed_point(a.x);
+    print_scalar(a.x);
     printf(", ");
-    print_fixed_point(a.y);
+    print_scalar(a.y);
     printf(", ");
-    print_fixed_point(a.z);
+    print_scalar(a.z);
     printf("\n");
 }
 

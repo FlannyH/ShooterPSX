@@ -8,7 +8,7 @@
 
 #include "../common.h"
 
-#include "../math/fixed_point.h"
+#include "../math/scalar.h"
 #include "../texture_pool.h"
 #include "../collision.h"
 #include "../particles.h"
