@@ -207,7 +207,7 @@ void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const
         if (text[text_cursor] == '\t') {
             // Get X coordinate relative to start, and round the position up to the nearest multiple of 4
             scalar_t rel_x = pos.x - start_pos.x;
-            int n_spaces = 4 - ((rel_x / font_dst_width) % 4);
+            int n_spaces = 4 - ((int_from_scalar(rel_x) / font_dst_width) % 4);
             pos.x += n_spaces * font_dst_width * ONE;
             goto end;
         }
