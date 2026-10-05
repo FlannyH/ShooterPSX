@@ -536,12 +536,13 @@ int renderer_convert_dt_raw_to_sec(int dt_raw) {
     scalar_t dt;
     if (vsync_enable) { // dt_raw is frames
         if (is_pal)
-            dt = SCALAR((float)dt_raw / 50.0);
+            dt = SCALAR(dt_raw) / 50;
         else
-            dt = SCALAR((float)dt_raw / 60.0);
+            dt = SCALAR(dt_raw) / 60;
     }
     else { // dt_raw is hblanks
         dt = SCALAR((float)dt_raw / 15625.0); // Somehow this works for both PAL and NTSC
+        dt = SCALAR(dt_raw) / 15625; // Somehow this works for both PAL and NTSC
     }
 
     return dt;

@@ -31,6 +31,7 @@ void state_enter_debug_menu_level(void) {
 	state.title_screen.button_pressed = 0;
 	renderer_start_fade_in(FADE_SPEED);
 	while (renderer_is_fading()) {
+		renderer_delta_time(DT_TICK);
 		renderer_begin_frame(&id_transform);
 		ui_render_background();
 		renderer_end_frame();
@@ -112,6 +113,7 @@ void state_exit_debug_menu_level(void) {
 	renderer_start_fade_out(FADE_SPEED);
 
 	while (renderer_is_fading()) {
+		renderer_delta_time(DT_TICK);
 		renderer_begin_frame(&id_transform);
 		input_update();
 		ui_render_background();
