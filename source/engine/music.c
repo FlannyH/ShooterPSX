@@ -1,7 +1,6 @@
 #include "music.h"
 #include "common.h"
 
-#include "math/scalar.h"
 #include "math/vec2.h"
 #include "memory.h"
 #include "mixer.h"

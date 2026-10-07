@@ -21,6 +21,12 @@ typedef enum {
     SOUNDBANK_TYPE_SFX,
 } soundbank_type_t;
 
+typedef enum {
+    INTERPOLATE_NEAREST,
+    INTERPOLATE_LINEAR,
+    INTERPOLATE_GAUSSIAN,
+} interpolation_type_t;
+
 void mixer_init(void);
 void mixer_upload_sample_data(const void* const sample_data, size_t n_bytes, soundbank_type_t soundbank_type);
 void mixer_global_set_volume(scalar_t left, scalar_t right);

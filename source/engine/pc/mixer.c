@@ -13,8 +13,9 @@ typedef struct {
     float sample_length;
     float volume_left;
     float volume_right;
-    uint8_t type; // 0 = music, 1 = sfx
+    uint8_t soundbank_type; // 0 = music, 1 = sfx
     uint8_t is_playing;
+    uint8_t interpolation_mode; // see `interpolation_type_t`
 } mixer_channel_t;
 
 PaStream* stream = NULL;
@@ -40,34 +41,38 @@ float sample_from_index(const int16_t* const samples, int sample_index, size_t l
         sample_index_corrected -= loop_stride;
     }
 
-    if (sample_index_corrected >= 0) return ((float)samples[(size_t)sample_index_corrected]) / INT16_MAX;
+    if (sample_index_corrected >= 0 && sample_index_corrected < sample_end) return ((float)samples[(size_t)sample_index_corrected]) / INT16_MAX;
 
     return 0.0f;
 }
 
-float interpolate_sample(const int16_t* const samples, double sample_index, size_t loop_stride, int sample_end) {
-#if 0 // nearest neighbor sampling
-    return sample_from_index(samples, (size_t)sample_index, loop_stride, sample_end);;
-
-#elif 0 // linear sampling
-    const size_t sample_index1 = (size_t)sample_index;
-    const size_t sample_index2 = sample_index1 + 1;
-    const float sample1 = sample_from_index(samples, sample_index1, loop_stride, sample_end);
-    const float sample2 = sample_from_index(samples, sample_index2, loop_stride, sample_end);
-    const float t = (float)(sample_index - floor(sample_index));
-    return sample1 + (sample2 - sample1) * t;
-
-#elif 1 // 4-tap gaussian sampling
-    const size_t sample_index1 = (size_t)sample_index;
-    float output = 0.0f;
-    for (int i = -1; i < 3; i++) {
-        const int sample_idx = sample_index1 + i;
-        const double distance = fabs(sample_index - (double)sample_idx);
-        if (distance < 2.0)
-            output += sample_from_index(samples, sample_idx, loop_stride, sample_end) * bell_curve[(int)scalar_clamp(distance * 256, 0, 511)];
+float interpolate_sample(const int16_t* const samples, double sample_index, size_t loop_stride, int sample_end, interpolation_type_t interp_type) {
+    if (interp_type == INTERPOLATE_NEAREST) {
+        return sample_from_index(samples, (size_t)sample_index + 0.5, loop_stride, sample_end);
     }
-    return output;
-#endif
+
+    else if (interp_type == INTERPOLATE_LINEAR) {
+        const size_t sample_index1 = (size_t)sample_index;
+        const size_t sample_index2 = sample_index1 + 1;
+        const float sample1 = sample_from_index(samples, sample_index1, loop_stride, sample_end);
+        const float sample2 = sample_from_index(samples, sample_index2, loop_stride, sample_end);
+        const float t = (float)(sample_index - floor(sample_index));
+        return sample1 + (sample2 - sample1) * t;
+    }
+
+    else if (interp_type == INTERPOLATE_GAUSSIAN) {
+        const size_t sample_index1 = (size_t)sample_index;
+        float output = 0.0f;
+        for (int i = -1; i < 3; i++) {
+            const int sample_idx = sample_index1 + i;
+            const double distance = fabs(sample_index - (double)sample_idx);
+            if (distance < 2.0)
+                output += sample_from_index(samples, sample_idx, loop_stride, sample_end) * bell_curve[(int)scalar_clamp(distance * 256, 0, 511)];
+        }
+        return output;
+    }
+
+    else return 0.0f;
 }
 
 int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffer, const PaStreamCallbackTimeInfo* time_info, PaStreamCallbackFlags flags, void* user_data) {
@@ -111,11 +116,11 @@ int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffe
 
             double sample_index = mixer_ch->sample_source + mixer_ch->sample_offset;
             float sample = 0.0f;
-            if (mixer_ch->type == SOUNDBANK_TYPE_MUSIC) {
-                sample = interpolate_sample(music_samples, sample_index, (size_t)mixer_ch->loop_length, mixer_ch->sample_end);
+            if (mixer_ch->soundbank_type == SOUNDBANK_TYPE_MUSIC) {
+                sample = interpolate_sample(music_samples, sample_index, (size_t)mixer_ch->loop_length, mixer_ch->sample_end, mixer_ch->interpolation_mode);
             }
-            else if (mixer_ch->type == SOUNDBANK_TYPE_SFX) {
-                sample = interpolate_sample(sfx_samples, sample_index, (size_t)mixer_ch->loop_length, mixer_ch->sample_end);
+            else if (mixer_ch->soundbank_type == SOUNDBANK_TYPE_SFX) {
+                sample = interpolate_sample(sfx_samples, sample_index, (size_t)mixer_ch->loop_length, mixer_ch->sample_end, mixer_ch->interpolation_mode);
             }
 
             vol_l += sample * mixer_ch->volume_left;
@@ -245,7 +250,8 @@ void mixer_channel_set_volume(size_t channel_index, scalar_t left, scalar_t righ
 void mixer_channel_set_sample(size_t channel_index, size_t sample_source, size_t loop_start, size_t sample_length, soundbank_type_t soundbank_type) {
     mixer_channel[channel_index].sample_source = ((double)sample_source) / sizeof(int16_t);
     mixer_channel[channel_index].sample_offset = 0.0;
-    mixer_channel[channel_index].type = soundbank_type;
+    mixer_channel[channel_index].soundbank_type = soundbank_type;
+    mixer_channel[channel_index].interpolation_mode = INTERPOLATE_GAUSSIAN;
     if (loop_start < 0xF0000000) {
         mixer_channel[channel_index].loop_length = (float)(sample_length - loop_start) / sizeof(int16_t) + 1.0f;
     }
