@@ -72,6 +72,7 @@ typedef enum {
 
 void input_init(void);
 void input_update(void);
+int input_gamepad_connected(int player_id);
 void input_lock_mouse(void);
 void input_unlock_mouse(void);
 void input_rumble(scalar_t left_strength, scalar_t right_enable);
