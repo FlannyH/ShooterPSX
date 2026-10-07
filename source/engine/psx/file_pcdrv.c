@@ -1,7 +1,7 @@
 #ifdef _PSX
 #include "../common.h"
-#include "file.h"
-#include "memory.h"
+#include "../file.h"
+#include "../memory.h"
 
 #include <string.h>
 #include <stdio.h>
