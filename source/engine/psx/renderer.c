@@ -565,7 +565,6 @@ int renderer_convert_dt_raw_to_sec(int dt_raw) {
             dt = SCALAR(dt_raw) / 60;
     }
     else { // dt_raw is hblanks
-        dt = SCALAR((float)dt_raw / 15625.0); // Somehow this works for both PAL and NTSC
         dt = SCALAR(dt_raw) / 15625; // Somehow this works for both PAL and NTSC
     }
 
@@ -578,7 +577,6 @@ scalar_t renderer_delta_time(dt_flags_t flags) {
     if (flags == DT_TICK) {
         int dt_raw = renderer_get_delta_time_raw();
         curr_dt = renderer_convert_dt_raw_to_sec(dt_raw);
-        printf("dt: "); scalar_debug(curr_dt);
     }
     return curr_dt;
 }
