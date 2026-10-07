@@ -19,6 +19,7 @@ typedef enum {
     STATE_DEBUG_MENU_MAIN,
 	STATE_DEBUG_MENU_LEVEL,
 	STATE_DEBUG_MENU_MUSIC,
+	STATE_DEBUG_MENU_CONTROLLER,
 } state_t;
 
 typedef struct {
@@ -129,6 +130,11 @@ void state_exit_debug_menu_music(void);
 void state_enter_debug_menu_level(void);
 void state_update_debug_menu_level(scalar_t dt);
 void state_exit_debug_menu_level(void);
+
+// Debug menu controller
+void state_enter_debug_menu_controller(void);
+void state_update_debug_menu_controller(scalar_t dt);
+void state_exit_debug_menu_controller(void);
 
 #ifdef __cplusplus
 }

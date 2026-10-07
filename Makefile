@@ -71,6 +71,7 @@ CODE_ENGINE_SHARED_C = engine/collision.c \
 CODE_GAME_C = 		   subnivis/debug_menu_main.c \
 					   subnivis/debug_menu_music.c \
 					   subnivis/debug_menu_level.c \
+					   subnivis/debug_menu_controller.c \
 					   subnivis/title_screen.c \
 					   subnivis/pause_menu.c \
 					   subnivis/settings.c \
