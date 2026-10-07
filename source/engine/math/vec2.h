@@ -46,9 +46,9 @@ static inline vec2_t vec2_from_scalars(const scalar_t x, const scalar_t y) {
     return (vec2_t){ x, y };
 }
 
-// todo: this one may not work in float mode yet
-static inline vec2_t vec2_from_int32s(int32_t x, int32_t y) {
-    return (vec2_t){ (scalar_t)x, (scalar_t)y };
+/// doc: desc: Create a `vec2_t` from two integers, converting them into scalar values
+static inline vec2_t vec2_from_ints(int x, int y) {
+    return (vec2_t){ SCALAR(x), SCALAR(y) };
 }
 
 static inline vec2_t vec2_from_svec2(svec2_t vec) {
