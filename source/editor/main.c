@@ -38,6 +38,18 @@ int main(int argc, char** argv) {
     input_mapping_init();
 	entity_init();
     input_set_gamepad_stick_deadzone(SCALAR(36.0/255));
+    input_mapping_register_mouse(IM_CAMERA_LOCK, INPUT_MOUSE_BUTTON_RIGHT, SCALAR(1.0));
+    input_mapping_register_keyboard(IM_CAMERA_DOWN, INPUT_KEY_LEFT_SHIFT, SCALAR(1.0));
+    input_mapping_register_keyboard(IM_CAMERA_UP, INPUT_KEY_SPACE, SCALAR(1.0));
+    input_mapping_register_keyboard(IM_MOVE_X, INPUT_KEY_A, SCALAR(-1.0));
+    input_mapping_register_keyboard(IM_MOVE_X, INPUT_KEY_D, SCALAR(+1.0));
+    input_mapping_register_keyboard(IM_MOVE_Y, INPUT_KEY_S, SCALAR(-1.0));
+    input_mapping_register_keyboard(IM_MOVE_Y, INPUT_KEY_W, SCALAR(1.0));
+    input_mapping_register_mouse(IM_LOOK_X, INPUT_MOUSE_DELTA_X, SCALAR(0.5));
+    input_mapping_register_mouse(IM_LOOK_Y, INPUT_MOUSE_DELTA_Y, SCALAR(0.5));
+    input_mapping_register_mouse(IM_CAMERA_SPEED_UP, INPUT_KEY_EQUALS, SCALAR(1.0));
+    input_mapping_register_mouse(IM_CAMERA_SPEED_DOWN, INPUT_KEY_MINUS, SCALAR(1.0));
+    input_mapping_register_mouse(IM_PICK, INPUT_MOUSE_BUTTON_LEFT, SCALAR(1.0));
 
     const int n_failed_tests = test();
     printf("Unit tests finished with %i errors\n", n_failed_tests);
