@@ -73,10 +73,10 @@ extern "C" {
 }
 
 static model_t* gizmos = nullptr;
+static mesh_t* specialized_meshes[MAX_SHAPE_COUNT] = {0};
 static bool vertex_selected = false;
 static vec3_t selected_vertex_position = {0, 0, 0};
-
-static mesh_t* specialized_meshes[MAX_SHAPE_COUNT] = {0};
+static std::vector<size_t> defer_remove_shape;
 
 extern const char* entity_names[];
 const char* light_type_names[] = {
@@ -94,6 +94,30 @@ const char* shape_type_names[] = {
     "Convex Hull",
     NULL
 };
+
+void shape_defragment(level_t* curr_level) {
+    // find last valid entry
+    size_t last_valid = 0;
+    for (size_t i = 0; i < MAX_SHAPE_COUNT; ++i) {
+        if (curr_level->shapes[i].type != SHAPE_NONE) last_valid = i;
+    }
+    curr_level->n_shapes = last_valid + 1;
+
+    // defragment up to last valid entry
+    size_t i = 0;
+    while (i < curr_level->n_shapes) {
+        if (curr_level->shapes[i].type != SHAPE_NONE) {
+            ++i;
+            continue;
+        }
+
+        --curr_level->n_shapes;
+        for (size_t j = i; j < curr_level->n_shapes; ++j) {
+            curr_level->shapes[j] = curr_level->shapes[j + 1];
+        }
+        memset(&curr_level->shapes[curr_level->n_shapes], 0, sizeof(shape_t));
+    }
+}
 
 float scalar_to_float(scalar_t a) {
     return (float)a / (float)ONE;
@@ -406,10 +430,6 @@ bool inspect_shape(level_t* curr_level, size_t shape_id, int& render_hull_build_
             );
             result |= true;
         }
-        if (ImGui::Button("Add point")) {
-            size_t index = curr_level->shapes[shape_id].convex_hull.n_points++;
-            curr_level->shapes[shape_id].convex_hull.points[index] = selected_vertex_position;
-        }
 
         const vec3_t initial_point = curr_level->shapes[shape_id].convex_hull.points[0];
         aabb_t aabb = (aabb_t){initial_point, initial_point};
@@ -450,6 +470,14 @@ bool inspect_shape(level_t* curr_level, size_t shape_id, int& render_hull_build_
         }
 
         renderer_debug_draw_aabb(&aabb, {255, 255, 127, 255}, &id_transform);
+
+        if (ImGui::Button("Add point") || input_mapping_pressed(IM_SHAPE_ADD_POINT, 0)) {
+            size_t index = curr_level->shapes[shape_id].convex_hull.n_points++;
+            curr_level->shapes[shape_id].convex_hull.points[index] = selected_vertex_position;
+        }
+        if (ImGui::Button("Delete")) {
+            defer_remove_shape.push_back(shape_id);
+        }
     }
 
     return result;
@@ -528,6 +556,16 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
     static int render_level_bvh_start_depth = 0;
     static int render_level_bvh_end_depth = 6;
     static int render_hull_build_set_cap = 1;
+
+    if (!defer_remove_shape.empty()) {
+        // remove deferred shapes
+        for (const size_t shape_id : defer_remove_shape) {
+            memset(&curr_level->shapes[shape_id], 0, sizeof(shape_t));
+        }
+        defer_remove_shape.clear();
+
+        shape_defragment(curr_level);
+    }
 
     if (render_level_graphics) renderer_draw_model_shaded(curr_level->graphics, &curr_level->transform, NULL);
 
@@ -1089,10 +1127,12 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                     break;
                 }
             }
+
+            shape_defragment(curr_level);
         }
 
         if (ImGui::Button("Defragment")) {
-            // todo(debug_shape_defragment): desc: shape_defragment();
+            shape_defragment(curr_level);
         }
     }
     ImGui::End();
@@ -1142,7 +1182,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         }
         ImGui::Spacing();
         if (ImGui::TreeNode("All shapes")) {
-            for (size_t i = 0; i < MAX_SHAPE_COUNT && curr_level->shapes; ++i) {
+            for (size_t i = 0; i < curr_level->n_shapes && curr_level->shapes; ++i) {
                 if (curr_level->shapes[i].type == SHAPE_NONE) continue;
 
                 static std::string tree_nodes[MAX_SHAPE_COUNT];

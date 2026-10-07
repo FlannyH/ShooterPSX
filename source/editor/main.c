@@ -50,6 +50,7 @@ int main(int argc, char** argv) {
     input_mapping_register_mouse(IM_CAMERA_SPEED_UP, INPUT_KEY_EQUALS, SCALAR(1.0));
     input_mapping_register_mouse(IM_CAMERA_SPEED_DOWN, INPUT_KEY_MINUS, SCALAR(1.0));
     input_mapping_register_mouse(IM_PICK, INPUT_MOUSE_BUTTON_LEFT, SCALAR(1.0));
+    input_mapping_register_keyboard(IM_SHAPE_ADD_POINT, INPUT_KEY_P, SCALAR(1.0));
 
     const int n_failed_tests = test();
     printf("Unit tests finished with %i errors\n", n_failed_tests);
