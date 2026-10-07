@@ -630,11 +630,12 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	}
 
 	glUniform1i(glGetUniformLocation(shader_vertex_pick, "curr_depth_bias"), -64);
-	glUniform1i(glGetUniformLocation(shader_vertex_pick, "drawing_id"), drawing_id);
-	glUniform1i(glGetUniformLocation(shader_vertex_pick, "drawing_what"), drawing_what);
+	glUniform1i(glGetUniformLocation(shader_vertex_pick, "drawing_id"), 0);
+	glUniform1i(glGetUniformLocation(shader_vertex_pick, "drawing_what"), 4);
 
-	glPointSize(50.0f);
+	glPointSize(40.0f);
 	glDepthMask(GL_FALSE);
+	glBindVertexArray(mesh->vao);
 	if (mesh->n_triangles) glDrawArrays(GL_POINTS, 0, mesh->n_triangles * 3);
 	if (mesh->n_quads) glDrawArrays(GL_POINTS, mesh->n_triangles * 3, mesh->n_quads * 4);
 	glDepthMask(GL_TRUE);
@@ -642,6 +643,10 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 #endif
 
 	glUseProgram(shader_gouraud);
+#ifdef _LEVEL_EDITOR
+	glUniform1i(glGetUniformLocation(shader_gouraud, "drawing_id"), drawing_id);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "drawing_what"), drawing_what);
+#endif
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, light_buffer_gpu);
 	unsigned int lights_index = glGetUniformBlockIndex(shader_gouraud, "Lights");
 	glUniformBlockBinding(shader_gouraud, lights_index, 0);
