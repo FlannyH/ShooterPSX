@@ -172,6 +172,7 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
     model->meshes[0].vbo_vertices = 0;
     model->meshes[0].vbo_normals = 0;
     model->meshes[0].vao = 0;
+    model->meshes[0].name = NULL;
 
     // Since collision model is only meant to be see in the level
     // editor, don't bother calculating bounding boxes for culling
@@ -238,6 +239,7 @@ mesh_t* create_debug_mesh_from_raw_triangles(triangle_t* tri, size_t count) {
     mesh->vao = 0;
     mesh->vertices = malloc(sizeof(vertex_3d_t) * count * 3);
     mesh->normals = malloc(sizeof(normal_t) * count * 3);
+    mesh->name = "debug mesh";
 
     printf("debug_mesh:\n");
     for (size_t tri_i = 0; tri_i < count; ++tri_i) {

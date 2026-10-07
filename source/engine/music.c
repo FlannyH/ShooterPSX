@@ -386,7 +386,9 @@ void audio_tick(int delta_time) {
 				continue;
 			}
 			if (vol_envs[j].stage == ENV_STAGE_DECAY && vol_envs[j].stage_time > max_decay_stage_time) {
+				max_decay_stage_time = vol_envs[j].stage_time;
 				last_resort = j;
+				continue;
 			}
 		}
 
@@ -518,7 +520,7 @@ void audio_tick(int delta_time) {
 		velocity *= (vol_envs[i].adsr_volume) / (ADSR_VOLUME_ONE >> 8); // 0-4129024 * 0-256  = 0 - 1057030144
 		velocity >>= 12;                                                // 0-1057030144 >> 12 = 0 -     258064
 
-		scalar_t s_velocity = scalar_div((velocity * ONE), 258064 * ONE);
+		scalar_t s_velocity = (velocity * ONE) / 258064;
 		s_velocity = scalar_mul(s_velocity, s_velocity);
 
 		int pan = channel_panning;

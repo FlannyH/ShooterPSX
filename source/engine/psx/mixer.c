@@ -33,6 +33,7 @@ void mixer_upload_sample_data(const void* const sample_data, size_t n_bytes, sou
 	if (soundbank_type == SOUNDBANK_TYPE_MUSIC) SpuSetTransferStartAddr(SBK_MUSIC_OFFSET);
 	if (soundbank_type == SOUNDBANK_TYPE_SFX)   SpuSetTransferStartAddr(SBK_SFX_OFFSET);
 	SpuWrite(sample_data, n_bytes);
+	SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
 }
 
 void mixer_global_set_volume(scalar_t left, scalar_t right) {

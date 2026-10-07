@@ -93,7 +93,6 @@ void state_update_debug_menu_main(scalar_t dt) {
 		}
 	}
 	renderer_end_frame();
-	return;
 }
 
 void state_exit_debug_menu_main(void) {

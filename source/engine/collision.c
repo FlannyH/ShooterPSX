@@ -19,16 +19,16 @@ void dump_current_simplex(size_t i, convex_hull_mesh_t* polytope, size_t closest
     fprintf(o, "o simplex_%lu\n", i);
     for (size_t i = 0; i < polytope->n_vertices; ++i) {
         fprintf(o, "v %.3f %.3f %.3f\n",
-            ((float)polytope->vertices[i].x) / 4096.f,
-            ((float)polytope->vertices[i].y) / 4096.f,
-            ((float)polytope->vertices[i].z) / 4096.f
+            ((float)polytope->vertices[i].x) / ONE,
+            ((float)polytope->vertices[i].y) / ONE,
+            ((float)polytope->vertices[i].z) / ONE
         );
     }
     for (size_t i = 0; i < polytope->n_faces; ++i) {
         fprintf(o, "vn %.3f %.3f %.3f\n",
-            ((float)polytope->faces[i].normal.x) / 4096.f,
-            ((float)polytope->faces[i].normal.y) / 4096.f,
-            ((float)polytope->faces[i].normal.z) / 4096.f
+            ((float)polytope->faces[i].normal.x) / ONE,
+            ((float)polytope->faces[i].normal.y) / ONE,
+            ((float)polytope->faces[i].normal.z) / ONE
         );
     }
     for (size_t i = 0; i < polytope->n_faces; ++i) {
@@ -41,24 +41,24 @@ void dump_current_simplex(size_t i, convex_hull_mesh_t* polytope, size_t closest
 
     fprintf(o, "o simplex_%lu_closest_face\n", i);
     fprintf(o, "v %.3f %.3f %.3f\n",
-        ((float)polytope->vertices[polytope->faces[closest_face].a].x) / 4096.f,
-        ((float)polytope->vertices[polytope->faces[closest_face].a].y) / 4096.f,
-        ((float)polytope->vertices[polytope->faces[closest_face].a].z) / 4096.f
+        ((float)polytope->vertices[polytope->faces[closest_face].a].x) / ONE,
+        ((float)polytope->vertices[polytope->faces[closest_face].a].y) / ONE,
+        ((float)polytope->vertices[polytope->faces[closest_face].a].z) / ONE
     );
     fprintf(o, "v %.3f %.3f %.3f\n",
-        ((float)polytope->vertices[polytope->faces[closest_face].a].x) / 4096.f,
-        ((float)polytope->vertices[polytope->faces[closest_face].a].y) / 4096.f,
-        ((float)polytope->vertices[polytope->faces[closest_face].a].z) / 4096.f
+        ((float)polytope->vertices[polytope->faces[closest_face].a].x) / ONE,
+        ((float)polytope->vertices[polytope->faces[closest_face].a].y) / ONE,
+        ((float)polytope->vertices[polytope->faces[closest_face].a].z) / ONE
     );
     fprintf(o, "v %.3f %.3f %.3f\n",
-        ((float)polytope->vertices[polytope->faces[closest_face].a].x) / 4096.f,
-        ((float)polytope->vertices[polytope->faces[closest_face].a].y) / 4096.f,
-        ((float)polytope->vertices[polytope->faces[closest_face].a].z) / 4096.f
+        ((float)polytope->vertices[polytope->faces[closest_face].a].x) / ONE,
+        ((float)polytope->vertices[polytope->faces[closest_face].a].y) / ONE,
+        ((float)polytope->vertices[polytope->faces[closest_face].a].z) / ONE
     );
     fprintf(o, "vn %.3f %.3f %.3f\n",
-        ((float)polytope->faces[closest_face].normal.x) / 4096.f,
-        ((float)polytope->faces[closest_face].normal.y) / 4096.f,
-        ((float)polytope->faces[closest_face].normal.z) / 4096.f
+        ((float)polytope->faces[closest_face].normal.x) / ONE,
+        ((float)polytope->faces[closest_face].normal.y) / ONE,
+        ((float)polytope->faces[closest_face].normal.z) / ONE
     );
     fprintf(o, "f 1//1 2//1 3//1\n");
     fclose(o);

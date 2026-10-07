@@ -168,9 +168,9 @@ void renderer_begin_frame(const transform_t* camera_transform) {
     VECTOR position;
     memcpy(&position, &camera_transform->position, sizeof(position));
     memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
-    position.vx = -position.vx >> 12;
-    position.vy = -position.vy >> 12;
-    position.vz = -position.vz >> 12;
+    position.vx = -position.vx >> FRAC_BITS;
+    position.vy = -position.vy >> FRAC_BITS;
+    position.vz = -position.vz >> FRAC_BITS;
 
     VECTOR rotation;
     rotation.vx = -camera_transform->rotation.x;

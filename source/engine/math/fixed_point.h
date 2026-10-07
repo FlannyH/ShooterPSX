@@ -21,9 +21,11 @@ typedef fixed20_12_t scalar_t;
 #ifdef ONE
 #undef ONE
 #endif
-#define ONE ((scalar_t)(1 << 12))
 
-#define SCALAR(a) ((int32_t)(((a) * (ONE)) + (((a) >= 0.0f) ? 0.5f : -0.5f)))
+#define FRAC_BITS 12
+
+#define ONE ((scalar_t)(1 << FRAC_BITS))
+#define SCALAR(a) (int32_t)((a) * ONE)
 
 static inline scalar_t fixed_to_scalar(int32_t a) {
     return a;
@@ -38,10 +40,9 @@ static inline void print_scalar(scalar_t a) {
         a = -a;
         printf("-");
     }
-    const int n_fractional_bits = 12;
-    const int32_t integer = a >> n_fractional_bits;
-    const int32_t fractional = a & ((1 << n_fractional_bits) - 1);
-    printf("%li.%03li", integer, (fractional * 1000) / (1 << n_fractional_bits));
+    const int32_t integer = a >> FRAC_BITS;
+    const int32_t fractional = a & ((1 << FRAC_BITS) - 1);
+    printf("%li.%03li", integer, (fractional * 1000) / (1 << FRAC_BITS));
 }
 
 static inline void scalar_debug(const scalar_t a) {
