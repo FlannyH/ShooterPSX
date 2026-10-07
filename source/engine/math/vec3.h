@@ -259,6 +259,25 @@ static inline int vec3_equal(vec3_t a, vec3_t b) {
     return (a.x == b.x) && (a.y == b.y) && (a.z == b.z);
 }
 
+static inline size_t serialize_vec3(void* destination, vec3_t vec) {
+    assert(destination);
+    intptr_t dest_i = (intptr_t)destination;
+    serialize_scalar((void*)(dest_i + offsetof(vec3_t, x)), vec.x);
+    serialize_scalar((void*)(dest_i + offsetof(vec3_t, y)), vec.y);
+    serialize_scalar((void*)(dest_i + offsetof(vec3_t, z)), vec.z);
+    return sizeof(vec);
+}
+
+static inline size_t deserialize_vec3(const void *const source, vec3_t* vec) {
+    assert(source);
+    assert(vec);
+    intptr_t src_i = (intptr_t)source;
+    deserialize_scalar((void*)(src_i + offsetof(vec3_t, x)), &vec->x);
+    deserialize_scalar((void*)(src_i + offsetof(vec3_t, y)), &vec->y);
+    deserialize_scalar((void*)(src_i + offsetof(vec3_t, z)), &vec->z);
+    return sizeof(*vec);
+}
+
 #pragma GCC diagnostic pop
 
 #ifdef __cplusplus
