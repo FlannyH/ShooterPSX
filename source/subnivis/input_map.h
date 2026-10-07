@@ -5,6 +5,8 @@ typedef enum {
     IM_MOVE_Y,
     IM_LOOK_MOUSE_X,
     IM_LOOK_MOUSE_Y,
+    IM_LOOK_STICK_X,
+    IM_LOOK_STICK_Y,
     IM_MENU_UP,
     IM_MENU_DOWN,
     IM_MENU_LEFT,

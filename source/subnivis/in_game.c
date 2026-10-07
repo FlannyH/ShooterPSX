@@ -120,7 +120,7 @@ void state_update_in_game(scalar_t dt) {
 	state.global.frame_counter += 1;
 
 #if defined(_DEBUG) && defined(_PSX)
-	if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
+	// if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
 
 	if (state.global.show_debug) {
         draw_debug_info(dt, n_sections);

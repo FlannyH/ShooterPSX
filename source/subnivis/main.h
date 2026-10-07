@@ -87,6 +87,9 @@ extern state_vars_t state;
 #define DEPTH_BIAS_VIEWMODELS 64
 #define DEPTH_BIAS_LEVEL 256
 
+const static scalar_t stick_sensitivity = SCALAR(3.0);
+const static scalar_t mouse_sensitivity = SCALAR(0.01);
+
 void set_current_state(state_t state);
 state_t get_current_state(void);
 state_t get_prev_state(void);
@@ -135,6 +138,9 @@ void state_exit_debug_menu_level(void);
 void state_enter_debug_menu_controller(void);
 void state_update_debug_menu_controller(scalar_t dt);
 void state_exit_debug_menu_controller(void);
+
+void init_keyboard_mouse_mappings(void);
+void init_controller_mappings(void);
 
 #ifdef __cplusplus
 }
