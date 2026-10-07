@@ -296,8 +296,10 @@ void renderer_init(void) {
 	// Set up VAO and VBO
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
+	glObjectLabel(GL_VERTEX_ARRAY, vao, -1, "dynamic geometry vao");
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glObjectLabel(GL_BUFFER, vbo, -1, "dynamic geometry vbo");
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
@@ -321,6 +323,7 @@ void renderer_init(void) {
 	}
 
 	glGenTextures(1, &textures);
+	glObjectLabel(GL_TEXTURE, textures, -1, "texture atlas pixel data");
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textures);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, zero_data);
@@ -341,6 +344,7 @@ void renderer_init(void) {
 	}
 	glActiveTexture(GL_TEXTURE0);
 	glGenTextures(1, &texture_metadata);
+	glObjectLabel(GL_TEXTURE, texture_metadata, -1, "texture atlas metadata");
 	glBindTexture(GL_TEXTURE_2D, texture_metadata);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
@@ -356,6 +360,7 @@ void renderer_init(void) {
 	// Create fbo
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	glObjectLabel(GL_FRAMEBUFFER, fbo, -1, "game framebuffer");
 
 	// Create color attachment
 	glGenTextures(1, &fb_texture);
@@ -364,10 +369,12 @@ void renderer_init(void) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fb_texture, 0);
+	glObjectLabel(GL_TEXTURE, fb_texture, -1, "game fb color");
     glBindTexture(GL_TEXTURE_2D, 0);
 
 	// Create depth attachment
 	glGenTextures(1, &fb_depth);
+	glObjectLabel(GL_TEXTURE, fb_depth, -1, "game fb depth");
 	glBindTexture(GL_TEXTURE_2D, fb_depth);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -379,6 +386,7 @@ void renderer_init(void) {
 #ifdef _LEVEL_EDITOR
 	// Create object picking framebuffer data
 	glGenTextures(1, &picking_fb_texture);
+	glObjectLabel(GL_TEXTURE, picking_fb_texture, -1, "editor object picking texture");
 	glBindTexture(GL_TEXTURE_2D, picking_fb_texture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, 0, GL_RG, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -388,6 +396,7 @@ void renderer_init(void) {
 
     // Create vertex picking framebuffer data
 	glGenTextures(1, &closest_vertex_fb_texture);
+	glObjectLabel(GL_TEXTURE, picking_fb_texture, -1, "editor vertex picking texture");
 	glBindTexture(GL_TEXTURE_2D, closest_vertex_fb_texture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -661,7 +670,14 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	if (mesh->vbo_vertices == 0) {
 		glGenVertexArrays(1, &mesh->vao);
 		glBindVertexArray(mesh->vao);
+		char vbo_name[256] = {0};
+		if (mesh->name) {
+		    snprintf(vbo_name, sizeof(vbo_name), "%s (vao)", mesh->name);
+		}
+		glObjectLabel(GL_BUFFER, mesh->vao, -1, vbo_name);
 		glGenBuffers(1, &mesh->vbo_vertices);
+		snprintf(vbo_name, sizeof(vbo_name), "%s (vertex buffer)", mesh->name);
+		glObjectLabel(GL_BUFFER, mesh->vbo_vertices, -1, vbo_name);
 		glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_vertices);
 		glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(vertex_3d_t), mesh->vertices, GL_STATIC_DRAW);
 		glEnableVertexAttribArray(0);
@@ -675,6 +691,8 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 
 		if (mesh->vbo_normals == 0 && mesh->normals) {
 			glGenBuffers(1, &mesh->vbo_normals);
+			snprintf(vbo_name, sizeof(vbo_name), "%s (normals)", mesh->name);
+			glObjectLabel(GL_BUFFER, mesh->vbo_normals, -1, vbo_name);
 			glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_normals);
 			glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(normal_t), mesh->normals, GL_STATIC_DRAW);
 			glEnableVertexAttribArray(4);
