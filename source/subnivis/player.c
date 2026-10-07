@@ -66,7 +66,7 @@ void collide(player_t* self, level_t* level) {
             move_shape(&player, penetration);
 
             if (penetration.y > 0) {
-                self->is_grounded = 1;
+                self->seconds_since_on_ground = 0;
             }
 
             // get part of the vector along the move axis
@@ -97,7 +97,7 @@ void apply_gravity(player_t* self, const scalar_t dt) {
 void handle_stick_input(player_t* self, const scalar_t dt) {
     scalar_t curr_acceleration = scalar_mul(walking_acceleration, dt);
     if (!self->is_grounded) {
-        curr_acceleration = scalar_div(curr_acceleration, air_acceleration_divider);
+        curr_acceleration = scalar_mul(curr_acceleration, air_acceleration_multiplyer);
     }
 
     // Moving forwards and backwards
@@ -118,27 +118,35 @@ void handle_stick_input(player_t* self, const scalar_t dt) {
         input_mapping_value(IM_MOVE_Y, 0)
     };
 
-    const vec2_t look = (vec2_t) {
+    const vec2_t look_mouse = (vec2_t) {
         input_mapping_value(IM_LOOK_MOUSE_X, 0),
         input_mapping_value(IM_LOOK_MOUSE_Y, 0)
     };
 
+    const vec2_t look_stick = (vec2_t) {
+        input_mapping_value(IM_LOOK_STICK_X, 0),
+        input_mapping_value(IM_LOOK_STICK_Y, 0)
+    };
+    vec2_debug(look_stick);
+
     // Moving horizontally
-    self->velocity = vec3_add(self->velocity, vec3_muls(forward, scalar_mul(move.y, walking_acceleration * PLAYER_VELOCITY_PRECISION)));
-    self->velocity = vec3_add(self->velocity, vec3_muls(right, scalar_mul(move.x, walking_acceleration * PLAYER_VELOCITY_PRECISION)));
+    self->velocity = vec3_add(self->velocity, vec3_muls(forward, scalar_mul(move.y, curr_acceleration * PLAYER_VELOCITY_PRECISION)));
+    self->velocity = vec3_add(self->velocity, vec3_muls(right, scalar_mul(move.x, curr_acceleration * PLAYER_VELOCITY_PRECISION)));
 
     // Looking up and down
-    self->rotation.x += look.y;
+    self->rotation.x += look_mouse.y;
+    self->rotation.x += scalar_mul(look_stick.y, dt);
     self->rotation.x = scalar_clamp(self->rotation.x, SCALAR(-0.22 * PLAYER_ROTATION_PRECISION), SCALAR(0.22 * PLAYER_ROTATION_PRECISION));
 
     // Looking left and right
-    self->rotation.y += look.x;
+    self->rotation.y += look_mouse.x;
+    self->rotation.y += scalar_mul(look_stick.x, dt);
 }
 
 void player_handle_drag(player_t* self, const scalar_t dt) {
     scalar_t curr_drag = scalar_mul(drag, dt);
-    if (self->is_grounded) {
-        curr_drag = scalar_div(drag, jump_drag_divider);
+    if (!self->is_grounded) {
+        curr_drag = scalar_mul(curr_drag, jump_drag_multiplyer);
     }
 
     const scalar_t length = vec3_magnitude(self->velocity);
@@ -205,12 +213,11 @@ void player_update(player_t* self, level_t* level, const scalar_t dt, const scal
     if (!self) return;
     if (!level) return;
 
-    printf("dt: "); scalar_debug(dt);
-
     const vec3_t player_right = (vec3_t) {-trig_cos(self->rotation.y),0,+trig_sin(self->rotation.y)};
     audio_update_listener(self->position, player_right);
 
-    self->is_grounded = 0;
+    self->seconds_since_on_ground += dt;
+    self->is_grounded = (self->seconds_since_on_ground < SCALAR(0.1));
     apply_gravity(self, dt);
     handle_stick_input(self, dt);
     player_handle_drag(self, dt);

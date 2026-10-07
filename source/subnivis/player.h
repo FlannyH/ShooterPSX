@@ -20,6 +20,7 @@ typedef struct {
     vec3_t velocity;
     vec3_t rotation;
     scalar_t footstep_timer;
+    scalar_t seconds_since_on_ground;
     int ground_entity_id_prev; // -1 = no entity
     int ground_entity_id_curr; // -1 = no entity
     transform_t ground_entity_prev;
@@ -36,21 +37,18 @@ typedef struct {
 #define PLAYER_VELOCITY_PRECISION 4
 #define PLAYER_ROTATION_PRECISION 4
 const static scalar_t eye_height = SCALAR(200);
-const static scalar_t player_height = SCALAR(230);
-const static scalar_t player_radius = SCALAR(320);
+const static scalar_t player_height = SCALAR(180);
+const static scalar_t player_radius = SCALAR(160);
 const static int32_t step_height = SCALAR(100);
-const static scalar_t terminal_velocity_down = SCALAR(-5000.0);
-const static scalar_t terminal_velocity_up = SCALAR(500.0);
-const static scalar_t gravity = SCALAR(-1000);
-const static scalar_t walking_acceleration = SCALAR(50);
-const static scalar_t air_acceleration_divider = SCALAR(2);
-const static scalar_t walking_max_speed = SCALAR(80);
-const static scalar_t stick_sensitivity = SCALAR(1.0);
-const static scalar_t mouse_sensitivity = SCALAR(0.01);
-const static scalar_t drag = SCALAR(10);
-const static scalar_t jump_drag_divider = SCALAR(2);
-const static int32_t initial_jump_velocity = SCALAR(750);
-const static int32_t jump_ground_threshold = 4000;
+const static scalar_t terminal_velocity_down = SCALAR(-8000.0);
+const static scalar_t terminal_velocity_up = SCALAR(50000.0);
+const static scalar_t gravity = SCALAR(-3200);
+const static scalar_t walking_acceleration = SCALAR(15500);
+const static scalar_t air_acceleration_multiplyer = SCALAR(0.4);
+const static scalar_t walking_max_speed = SCALAR(600);
+const static scalar_t drag = SCALAR(6.5);
+const static scalar_t jump_drag_multiplyer = SCALAR(0.95);
+const static int32_t initial_jump_velocity = SCALAR(4800);
 
 void player_init(player_t* player, vec3_t position, vec3_t rotation, int health, int armor, int ammo);
 void player_update(player_t* self, level_t* level, const scalar_t dt, const scalar_t time_counter);
