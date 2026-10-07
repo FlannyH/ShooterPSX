@@ -15,8 +15,8 @@ debug_camera_t debug_camera_new(void) {
         },
         .velocity = vec3_from_scalar(0),
         .max_speed = SCALAR(100),
-        .drag = SCALAR(7),
-        .acceleration = SCALAR(14),
+        .drag = SCALAR(10),
+        .acceleration = SCALAR(28),
     };
 }
 
@@ -56,11 +56,11 @@ void move_look(debug_camera_t* self, const scalar_t dt) {
     if (input_mapping_held(IM_CAMERA_UP, 0))  self->velocity.y += scalar_mul(self->acceleration * PLAYER_VELOCITY_PRECISION, dt);
 
     // Looking up and down
-    self->transform.rotation.x += scalar_mul(-look.y, dt);
+    self->transform.rotation.x += scalar_mul(look.y, dt);
     self->transform.rotation.x = scalar_clamp(self->transform.rotation.x, SCALAR(-0.22), SCALAR(0.22));
 
     // Looking left and right
-    self->transform.rotation.y += scalar_mul(-look.x, dt);
+    self->transform.rotation.y += scalar_mul(look.x, dt);
 
     if (self->transform.rotation.x > ONE/4) {
         self->transform.rotation.x = ONE/4;
@@ -99,8 +99,8 @@ void debug_camera_update(debug_camera_t* self, const scalar_t dt, const int regi
 
     if (register_input) {
         move_look(self, dt);
-        handle_drag(self, dt);
     }
+    handle_drag(self, dt);
 
     // Move the player based on velocity
     self->transform.position = vec3_add(self->transform.position, vec3_divs(vec3_muls(self->velocity, dt), PLAYER_VELOCITY_PRECISION));
