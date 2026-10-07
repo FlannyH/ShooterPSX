@@ -27,7 +27,7 @@ typedef float scalar_t;
 #endif
 #define ONE FLOAT_ONE
 
-#define SCALAR(a) ((float)a)
+#define SCALAR(a) ((float)(a))
 
 static inline scalar_t fixed_to_scalar(int32_t a) {
     return (float)a / FIXED_ONE;
