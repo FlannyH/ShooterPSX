@@ -282,7 +282,7 @@ int gjk(convex_hull_mesh_t* polytope, shape_t* shape1, shape_t* shape2) {
     if (shape2->type == SHAPE_NONE) return 0;
 
     // random initial direction
-    vec3_t dir = vec3_from_floats(1.0f, 0.0f, 0.0f);
+    vec3_t dir = vec3_from_scalars(SCALAR(1.0), 0, 0);
     vec3_t support = SUPPORT(shape1, shape2, dir);
     polytope->vertices[0] = support;
     polytope->n_vertices = 1;
