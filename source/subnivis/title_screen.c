@@ -141,7 +141,7 @@ void state_update_title_screen(scalar_t dt) {
 	char debug_text[64];
 	char* curr_pointer = debug_text;
 	sprintf(curr_pointer, "DEBUG\n"); curr_pointer += strlen("DEBUG ");
-	if (is_pal) {
+	if (renderer_get_video_mode().bits.ntsc0_pal1) {
 		sprintf(curr_pointer, "PAL\n");  curr_pointer += strlen("PAL ");
 	}
 	else {

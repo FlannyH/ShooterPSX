@@ -25,6 +25,13 @@
 #define N_CLUT_FADES 16
 #define N_SECTIONS_PLAYER_CAN_BE_IN_AT_ONCE 4
 
+video_mode_t video_mode = {.bits = {
+    .ntsc0_pal1 = 0,
+    .window0_fullscreen1 = 1,
+    .widescreen_off0_on1 = 0,
+    .vsync_frames = 1,
+}};
+
 // Render context
 DISPENV disp[2];
 DRAWENV draw[2];
@@ -205,9 +212,8 @@ void renderer_end_frame(void) {
     // Wait for GPU to finish drawing and V-blank
     DrawSync(0);
 
-    if (vsync_enable)
-    {
-        while (((VSync(-1) - frame_counter) & 0x3FFF) < vsync_enable)
+    if (video_mode.bits.vsync_frames > 0) {
+        while (((VSync(-1) - frame_counter) & 0x3FFF) < video_mode.bits.vsync_frames)
             VSync(0);
         frame_counter = VSync(-1);
     }
@@ -470,67 +476,38 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
     }
 }
 
-uint32_t video_mode = 0;
+void renderer_set_video_mode(video_mode_t new_video_mode) {
+    video_mode_t old_video_mode = video_mode;
+    video_mode = new_video_mode;
 
-void renderer_set_video_mode(uint32_t video_mode_bitmask, bit_op_t bit_operation) {
-    uint32_t old_video_mode = video_mode;
+    int enter_pal = (old_video_mode.bits.ntsc0_pal1 == 0) && (new_video_mode.bits.ntsc0_pal1 == 1);
+    int enter_ntsc = (old_video_mode.bits.ntsc0_pal1 == 1) && (new_video_mode.bits.ntsc0_pal1 == 0);
 
-    switch (bit_operation) {
-    case BIT_OP_AND: video_mode &= video_mode_bitmask; break;
-    case BIT_OP_OR: video_mode |= video_mode_bitmask; break;
-    case BIT_OP_XOR: video_mode ^= video_mode_bitmask; break;
-    default: break;
-    }
-
-    const uint32_t set = video_mode & (~old_video_mode);
-    const uint32_t reset = old_video_mode & (~video_mode);
-
-    printf("set, reset, video_mode, old_video_mode: %02X, %02X, %02X, %02X\n", set, reset, video_mode, old_video_mode);
-
-    if (set & VIDEO_MODE_PAL) {
+    if (enter_pal || enter_ntsc) {
         DrawSync(0);
         ResetGraph(0);
 
-        // Configures the pair of DISPENVs
-        SetDefDispEnv(&disp[0], 0, 0, res_x, RES_Y_PAL);
-        SetDefDispEnv(&disp[1], res_x, 0, res_x, RES_Y_PAL);
+        if (enter_pal) curr_res_y = RES_Y_PAL;
+        else curr_res_y = RES_Y_NTSC;
 
-        // Configures the pair of DRAWENVs for the DISPENVs
-        SetDefDrawEnv(&draw[0], res_x, 0, res_x, RES_Y_PAL);
-        SetDefDrawEnv(&draw[1], 0, 0, res_x, RES_Y_PAL);
+        SetDefDispEnv(&disp[0], 0, 0, res_x, curr_res_y);
+        SetDefDispEnv(&disp[1], res_x, 0, res_x, curr_res_y);
+        SetDefDrawEnv(&draw[0], res_x, 0, res_x, curr_res_y);
+        SetDefDrawEnv(&draw[1], 0, 0, res_x, curr_res_y);
 
         // Seems like I have to do this in order to actually set the display
         // resolution to the right value?
-        disp[0].screen.h = RES_Y_PAL;
-        disp[1].screen.h = RES_Y_PAL;
+        disp[0].screen.h = curr_res_y;
+        disp[1].screen.h = curr_res_y;
 
-        SetVideoMode(MODE_PAL);
-        curr_res_y = RES_Y_PAL;
+        SetVideoMode(enter_pal ? MODE_PAL : MODE_NTSC);
 
-        gte_SetGeomOffset(res_x / 2, curr_res_y / 2);
-        gte_SetGeomScreen(120);
-    }
-    else if (reset & VIDEO_MODE_PAL) {
-        DrawSync(0);
-        ResetGraph(0);
-
-        // Configures the pair of DISPENVs
-        SetDefDispEnv(&disp[0], 0, 0, res_x, RES_Y_NTSC);
-        SetDefDispEnv(&disp[1], res_x, 0, res_x, RES_Y_NTSC);
-
-        // Configures the pair of DRAWENVs for the DISPENVs
-        SetDefDrawEnv(&draw[0], res_x, 0, res_x, RES_Y_NTSC);
-        SetDefDrawEnv(&draw[1], 0, 0, res_x, RES_Y_NTSC);
-
-        SetVideoMode(MODE_NTSC);
-        curr_res_y = RES_Y_NTSC;
-
-        gte_SetGeomOffset(res_x / 2, curr_res_y / 2);
-        gte_SetGeomScreen(120);
-
-        // Specifies the clear color of the DRAWENV
+        // Specify the clear color of the DRAWENV
         setRGB0(&draw[0], 16, 16, 20);
         setRGB0(&draw[1], 16, 16, 20);
+
+        gte_SetGeomOffset(res_x / 2, curr_res_y / 2);
+        gte_SetGeomScreen(120);
 
         // Enable background clear
         draw[0].isbg = 1;

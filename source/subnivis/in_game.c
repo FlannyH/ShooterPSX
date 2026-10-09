@@ -277,6 +277,7 @@ void draw_debug_info(scalar_t dt, const int n_sections) {
 
 void draw_hud(void) {
     // Draw crosshair
+    const int is_pal = renderer_get_video_mode().bits.ntsc0_pal1;
     renderer_draw_2d_quad_axis_aligned((vec2_t){256 * ONE, (128 + 8 * (!is_pal)) * ONE}, (vec2_t){32 * ONE, 20 * ONE}, (vec2_t){96 * ONE, 40 * ONE}, (vec2_t){127 * ONE, 59 * ONE}, (pixel32_t){128, 128, 128, 255}, 2, 5, TEX_CAT_MISC);
 
     // Draw HUD - background
@@ -322,8 +323,9 @@ void fps_counter(scalar_t dt) {
 
 void benchmark_mode(void) {
     // Hack together some benchmark positions and fixed graphics settings
-    widescreen = 1;
-    vsync_enable = 0;
+    video_mode_t mode = renderer_get_video_mode();
+    mode.bits.widescreen_off0_on1 = 1;
+    mode.bits.vsync_frames = 0;
     const transform_t benchmark_positions[] = {
         (transform_t){.position = (vec3_t){5849088, 5363200, 1052672}, .rotation = (vec3_t){0, 65536, 0}},     // starting area
         (transform_t){.position = (vec3_t){2695122, 4257280, 7820815}, .rotation = (vec3_t){1272, 43970, 0}},  // near pillar bottom

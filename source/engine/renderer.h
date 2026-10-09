@@ -62,14 +62,14 @@ typedef enum {
     BIT_OP_XOR = 3, // for toggling bits
 } bit_op_t;
 
-typedef enum {
-    // only relevant on ps1
-    VIDEO_MODE_NTSC = (0 << 0),
-    VIDEO_MODE_PAL = (1 << 0),
-
-    // only relevant on pc
-    VIDEO_MODE_WINDOW = (0 << 1),
-    VIDEO_MODE_FULLSCREEN = (1 << 1),
+typedef union {
+    uint32_t u32;
+    struct {
+        uint32_t ntsc0_pal1 : 1;
+        uint32_t window0_fullscreen1 : 1;
+        uint32_t widescreen_off0_on1 : 1;
+        uint32_t vsync_frames : 3;
+    } bits;
 } video_mode_t;
 
 // todo(renderer_coordinate_system): desc: pick one coordinate system
@@ -97,7 +97,8 @@ void renderer_debug_draw_sphere(sphere_t sphere);
 void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_category_t category);
 void renderer_free_texture(int index, texture_category_t category);
 void renderer_free_texture_category(texture_category_t category);
-void renderer_set_video_mode(uint32_t video_mode_bitmask, bit_op_t bit_operation);
+void renderer_set_video_mode(video_mode_t new_video_mode);
+video_mode_t renderer_get_video_mode(void);
 scalar_t renderer_delta_time(dt_flags_t flags);
 int renderer_should_close(void);
 void renderer_set_depth_bias(int bias);
@@ -126,9 +127,6 @@ inline uint8_t mul_8x8(const uint8_t a, const uint8_t b) {
 #ifdef _LEVEL_EDITOR
 vec3_t renderer_get_forward_vector(void); // Used in the level editor to determine where to spawn new entities
 #endif
-
-extern int vsync_enable;
-extern int is_pal;
 
 #ifdef __cplusplus
 }

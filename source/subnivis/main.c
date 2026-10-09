@@ -97,7 +97,9 @@ int main(void) {
 		input_update();
 
 		if (input_mapping_pressed(IM_FULL_SCREEN, 0)) {
-		    renderer_set_video_mode(VIDEO_MODE_FULLSCREEN, BIT_OP_XOR);
+		    video_mode_t mode = renderer_get_video_mode();
+		    mode.bits.window0_fullscreen1 = !mode.bits.window0_fullscreen1;
+		    renderer_set_video_mode(mode);
 		}
 
         // If a state change happened, transition between them

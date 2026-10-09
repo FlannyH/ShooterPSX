@@ -65,18 +65,14 @@ void state_update_settings(scalar_t dt) {
 	// Draw values
 	char num_display[6];
 	snprintf(num_display, 6, "%i", renderer_width());
-	char* fps_text = "UNLOCKED";
-	if (vsync_enable == 1) {
-		if (is_pal) fps_text = "50 FPS";
-		else fps_text = "60 FPS";
-	}
-	else if (vsync_enable == 2) {
-		if (is_pal) fps_text = "25 FPS";
-		else fps_text = "30 FPS";
+	char fps_text[] = "UNLOCKED";
+	if (renderer_get_video_mode().bits.vsync_frames > 0) {
+	    const int base = renderer_get_video_mode().bits.ntsc0_pal1 ? 50 : 60;
+	    snprintf(fps_text, sizeof(fps_text), "%i fps", base / renderer_get_video_mode().bits.vsync_frames);
 	}
 	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 0))*ONE}, fps_text, 1, 0, white);
-	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 1))*ONE}, is_pal ? "PAL" : "NTSC", 1, 0, white);
-	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 2))*ONE}, widescreen ? "16:9" : "4:3", 1, 0, white);
+	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 1))*ONE}, renderer_get_video_mode().bits.ntsc0_pal1 ? "PAL" : "NTSC", 1, 0, white);
+	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 2))*ONE}, renderer_get_video_mode().bits.widescreen_off0_on1 ? "16:9" : "4:3", 1, 0, white);
 	renderer_draw_text((vec2_t){320*ONE, (96 + (24 * 3))*ONE}, num_display, 1, 0, white);
 
 	// Handle button navigation
@@ -94,21 +90,17 @@ void state_update_settings(scalar_t dt) {
 
 	// Handle button presses
 	if (input_mapping_released(IM_MENU_GO, 0)) {
+	    video_mode_t curr_mode = renderer_get_video_mode();
 		state.settings.button_pressed = 0;
 		switch (state.settings.button_selected) {
 			case 0: // frame rate limit
-				vsync_enable--;
-				if (vsync_enable < 0) {
-					vsync_enable = 2;
-				}
+				curr_mode.bits.vsync_frames++;
 				break;
 			case 1: // video mode pal or ntsc
-				is_pal = !is_pal;
-				if (is_pal) renderer_set_video_mode(VIDEO_MODE_PAL, BIT_OP_OR);
-				else renderer_set_video_mode(~VIDEO_MODE_PAL, BIT_OP_AND);
+				curr_mode.bits.ntsc0_pal1 = !curr_mode.bits.ntsc0_pal1;
 				break;
 			case 2: // aspect ratio
-				widescreen = !widescreen;
+				curr_mode.bits.widescreen_off0_on1 = !curr_mode.bits.widescreen_off0_on1;
 				break;
 			case 3: // controller sensitivity
 				break;
@@ -116,6 +108,7 @@ void state_update_settings(scalar_t dt) {
 				set_current_state(state.global.state_to_return_to);
 				break;
 		}
+		renderer_set_video_mode(curr_mode);
 	}
 	renderer_end_frame();
 	return;
