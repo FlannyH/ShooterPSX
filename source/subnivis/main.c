@@ -147,9 +147,6 @@ int main(void) {
             case STATE_DEBUG_MENU_CONTROLLER: state_update_debug_menu_controller(delta_time); break;
 		}
 	}
-#ifdef _PC
-	debug_layer_close();
-#endif
     return 0;
 }
 

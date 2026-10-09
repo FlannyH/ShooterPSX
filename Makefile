@@ -99,7 +99,7 @@ CODE_ENGINE_PC_C =   engine/pc/file.c \
 				     engine/pc/mixer.c \
 				     engine/pc/psx.c \
 				     engine/pc/renderer.c
-CODE_ENGINE_PC_CPP = engine/pc/debug_layer.cpp \
+CODE_ENGINE_PC_CPP = editor/editor.cpp \
 					 engine/pc/input.cpp
 
 # Source files specific to NDS
@@ -118,7 +118,7 @@ PATH_OBJ_LEVEL_EDITOR = $(PATH_TEMP_LEVEL_EDITOR)/obj
 
 # Misc source file definitions
 CODE_GAME_MAIN = subnivis/main.c
-CODE_LEVEL_EDITOR = editor/main.c editor/camera.c
+CODE_LEVEL_EDITOR = editor/camera.c
 
 # Create code sets and object sets
 CODE_PSX_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PSX_C) 	$(CODE_GAME_MAIN) 		$(CODE_GAME_C)

@@ -1,6 +1,20 @@
 #include "editor.h"
 
+#include "../subnivis/main.h"
+
+// todo: figure this crap out
+extern "C" {
+    int widescreen = 0;
+    state_vars_t state;
+    state_t current_state = STATE_NONE;
+    state_t prev_state = STATE_NONE;
+    void set_current_state(state_t state) { current_state = state; }
+    state_t get_current_state(void) { return current_state; }
+    state_t get_prev_state(void) { return prev_state; }
+}
+
 #include "engine/entity.h"
+#include "camera.h"
 #include "imgui.h"
 
 #include <backends/imgui_impl_opengl3.h>
@@ -29,6 +43,54 @@
 
 // todo(debug_renderer_fix): desc: fix debug renderers for collision, nav, etc
 
+struct editor_state_t {
+    bool initialized;
+    struct editor_level_state_t {
+        char path[256];
+        char path_music[256];
+        char path_bank[256];
+        char path_textures[256];
+        char path_collision[256];
+        char path_vislist[256];
+        char path_model[256];
+        char path_model_lod[256];
+        char name[256];
+        vec3_t player_spawn_position;
+        vec3_t player_spawn_rotation;
+        level_t lvl;
+    } level;
+    struct editor_render_state_t {
+        bool graphics;
+        bool collision;
+        bool vislist;
+        bool level_bvh;
+        bool level_nav_graph;
+        bool level_vislist_regions;
+        int level_bvh_start_depth;
+        int level_bvh_end_depth;
+        int hull_build_set_cap;
+    } render;
+    struct editor_resources_t {
+        texture_cpu_t* gizmo_textures;
+        model_t* gizmos;
+        mesh_t* specialized_meshes[MAX_SHAPE_COUNT];
+    } resources;
+    struct editor_misc_t {
+        player_t player;
+        debug_camera_t camera;
+        int selected_entity;
+        int selected_light;
+        int selected_shape;
+        bool vertex_selected;
+        vec3_t selected_vertex_position;
+        int mouse_over_viewport;
+        std::vector<size_t> defer_remove_shape;
+        ImGuizmo::OPERATION gizmode = ImGuizmo::TRANSLATE;
+    } misc;
+} editor;
+
+static ImGui::FileBrowser file_dialog(ImGuiFileBrowserFlags_EnterNewFilename);
+
 void debug_layer_init(GLFWwindow* window) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
@@ -44,9 +106,9 @@ void debug_layer_begin(void) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-#ifdef _LEVEL_EDITOR
+    #ifdef _LEVEL_EDITOR
     ImGuizmo::BeginFrame();
-#endif
+    #endif
 }
 
 void debug_layer_end(void) {
@@ -72,13 +134,7 @@ extern "C" {
     extern GLuint fbo;
 }
 
-static model_t* gizmos = nullptr;
-static mesh_t* specialized_meshes[MAX_SHAPE_COUNT] = {0};
-static bool vertex_selected = false;
-static vec3_t selected_vertex_position = {0, 0, 0};
-static std::vector<size_t> defer_remove_shape;
-
-    // todo(debug_layer_extern_entity_names): desc: maybe dont use extern for entity_names
+// todo(debug_layer_extern_entity_names): desc: maybe dont use extern for entity_names
 extern const char* entity_names[];
 const char* light_type_names[] = {
     "None",
@@ -96,27 +152,27 @@ const char* shape_type_names[] = {
     NULL
 };
 
-void shape_defragment(level_t* curr_level) {
+void shape_defragment() {
     // find last valid entry
     size_t last_valid = 0;
     for (size_t i = 0; i < MAX_SHAPE_COUNT; ++i) {
-        if (curr_level->shapes[i].type != SHAPE_NONE) last_valid = i;
+        if (editor.level.lvl.shapes[i].type != SHAPE_NONE) last_valid = i;
     }
-    curr_level->n_shapes = last_valid + 1;
+    editor.level.lvl.n_shapes = last_valid + 1;
 
     // defragment up to last valid entry
     size_t i = 0;
-    while (i < curr_level->n_shapes) {
-        if (curr_level->shapes[i].type != SHAPE_NONE) {
+    while (i < editor.level.lvl.n_shapes) {
+        if (editor.level.lvl.shapes[i].type != SHAPE_NONE) {
             ++i;
             continue;
         }
 
-        --curr_level->n_shapes;
-        for (size_t j = i; j < curr_level->n_shapes; ++j) {
-            curr_level->shapes[j] = curr_level->shapes[j + 1];
+        --editor.level.lvl.n_shapes;
+        for (size_t j = i; j < editor.level.lvl.n_shapes; ++j) {
+            editor.level.lvl.shapes[j] = editor.level.lvl.shapes[j + 1];
         }
-        memset(&curr_level->shapes[curr_level->n_shapes], 0, sizeof(shape_t));
+        memset(&editor.level.lvl.shapes[editor.level.lvl.n_shapes], 0, sizeof(shape_t));
     }
 }
 
@@ -319,32 +375,32 @@ bool inspect_entity(size_t entity_id) {
 }
 
 // returns whether data changed
-bool inspect_light(level_t* curr_level, size_t light_id) {
-    const uint8_t light_type = curr_level->lights[light_id].type;
+bool inspect_light(size_t light_id) {
+    const uint8_t light_type = editor.level.lvl.lights[light_id].type;
     if (light_type == LIGHT_NONE) return false;
 
     bool result = false;
 
-    inspect_svec3_4_12(&curr_level->lights[light_id].direction_position, (light_type == LIGHT_DIRECTIONAL)? "Direction" : "Position");
-    float intensity = (curr_level->lights[light_id].intensity) / 256.0f;
+    inspect_svec3_4_12(&editor.level.lvl.lights[light_id].direction_position, (light_type == LIGHT_DIRECTIONAL)? "Direction" : "Position");
+    float intensity = (editor.level.lvl.lights[light_id].intensity) / 256.0f;
     if (ImGui::DragFloat("Intensity", &intensity, 0.05, 0.0f, 127.0f)) {
-        curr_level->lights[light_id].intensity = (int16_t)(intensity * 256.0);
+        editor.level.lvl.lights[light_id].intensity = (int16_t)(intensity * 256.0);
         result |= true;
     }
     float color[3] = {
-        ((float)curr_level->lights[light_id].color_r) / 255.0f,
-        ((float)curr_level->lights[light_id].color_g) / 255.0f,
-        ((float)curr_level->lights[light_id].color_b) / 255.0f,
+        ((float)editor.level.lvl.lights[light_id].color_r) / 255.0f,
+        ((float)editor.level.lvl.lights[light_id].color_g) / 255.0f,
+        ((float)editor.level.lvl.lights[light_id].color_b) / 255.0f,
     };
     if (ImGui::ColorPicker3("Color", color)) {
-        curr_level->lights[light_id].color_r = (color[0] * 255.0f);
-        curr_level->lights[light_id].color_g = (color[1] * 255.0f);
-        curr_level->lights[light_id].color_b = (color[2] * 255.0f);
+        editor.level.lvl.lights[light_id].color_r = (color[0] * 255.0f);
+        editor.level.lvl.lights[light_id].color_g = (color[1] * 255.0f);
+        editor.level.lvl.lights[light_id].color_b = (color[2] * 255.0f);
         result |= true;
     }
 
     if (ImGui::Button("Delete")) {
-        curr_level->lights[light_id].type = LIGHT_NONE;
+        editor.level.lvl.lights[light_id].type = LIGHT_NONE;
         result |= true;
     }
 
@@ -352,69 +408,69 @@ bool inspect_light(level_t* curr_level, size_t light_id) {
 }
 
 // returns if the shape changed
-bool inspect_shape(level_t* curr_level, size_t shape_id, int& render_hull_build_set_cap) {
+bool inspect_shape(size_t shape_id, int& render_hull_build_set_cap) {
     bool result = false;
 
-    const uint8_t shape_type = curr_level->shapes[shape_id].type;
+    const uint8_t shape_type = editor.level.lvl.shapes[shape_id].type;
     if (shape_type == SHAPE_NONE) return false;
     else if (shape_type == SHAPE_SPHERE) {
-        inspect_vec3(&curr_level->shapes[shape_id].sphere.center, "Center");
+        inspect_vec3(&editor.level.lvl.shapes[shape_id].sphere.center, "Center");
         ImGui::SameLine();
         if (ImGui::Button("Center to selected vtx")) {
-            curr_level->shapes[shape_id].sphere.center = selected_vertex_position;
+            editor.level.lvl.shapes[shape_id].sphere.center = editor.misc.selected_vertex_position;
             result |= true;
         }
 
-        result |= inspect_scalar(&curr_level->shapes[shape_id].sphere.radius, "Radius");
+        result |= inspect_scalar(&editor.level.lvl.shapes[shape_id].sphere.radius, "Radius");
         ImGui::SameLine();
         if (ImGui::Button("Fit to selected vtx")) {
-            curr_level->shapes[shape_id].sphere.radius = vec3_magnitude(vec3_sub(selected_vertex_position, curr_level->shapes[shape_id].sphere.center));
+            editor.level.lvl.shapes[shape_id].sphere.radius = vec3_magnitude(vec3_sub(editor.misc.selected_vertex_position, editor.level.lvl.shapes[shape_id].sphere.center));
         }
         const aabb_t aabb = {
-            .min = vec3_sub(curr_level->shapes[shape_id].sphere.center, vec3_from_scalar(curr_level->shapes[shape_id].sphere.radius)),
-            .max = vec3_add(curr_level->shapes[shape_id].sphere.center, vec3_from_scalar(curr_level->shapes[shape_id].sphere.radius)),
+            .min = vec3_sub(editor.level.lvl.shapes[shape_id].sphere.center, vec3_from_scalar(editor.level.lvl.shapes[shape_id].sphere.radius)),
+            .max = vec3_add(editor.level.lvl.shapes[shape_id].sphere.center, vec3_from_scalar(editor.level.lvl.shapes[shape_id].sphere.radius)),
         };
         renderer_debug_draw_aabb(&aabb, {255, 255, 127, 255}, &id_transform);
     }
     else if (shape_type == SHAPE_AABB) {
-        inspect_vec3(&curr_level->shapes[shape_id].aabb.min, "Min");
+        inspect_vec3(&editor.level.lvl.shapes[shape_id].aabb.min, "Min");
         ImGui::SameLine();
         if (ImGui::Button("Min to selected vtx")) {
-            curr_level->shapes[shape_id].aabb.min = selected_vertex_position;
+            editor.level.lvl.shapes[shape_id].aabb.min = editor.misc.selected_vertex_position;
             result |= true;
         }
 
-        result |= inspect_vec3(&curr_level->shapes[shape_id].aabb.max, "Max");
+        result |= inspect_vec3(&editor.level.lvl.shapes[shape_id].aabb.max, "Max");
         ImGui::SameLine();
         if (ImGui::Button("Max to selected vtx")) {
-            curr_level->shapes[shape_id].aabb.max = selected_vertex_position;
+            editor.level.lvl.shapes[shape_id].aabb.max = editor.misc.selected_vertex_position;
             result |= true;
         }
 
-        renderer_debug_draw_aabb(&curr_level->shapes[shape_id].aabb, {255, 255, 127, 255}, &id_transform);
+        renderer_debug_draw_aabb(&editor.level.lvl.shapes[shape_id].aabb, {255, 255, 127, 255}, &id_transform);
     }
     else if (shape_type == SHAPE_CONVEX_HULL) {
         if (ImGui::TreeNode("Points")) {
-            for (size_t i = 0; i < curr_level->shapes[shape_id].convex_hull.n_points; ++i) {
+            for (size_t i = 0; i < editor.level.lvl.shapes[shape_id].convex_hull.n_points; ++i) {
                 ImGui::PushID((int)i);
                 if (ImGui::Button("Remove")) {
-                    curr_level->shapes[shape_id].convex_hull.n_points--;
-                    for (size_t si = i; si < curr_level->shapes[shape_id].convex_hull.n_points; ++si) {
-                        curr_level->shapes[shape_id].convex_hull.points[si] = curr_level->shapes[shape_id].convex_hull.points[si+1];
+                    editor.level.lvl.shapes[shape_id].convex_hull.n_points--;
+                    for (size_t si = i; si < editor.level.lvl.shapes[shape_id].convex_hull.n_points; ++si) {
+                        editor.level.lvl.shapes[shape_id].convex_hull.points[si] = editor.level.lvl.shapes[shape_id].convex_hull.points[si+1];
                     }
                     result |= true;
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("To selected vtx")) {
-                    curr_level->shapes[shape_id].convex_hull.points[i] = selected_vertex_position;
+                    editor.level.lvl.shapes[shape_id].convex_hull.points[i] = editor.misc.selected_vertex_position;
                     result |= true;
                 }
                 ImGui::SameLine();
-                if (inspect_vec3(&curr_level->shapes[shape_id].convex_hull.points[i], "Pos")) {
-                    mem_free(specialized_meshes[shape_id]);
-                    specialized_meshes[shape_id] = create_convex_hull_from_point_cloud(
-                        curr_level->shapes[shape_id].convex_hull.points,
-                        curr_level->shapes[shape_id].convex_hull.n_points,
+                if (inspect_vec3(&editor.level.lvl.shapes[shape_id].convex_hull.points[i], "Pos")) {
+                    mem_free(editor.resources.specialized_meshes[shape_id]);
+                    editor.resources.specialized_meshes[shape_id] = create_convex_hull_from_point_cloud(
+                        editor.level.lvl.shapes[shape_id].convex_hull.points,
+                        editor.level.lvl.shapes[shape_id].convex_hull.n_points,
                         render_hull_build_set_cap
                     );
                     result |= true;
@@ -423,19 +479,19 @@ bool inspect_shape(level_t* curr_level, size_t shape_id, int& render_hull_build_
             }
             ImGui::TreePop();
 
-            mem_free(specialized_meshes[shape_id]);
-            specialized_meshes[shape_id] = create_convex_hull_from_point_cloud(
-                curr_level->shapes[shape_id].convex_hull.points,
-                curr_level->shapes[shape_id].convex_hull.n_points,
+            mem_free(editor.resources.specialized_meshes[shape_id]);
+            editor.resources.specialized_meshes[shape_id] = create_convex_hull_from_point_cloud(
+                editor.level.lvl.shapes[shape_id].convex_hull.points,
+                editor.level.lvl.shapes[shape_id].convex_hull.n_points,
                 render_hull_build_set_cap
             );
             result |= true;
         }
 
-        const vec3_t initial_point = curr_level->shapes[shape_id].convex_hull.points[0];
+        const vec3_t initial_point = editor.level.lvl.shapes[shape_id].convex_hull.points[0];
         aabb_t aabb = (aabb_t){initial_point, initial_point};
-        for (size_t i = 1; i < curr_level->shapes[shape_id].convex_hull.n_points; ++i) {
-            const vec3_t point = curr_level->shapes[shape_id].convex_hull.points[i];
+        for (size_t i = 1; i < editor.level.lvl.shapes[shape_id].convex_hull.n_points; ++i) {
+            const vec3_t point = editor.level.lvl.shapes[shape_id].convex_hull.points[i];
 
             // expand aabb
             aabb.min = vec3_min(aabb.min, point);
@@ -448,14 +504,14 @@ bool inspect_shape(level_t* curr_level, size_t shape_id, int& render_hull_build_
                 .scale = vec3_from_scalar(SCALAR(16.0 / 1024)), // 1024 because the model is scaled by 1024 for precision
             };
             renderer_set_drawing_id(0, 0);
-            renderer_draw_mesh_shaded(&gizmos->meshes[2], &trans, 0, 0);
+            renderer_draw_mesh_shaded(&editor.resources.gizmos->meshes[2], &trans, 0, 0);
         }
 
-        if (specialized_meshes[shape_id]) {
-            for (size_t i = 0; i < specialized_meshes[shape_id]->n_triangles; ++i) {
-                assert(specialized_meshes[shape_id]->vertices != NULL);
-                assert(specialized_meshes[shape_id]->normals != NULL);
-                const vertex_3d_t* vertices = &specialized_meshes[shape_id]->vertices[3*i + 0];
+        if (editor.resources.specialized_meshes[shape_id]) {
+            for (size_t i = 0; i < editor.resources.specialized_meshes[shape_id]->n_triangles; ++i) {
+                assert(editor.resources.specialized_meshes[shape_id]->vertices != NULL);
+                assert(editor.resources.specialized_meshes[shape_id]->normals != NULL);
+                const vertex_3d_t* vertices = &editor.resources.specialized_meshes[shape_id]->vertices[3*i + 0];
                 const vec3_t a = vec3_from_svec3(*(svec3_t*)&vertices[0]);
                 const vec3_t b = vec3_from_svec3(*(svec3_t*)&vertices[1]);
                 const vec3_t c = vec3_from_svec3(*(svec3_t*)&vertices[2]);
@@ -463,21 +519,22 @@ bool inspect_shape(level_t* curr_level, size_t shape_id, int& render_hull_build_
                 const vec3_t ac = vec3_sub(c, a);
                 const vec3_t center = vec3_add(a, vec3_divs(vec3_add(ab, ac), SCALAR(3.0)));
                 const vec3_t normal = (vec3_t) {
-                    .x = (scalar_t)specialized_meshes[shape_id]->normals[3*i].x * (ONE / 127),
-                    .y = (scalar_t)specialized_meshes[shape_id]->normals[3*i].y * (ONE / 127),
-                    .z = (scalar_t)specialized_meshes[shape_id]->normals[3*i].z * (ONE / 127),
+                    .x = (scalar_t)editor.resources.specialized_meshes[shape_id]->normals[3*i].x * (ONE / 127),
+                    .y = (scalar_t)editor.resources.specialized_meshes[shape_id]->normals[3*i].y * (ONE / 127),
+                    .z = (scalar_t)editor.resources.specialized_meshes[shape_id]->normals[3*i].z * (ONE / 127),
                 };
+                // todo: was i gonna plan something here?
             }
         }
 
         renderer_debug_draw_aabb(&aabb, {255, 255, 127, 255}, &id_transform);
 
         if (ImGui::Button("Add point") || input_mapping_pressed(IM_SHAPE_ADD_POINT, 0)) {
-            size_t index = curr_level->shapes[shape_id].convex_hull.n_points++;
-            curr_level->shapes[shape_id].convex_hull.points[index] = selected_vertex_position;
+            size_t index = editor.level.lvl.shapes[shape_id].convex_hull.n_points++;
+            editor.level.lvl.shapes[shape_id].convex_hull.points[index] = editor.misc.selected_vertex_position;
         }
         if (ImGui::Button("Delete")) {
-            defer_remove_shape.push_back(shape_id);
+            editor.misc.defer_remove_shape.push_back(shape_id);
         }
     }
 
@@ -528,59 +585,23 @@ void draw_texture_category(const char* name, texture_category_t category, bool s
 }
 
 #define PI 3.14159265358979f
-void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slot, int* selected_light_slot, int* selected_shape_slot, int* mouse_over_viewport, level_t* curr_level, player_t* player) {
-    ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
-    static ImGui::FileBrowser file_dialog(ImGuiFileBrowserFlags_EnterNewFilename);
 
-    // Level metadata
-    static vec3_t player_spawn_position = (vec3_t){ 0, 0, 0 };
-    static vec3_t player_spawn_rotation = (vec3_t){ 0, 0, 0 };
-    static char* level_path = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
-    static char* path_music = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
-    static char* path_bank = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
-    static char* path_texture = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
-    static char* path_collision = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
-    static char* path_vislist = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
-    static char* path_model = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
-    static char* path_model_lod = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
-    static char* level_name = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
-    static texture_cpu_t* gizmo_textures = nullptr;
-    static bool initialized = false;
-    static auto gizmode = ImGuizmo::TRANSLATE;
-
-    // Debug state
-    static bool render_level_graphics = true;
-    static bool render_level_collision = false;
-    static bool render_level_bvh = false;
-    static bool render_level_nav_graph = false;
-    static bool render_level_vislist_regions = false;
-    static int render_level_bvh_start_depth = 0;
-    static int render_level_bvh_end_depth = 6;
-    static int render_hull_build_set_cap = 1;
-
-    if (!defer_remove_shape.empty()) {
-        // remove deferred shapes
-        for (const size_t shape_id : defer_remove_shape) {
-            memset(&curr_level->shapes[shape_id], 0, sizeof(shape_t));
-        }
-        defer_remove_shape.clear();
-
-        shape_defragment(curr_level);
+void render_3d_debug_stuff() {
+    if (editor.render.graphics) {
+        renderer_draw_model_shaded(editor.level.lvl.graphics, &editor.level.lvl.transform, NULL);
     }
 
-    if (render_level_graphics) renderer_draw_model_shaded(curr_level->graphics, &curr_level->transform, NULL);
-
     // todo(editor_render_level_bvh): desc: render level bvh and nav graph in the editor
-    // if (render_level_bvh) bvh_debug_draw(&curr_level->collision_bvh, render_level_bvh_start_depth, render_level_bvh_end_depth, (pixel32_t){ .r = 160, .g = 240, .b = 80, .a = 255 });
-    // if (render_level_nav_graph) bvh_debug_draw_nav_graph(&curr_level->collision_bvh);
-    if (render_level_vislist_regions) {
+    // if (render_level_bvh) bvh_debug_draw(&editor.level.lvl.collision_bvh, render_level_bvh_start_depth, render_level_bvh_end_depth, (pixel32_t){ .r = 160, .g = 240, .b = 80, .a = 255 });
+    // if (render_level_nav_graph) bvh_debug_draw_nav_graph(&editor.level.lvl.collision_bvh);
+
+    if (editor.render.vislist) {
         uint32_t node_stack[2048] = {0};
         uint32_t node_handle_ptr = 0;
         uint32_t node_add_ptr = 1;
-        // printf("draw");
         while (node_handle_ptr != node_add_ptr) {
             // check a node
-            visbvh_node_t* node = &curr_level->vislist.bvh_root[node_stack[node_handle_ptr]];
+            visbvh_node_t* node = &editor.level.lvl.vislist.bvh_root[node_stack[node_handle_ptr]];
 
             aabb_t aabb;
             aabb.min = vec3_shift_right(vec3_from_svec3(node->min), 3);
@@ -603,427 +624,446 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             node_handle_ptr = (node_handle_ptr + 1) % 2048;
         }
     }
-    if (vertex_selected) {
+
+    // Draw sphere at selected vertex to show it's selected
+    if (editor.misc.vertex_selected) {
         transform_t trans = {
-            .position = selected_vertex_position,
+            .position = editor.misc.selected_vertex_position,
             .rotation = vec3_from_scalar(0),
             .scale = vec3_from_scalar(SCALAR(16.0 / 1024)), // 1024 because the model is scaled by 1024 for precision
         };
         renderer_set_drawing_id(0, 0);
-        renderer_draw_mesh_shaded(&gizmos->meshes[2], &trans, 0, 0);
+        renderer_draw_mesh_shaded(&editor.resources.gizmos->meshes[2], &trans, 0, 0);
     }
+}
 
-    if (!initialized) {
-        level_path[0] = 0;
-        path_music[0] = 0;
-        path_bank[0] = 0;
-        path_texture[0] = 0;
-        path_collision[0] = 0;
-        path_vislist[0] = 0;
-        path_model[0] = 0;
-        path_model_lod[0] = 0;
-        level_name[0] = 0;
-        gizmos = model_load("editor/gizmos.msh", 0, (stack_t)0, TEX_CAT_PERSISTENT, 0);
-        uint32_t n_tex = texture_collection_load("editor/gizmos.txc", &gizmo_textures, 1, STACK_TEMP);
-        for (uint32_t i = 0; i < n_tex; ++i) {
-            renderer_upload_texture(&gizmo_textures[i], i,  TEX_CAT_PERSISTENT);
-        }
-        initialized = true;
-    }
+void level_metadata() {
     ImGui::Begin("Level Metadata");
-    {
-        auto load = [curr_level, &player, &camera]() {
-            mem_debug();
-            if (curr_level) {
-                // only slightly cursed, at least we can be sure that the pc/level editor builds use mem_alloc for these
-                if (curr_level->graphics) {
-                    for (uint32_t i = 0; i < curr_level->graphics->n_meshes; ++i) {
-                        mem_free(curr_level->graphics->meshes[i].vertices);
-                    }
-                }
-                if (curr_level->collision_mesh_debug) {
-                    if (curr_level->collision_mesh_debug->meshes) {
-                        for (uint32_t i = 0; i < curr_level->collision_mesh_debug->n_meshes; ++i) {
-                            mem_free(curr_level->collision_mesh_debug->meshes[i].vertices);
-                        }
-                        mem_free(curr_level->collision_mesh_debug->meshes);
-                    }
-                    mem_free(curr_level->collision_mesh_debug);
-                }
-                mem_free(curr_level->lights);
+    auto load = []() {
+        mem_debug();
+        // todo: how is this gonna work? we'll find out
+        if (editor.level.lvl.graphics) {
+            for (uint32_t i = 0; i < editor.level.lvl.graphics->n_meshes; ++i) {
+                mem_free(editor.level.lvl.graphics->meshes[i].vertices);
             }
-            mem_debug();
-
-            uint32_t* data;
-            size_t size;
-            if (file_read(level_path, &data, &size, 1, STACK_TEMP) == 0) {
-                printf("Failed to load level '%s'\n", level_path);
+        }
+        if (editor.level.lvl.collision_mesh_debug) {
+            if (editor.level.lvl.collision_mesh_debug->meshes) {
+                for (uint32_t i = 0; i < editor.level.lvl.collision_mesh_debug->n_meshes; ++i) {
+                    mem_free(editor.level.lvl.collision_mesh_debug->meshes[i].vertices);
+                }
+                mem_free(editor.level.lvl.collision_mesh_debug->meshes);
             }
-            level_header_t* header = (level_header_t*)data;
-            char* binary_section = (char*)(&header[1]);
+            mem_free(editor.level.lvl.collision_mesh_debug);
+        }
+        mem_free(editor.level.lvl.lights);
+        mem_debug();
 
-            strncpy(path_music, binary_section + header->path_music_offset, 255);
-            strncpy(path_bank, binary_section + header->path_bank_offset, 255);
-            strncpy(path_texture, binary_section + header->path_texture_offset, 255);
-            strncpy(path_collision, binary_section + header->path_collision_offset, 255);
-            strncpy(path_vislist, binary_section + header->path_vislist_offset, 255);
-            strncpy(path_model, binary_section + header->path_model_offset, 255);
-            strncpy(path_model_lod, binary_section + header->path_model_lod_offset, 255);
-            strncpy(level_name, binary_section + header->level_name_offset, 255);
+        uint32_t* data;
+        size_t size;
+        if (file_read(editor.level.path, &data, &size, 1, STACK_TEMP) == 0) {
+            printf("Failed to load level '%s'\n", editor.level.path);
+        }
+        level_header_t* header = (level_header_t*)data;
+        char* binary_section = (char*)(&header[1]);
 
-            entity_init();
-            *curr_level = level_load(level_path, LEVEL_LOAD_ALL);
-            player_spawn_position = vec3_from_svec3(curr_level->player_spawn_position);
-            player_spawn_rotation = curr_level->player_spawn_rotation;
-            player_init(player, player_spawn_position, player_spawn_rotation, 40, 0, 0);
-            camera->position = player_spawn_position;
-            camera->rotation = player_spawn_rotation;
+        strncpy(editor.level.path_music, binary_section + header->path_music_offset, 255);
+        strncpy(editor.level.path_bank, binary_section + header->path_bank_offset, 255);
+        strncpy(editor.level.path_textures, binary_section + header->path_texture_offset, 255);
+        strncpy(editor.level.path_collision, binary_section + header->path_collision_offset, 255);
+        strncpy(editor.level.path_vislist, binary_section + header->path_vislist_offset, 255);
+        strncpy(editor.level.path_model, binary_section + header->path_model_offset, 255);
+        strncpy(editor.level.path_model_lod, binary_section + header->path_model_lod_offset, 255);
+        strncpy(editor.level.name, binary_section + header->level_name_offset, 255);
+
+        entity_init();
+        editor.level.lvl = level_load(editor.level.path, LEVEL_LOAD_ALL);
+        editor.level.player_spawn_position = vec3_from_svec3(editor.level.lvl.player_spawn_position);
+        editor.level.player_spawn_rotation = editor.level.lvl.player_spawn_rotation;
+        player_init(&editor.misc.player, editor.level.player_spawn_position, editor.level.player_spawn_rotation, 40, 0, 0);
+        editor.misc.camera.transform.position = editor.level.player_spawn_position;
+        editor.misc.camera.transform.rotation = editor.level.player_spawn_rotation;
+    };
+
+    auto save = []() {
+        std::vector<uint8_t> binary_section;
+
+        auto write_text_and_get_offset = [](std::vector<uint8_t>& output, char* string) {
+            const auto string_offset_in_file = output.size();
+            intptr_t offset = 0;
+            do {
+                output.push_back(string[offset]);
+            } while (string[offset++] != 0);
+            return string_offset_in_file;
         };
 
-        auto save = [curr_level]() {
-            std::vector<uint8_t> binary_section;
+        auto write_data_and_get_offset = [](std::vector<uint8_t>& output, const void* data, size_t size_in_bytes) {
+            const uint8_t* ptr = (uint8_t*)data;
 
-            auto write_text_and_get_offset = [](std::vector<uint8_t>& output, char* string) {
-                const auto string_offset_in_file = output.size();
-                intptr_t offset = 0;
+            // align to 4 bytes
+            while ((output.size() % 4) != 0) output.push_back(0);
+
+            const auto offset_in_file = output.size();
+            uintptr_t offset = 0;
+            if (data) {
                 do {
-                    output.push_back(string[offset]);
-                } while (string[offset++] != 0);
-                return string_offset_in_file;
-            };
-
-            auto write_data_and_get_offset = [](std::vector<uint8_t>& output, const void* data, size_t size_in_bytes) {
-                const uint8_t* ptr = (uint8_t*)data;
-
-                // align to 4 bytes
-                while ((output.size() % 4) != 0) output.push_back(0);
-
-                const auto offset_in_file = output.size();
-                uintptr_t offset = 0;
-                if (data) {
-                    do {
-                        output.push_back(ptr[offset]);
-                    } while (++offset < size_in_bytes);
-                }
-                return offset_in_file;
-            };
-
-            // Construct level header and write into binary section as we go along
-            entity_defragment(); // make entity allocations contiguous and compact so we can save space...
-            const int n_entities = entity_how_many_active(); // ...and reuse this function
-
-            // Serialize the entities, removing all pointers in the process
-            std::vector<uint8_t> entity_data_serialized;
-            for (intptr_t i = 0; i < n_entities; ++i) {
-                // Get header
-                const entity_header_t header = *entity_get_header(i);
-
-                // Write entity header
-                write_data_and_get_offset(entity_data_serialized, &header.position, sizeof(vec3_t));
-                write_data_and_get_offset(entity_data_serialized, &header.rotation, sizeof(vec3_t));
-                write_data_and_get_offset(entity_data_serialized, &header.scale, sizeof(vec3_t));
-
-                // Write entity data
-                const uint8_t* entity_data = ((const uint8_t*)entity_get_header(i)) + sizeof(entity_header_t);
-                const size_t size = entity_get_pool_stride() - sizeof(entity_header_t);
-                write_data_and_get_offset(entity_data_serialized, entity_data, size);
+                    output.push_back(ptr[offset]);
+                } while (++offset < size_in_bytes);
             }
-
-            // Serialize text
-            std::vector<uint8_t> text_data_serialized;
-            for (int i = 0; i < curr_level->n_text_entries; ++i) {
-                int n_chars = 0;
-                while (curr_level->text_entries[i][n_chars] != 0 && curr_level->text_entries[i][n_chars] != 127) {
-                    ++n_chars;
-                }
-                text_data_serialized.push_back((uint8_t)n_chars);
-                for (int j = 0; j < n_chars; ++j) {
-                    text_data_serialized.push_back(*(uint8_t*)&curr_level->text_entries[i][j]);
-                }
-            }
-
-            const size_t n_entities_padded = (n_entities + 3) & ~0x03;
-            const size_t n_extra_values = n_entities_padded - n_entities;
-            uint8_t* entity_types = (uint8_t*)mem_alloc(n_entities_padded, MEM_CAT_UNDEFINED);
-            for (int i = 0; i < n_entities; ++i) {
-                entity_types[i] = entity_get_type(i);
-            }
-            for (size_t i = 0; i < n_extra_values; ++i) {
-                entity_types[i + n_entities] = 0;
-            }
-
-            light_t lights[MAX_LIGHT_COUNT];
-            memset(lights, 0, sizeof(lights));
-
-            int n_lights = 0;
-            for (int i = 0; i < MAX_LIGHT_COUNT; ++i) {
-                if (curr_level->lights[i].type != LIGHT_NONE) {
-                    lights[n_lights++] = curr_level->lights[i];
-                }
-            }
-
-            // serialize shapes
-            uint8_t* shapes = (uint8_t*)mem_alloc(1 * MiB, MEM_CAT_UNDEFINED); // 1 MB should be overkill
-            size_t shape_cursor = 0;
-            size_t n_shapes = 0;
-            for (int i = 0; i < MAX_SHAPE_COUNT; ++i) {
-                if (curr_level->shapes[i].type == SHAPE_NONE) continue;
-                serialize_shape(shapes, &shape_cursor, &curr_level->shapes[i]);
-                ++n_shapes;
-            }
-
-            level_header_t header = {
-                .file_magic = MAGIC_FLVL,
-                .path_music_offset = (uint32_t)write_text_and_get_offset(binary_section, path_music),
-                .path_bank_offset = (uint32_t)write_text_and_get_offset(binary_section, path_bank),
-                .path_texture_offset = (uint32_t)write_text_and_get_offset(binary_section, path_texture),
-                .path_collision_offset = (uint32_t)write_text_and_get_offset(binary_section, path_collision),
-                .path_vislist_offset = (uint32_t)write_text_and_get_offset(binary_section, path_vislist),
-                .path_model_offset = (uint32_t)write_text_and_get_offset(binary_section, path_model),
-                .path_model_lod_offset = (uint32_t)write_text_and_get_offset(binary_section, path_model_lod),
-                .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_types, (n_entities + 3) & ~0x03), // 4-byte padding
-                .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_data_serialized.data(), entity_data_serialized.size() * sizeof(entity_data_serialized[0])),
-                .light_data_offset =  (uint32_t)write_data_and_get_offset(binary_section, lights, n_lights * sizeof(light_t)),
-                .shape_data_offset =  (uint32_t)write_data_and_get_offset(binary_section, shapes, shape_cursor),
-                .level_name_offset = (uint32_t)write_text_and_get_offset(binary_section, level_name),
-                .text_offset = (uint32_t)write_data_and_get_offset(binary_section, text_data_serialized.data(), text_data_serialized.size()),
-                .n_text_entries = (uint32_t)curr_level->n_text_entries,
-                .player_spawn_position = svec3_from_vec3(player_spawn_position),
-                .player_spawn_rotation = player_spawn_rotation,
-                .n_entities = (uint16_t)n_entities,
-                .n_lights = (uint16_t)n_lights,
-                .n_shapes = (uint16_t)n_shapes,
-            };
-
-            mem_free(entity_types);
-
-            FILE* file = fopen(level_path, "wb");
-            if (file == nullptr) {
-                // todo(error_dialog): desc: message boxes for errors?
-                printf("Error saving file '%s': could not open file\n", level_path);
-                return;
-            }
-            fwrite(&header, sizeof(header), 1, file);
-            fwrite(binary_section.data(), sizeof(binary_section[0]), binary_section.size(), file);
-            fclose(file);
+            return offset_in_file;
         };
 
-        ImGui::SeparatorText("Level File");
-        ImGui::InputText("Level File Path", level_path, 255);
+        // Construct level header and write into binary section as we go along
+        entity_defragment(); // make entity allocations contiguous and compact so we can save space...
+        const int n_entities = entity_how_many_active(); // ...and reuse this function
 
-        // Browse button
-        ImGui::SameLine();
-        if (ImGui::Button("...")) {
+        // Serialize the entities, removing all pointers in the process
+        std::vector<uint8_t> entity_data_serialized;
+        for (intptr_t i = 0; i < n_entities; ++i) {
+            // Get header
+            const entity_header_t header = *entity_get_header(i);
+
+            // Write entity header
+            write_data_and_get_offset(entity_data_serialized, &header.position, sizeof(vec3_t));
+            write_data_and_get_offset(entity_data_serialized, &header.rotation, sizeof(vec3_t));
+            write_data_and_get_offset(entity_data_serialized, &header.scale, sizeof(vec3_t));
+
+            // Write entity data
+            const uint8_t* entity_data = ((const uint8_t*)entity_get_header(i)) + sizeof(entity_header_t);
+            const size_t size = entity_get_pool_stride() - sizeof(entity_header_t);
+            write_data_and_get_offset(entity_data_serialized, entity_data, size);
+        }
+
+        // Serialize text
+        std::vector<uint8_t> text_data_serialized;
+        for (int i = 0; i < editor.level.lvl.n_text_entries; ++i) {
+            int n_chars = 0;
+            while (editor.level.lvl.text_entries[i][n_chars] != 0 && editor.level.lvl.text_entries[i][n_chars] != 127) {
+                ++n_chars;
+            }
+            text_data_serialized.push_back((uint8_t)n_chars);
+            for (int j = 0; j < n_chars; ++j) {
+                text_data_serialized.push_back(*(uint8_t*)&editor.level.lvl.text_entries[i][j]);
+            }
+        }
+
+        const size_t n_entities_padded = (n_entities + 3) & ~0x03;
+        const size_t n_extra_values = n_entities_padded - n_entities;
+        uint8_t* entity_types = (uint8_t*)mem_alloc(n_entities_padded, MEM_CAT_UNDEFINED);
+        for (int i = 0; i < n_entities; ++i) {
+            entity_types[i] = entity_get_type(i);
+        }
+        for (size_t i = 0; i < n_extra_values; ++i) {
+            entity_types[i + n_entities] = 0;
+        }
+
+        light_t lights[MAX_LIGHT_COUNT];
+        memset(lights, 0, sizeof(lights));
+
+        int n_lights = 0;
+        for (int i = 0; i < MAX_LIGHT_COUNT; ++i) {
+            if (editor.level.lvl.lights[i].type != LIGHT_NONE) {
+                lights[n_lights++] = editor.level.lvl.lights[i];
+            }
+        }
+
+        // serialize shapes
+        uint8_t* shapes = (uint8_t*)mem_alloc(1 * MiB, MEM_CAT_UNDEFINED); // 1 MB should be overkill
+        size_t shape_cursor = 0;
+        size_t n_shapes = 0;
+        for (int i = 0; i < MAX_SHAPE_COUNT; ++i) {
+            if (editor.level.lvl.shapes[i].type == SHAPE_NONE) continue;
+            serialize_shape(shapes, &shape_cursor, &editor.level.lvl.shapes[i]);
+            ++n_shapes;
+        }
+
+        level_header_t header = {
+            .file_magic = MAGIC_FLVL,
+            .path_music_offset = (uint32_t)write_text_and_get_offset(binary_section, editor.level.path_music),
+            .path_bank_offset = (uint32_t)write_text_and_get_offset(binary_section, editor.level.path_bank),
+            .path_texture_offset = (uint32_t)write_text_and_get_offset(binary_section, editor.level.path_textures),
+            .path_collision_offset = (uint32_t)write_text_and_get_offset(binary_section, editor.level.path_collision),
+            .path_vislist_offset = (uint32_t)write_text_and_get_offset(binary_section, editor.level.path_vislist),
+            .path_model_offset = (uint32_t)write_text_and_get_offset(binary_section, editor.level.path_model),
+            .path_model_lod_offset = (uint32_t)write_text_and_get_offset(binary_section, editor.level.path_model_lod),
+            .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_types, (n_entities + 3) & ~0x03), // 4-byte padding
+            .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_data_serialized.data(), entity_data_serialized.size() * sizeof(entity_data_serialized[0])),
+            .light_data_offset =  (uint32_t)write_data_and_get_offset(binary_section, lights, n_lights * sizeof(light_t)),
+            .shape_data_offset =  (uint32_t)write_data_and_get_offset(binary_section, shapes, shape_cursor),
+            .level_name_offset = (uint32_t)write_text_and_get_offset(binary_section, editor.level.name),
+            .text_offset = (uint32_t)write_data_and_get_offset(binary_section, text_data_serialized.data(), text_data_serialized.size()),
+            .n_text_entries = (uint32_t)editor.level.lvl.n_text_entries,
+            .player_spawn_position = svec3_from_vec3(editor.level.player_spawn_position),
+            .player_spawn_rotation = editor.level.player_spawn_rotation,
+            .n_entities = (uint16_t)n_entities,
+            .n_lights = (uint16_t)n_lights,
+            .n_shapes = (uint16_t)n_shapes,
+        };
+
+        mem_free(entity_types);
+
+        FILE* file = fopen(editor.level.path, "wb");
+        if (file == nullptr) {
+            // todo(error_dialog): desc: message boxes for errors?
+            printf("Error saving file '%s': could not open file\n", editor.level.path);
+            return;
+        }
+        fwrite(&header, sizeof(header), 1, file);
+        fwrite(binary_section.data(), sizeof(binary_section[0]), binary_section.size(), file);
+        fclose(file);
+    };
+
+    ImGui::SeparatorText("Level File");
+    ImGui::InputText("Level File Path", editor.level.path, 255);
+
+    // Browse button
+    ImGui::SameLine();
+    if (ImGui::Button("...")) {
+        file_dialog.SetTitle("Open level file");
+        file_dialog.SetTypeFilters({ ".lvl" });
+        file_dialog.Open();
+    }
+    file_dialog.Display();
+
+    static bool load_after_select = false;
+    static bool save_after_select = false;
+
+    if (file_dialog.HasSelected()) {
+        strcpy(editor.level.path, file_dialog.GetSelected().string().c_str());
+        file_dialog.ClearSelected();
+
+        if (load_after_select) load();
+        if (save_after_select) save();
+
+        load_after_select = false;
+        save_after_select = false;
+    }
+
+    // Load button
+    if (ImGui::Button("Load")) {
+        // If the level path is empty, open file dialog
+        if (editor.level.path[0] == '\0' || editor.level.path[0] == ' ') {
+            load_after_select = true;
             file_dialog.SetTitle("Open level file");
             file_dialog.SetTypeFilters({ ".lvl" });
             file_dialog.Open();
         }
-        file_dialog.Display();
-
-        static bool load_after_select = false;
-        static bool save_after_select = false;
-
-        if (file_dialog.HasSelected()) {
-            strcpy(level_path, file_dialog.GetSelected().string().c_str());
-            file_dialog.ClearSelected();
-
-            if (load_after_select) load();
-            if (save_after_select) save();
-
-            load_after_select = false;
-            save_after_select = false;
+        else {
+            load();
         }
+    }
 
-        // Load button
-        if (ImGui::Button("Load")) {
-            // If the level path is empty, open file dialog
-            if (level_path[0] == '\0' || level_path[0] == ' ') {
-                load_after_select = true;
-                file_dialog.SetTitle("Open level file");
-                file_dialog.SetTypeFilters({ ".lvl" });
-                file_dialog.Open();
-            }
-            else {
-                load();
-            }
-        }
-
-        // Save button
-        ImGui::SameLine();
-        if (ImGui::Button("Save")) {
-            // If the level path is empty, open file dialog
-            if (level_path[0] == '\0' || level_path[0] == ' ') {
-                save_after_select = true;
-                file_dialog.SetTitle("Open level file");
-                file_dialog.SetTypeFilters({ ".lvl" });
-                file_dialog.Open();
-            }
-            else {
-                save();
-            }
-        }
-
-        // Save as button
-        ImGui::SameLine();
-        if (ImGui::Button("Save as")) {
-            // Open file dialog
+    // Save button
+    ImGui::SameLine();
+    if (ImGui::Button("Save")) {
+        // If the level path is empty, open file dialog
+        if (editor.level.path[0] == '\0' || editor.level.path[0] == ' ') {
             save_after_select = true;
             file_dialog.SetTitle("Open level file");
             file_dialog.SetTypeFilters({ ".lvl" });
             file_dialog.Open();
         }
-
-        ImGui::SeparatorText("Level Header");
-        ImGui::InputText("Music Sequence Path", path_music, 255);
-        ImGui::InputText("Music Soundbank Path", path_bank, 255);
-        ImGui::InputText("Texture Collection Path", path_texture, 255);
-        ImGui::InputText("Collision Path", path_collision, 255);
-        ImGui::InputText("Visility List Path", path_vislist, 255);
-        ImGui::InputText("Model Path", path_model, 255);
-        ImGui::InputText("Model LOD Path", path_model_lod, 255);
-        ImGui::InputText("Level Name", level_name, 255);
-        inspect_vec3(&player_spawn_position, "Player Spawn Position");
-        inspect_vec3(&player_spawn_rotation, "Player Spawn Rotation");
-
-        if (ImGui::Button("Hot reload")) {
-            // todo(debug_level_load_reuse_code): desc: reuse level_load() in hot reload
-            mem_stack_release(STACK_TEMP);
-            mem_stack_release(STACK_LEVEL);
-            mem_stack_release(STACK_ENTITY);
-            entity_init();
-
-            // Load level textures
-            texture_cpu_t *tex_level;
-            auto n_level_textures = texture_collection_load(path_texture, &tex_level, 1, STACK_TEMP);
-            for (uint8_t i = 0; i < n_level_textures; ++i) {
-                renderer_upload_texture(&tex_level[i], i, TEX_CAT_LEVEL);
-            }
-
-            // Load graphics and collision data
-            curr_level->graphics = model_load(path_model, 1, STACK_LEVEL, TEX_CAT_LEVEL, 1);
-            curr_level->collision_mesh_debug = model_load_collision_debug(path_collision, 0, (stack_t)0);
-            curr_level->collision_mesh = model_load_collision(path_collision, 1, STACK_LEVEL);
-            curr_level->transform = { {0, 0, 0}, {0, 0, 0}, {ONE, ONE, ONE} };
-            curr_level->vislist = vislist_load(path_vislist, 1, STACK_LEVEL);
-
-            // todo(editor_collision_bvh_load): desc: update editor to new collision system
-            // curr_level->collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL);
-            memset(&curr_level->collision_bvh, 0, sizeof(curr_level->collision_bvh));
-
-            player->position = player_spawn_position;
-            player->rotation = player_spawn_rotation;
-            camera->position = player_spawn_position;
-            camera->rotation = player_spawn_position;
-            player_update(player, curr_level, 0, 0); // Tick the player with 0 delta time to update the camera transform
+        else {
+            save();
         }
     }
-    ImGui::End();
 
+    // Save as button
+    ImGui::SameLine();
+    if (ImGui::Button("Save as")) {
+        // Open file dialog
+        save_after_select = true;
+        file_dialog.SetTitle("Open level file");
+        file_dialog.SetTypeFilters({ ".lvl" });
+        file_dialog.Open();
+    }
+
+    ImGui::SeparatorText("Level Header");
+    ImGui::InputText("Music Sequence Path", editor.level.path_music, 255);
+    ImGui::InputText("Music Soundbank Path", editor.level.path_bank, 255);
+    ImGui::InputText("Texture Collection Path", editor.level.path_textures, 255);
+    ImGui::InputText("Collision Path", editor.level.path_collision, 255);
+    ImGui::InputText("Visility List Path", editor.level.path_vislist, 255);
+    ImGui::InputText("Model Path", editor.level.path_model, 255);
+    ImGui::InputText("Model LOD Path", editor.level.path_model_lod, 255);
+    ImGui::InputText("Level Name", editor.level.name, 255);
+    inspect_vec3(&editor.level.player_spawn_position, "Player Spawn Position");
+    inspect_vec3(&editor.level.player_spawn_rotation, "Player Spawn Rotation");
+
+    if (ImGui::Button("Hot reload")) {
+        // todo(debug_level_load_reuse_code): desc: reuse level_load() in hot reload
+        mem_stack_release(STACK_TEMP);
+        mem_stack_release(STACK_LEVEL);
+        mem_stack_release(STACK_ENTITY);
+        entity_init();
+
+        // Load level textures
+        texture_cpu_t *tex_level;
+        auto n_level_textures = texture_collection_load(editor.level.path_textures, &tex_level, 1, STACK_TEMP);
+        for (uint8_t i = 0; i < n_level_textures; ++i) {
+            renderer_upload_texture(&tex_level[i], i, TEX_CAT_LEVEL);
+        }
+
+        // Load graphics and collision data
+        editor.level.lvl.graphics = model_load(editor.level.path_model, 1, STACK_LEVEL, TEX_CAT_LEVEL, 1);
+        editor.level.lvl.collision_mesh_debug = model_load_collision_debug(editor.level.path_collision, 0, (stack_t)0);
+        editor.level.lvl.collision_mesh = model_load_collision(editor.level.path_collision, 1, STACK_LEVEL);
+        editor.level.lvl.transform = { {0, 0, 0}, {0, 0, 0}, {ONE, ONE, ONE} };
+        editor.level.lvl.vislist = vislist_load(editor.level.path_vislist, 1, STACK_LEVEL);
+
+        // todo(editor_collision_bvh_load): desc: update editor to new collision system
+        // editor.level.lvl.collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL);
+        // memset(&editor.level.collision_bvh, 0, sizeof(editor.level.collision_bvh));
+
+        editor.misc.player.transform.position = editor.level.player_spawn_position;
+        editor.misc.player.transform.rotation = editor.level.player_spawn_rotation;
+        editor.misc.camera.transform.position = editor.level.player_spawn_position;
+        editor.misc.camera.transform.rotation = editor.level.player_spawn_position;
+        player_update(&editor.misc.player, &editor.level.lvl, 0, 0); // Tick the player with 0 delta time to update the camera transform
+    }
+    ImGui::End();
+}
+
+void initialize() {
+    if (editor.initialized) return;
+
+    memset(&editor, 0, sizeof(editor));
+
+    editor.resources.gizmos = model_load("editor/gizmos.msh", 0, (stack_t)0, TEX_CAT_PERSISTENT, 0);
+    uint32_t n_tex = texture_collection_load("editor/gizmos.txc", &editor.resources.gizmo_textures, 1, STACK_TEMP);
+    for (uint32_t i = 0; i < n_tex; ++i) {
+        renderer_upload_texture(&editor.resources.gizmo_textures[i], i,  TEX_CAT_PERSISTENT);
+    }
+
+    editor.level.lvl.lights = (light_t*)mem_alloc(256 * sizeof(light_t), MEM_CAT_UNDEFINED);
+    editor.level.lvl.shapes = (shape_t*)mem_alloc(256 * sizeof(shape_t), MEM_CAT_UNDEFINED);
+    memset(editor.level.lvl.lights, 0, 256 * sizeof(light_t));
+    memset(editor.level.lvl.shapes, 0, 256 * sizeof(shape_t));
+
+    editor.render.graphics = 1;
+    editor.misc.selected_entity = -1;
+    editor.misc.selected_light = -1;
+    editor.misc.selected_shape = -1;
+    editor.misc.gizmode = ImGuizmo::TRANSLATE;
+    editor.initialized = true;
+}
+
+void cleanup() {
+    if (!editor.misc.defer_remove_shape.empty()) {
+        // remove deferred shapes
+        for (const size_t shape_id : editor.misc.defer_remove_shape) {
+            memset(&editor.level.lvl.shapes[shape_id], 0, sizeof(shape_t));
+        }
+        editor.misc.defer_remove_shape.clear();
+
+        shape_defragment();
+    }
+}
+
+void general_info() {
     // General info
     ImGui::Begin("Info");
-    {
-        if (ImGui::TreeNodeEx("Camera Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
-            float vec_float[] =  {
-                scalar_to_float(camera->position.x),
-                scalar_to_float(camera->position.y),
-                scalar_to_float(camera->position.z),
-            };
+    if (ImGui::TreeNodeEx("Camera Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
+        float vec_float[] =  {
+            scalar_to_float(editor.misc.camera.transform.position.x),
+            scalar_to_float(editor.misc.camera.transform.position.y),
+            scalar_to_float(editor.misc.camera.transform.position.z),
+        };
 
-            if (ImGui::DragFloat3("Position", vec_float)) {
-                camera->position = vec3_from_floats(vec_float[0], vec_float[1], vec_float[2]);
-            }
-            inspect_vec3(&camera->rotation, "Rotation");
-            ImGui::TreePop();
+        if (ImGui::DragFloat3("Position", vec_float)) {
+            editor.misc.camera.transform.position = vec3_from_floats(vec_float[0], vec_float[1], vec_float[2]);
         }
-        if (ImGui::TreeNodeEx("Debug Render Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
-            ImGui::Checkbox("Render level graphics", &render_level_graphics);
-            ImGui::Checkbox("Render level collision", &render_level_collision);
-            if (ImGui::Button("-")) render_hull_build_set_cap--;
-            ImGui::SameLine();
-            if (ImGui::Button("+")) render_hull_build_set_cap++;
-            ImGui::SameLine();
-            ImGui::DragInt("Hull build step cap", &render_hull_build_set_cap);
-            ImGui::Checkbox("Render level BVH", &render_level_bvh);
-            ImGui::DragInt("Min level", &render_level_bvh_start_depth);
-            ImGui::DragInt("Max level", &render_level_bvh_end_depth);
-            ImGui::Checkbox("Render level vislist regions", &render_level_vislist_regions);
-            ImGui::Checkbox("Render Level navgraph", &render_level_nav_graph);
-            ImGui::TreePop();
-        }
+        inspect_vec3(&editor.misc.camera.transform.rotation, "Rotation");
+        ImGui::TreePop();
+    }
+    if (ImGui::TreeNodeEx("Debug Render Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Checkbox("Render level graphics", &editor.render.graphics);
+        ImGui::Checkbox("Render level collision", &editor.render.collision);
+        ImGui::Checkbox("Render level BVH", &editor.render.level_bvh);
+        ImGui::Checkbox("Render level vislist regions", &editor.render.level_vislist_regions);
+        ImGui::Checkbox("Render Level navgraph", &editor.render.level_nav_graph);
+        if (ImGui::Button("-")) editor.render.hull_build_set_cap--;
+        ImGui::SameLine();
+        if (ImGui::Button("+")) editor.render.hull_build_set_cap++;
+        ImGui::SameLine();
+        ImGui::DragInt("Hull build step cap", &editor.render.hull_build_set_cap);
+        ImGui::DragInt("BVH min level", &editor.render.level_bvh_start_depth);
+        ImGui::DragInt("BVH max level", &editor.render.level_bvh_end_depth);
+        ImGui::TreePop();
     }
     ImGui::End();
+}
 
+void entity_stuff() {
     // Entity spawn menu
     ImGui::Begin("Entity spawning");
-    {
-        // Entity count:
-        int entity_count = 0;
-        for (size_t i = 0; i < ENTITY_LIST_LENGTH; ++i) {
-            if (entity_get_type(i) != ENTITY_NONE) {
-                ++entity_count;
-            }
+    // Entity count:
+    int entity_count = 0;
+    for (size_t i = 0; i < ENTITY_LIST_LENGTH; ++i) {
+        if (entity_get_type(i) != ENTITY_NONE) {
+            ++entity_count;
         }
+    }
 
-        ImGui::Text("Entities: %i / %i", entity_count, ENTITY_LIST_LENGTH);
+    ImGui::Text("Entities: %i / %i", entity_count, ENTITY_LIST_LENGTH);
 
-        // Entity select dropdown
-        static size_t curr_selected_entity_type = 1;
-        curr_selected_entity_type = inspect_enum(curr_selected_entity_type, entity_names, "Entity type");
+    // Entity select dropdown
+    static size_t curr_selected_entity_type = 1;
+    curr_selected_entity_type = inspect_enum(curr_selected_entity_type, entity_names, "Entity type");
 
-        if (ImGui::Button("Spawn")) {
-            // Figure out where to spawn - in front of the camera
-            const vec3_t forward = renderer_get_forward_vector();
-            const vec3_t spawn_pos = vec3_add((vertex_selected) ? (selected_vertex_position) : (camera->position), vec3_muls(forward, 80 * ONE));
+    if (ImGui::Button("Spawn")) {
+        // Figure out where to spawn - in front of the camera
+        const vec3_t forward = renderer_get_forward_vector();
+        const vec3_t spawn_pos = vec3_add((editor.misc.vertex_selected) ? (editor.misc.selected_vertex_position) : (editor.misc.camera.transform.position), vec3_muls(forward, 80 * ONE));
 
-            entity_header_t* entity;
+        entity_header_t* entity;
 
-            switch (curr_selected_entity_type) {
-                case ENTITY_DOOR:
-                    entity = (entity_header_t*)entity_door_new();
-                    entity->position = spawn_pos;
-                    break;
-                case ENTITY_PICKUP:
-                    entity = (entity_header_t*)entity_pickup_new();
-                    entity->position = spawn_pos;
-                    break;
-                case ENTITY_CRATE:
-                    entity = (entity_header_t*)entity_crate_new();
-                    entity->position = spawn_pos;
-                    break;
-                case ENTITY_CHASER:
-                    entity = (entity_header_t*)entity_chaser_new();
-                    entity->position = spawn_pos;
-                    break;
-                case ENTITY_PLATFORM:
-                    entity = (entity_header_t*)entity_platform_new();
-                    entity->position = spawn_pos;
-                    ((entity_platform_t*)entity)->position_start = spawn_pos;
-                    ((entity_platform_t*)entity)->position_end = vec3_add(spawn_pos, vec3_from_scalars(0, ONE * 16, 0));
-                    break;
-                case ENTITY_TRIGGER:
-                    entity = (entity_header_t*)entity_trigger_new();
-                    entity->position = spawn_pos;
-                    break;
-            }
+        switch (curr_selected_entity_type) {
+            case ENTITY_DOOR:
+                entity = (entity_header_t*)entity_door_new();
+                entity->position = spawn_pos;
+                break;
+            case ENTITY_PICKUP:
+                entity = (entity_header_t*)entity_pickup_new();
+                entity->position = spawn_pos;
+                break;
+            case ENTITY_CRATE:
+                entity = (entity_header_t*)entity_crate_new();
+                entity->position = spawn_pos;
+                break;
+            case ENTITY_CHASER:
+                entity = (entity_header_t*)entity_chaser_new();
+                entity->position = spawn_pos;
+                break;
+            case ENTITY_PLATFORM:
+                entity = (entity_header_t*)entity_platform_new();
+                entity->position = spawn_pos;
+                ((entity_platform_t*)entity)->position_start = spawn_pos;
+                ((entity_platform_t*)entity)->position_end = vec3_add(spawn_pos, vec3_from_scalars(0, ONE * 16, 0));
+                break;
+            case ENTITY_TRIGGER:
+                entity = (entity_header_t*)entity_trigger_new();
+                entity->position = spawn_pos;
+                break;
         }
+    }
 
-        if (ImGui::Button("Defragment")) {
-            entity_defragment();
-        }
+    if (ImGui::Button("Defragment")) {
+        entity_defragment();
     }
     ImGui::End();
 
     // Entity inspector menu
     ImGui::Begin("Entity Inspector", NULL, ImGuiWindowFlags_None);
     {
-        if (selected_entity_slot != NULL && *selected_entity_slot >= 0) {
+        if (editor.misc.selected_entity >= 0) {
             ImGui::Text("Selected entity");
             ImGui::Spacing();
-            inspect_entity(*selected_entity_slot);
+            inspect_entity(editor.misc.selected_entity);
 
             // If deleted, deselect it
-            if (entity_get_type(*selected_entity_slot) == ENTITY_NONE) {
-                *selected_entity_slot = -1;
+            if (entity_get_type(editor.misc.selected_entity) == ENTITY_NONE) {
+                editor.misc.selected_entity = -1;
             }
         }
         ImGui::Spacing();
@@ -1042,171 +1082,89 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         }
     }
     ImGui::End();
+}
 
+void light_stuff() {
     // Light spawn menu
     ImGui::Begin("Light spawning");
-    {
-        int light_count = 0;
+    int light_count = 0;
+    for (size_t i = 0; i < MAX_LIGHT_COUNT; ++i) {
+        if (editor.level.lvl.lights[i].type != LIGHT_NONE) {
+            ++light_count;
+        }
+    }
+
+    ImGui::Text("Lights: %i / %i", light_count, MAX_LIGHT_COUNT);
+
+    // Light select dropdown
+    static size_t curr_selected_light_type = 1;
+    curr_selected_light_type = inspect_enum(curr_selected_light_type, light_type_names, "Light type");
+
+    if (ImGui::Button("Spawn")) {
+        // Figure out where to spawn - in front of the camera
+        const vec3_t forward = renderer_get_forward_vector();
+        const vec3_t spawn_pos = vec3_add((editor.misc.vertex_selected) ? (editor.misc.selected_vertex_position) : (editor.misc.camera.transform.position), vec3_muls(forward, 80 * ONE));
+
         for (size_t i = 0; i < MAX_LIGHT_COUNT; ++i) {
-            if (curr_level->lights[i].type != LIGHT_NONE) {
-                ++light_count;
-            }
-        }
-
-        ImGui::Text("Lights: %i / %i", light_count, MAX_LIGHT_COUNT);
-
-        // Light select dropdown
-        static size_t curr_selected_light_type = 1;
-        curr_selected_light_type = inspect_enum(curr_selected_light_type, light_type_names, "Light type");
-
-        if (ImGui::Button("Spawn")) {
-            // Figure out where to spawn - in front of the camera
-            const vec3_t forward = renderer_get_forward_vector();
-            const vec3_t spawn_pos = vec3_add((vertex_selected) ? (selected_vertex_position) : (camera->position), vec3_muls(forward, 80 * ONE));
-
-            for (size_t i = 0; i < MAX_LIGHT_COUNT; ++i) {
-                if (curr_level->lights[i].type == LIGHT_NONE) {
-                    if (curr_selected_light_type == LIGHT_DIRECTIONAL) {
-                        curr_level->lights[i].direction_position = { (int16_t)forward.x, (int16_t)forward.y, (int16_t)forward.z };
-                    }
-                    else if (curr_selected_light_type == LIGHT_POINT) {
-                        curr_level->lights[i].direction_position = svec3_from_vec3(spawn_pos);
-                    }
-
-                    curr_level->lights[i].intensity = 1 << 8; // 1.0
-                    curr_level->lights[i].color_r = 255;
-                    curr_level->lights[i].color_g = 255;
-                    curr_level->lights[i].color_b = 255;
-                    curr_level->lights[i].type = (uint8_t)curr_selected_light_type;
-                    break;
+            if (editor.level.lvl.lights[i].type == LIGHT_NONE) {
+                if (curr_selected_light_type == LIGHT_DIRECTIONAL) {
+                    editor.level.lvl.lights[i].direction_position = { (int16_t)forward.x, (int16_t)forward.y, (int16_t)forward.z };
                 }
+                else if (curr_selected_light_type == LIGHT_POINT) {
+                    editor.level.lvl.lights[i].direction_position = svec3_from_vec3(spawn_pos);
+                }
+
+                editor.level.lvl.lights[i].intensity = 1 << 8; // 1.0
+                editor.level.lvl.lights[i].color_r = 255;
+                editor.level.lvl.lights[i].color_g = 255;
+                editor.level.lvl.lights[i].color_b = 255;
+                editor.level.lvl.lights[i].type = (uint8_t)curr_selected_light_type;
+                break;
             }
         }
+    }
 
-        if (ImGui::Button("Defragment")) {
-            // todo(debug_light_defragment): desc: light_defragment();
-        }
+    if (ImGui::Button("Defragment")) {
+        // todo(debug_light_defragment): desc: light_defragment();
     }
     ImGui::End();
 
-    ImGui::Begin("Collision spawning");
-    {
-        int shape_count = 0;
-        for (size_t i = 0; i < MAX_SHAPE_COUNT; ++i) {
-            if (!curr_level->shapes) break;
-            if (curr_level->shapes[i].type != SHAPE_NONE) {
-                ++shape_count;
-            }
-        }
-
-        ImGui::Text("Shapes: %i / %i", shape_count, MAX_SHAPE_COUNT);
-
-        // Shape select dropdown
-        static size_t curr_selected_shape_type = 1;
-        curr_selected_shape_type = inspect_enum(curr_selected_shape_type, shape_type_names, "Shape type");
-
-        if (ImGui::Button("Spawn")) {
-            // Figure out where to spawn - in front of the camera
-            const vec3_t forward = renderer_get_forward_vector();
-            const vec3_t spawn_pos = vec3_add((vertex_selected) ? (selected_vertex_position) : (camera->position), vec3_muls(forward, 80 * ONE));
-
-            for (size_t i = 0; i < MAX_SHAPE_COUNT; ++i) {
-                if (curr_level->shapes[i].type == SHAPE_NONE) {
-                    if (curr_selected_shape_type == SHAPE_SPHERE) {
-                        curr_level->shapes[i].sphere.center = spawn_pos;
-                        curr_level->shapes[i].sphere.radius = SCALAR(100.0);
-                    }
-                    else if (curr_selected_shape_type == SHAPE_AABB) {
-                        curr_level->shapes[i].aabb.min = spawn_pos;
-                        curr_level->shapes[i].aabb.max = vec3_add(spawn_pos, vec3_from_scalar(SCALAR(250.0)));
-                    }
-                    else if (curr_selected_shape_type == SHAPE_CONVEX_HULL) {
-                        curr_level->shapes[i].convex_hull.points = (vec3_t*)mem_alloc(256 * sizeof(vec3_t), MEM_CAT_MESH);
-                        curr_level->shapes[i].convex_hull.n_points = 0;
-                    }
-                    curr_level->shapes[i].type = curr_selected_shape_type;
-                    break;
-                }
-            }
-
-            shape_defragment(curr_level);
-        }
-
-        if (ImGui::Button("Defragment")) {
-            shape_defragment(curr_level);
-        }
-    }
-    ImGui::End();
-
-    // Light inspector menu
+        // Light inspector menu
     ImGui::Begin("Light Inspector", NULL, ImGuiWindowFlags_None);
-    {
-        if (selected_light_slot != NULL && *selected_light_slot >= 0) {
-            ImGui::Text("Selected light");
-            ImGui::Spacing();
-            inspect_light(curr_level, *selected_light_slot);
-
-            // If deleted, deselect it
-            if (curr_level->lights[*selected_light_slot].type == LIGHT_NONE) {
-                *selected_light_slot = -1;
-            }
-        }
+    if (editor.misc.selected_light >= 0) {
+        ImGui::Text("Selected light");
         ImGui::Spacing();
-        if (ImGui::TreeNode("All lights")) {
-            for (size_t i = 0; i < MAX_LIGHT_COUNT && curr_level->lights; ++i) {
-                if (curr_level->lights[i].type != LIGHT_NONE) {
-                    static std::string tree_nodes[MAX_LIGHT_COUNT];
-                    tree_nodes[i] = std::format("{} - {}", i, light_type_names[curr_level->lights[i].type]);
-                    if (ImGui::TreeNode(tree_nodes[i].c_str())) {
-                        inspect_light(curr_level, i);
-                        ImGui::TreePop();
-                    }
-                }
-            }
-            ImGui::TreePop();
+        inspect_light(editor.misc.selected_light);
+
+        // If deleted, deselect it
+        if (editor.level.lvl.lights[editor.misc.selected_light].type == LIGHT_NONE) {
+            editor.misc.selected_light = -1;
         }
     }
-    ImGui::End();
-
-    // Collision inspector menu
-    ImGui::Begin("Collision Inspector", NULL, ImGuiWindowFlags_None);
-    {
-        if (selected_shape_slot != NULL && *selected_shape_slot >= 0) {
-            ImGui::Text("Selected shape");
-            ImGui::Spacing();
-            inspect_shape(curr_level, *selected_shape_slot, render_hull_build_set_cap);
-
-            // If deleted, deselect it
-            if (!curr_level->shapes || curr_level->shapes[*selected_shape_slot].type == SHAPE_NONE) {
-                *selected_shape_slot = -1;
-            }
-        }
-        ImGui::Spacing();
-        if (ImGui::TreeNode("All shapes")) {
-            for (size_t i = 0; i < curr_level->n_shapes && curr_level->shapes; ++i) {
-                if (curr_level->shapes[i].type == SHAPE_NONE) continue;
-
-                static std::string tree_nodes[MAX_SHAPE_COUNT];
-                tree_nodes[i] = std::format("{} - {}", i, shape_type_names[curr_level->shapes[i].type]);
+    ImGui::Spacing();
+    if (ImGui::TreeNode("All lights")) {
+        for (size_t i = 0; i < MAX_LIGHT_COUNT && editor.level.lvl.lights; ++i) {
+            if (editor.level.lvl.lights[i].type != LIGHT_NONE) {
+                static std::string tree_nodes[MAX_LIGHT_COUNT];
+                tree_nodes[i] = std::format("{} - {}", i, light_type_names[editor.level.lvl.lights[i].type]);
                 if (ImGui::TreeNode(tree_nodes[i].c_str())) {
-                    inspect_shape(curr_level, i, render_hull_build_set_cap);
+                    inspect_light(i);
                     ImGui::TreePop();
                 }
             }
-            ImGui::TreePop();
         }
+        ImGui::TreePop();
     }
     ImGui::End();
 
-    for (int i = 0; i < MAX_LIGHT_COUNT && curr_level->lights; ++i) {
-        if (curr_level->lights[i].type != LIGHT_NONE
-        && curr_level->lights[i].type != LIGHT_DIRECTIONAL) {
+    for (int i = 0; i < MAX_LIGHT_COUNT && editor.level.lvl.lights; ++i) {
+        if (editor.level.lvl.lights[i].type == LIGHT_POINT) {
             transform_t trans = {
-                .position = vec3_from_svec3(curr_level->lights[i].direction_position),
+                .position = vec3_from_svec3(editor.level.lvl.lights[i].direction_position),
                 .rotation = vec3_from_scalar(0),
                 .scale = vec3_from_scalar(ONE),
             };
-            if ((int)i == *selected_light_slot) {
+            if ((int)i == editor.misc.selected_light) {
                 aabb_t aabb = {
                     .min = vec3_sub(trans.position, vec3_from_scalar(6*ONE)),
                     .max = vec3_add(trans.position, vec3_from_scalar(6*ONE)),
@@ -1214,31 +1172,106 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 renderer_debug_draw_aabb(&aabb, red, &id_transform);
             }
             renderer_set_drawing_id(i, 2);
-            renderer_draw_mesh_shaded(&gizmos->meshes[(size_t)(curr_level->lights[i].type-1)], &trans, 0, 1);
+            renderer_draw_mesh_shaded(&editor.resources.gizmos->meshes[(size_t)(editor.level.lvl.lights[i].type-1)], &trans, 0, 1);
         }
     }
-    renderer_update_lights(curr_level->lights);
+    renderer_update_lights(editor.level.lvl.lights);
+}
+
+void collision_stuff() {
+    ImGui::Begin("Collision spawning");
+    int shape_count = 0;
+    for (size_t i = 0; i < MAX_SHAPE_COUNT; ++i) {
+        if (!editor.level.lvl.shapes) break;
+        if (editor.level.lvl.shapes[i].type != SHAPE_NONE) {
+            ++shape_count;
+        }
+    }
+
+    ImGui::Text("Shapes: %i / %i", shape_count, MAX_SHAPE_COUNT);
+
+    // Shape select dropdown
+    static size_t curr_selected_shape_type = 1;
+    curr_selected_shape_type = inspect_enum(curr_selected_shape_type, shape_type_names, "Shape type");
+
+    if (ImGui::Button("Spawn")) {
+        // Figure out where to spawn - in front of the camera
+        const vec3_t forward = renderer_get_forward_vector();
+        const vec3_t spawn_pos = vec3_add((editor.misc.vertex_selected) ? (editor.misc.selected_vertex_position) : (editor.misc.camera.transform.position), vec3_muls(forward, 80 * ONE));
+
+        for (size_t i = 0; i < MAX_SHAPE_COUNT; ++i) {
+            if (editor.level.lvl.shapes[i].type == SHAPE_NONE) {
+                if (curr_selected_shape_type == SHAPE_SPHERE) {
+                    editor.level.lvl.shapes[i].sphere.center = spawn_pos;
+                    editor.level.lvl.shapes[i].sphere.radius = SCALAR(100.0);
+                }
+                else if (curr_selected_shape_type == SHAPE_AABB) {
+                    editor.level.lvl.shapes[i].aabb.min = spawn_pos;
+                    editor.level.lvl.shapes[i].aabb.max = vec3_add(spawn_pos, vec3_from_scalar(SCALAR(250.0)));
+                }
+                else if (curr_selected_shape_type == SHAPE_CONVEX_HULL) {
+                    editor.level.lvl.shapes[i].convex_hull.points = (vec3_t*)mem_alloc(256 * sizeof(vec3_t), MEM_CAT_MESH);
+                    editor.level.lvl.shapes[i].convex_hull.n_points = 0;
+                }
+                editor.level.lvl.shapes[i].type = curr_selected_shape_type;
+                break;
+            }
+        }
+
+        shape_defragment();
+    }
+
+    if (ImGui::Button("Defragment")) {
+        shape_defragment();
+    }
+    ImGui::End();
+
+    // Collision inspector menu
+    ImGui::Begin("Collision Inspector", NULL, ImGuiWindowFlags_None);
+    if (editor.misc.selected_shape >= 0) {
+        ImGui::Text("Selected shape");
+        ImGui::Spacing();
+        inspect_shape(editor.misc.selected_shape, editor.render.hull_build_set_cap);
+
+        // If deleted, deselect it
+        if (!editor.level.lvl.shapes || editor.level.lvl.shapes[editor.misc.selected_shape].type == SHAPE_NONE) {
+            editor.misc.selected_shape = -1;
+        }
+    }
+    ImGui::Spacing();
+    if (ImGui::TreeNode("All shapes")) {
+        for (int i = 0; i < editor.level.lvl.n_shapes && editor.level.lvl.shapes; ++i) {
+            if (editor.level.lvl.shapes[i].type == SHAPE_NONE) continue;
+
+            static std::string tree_nodes[MAX_SHAPE_COUNT];
+            tree_nodes[i] = std::format("{} - {}", i, shape_type_names[editor.level.lvl.shapes[i].type]);
+            if (ImGui::TreeNode(tree_nodes[i].c_str())) {
+                inspect_shape(i, editor.render.hull_build_set_cap);
+                ImGui::TreePop();
+            }
+        }
+        ImGui::TreePop();
+    }
+    ImGui::End();
 
     static int counter = 0;
     counter += 1;
 
-    convex_hull_mesh_t polytope = {0};
-
-    if (render_level_collision) {
-        for (int i = 0; i < MAX_SHAPE_COUNT && curr_level->shapes; ++i) {
-            if (curr_level->shapes[i].type == SHAPE_SPHERE) {
+    if (editor.render.collision) {
+        for (int i = 0; i < MAX_SHAPE_COUNT && editor.level.lvl.shapes; ++i) {
+            if (editor.level.lvl.shapes[i].type == SHAPE_SPHERE) {
                 const transform_t trans = {
-                    .position = curr_level->shapes[i].sphere.center,
+                    .position = editor.level.lvl.shapes[i].sphere.center,
                     .rotation = vec3_from_scalar(0),
-                    .scale = vec3_from_scalar(curr_level->shapes[i].sphere.radius / 1024), // 1024 because the model is scaled by 1024 for precision
+                    .scale = vec3_from_scalar(editor.level.lvl.shapes[i].sphere.radius / 1024), // 1024 because the model is scaled by 1024 for precision
                 };
 
                 renderer_set_drawing_id(i, 3);
-                renderer_draw_mesh_shaded(&gizmos->meshes[2], &trans, 0, 0);
+                renderer_draw_mesh_shaded(&editor.resources.gizmos->meshes[2], &trans, 0, 0);
             }
-            else if (curr_level->shapes[i].type == SHAPE_AABB) {
-                const vec3_t min = curr_level->shapes[i].aabb.min;
-                const vec3_t max = curr_level->shapes[i].aabb.max;
+            else if (editor.level.lvl.shapes[i].type == SHAPE_AABB) {
+                const vec3_t min = editor.level.lvl.shapes[i].aabb.min;
+                const vec3_t max = editor.level.lvl.shapes[i].aabb.max;
                 const vec3_t size = vec3_sub(max, min);
                 transform_t trans = {
                     .position = min,
@@ -1247,88 +1280,88 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 };
 
                 renderer_set_drawing_id(i, 3);
-                renderer_draw_mesh_shaded(&gizmos->meshes[3], &trans, 0, 0);
+                renderer_draw_mesh_shaded(&editor.resources.gizmos->meshes[3], &trans, 0, 0);
             }
-            else if (curr_level->shapes[i].type == SHAPE_CONVEX_HULL) {
+            else if (editor.level.lvl.shapes[i].type == SHAPE_CONVEX_HULL) {
                 renderer_set_drawing_id(i, 3);
-                renderer_draw_mesh_shaded(specialized_meshes[i], &id_transform, 0, 0);
+                renderer_draw_mesh_shaded(editor.resources.specialized_meshes[i], &id_transform, 0, 0);
             }
         }
     }
 
-    if (curr_level && (curr_level->n_shapes > 0)) {
+    if (editor.level.lvl.n_shapes > 0) {
         static int lazy_update_convex_hulls = 0;
         lazy_update_convex_hulls++;
-        lazy_update_convex_hulls %= curr_level->n_shapes;
-        if (curr_level->shapes[lazy_update_convex_hulls].type == SHAPE_CONVEX_HULL) {
-            mem_free(specialized_meshes[lazy_update_convex_hulls]);
-            specialized_meshes[lazy_update_convex_hulls] = create_convex_hull_from_point_cloud(
-                curr_level->shapes[lazy_update_convex_hulls].convex_hull.points,
-                curr_level->shapes[lazy_update_convex_hulls].convex_hull.n_points,
-                render_hull_build_set_cap
+        lazy_update_convex_hulls %= editor.level.lvl.n_shapes;
+        if (editor.level.lvl.shapes[lazy_update_convex_hulls].type == SHAPE_CONVEX_HULL) {
+            mem_free(editor.resources.specialized_meshes[lazy_update_convex_hulls]);
+            editor.resources.specialized_meshes[lazy_update_convex_hulls] = create_convex_hull_from_point_cloud(
+                editor.level.lvl.shapes[lazy_update_convex_hulls].convex_hull.points,
+                editor.level.lvl.shapes[lazy_update_convex_hulls].convex_hull.n_points,
+                editor.render.hull_build_set_cap
             );
         }
     }
+}
 
+void text_editor() {
     // Text editor window
     ImGui::Begin("Text editor", NULL, ImGuiWindowFlags_None);
-    {
-        if (ImGui::Button("Add")) {
-            bool found = false;
-            for (int i = 0; i < curr_level->n_text_entries; ++i) {
-                if (curr_level->text_entries[i][0] == 127) {
-                    curr_level->text_entries[i][0] = 0;
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found) {
-                curr_level->text_entries = (char**)realloc(curr_level->text_entries, (curr_level->n_text_entries + 1) * sizeof(char**));
-                curr_level->text_entries[curr_level->n_text_entries] = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
-                curr_level->text_entries[curr_level->n_text_entries][0] = 0;
-                ++curr_level->n_text_entries;
+    if (ImGui::Button("Add")) {
+        bool found = false;
+        for (int i = 0; i < editor.level.lvl.n_text_entries; ++i) {
+            if (editor.level.lvl.text_entries[i][0] == 127) {
+                editor.level.lvl.text_entries[i][0] = 0;
+                found = true;
+                break;
             }
         }
 
-        for (int i = 0; i < curr_level->n_text_entries; ++i) {
-            if (curr_level->text_entries[i][0] == 127) continue;
-
-            if (ImGui::TreeNode(std::format("{}", i).c_str())) {
-                ImGui::PushID(i);
-                ImGui::InputTextMultiline("", curr_level->text_entries[i], 255);
-                if (ImGui::Button("Delete")) {
-                    curr_level->text_entries[i][0] = 127;
-                }
-                ImGui::PopID();
-                ImGui::TreePop();
-            }
+        if (!found) {
+            editor.level.lvl.text_entries = (char**)realloc(editor.level.lvl.text_entries, (editor.level.lvl.n_text_entries + 1) * sizeof(char**));
+            editor.level.lvl.text_entries[editor.level.lvl.n_text_entries] = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
+            editor.level.lvl.text_entries[editor.level.lvl.n_text_entries][0] = 0;
+            ++editor.level.lvl.n_text_entries;
         }
     }
-    ImGui::End();
 
-    // Texture viewer window
-    ImGui::Begin("Texture viewer", NULL, ImGuiWindowFlags_None);
-    {
-        static bool show_detail = false;
-        ImGui::Checkbox("View allocation details", &show_detail);
-        draw_texture_category("Level textures", TEX_CAT_LEVEL, show_detail);
-        draw_texture_category("Entity textures", TEX_CAT_ENTITY, show_detail);
-        draw_texture_category("Weapon textures", TEX_CAT_WEAPON, show_detail);
-        draw_texture_category("Misc textures", TEX_CAT_MISC, show_detail);
-        draw_texture_category("Persistent textures", TEX_CAT_PERSISTENT, show_detail);
-        if (ImGui::TreeNode("Texture Atlas")) {
-            auto avail = ImGui::GetContentRegionAvail().x;
-            ImGui::Image(
-                reinterpret_cast<ImTextureID>(renderer_debug_fetch_atlas()),
-                ImVec2(avail, avail)
-            );
+    for (int i = 0; i < editor.level.lvl.n_text_entries; ++i) {
+        if (editor.level.lvl.text_entries[i][0] == 127) continue;
+
+        if (ImGui::TreeNode(std::format("{}", i).c_str())) {
+            ImGui::PushID(i);
+            ImGui::InputTextMultiline("", editor.level.lvl.text_entries[i], 255);
+            if (ImGui::Button("Delete")) {
+                editor.level.lvl.text_entries[i][0] = 127;
+            }
+            ImGui::PopID();
             ImGui::TreePop();
         }
     }
     ImGui::End();
+}
 
-    // Viewport with gizmos
+void texture_viewer() {
+    ImGui::Begin("Texture viewer", NULL, ImGuiWindowFlags_None);
+    static bool show_detail = false;
+    ImGui::Checkbox("View allocation details", &show_detail);
+    draw_texture_category("Level textures", TEX_CAT_LEVEL, show_detail);
+    draw_texture_category("Entity textures", TEX_CAT_ENTITY, show_detail);
+    draw_texture_category("Weapon textures", TEX_CAT_WEAPON, show_detail);
+    draw_texture_category("Misc textures", TEX_CAT_MISC, show_detail);
+    draw_texture_category("Persistent textures", TEX_CAT_PERSISTENT, show_detail);
+    if (ImGui::TreeNode("Texture Atlas")) {
+        auto avail = ImGui::GetContentRegionAvail().x;
+        ImGui::Image(
+            reinterpret_cast<ImTextureID>(renderer_debug_fetch_atlas()),
+            ImVec2(avail, avail)
+        );
+        ImGui::TreePop();
+    }
+    ImGui::End();
+}
+
+void viewport() {
     int flags = ImGuizmo::IsOver() || ImGuizmo::IsUsingAny() ? ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove : 0;
     ImGui::Begin("Viewport", NULL, flags);
     {
@@ -1357,9 +1390,9 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         ImGui::RadioButton("Rotate", &selected, 1);
         ImGui::SameLine();
         ImGui::RadioButton("Scale", &selected, 2);
-        if (selected == 0) gizmode = ImGuizmo::TRANSLATE;
-        else if (selected == 1) gizmode = ImGuizmo::ROTATE;
-        else if (selected == 2) gizmode = ImGuizmo::SCALE;
+        if (selected == 0) editor.misc.gizmode = ImGuizmo::TRANSLATE;
+        else if (selected == 1) editor.misc.gizmode = ImGuizmo::ROTATE;
+        else if (selected == 2) editor.misc.gizmode = ImGuizmo::SCALE;
 
         // Handle entity gizmo
         ImGuizmo::SetOrthographic(false);
@@ -1367,13 +1400,13 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, window_width, window_height);
         mat4 delta;
 
-        bool has_selected_entity = (*selected_entity_slot != -1);
-        bool has_selected_light = (*selected_light_slot != -1);
-        bool has_selected_shape = (*selected_shape_slot != -1);
+        bool has_selected_entity = (editor.misc.selected_entity != -1);
+        bool has_selected_light = (editor.misc.selected_light != -1);
+        bool has_selected_shape = (editor.misc.selected_shape != -1);
 
         bool light_has_position = false;
         if (has_selected_light) {
-            if (curr_level->lights[*selected_light_slot].type == LIGHT_POINT) light_has_position = true;
+            if (editor.level.lvl.lights[editor.misc.selected_light].type == LIGHT_POINT) light_has_position = true;
         }
 
         if (has_selected_entity || (has_selected_light && light_has_position) || has_selected_shape) {
@@ -1381,17 +1414,17 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             transform_t render_transform{{0, 0, 0}, {0, 0, 0}, {ONE, ONE, ONE}};
 
             if (has_selected_entity) {
-                entity_header_t* selected_entity = entity_get_header(*selected_entity_slot);
+                entity_header_t* selected_entity = entity_get_header(editor.misc.selected_entity);
                 render_transform.position = selected_entity->position;
                 render_transform.rotation = selected_entity->rotation;
                 render_transform.scale = selected_entity->scale;
             }
             else if (has_selected_light) {
-                light_t light = curr_level->lights[*selected_light_slot];
+                light_t light = editor.level.lvl.lights[editor.misc.selected_light];
                 render_transform.position = vec3_from_svec3(light.direction_position);
             }
             else if (has_selected_shape) {
-                shape_t shape = curr_level->shapes[*selected_shape_slot];
+                shape_t shape = editor.level.lvl.shapes[editor.misc.selected_shape];
                 if (shape.type == SHAPE_SPHERE) {
                     render_transform.position = shape.sphere.center;
                     render_transform.scale = vec3_from_scalar(shape.sphere.radius);
@@ -1433,7 +1466,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
             if (ImGuizmo::Manipulate(
                 renderer_debug_view_matrix(),
                 renderer_debug_perspective_matrix(),
-                gizmode,
+                editor.misc.gizmode,
                 ImGuizmo::WORLD,
                 &model_matrix[0][0],
                 &delta[0][0]
@@ -1446,42 +1479,42 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 printf("s: %3.3f, %3.3f, %3.3f\n\n", scale[0], scale[1], scale[2]);
 
                 if (has_selected_entity) {
-                    entity_header_t* selected_entity = entity_get_header(*selected_entity_slot);
-                    if (gizmode == ImGuizmo::TRANSLATE) {
+                    entity_header_t* selected_entity = entity_get_header(editor.misc.selected_entity);
+                    if (editor.misc.gizmode == ImGuizmo::TRANSLATE) {
                         selected_entity->position.x += SCALAR(translation[0]);
                         selected_entity->position.y += SCALAR(translation[1]);
                         selected_entity->position.z += SCALAR(translation[2]);
                     }
-                    if (gizmode == ImGuizmo::ROTATE) {
+                    if (editor.misc.gizmode == ImGuizmo::ROTATE) {
                         selected_entity->rotation.x += SCALAR(rotation[0] / 360.0f);
                         selected_entity->rotation.y += SCALAR(rotation[1] / 360.0f);
                         selected_entity->rotation.z += SCALAR(rotation[2] / 360.0f);
                     }
-                    if (gizmode == ImGuizmo::SCALE) {
+                    if (editor.misc.gizmode == ImGuizmo::SCALE) {
                         selected_entity->scale.x = scalar_mul(selected_entity->scale.x, SCALAR(scale[0]));
                         selected_entity->scale.y = scalar_mul(selected_entity->scale.y, SCALAR(scale[1]));
                         selected_entity->scale.z = scalar_mul(selected_entity->scale.z, SCALAR(scale[2]));
                     }
                 }
                 if (has_selected_light) {
-                    light_t* selected_light = &curr_level->lights[*selected_light_slot];
-                    if (gizmode == ImGuizmo::TRANSLATE) {
+                    light_t* selected_light = &editor.level.lvl.lights[editor.misc.selected_light];
+                    if (editor.misc.gizmode == ImGuizmo::TRANSLATE) {
                         selected_light->direction_position.x += translation[0];
                         selected_light->direction_position.y += translation[1];
                         selected_light->direction_position.z += translation[2];
                     }
                 }
                 if (has_selected_shape) {
-                    shape_t* selected_shape = &curr_level->shapes[*selected_shape_slot];
+                    shape_t* selected_shape = &editor.level.lvl.shapes[editor.misc.selected_shape];
                     if (selected_shape->type == SHAPE_SPHERE) {
-                        if (gizmode == ImGuizmo::TRANSLATE) {
+                        if (editor.misc.gizmode == ImGuizmo::TRANSLATE) {
                             selected_shape->sphere.center.x += SCALAR(translation[0]);
                             selected_shape->sphere.center.y += SCALAR(translation[1]);
                             selected_shape->sphere.center.z += SCALAR(translation[2]);
                         }
                     }
                     else if (selected_shape->type == SHAPE_AABB) {
-                        if (gizmode == ImGuizmo::TRANSLATE) {
+                        if (editor.misc.gizmode == ImGuizmo::TRANSLATE) {
                             selected_shape->aabb.min.x += SCALAR(translation[0]);
                             selected_shape->aabb.min.y += SCALAR(translation[1]);
                             selected_shape->aabb.min.z += SCALAR(translation[2]);
@@ -1489,7 +1522,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                             selected_shape->aabb.max.y += SCALAR(translation[1]);
                             selected_shape->aabb.max.z += SCALAR(translation[2]);
                         }
-                        if (gizmode == ImGuizmo::SCALE) {
+                        if (editor.misc.gizmode == ImGuizmo::SCALE) {
                             if ((scale[0] != 1.0f) || (scale[1] != 1.0f) || (scale[2] != 1.0f)) {
                                 vec3_t initial_size = vec3_sub(selected_shape->aabb.max, selected_shape->aabb.min);
                                 const vec3_t center = vec3_add(selected_shape->aabb.min, vec3_shift_right(initial_size, 1));
@@ -1516,7 +1549,7 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
         && nrm_mouse_y >= -1.0f
         && nrm_mouse_y <= 1.0f
         ) {
-            *mouse_over_viewport = 1;
+            editor.misc.mouse_over_viewport = 1;
 
             if (input_mapping_pressed(IM_PICK, 0)) {
                 // Read picking buffer
@@ -1529,29 +1562,88 @@ void debug_layer_manipulate_entity(transform_t* camera, int* selected_entity_slo
                 glReadPixels((GLint)rel_mouse_pos.x, (GLint)(renderer_height() - rel_mouse_pos.y), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pick_info);
 
                 if (!ImGuizmo::IsOver() && !ImGuizmo::IsUsingAny()) {
-                    *selected_light_slot = -1;
-                    *selected_shape_slot = -1;
-                    *selected_entity_slot = -1;
-                    vertex_selected = false;
+                    editor.misc.selected_light = -1;
+                    editor.misc.selected_shape = -1;
+                    editor.misc.selected_entity = -1;
+                    editor.misc.vertex_selected = false;
 
-                    if (pick_info.what == 1) *selected_entity_slot = pick_info.index;
-                    else if (pick_info.what == 2) *selected_light_slot = pick_info.index;
-                    else if (pick_info.what == 3) *selected_shape_slot = pick_info.index;
+                    if (pick_info.what == 1) editor.misc.selected_entity = pick_info.index;
+                    else if (pick_info.what == 2) editor.misc.selected_light = pick_info.index;
+                    else if (pick_info.what == 3) editor.misc.selected_shape = pick_info.index;
                     else if (pick_info.what == 4) {
                         float vertex_pos_float[3] = {0};
                         glReadBuffer(GL_COLOR_ATTACHMENT2);
                         glReadPixels((GLint)rel_mouse_pos.x, (GLint)(renderer_height() - rel_mouse_pos.y), 1, 1, GL_RGB, GL_FLOAT, &vertex_pos_float);
-                        vertex_selected = true;
-                        selected_vertex_position = vec3_from_floats(vertex_pos_float[0], vertex_pos_float[1], vertex_pos_float[2]);
+                        editor.misc.vertex_selected = true;
+                        editor.misc.selected_vertex_position = vec3_from_floats(vertex_pos_float[0], vertex_pos_float[1], vertex_pos_float[2]);
                     }
                 }
             }
         }
         else {
-            *mouse_over_viewport = 0;
+            editor.misc.mouse_over_viewport = 0;
         }
     }
     ImGui::End();
+}
+
+/// doc: desc: Entry point for the level editor.
+/// doc: desc: It initializes the engine systems, spawns a player and a debug camera, and then enters the main editor loop.
+int main(int argc, char** argv) {
+    if      (argc == 1) {
+        std::filesystem::current_path("./assets/");
+    }
+    else if (argc == 2) {
+        std::filesystem::current_path(argv[1]);
+    }
+    else {
+        printf("Usage: level_editor.exe [assets_folder]\n");
+        printf("Default assets folder is \"./assets/\"\n");
+        exit(1);
+    }
+
+    mem_init();
+    renderer_init();
+    input_init();
+    input_mapping_init();
+	entity_init();
+    input_set_gamepad_stick_deadzone(SCALAR(36.0/255));
+    input_mapping_register_mouse(IM_CAMERA_LOCK, INPUT_MOUSE_BUTTON_RIGHT, SCALAR(1.0));
+    input_mapping_register_keyboard(IM_CAMERA_DOWN, INPUT_KEY_LEFT_SHIFT, SCALAR(1.0));
+    input_mapping_register_keyboard(IM_CAMERA_UP, INPUT_KEY_SPACE, SCALAR(1.0));
+    input_mapping_register_keyboard(IM_MOVE_X, INPUT_KEY_A, SCALAR(-1.0));
+    input_mapping_register_keyboard(IM_MOVE_X, INPUT_KEY_D, SCALAR(+1.0));
+    input_mapping_register_keyboard(IM_MOVE_Y, INPUT_KEY_S, SCALAR(-1.0));
+    input_mapping_register_keyboard(IM_MOVE_Y, INPUT_KEY_W, SCALAR(1.0));
+    input_mapping_register_mouse(IM_LOOK_X, INPUT_MOUSE_DELTA_X, SCALAR(0.5));
+    input_mapping_register_mouse(IM_LOOK_Y, INPUT_MOUSE_DELTA_Y, SCALAR(0.5));
+    input_mapping_register_keyboard(IM_CAMERA_SPEED_UP, INPUT_KEY_EQUALS, SCALAR(1.0));
+    input_mapping_register_keyboard(IM_CAMERA_SPEED_DOWN, INPUT_KEY_MINUS, SCALAR(1.0));
+    input_mapping_register_mouse(IM_PICK, INPUT_MOUSE_BUTTON_LEFT, SCALAR(1.0));
+    input_mapping_register_keyboard(IM_SHAPE_ADD_POINT, INPUT_KEY_P, SCALAR(1.0));
+
+    initialize();
+
+    while (!renderer_should_close()) {
+        debug_layer_begin();
+        renderer_begin_frame(&editor.misc.camera.transform);
+
+        ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
+
+        cleanup();
+        render_3d_debug_stuff();
+        level_metadata();
+        general_info();
+        entity_stuff();
+        light_stuff();
+        collision_stuff();
+        text_editor();
+        texture_viewer();
+        viewport();
+
+        renderer_end_frame();
+        debug_layer_end();
+    }
 }
 
 #endif
