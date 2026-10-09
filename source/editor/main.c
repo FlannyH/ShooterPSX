@@ -1,13 +1,13 @@
 #include "../subnivis/main.h"
 
 #include "camera.h"
+#include "editor.h"
 #include "editor/input_map.h"
-#include "engine/pc/debug_layer.h"
 #include "engine/input_mapping.h"
 #include "engine/renderer.h"
 #include "engine/entity.h"
-#include "subnivis/player.h"
 #include "engine/level.h"
+#include "subnivis/player.h"
 
 #include "test/test.h"
 

@@ -22,7 +22,7 @@
 
 #ifdef _PC
 #include "engine/pc/psx.h"
-#include "engine/pc/debug_layer.h"
+#include "editor/editor.h"
 #endif
 
 #ifdef _NDS

@@ -1,13 +1,13 @@
-#include "debug_layer.h"
+#include "editor.h"
 
-#include "../entity.h"
+#include "engine/entity.h"
 #include "imgui.h"
 
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_glfw.h>
 #include <GL/gl3w.h>
 
-#include "../texture.h"
+#include "engine/texture.h"
 
 #ifdef _LEVEL_EDITOR
 #include "entities/platform.h"
@@ -17,11 +17,10 @@
 #include "entities/crate.h"
 #include "entities/door.h"
 #include "editor/input_map.h"
-#include "../input_mapping.h"
-#include "../renderer.h"
-#include "../common.h"
-#include "../mesh.h"
-#include "../file.h"
+#include "engine/input_mapping.h"
+#include "engine/renderer.h"
+#include "engine/mesh.h"
+#include "engine/file.h"
 
 #include <ImGuizmo.h>
 #include <imfilebrowser.h>
@@ -68,6 +67,7 @@ void debug_layer_end(void) {
 #include "engine/level.h"
 #include "engine/file.h"
 extern "C" {
+    // todo(debug_layer_extern_fb): desc: remove extern from debug layer framebuffer
     extern GLuint fb_texture;
     extern GLuint fbo;
 }
@@ -78,6 +78,7 @@ static bool vertex_selected = false;
 static vec3_t selected_vertex_position = {0, 0, 0};
 static std::vector<size_t> defer_remove_shape;
 
+    // todo(debug_layer_extern_entity_names): desc: maybe dont use extern for entity_names
 extern const char* entity_names[];
 const char* light_type_names[] = {
     "None",
