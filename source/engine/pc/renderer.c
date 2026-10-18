@@ -13,9 +13,12 @@
 #include <stdio.h>
 #include <time.h>
 
+#ifdef _LEVEL_EDITOR
+#include "editor/editor.h"
+#endif
+
 #include "../texture_pool.h"
 #include "../common.h"
-#include "debug_layer.h"
 #include "../renderer.h"
 #include "../memory.h"
 #include "../input.h"
@@ -60,8 +63,13 @@ int n_meshes_drawn = 0;
 
 // todo(pc_renderer_globals): desc: reassess global variables
 // Need to define these somewhere so it compiles, unused in PC build
-int is_pal = 0;
-int vsync_enable = 0; // 0 = unlocked, 1 = 60 fps or 50 fps, 2 = 30 fps or 25 fps
+video_mode_t video_mode = {.bits = {
+    .ntsc0_pal1 = 0,
+    .window0_fullscreen1 = 0,
+    .widescreen_off0_on1 = 1,
+    .vsync_frames = 1
+}};
+
 int tex_entity_start = 0;
 int tex_weapon_start = 0;
 int tex_level_start = 0;
@@ -312,9 +320,6 @@ void renderer_init(void) {
 	// Initialize delta time clock
 	dt_clock = glfwGetTime();
 
-	// Initialize ImGui
-	debug_layer_init(window);
-
 	// Zero init textures
 	// todo(pc_texture_atlas_resolution): desc: unhardcode texture atlas resolutions
     uint32_t* zero_data = mem_alloc(2048 * 2048 * 4, MEM_CAT_TEXTURE);
@@ -563,7 +568,6 @@ void renderer_end_frame(void) {
 #endif
 
 	// Flip buffers
-	glfwSwapInterval(vsync_enable);
 	glfwSwapBuffers(window);
 	glfwPollEvents();
 }
@@ -1136,24 +1140,15 @@ void renderer_apply_fade(scalar_t fade_level) {
 	);
 }
 
-uint32_t video_mode = 0;
+void renderer_set_video_mode(video_mode_t new_video_mode) {
+    video_mode_t old_video_mode = video_mode;
+    video_mode = new_video_mode;
 
-void renderer_set_video_mode(uint32_t video_mode_bitmask, bit_op_t bit_operation) {
-    uint32_t old_video_mode = video_mode;
+    int entering_full_screen = (old_video_mode.bits.window0_fullscreen1) == 0 && (new_video_mode.bits.window0_fullscreen1 == 1);
+    int exiting_full_screen = (old_video_mode.bits.window0_fullscreen1) == 1 && (new_video_mode.bits.window0_fullscreen1 == 0);
+    int vsync_changed = old_video_mode.bits.vsync_frames != new_video_mode.bits.vsync_frames;
 
-    switch (bit_operation) {
-    case BIT_OP_AND: video_mode &= video_mode_bitmask; break;
-    case BIT_OP_OR: video_mode |= video_mode_bitmask; break;
-    case BIT_OP_XOR: video_mode ^= video_mode_bitmask; break;
-    default: break;
-    }
-
-    const uint32_t set = video_mode & (~old_video_mode);
-    const uint32_t reset = old_video_mode & (~video_mode);
-
-    printf("set, reset, video_mode, old_video_mode: %02X, %02X, %02X, %02X\n", set, reset, video_mode, old_video_mode);
-
-    if (set & VIDEO_MODE_FULLSCREEN) {
+    if (entering_full_screen) {
         GLFWmonitor* monitor = glfwGetPrimaryMonitor();
         const GLFWvidmode* mode = glfwGetVideoMode(monitor);
         glfwSetWindowMonitor(
@@ -1165,7 +1160,7 @@ void renderer_set_video_mode(uint32_t video_mode_bitmask, bit_op_t bit_operation
             mode->refreshRate
         );
     }
-    else if (reset & VIDEO_MODE_FULLSCREEN) {
+    else if (exiting_full_screen) {
         glfwSetWindowMonitor(
             window,
             NULL,
@@ -1175,6 +1170,14 @@ void renderer_set_video_mode(uint32_t video_mode_bitmask, bit_op_t bit_operation
             0
         );
     }
+
+    if (vsync_changed) {
+        glfwSwapInterval(new_video_mode.bits.vsync_frames);
+    }
+}
+
+video_mode_t renderer_get_video_mode(void) {
+    return video_mode;
 }
 
 void renderer_set_depth_bias(int bias) {
@@ -1191,4 +1194,8 @@ float* renderer_debug_view_matrix(void) {
 
 int renderer_debug_fetch_atlas(void) {
     return textures;
+}
+
+void* renderer_get_window(void) {
+    return window;
 }

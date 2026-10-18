@@ -2,10 +2,10 @@
 
 #include "../subnivis/main.h"
 
-// todo: figure this crap out
+// todo(editor_externs): desc: figure this extern crap out
 extern "C" {
     int widescreen = 0;
-    state_vars_t state;
+    state_vars_t state = (state_vars_t){};
     state_t current_state = STATE_NONE;
     state_t prev_state = STATE_NONE;
     void set_current_state(state_t state) { current_state = state; }
@@ -91,11 +91,12 @@ struct editor_state_t {
 
 static ImGui::FileBrowser file_dialog(ImGuiFileBrowserFlags_EnterNewFilename);
 
-void debug_layer_init(GLFWwindow* window) {
+void debug_layer_init(void) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui::StyleColorsDark();
+    GLFWwindow* window = (GLFWwindow*)renderer_get_window();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 430");
     ImGui::LoadIniSettingsFromDisk("imgui_layout.ini");
@@ -214,7 +215,7 @@ bool inspect_svec3_4_12(svec3_t* vec, const char* label) {
 
 // returns whether data changed
 bool inspect_scalar(scalar_t* scalar, const char* label) {
-    float scalar_float = SCALAR(*scalar);
+    float scalar_float = (float)(*scalar) / ONE;
 
     if (ImGui::DragFloat(label, &scalar_float)) {
         *scalar = SCALAR(scalar_float);
@@ -505,26 +506,6 @@ bool inspect_shape(size_t shape_id, int& render_hull_build_set_cap) {
             };
             renderer_set_drawing_id(0, 0);
             renderer_draw_mesh_shaded(&editor.resources.gizmos->meshes[2], &trans, 0, 0);
-        }
-
-        if (editor.resources.specialized_meshes[shape_id]) {
-            for (size_t i = 0; i < editor.resources.specialized_meshes[shape_id]->n_triangles; ++i) {
-                assert(editor.resources.specialized_meshes[shape_id]->vertices != NULL);
-                assert(editor.resources.specialized_meshes[shape_id]->normals != NULL);
-                const vertex_3d_t* vertices = &editor.resources.specialized_meshes[shape_id]->vertices[3*i + 0];
-                const vec3_t a = vec3_from_svec3(*(svec3_t*)&vertices[0]);
-                const vec3_t b = vec3_from_svec3(*(svec3_t*)&vertices[1]);
-                const vec3_t c = vec3_from_svec3(*(svec3_t*)&vertices[2]);
-                const vec3_t ab = vec3_sub(b, a);
-                const vec3_t ac = vec3_sub(c, a);
-                const vec3_t center = vec3_add(a, vec3_divs(vec3_add(ab, ac), SCALAR(3.0)));
-                const vec3_t normal = (vec3_t) {
-                    .x = (scalar_t)editor.resources.specialized_meshes[shape_id]->normals[3*i].x * (ONE / 127),
-                    .y = (scalar_t)editor.resources.specialized_meshes[shape_id]->normals[3*i].y * (ONE / 127),
-                    .z = (scalar_t)editor.resources.specialized_meshes[shape_id]->normals[3*i].z * (ONE / 127),
-                };
-                // todo: was i gonna plan something here?
-            }
         }
 
         renderer_debug_draw_aabb(&aabb, {255, 255, 127, 255}, &id_transform);
@@ -935,6 +916,8 @@ void initialize() {
         renderer_upload_texture(&editor.resources.gizmo_textures[i], i,  TEX_CAT_PERSISTENT);
     }
 
+    debug_layer_init();
+
     editor.level.lvl.lights = (light_t*)mem_alloc(256 * sizeof(light_t), MEM_CAT_UNDEFINED);
     editor.level.lvl.shapes = (shape_t*)mem_alloc(256 * sizeof(shape_t), MEM_CAT_UNDEFINED);
     memset(editor.level.lvl.lights, 0, 256 * sizeof(light_t));
@@ -945,6 +928,7 @@ void initialize() {
     editor.misc.selected_light = -1;
     editor.misc.selected_shape = -1;
     editor.misc.gizmode = ImGuizmo::TRANSLATE;
+    editor.misc.camera = debug_camera_new();
     editor.initialized = true;
 }
 
@@ -1172,6 +1156,7 @@ void light_stuff() {
                 renderer_debug_draw_aabb(&aabb, red, &id_transform);
             }
             renderer_set_drawing_id(i, 2);
+            renderer_set_depth_bias(0);
             renderer_draw_mesh_shaded(&editor.resources.gizmos->meshes[(size_t)(editor.level.lvl.lights[i].type-1)], &trans, 0, 1);
         }
     }
@@ -1615,8 +1600,10 @@ int main(int argc, char** argv) {
     input_mapping_register_keyboard(IM_MOVE_X, INPUT_KEY_D, SCALAR(+1.0));
     input_mapping_register_keyboard(IM_MOVE_Y, INPUT_KEY_S, SCALAR(-1.0));
     input_mapping_register_keyboard(IM_MOVE_Y, INPUT_KEY_W, SCALAR(1.0));
-    input_mapping_register_mouse(IM_LOOK_X, INPUT_MOUSE_DELTA_X, SCALAR(0.5));
-    input_mapping_register_mouse(IM_LOOK_Y, INPUT_MOUSE_DELTA_Y, SCALAR(0.5));
+    input_mapping_register_mouse(IM_LOOK_MOUSE_X, INPUT_MOUSE_DELTA_X, SCALAR(0.002));
+    input_mapping_register_mouse(IM_LOOK_MOUSE_Y, INPUT_MOUSE_DELTA_Y, SCALAR(0.002));
+    input_mapping_register_gamepad(IM_LOOK_STICK_X, INPUT_GAMEPAD_STICK_RIGHT_X, SCALAR(1.0));
+    input_mapping_register_gamepad(IM_LOOK_STICK_Y, INPUT_GAMEPAD_STICK_RIGHT_Y, SCALAR(1.0));
     input_mapping_register_keyboard(IM_CAMERA_SPEED_UP, INPUT_KEY_EQUALS, SCALAR(1.0));
     input_mapping_register_keyboard(IM_CAMERA_SPEED_DOWN, INPUT_KEY_MINUS, SCALAR(1.0));
     input_mapping_register_mouse(IM_PICK, INPUT_MOUSE_BUTTON_LEFT, SCALAR(1.0));
@@ -1624,8 +1611,34 @@ int main(int argc, char** argv) {
 
     initialize();
 
+    scalar_t dt = SCALAR(1.0/ 24.0);
+    scalar_t time_counter = 0;
+    int mouse_lock = 0;
+    input_unlock_mouse();
+
     while (!renderer_should_close()) {
+	    mem_stack_release(STACK_TEMP);
+
         debug_layer_begin();
+
+        // Delta time
+        dt = renderer_delta_time(DT_TICK);
+        dt = scalar_min(dt, SCALAR(1.0 / 24.0));
+        time_counter += dt;
+
+        input_update();
+
+        // Allow locking and unlocking the mouse
+        if (input_mapping_pressed(IM_CAMERA_LOCK, 0) && editor.misc.mouse_over_viewport) {
+            mouse_lock = 1;
+            input_lock_mouse();
+        }
+        if (input_mapping_released(IM_CAMERA_LOCK, 0)) {
+            mouse_lock = 0;
+            input_unlock_mouse();
+        }
+
+        debug_camera_update(&editor.misc.camera, dt, mouse_lock);
         renderer_begin_frame(&editor.misc.camera.transform);
 
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());

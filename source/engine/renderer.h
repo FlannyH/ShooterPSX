@@ -108,6 +108,10 @@ int renderer_width(void);
 int renderer_height(void);
 texture_entry_t* renderer_get_texture_entry(texture_category_t category, int texture_id);
 
+#ifdef _PC
+void* renderer_get_window(void);
+#endif
+
 #ifdef _LEVEL_EDITOR
 float* renderer_debug_perspective_matrix(void);
 float* renderer_debug_view_matrix(void);

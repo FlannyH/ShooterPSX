@@ -88,7 +88,7 @@ extern state_vars_t state;
 #define DEPTH_BIAS_LEVEL 256
 
 const static scalar_t stick_sensitivity = SCALAR(3.0);
-const static scalar_t mouse_sensitivity = SCALAR(0.01);
+const static scalar_t mouse_sensitivity = SCALAR(0.001);
 
 void set_current_state(state_t state);
 state_t get_current_state(void);

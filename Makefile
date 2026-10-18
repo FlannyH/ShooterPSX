@@ -99,8 +99,7 @@ CODE_ENGINE_PC_C =   engine/pc/file.c \
 				     engine/pc/mixer.c \
 				     engine/pc/psx.c \
 				     engine/pc/renderer.c
-CODE_ENGINE_PC_CPP = editor/editor.cpp \
-					 engine/pc/input.cpp
+CODE_ENGINE_PC_CPP = engine/pc/input.cpp
 
 # Source files specific to NDS
 CODE_ENGINE_NDS_C = engine/nds/psx.c \
@@ -128,7 +127,7 @@ CODE_PC_CPP			    = $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_PC_CPP)
 CODE_NDS_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_NDS_C) 	$(CODE_GAME_MAIN) 		$(CODE_GAME_C)
 CODE_NDS_CPP			= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_NDS_CPP)
 CODE_LEVEL_EDITOR_C		= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PC_C) 	$(CODE_LEVEL_EDITOR) 	$(CODE_GAME_C)
-CODE_LEVEL_EDITOR_CPP	= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_PC_CPP)
+CODE_LEVEL_EDITOR_CPP	= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_PC_CPP)   editor/editor.cpp
 
 OBJ_PSX					= 	$(patsubst %.c, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_C))				\
 							$(patsubst %.cpp, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_CPP))
@@ -330,7 +329,7 @@ level_editor: tools assets $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor
 
 # PSX target
 psx: PSN00BSDK_PATH = $(PSN00BSDK_LIBS)/../..
-psx: DEFINES = _PSX PSN00BSDK=1 NDEBUG=1
+psx: DEFINES = _PSX PSN00BSDK=1 _DEBUG=1
 psx: LIBRARIES = gcc \
 				 psxgpu_exe_gprel \
 				 psxgte_exe_gprel \

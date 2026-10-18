@@ -26,8 +26,6 @@ scalar_t state_prev_keyboard[N_INPUT_KEY];
 scalar_t state_prev_mouse[N_INPUT_MOUSE];
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
-
     // convert mouse button to our own enum
     size_t state_mouse_index = 0;
     switch (button) {
@@ -46,22 +44,16 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 
 void scroll_callback(GLFWwindow* window, double x, double y) {
-    ImGui_ImplGlfw_ScrollCallback(window, x, y);
-
     state_new_mouse[INPUT_MOUSE_WHEEL_X] += SCALAR(x);
     state_new_mouse[INPUT_MOUSE_WHEEL_Y] += SCALAR(y);
 }
 
 void mouse_pos_callback(GLFWwindow* window, double x, double y) {
-    ImGui_ImplGlfw_CursorPosCallback(window, x, y);
-
     state_new_mouse[INPUT_MOUSE_POS_X] = SCALAR(x);
     state_new_mouse[INPUT_MOUSE_POS_Y] = SCALAR(y);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
-
     size_t state_keyboard_index = 0;
     switch (key) {
         case GLFW_KEY_ESCAPE: state_keyboard_index = INPUT_KEY_ESC; break;

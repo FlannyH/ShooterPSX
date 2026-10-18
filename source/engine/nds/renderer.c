@@ -315,9 +315,15 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
     }
 }
 
+uint32_t video_mode = 0;
+
 void renderer_set_video_mode(int is_pal) {
     (void)is_pal;
     return; // NDS has no pal mode so ignore all of this
+}
+
+imt renderer_get_video_mode(uint32_t video_mode_bitmask, int expected_result) {
+    return (!!(video_mode & video_mode_bitmask)) == expected_result;
 }
 
 int renderer_get_delta_time_raw(void) {

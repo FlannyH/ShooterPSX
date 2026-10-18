@@ -516,6 +516,10 @@ void renderer_set_video_mode(video_mode_t new_video_mode) {
     }
 }
 
+video_mode_t renderer_get_video_mode(void) {
+    return video_mode;
+}
+
 void renderer_set_depth_bias(int bias) {
     curr_ot_bias = bias;
 }
