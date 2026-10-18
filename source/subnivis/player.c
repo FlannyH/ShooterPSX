@@ -85,12 +85,12 @@ void collide(player_t* self, level_t* level) {
 void apply_gravity(player_t* self, const scalar_t dt) {
     if (self->is_grounded) return;
 
-    self->velocity.y += scalar_mul(gravity, dt) * PLAYER_VELOCITY_PRECISION;
-    if (self->velocity.y > terminal_velocity_up * PLAYER_VELOCITY_PRECISION) {
-        self->velocity.y = terminal_velocity_up * PLAYER_VELOCITY_PRECISION;
+    self->velocity.y += scalar_mul(gravity, dt);
+    if (self->velocity.y > terminal_velocity_up) {
+        self->velocity.y = terminal_velocity_up;
     }
-    else if (self->velocity.y < terminal_velocity_down * PLAYER_VELOCITY_PRECISION) {
-        self->velocity.y = terminal_velocity_down * PLAYER_VELOCITY_PRECISION;
+    else if (self->velocity.y < terminal_velocity_down) {
+        self->velocity.y = terminal_velocity_down;
     }
 }
 
@@ -127,16 +127,15 @@ void handle_stick_input(player_t* self, const scalar_t dt) {
         input_mapping_value(IM_LOOK_STICK_X, 0),
         input_mapping_value(IM_LOOK_STICK_Y, 0)
     };
-    vec2_debug(look_stick);
 
     // Moving horizontally
-    self->velocity = vec3_add(self->velocity, vec3_muls(forward, scalar_mul(move.y, curr_acceleration * PLAYER_VELOCITY_PRECISION)));
-    self->velocity = vec3_add(self->velocity, vec3_muls(right, scalar_mul(move.x, curr_acceleration * PLAYER_VELOCITY_PRECISION)));
+    self->velocity = vec3_add(self->velocity, vec3_muls(forward, scalar_mul(move.y, curr_acceleration)));
+    self->velocity = vec3_add(self->velocity, vec3_muls(right, scalar_mul(move.x, curr_acceleration)));
 
     // Looking up and down
     self->rotation.x += look_mouse.y;
     self->rotation.x += scalar_mul(look_stick.y, dt);
-    self->rotation.x = scalar_clamp(self->rotation.x, SCALAR(-0.22 * PLAYER_ROTATION_PRECISION), SCALAR(0.22 * PLAYER_ROTATION_PRECISION));
+    self->rotation.x = scalar_clamp(self->rotation.x, SCALAR(-0.22), SCALAR(0.22));
 
     // Looking left and right
     self->rotation.y += look_mouse.x;
@@ -149,16 +148,18 @@ void player_handle_drag(player_t* self, const scalar_t dt) {
         curr_drag = scalar_mul(curr_drag, jump_drag_multiplyer);
     }
 
-    const scalar_t length = vec3_magnitude(self->velocity);
-    const vec3_t dir = vec3_divs(self->velocity, length);
-    if (length > (walking_max_speed * PLAYER_VELOCITY_PRECISION)) {
+    const vec3_t vel_no_y = (vec3_t){self->velocity.x, 0, self->velocity.z};
+
+    const scalar_t length = vec3_magnitude(vel_no_y);
+    const vec3_t dir = vec3_divs(vel_no_y, length);
+    if (length > walking_max_speed) {
         const scalar_t preserve_y = self->velocity.y;
-        self->velocity = vec3_muls(dir, length);
+        self->velocity = vec3_muls(dir, walking_max_speed);
         self->velocity.y = preserve_y;
     }
-    else if (length > (curr_drag * PLAYER_VELOCITY_PRECISION)) {
+    else if (length > curr_drag) {
         const scalar_t preserve_y = self->velocity.y;
-        self->velocity = vec3_sub(self->velocity, vec3_muls(dir, curr_drag * PLAYER_VELOCITY_PRECISION));
+        self->velocity = vec3_sub(vel_no_y, vec3_muls(dir, curr_drag));
         self->velocity.y = preserve_y;
     }
     else {
@@ -204,9 +205,9 @@ void update_transform(player_t* self, scalar_t dt, scalar_t time_counter) {
     self->transform.position.x = self->position.x;
     self->transform.position.z = self->position.z;
 
-    self->transform.rotation.x = self->rotation.x / PLAYER_ROTATION_PRECISION;
-    self->transform.rotation.y = self->rotation.y / PLAYER_ROTATION_PRECISION;
-    self->transform.rotation.z = self->rotation.z / PLAYER_ROTATION_PRECISION;
+    self->transform.rotation.x = self->rotation.x;
+    self->transform.rotation.y = self->rotation.y;
+    self->transform.rotation.z = self->rotation.z;
 }
 
 void player_update(player_t* self, level_t* level, const scalar_t dt, const scalar_t time_counter) {
@@ -223,7 +224,7 @@ void player_update(player_t* self, level_t* level, const scalar_t dt, const scal
     player_handle_drag(self, dt);
     handle_jump(self);
 
-    self->position = vec3_add(self->position, vec3_muls(vec3_divs(self->velocity, SCALAR(PLAYER_VELOCITY_PRECISION)), dt));
+    self->position = vec3_add(self->position, vec3_muls(self->velocity, dt));
 
     collide(self, level);
     update_transform(self, dt, time_counter);
