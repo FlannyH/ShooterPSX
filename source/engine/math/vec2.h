@@ -203,7 +203,7 @@ static inline vec2_t vec2_normalize(vec2_t a) {
 
     scalar_t magnitude = vec2_magnitude_squared(a);
     if (magnitude == 0) {
-        return vec2_from_int32s(0, 0);
+        return vec2_from_ints(0, 0);
     }
     magnitude = scalar_sqrt(magnitude);
 

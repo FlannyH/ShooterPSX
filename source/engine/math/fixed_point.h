@@ -22,10 +22,9 @@ typedef fixed20_12_t scalar_t;
 #undef ONE
 #endif
 
-#define FRAC_BITS 12
+#define ONE FIXED_ONE
 
-#define ONE ((scalar_t)(1 << FRAC_BITS))
-#define SCALAR(a) (int32_t)((a) * ONE)
+#define SCALAR(a) (scalar_t)((a) * ONE)
 
 static inline scalar_t fixed_to_scalar(int32_t a) {
     return a;
@@ -59,62 +58,38 @@ static inline void scalar_debug(const scalar_t a) {
 }
 
 #ifdef _PSX
-#include <psxgte.h>
 #else
-#include "math.h"
+#include <math.h>
 #endif
 #include <stdlib.h>
 
 #ifdef _PSX
 static inline fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
-    register fixed20_12_t temp, result;
-    __asm__ volatile (
-        // shift the bits into the right place
-        // s = sign bit
-        // o = high bits to discard
-        // . low bits to discard
-        // S = useful integer bits in high byte with sign
-        // H = useful integer bits in high byte
-        // h = useful integer bits in high byte but with incorrect sign
-        // L = useful integer bits in low byte
-        // f = fractional bits
-        "mult %3, %2             \n\t" // hi, low = a*b; b on the left side, it's likely to be smaller than a, and smaller left side = less cycles
-
-        // --------------------------- // writes to r1 ----------------- | writes to r0 --------------------|
-        "mfhi %0                 \n\t" // _                              |   r0 = temp = hi                 |
-        "srl  %1, %0, 31         \n\t" // r0[soooohHH] -> r1[       s]   |                                  |
-        "sll  %1, %1, 31         \n\t" // r1[       s] -> r1[s       ]   |                                  |
-        "andi %0, %0, 0x07FF     \n\t" // _                              |   r0[soooohHH] -> r0[     HHH]   |
-        "sll  %0, %0, 20         \n\t" // _                              |   r0[     HHH] -> r0[HHH     ]   |
-        "or   %1, %1, %0         \n\t" // r1[s       ] -> r1[SHH     ]   | -------------------------------- |
-        "mflo %0                 \n\t" // _                              |   r0 = temp = low                |
-        "srl  %0, %0, 12         \n\t" // _                              |   r0[LLrrr...] -> r0[   LLfff]   |
-        "or   %1, %1, %0         \n\t" // r1[SHH     ] -> r1[SHHLLfff]   |   _                              |
-        // --------------------------- // ------------------------------ | ---------------------------------|
-        : "=&r"(temp), "=&r"(result)
-        : "r"(a), "r"(b)
-    );
-    return result;
+    const int64_t prod64 = (int64_t)a * (int64_t)b;
+    return prod64 / ONE;
 }
 #else
 static inline fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
-    int64_t result32 = (((int64_t)a * ((int64_t)b)) + SCALAR(0.5)) / ONE;
+    int64_t a64 = (int64_t)a;
+    int64_t b64 = (int64_t)b;
+    int64_t a_mul_b = a64 * b64;
+    int64_t result32 = a_mul_b / ONE;
 
     // todo(fixed_point_overflow_check): desc: make overflow check default, and add this check in the ps1 code
 // #ifdef _DEBUG
     // overflow check
     if (result32 > INT32_MAX) {
         result32 = INT32_MAX;
-        printf("scalar_mul resulted in infinity, check overflow!\n");
+        // printf("scalar_mul resulted in infinity, check overflow!\n");
     }
     else if (result32 < -INT32_MAX) {
         result32 = -INT32_MAX;
-        printf("scalar_mul resulted in infinity, check overflow!\n");
+        // printf("scalar_mul resulted in infinity, check overflow!\n");
     }
 
     // precision check
     if ((result32 < SCALAR(0.01)) && (result32 > SCALAR(-0.01)) && a != 0 && b != 0) {
-        printf("potential precision problem\n");
+        // printf("potential precision problem\n");
     }
 // #endif
 
@@ -124,13 +99,13 @@ static inline fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b
 
 // todo(fixed_point_ps1_asm_opt): desc: should this be optimized with assembly on ps1?
 static inline fixed20_12_t scalar_div(const fixed20_12_t a, const fixed20_12_t b) {
-    int64_t result32 = (int64_t)a * ONE;
+    int64_t result32 = ((int64_t)a) * ONE;
     if (b != 0) {
         result32 /= b;
     }
     else {
         result32 |= INT32_MAX;
-        //WARN_IF("division by zero occured in scalar_div", 1);
+        // WARN_IF("division by zero occured in scalar_div", 1);
     }
     //WARN_IF("division result returned zero but the dividend is not zero, possible lack of precision", result32 == 0 && a != 0);
     return (int32_t)result32;
@@ -144,14 +119,100 @@ static inline fixed20_12_t scalar_max(const fixed20_12_t a, const fixed20_12_t b
     return (a > b) ? a : b;
 }
 
+static inline int leading_zeros(int y) {
+    int zeros = 0;
+
+    #ifdef _PSX
+        __asm__ (
+            "mtc2 %1, $30 \n\t"
+            "nop \n\t"
+            "nop \n\t"
+            "mfc2 %0, $31 \n\t"
+            : "=&r"(zeros)
+            : "r"(y)
+        );
+    #else
+        if (y > 0) zeros = __builtin_clz(y);
+        else if (y < 0) zeros = __builtin_clz((-y) - 1);
+    #endif
+
+    printf("%i has %i zeros\n", y, zeros);
+    return zeros;
+}
+
+static inline int int_sqrt(int y) {
+    if (y <= 0) return 0;
+
+    int op = y;
+    int result = 0;
+    int zeros = leading_zeros(op);
+
+    int one = 1 << ((31u - zeros) & ~1u);
+
+    while (one != 0) {
+        int delta_square = result + one;
+        if (op >= delta_square) {
+            op -= delta_square;
+            result += one << 1;
+        }
+        result >>= 1;
+        one >>= 2;
+    }
+
+    return result;
+}
+
 // todo(scalar_sqrt_optimization): desc: optimize sqrt with luts
 static inline fixed20_12_t scalar_sqrt(fixed20_12_t a) {
-    if (a < 0) return 0;
-#ifdef _PSX
-    return SquareRoot12(a);
-#else
-    return SCALAR(sqrtf((float)a / (ONE)));
-#endif
+    if (a <= 0) return 0;
+
+    int op = (int)a;
+    int result = 0;
+    int zeros = leading_zeros(op);
+
+    /*
+     * 11111....1111 - invalid
+     * 01111....1111 - 1 - shift right 1x
+     * 00111....1111 - 2 - what we want
+     * 00011....1111 - 3 - shift left 1x
+     * 00001....1111 - 4 - shift left 2x, etc
+     * shift has to be multiples of 2, because (1 << n)^2 == 1 << 2n, so sqrt(1 << 2n) = (1 << n)
+     */
+
+    int shifted_right_at_start = 0;
+
+    if (zeros < 2) {
+        shifted_right_at_start = 2;
+        op >>= 2;
+    }
+    else if (zeros > 2) {
+        shifted_right_at_start = -((zeros - 2) & ~0x01);
+        op <<= -shifted_right_at_start;
+    }
+    zeros = 2;
+
+    int one = 1 << ((31u - zeros) & ~1u);;
+
+    while (one != 0) {
+        int delta_square = result + one;
+        if (op >= delta_square) {
+            op -= delta_square;
+            result += one << 1;
+        }
+        result >>= 1;
+        one >>= 2;
+    }
+
+    shifted_right_at_start += FRAC_BITS;
+    if (shifted_right_at_start < 0) {
+        int final_right_shift = (-shifted_right_at_start >> 1);
+        result >>= final_right_shift;
+    }
+    if (shifted_right_at_start > 0) {
+        int final_left_shift = (shifted_right_at_start >> 1);
+        result <<= final_left_shift;
+    }
+    return result;
 }
 
 static inline fixed20_12_t scalar_abs(fixed20_12_t a) {
@@ -197,7 +258,7 @@ static inline scalar_t trig_sin(scalar_t angle) {
     const scalar_t angle_wrapped = angle & (ONE - 1);
     const size_t lut_size = sizeof(lut_quarter_sine) / sizeof(lut_quarter_sine[0]);
     const size_t lut_entry = ((angle_wrapped & ((ONE / 4) - 1)) * lut_size) / (ONE / 4);
-    const size_t quadrant = angle_wrapped >> 10;
+    const size_t quadrant = angle_wrapped >> (FRAC_BITS - 2);
 
     if      (quadrant == 0)     return +(lut_quarter_sine[lut_entry]       / (65536 / ONE));
     else if (quadrant == 1)     return +(lut_quarter_sine[255 - lut_entry] / (65536 / ONE));
@@ -216,12 +277,27 @@ static inline scalar_t trig_cos(scalar_t angle) {
 }
 
 static inline size_t serialize_scalar(void* destination, scalar_t scalar) {
-    memcpy(destination, &scalar, sizeof(scalar));
+    // say we have 16.16, and we serialize to 20.12. when serializing, we need to divide by (1 << 4)
+    int32_t fixed_20_12 = scalar;
+    #if (FRAC_BITS < 12)
+    fixed_20_12 <<= (12 - FRAC_BITS);
+    #else
+    fixed_20_12 >>= (FRAC_BITS - 12);
+    #endif
+    memcpy(destination, &fixed_20_12, sizeof(fixed_20_12));
     return sizeof(scalar);
 }
 
 static inline size_t deserialize_scalar(const void *const source, scalar_t* scalar) {
-    memcpy(scalar, source, sizeof(*scalar));
+    // say we have 20.12, and we deserialize to 16.16. when serializing, we need to multiply by (1 << 4)
+    int32_t fixed_20_12 = 0;
+    memcpy(&fixed_20_12, source, sizeof(fixed_20_12));
+    #if (FRAC_BITS < 12)
+    fixed_20_12 >>= (12 - FRAC_BITS);
+    #elif (FRAC_BITS > 12)
+    fixed_20_12 <<= (FRAC_BITS - 12);
+    #endif
+    *scalar = fixed_20_12;
     return sizeof(*scalar);
 }
 

@@ -172,7 +172,7 @@ int handle_triangle_case(convex_hull_mesh_t* polytope, vec3_t* dir) {
     const vec3_t c = polytope->vertices[2];
 
     const vec3_t ab = vec3_normalize(vec3_sub(b, a));
-    const vec3_t ac = vec3_sub(c, a);
+    const vec3_t ac = vec3_normalize(vec3_sub(c, a));
     const vec3_t ao = vec3_neg(a);
 
     const vec3_t abc = vec3_normalize(vec3_cross_lh(ab, ac));
@@ -334,7 +334,7 @@ vec3_t epa(convex_hull_mesh_t* polytope, shape_t* shape1, shape_t* shape2) {
 
         dump_current_simplex(attempt, polytope, closest_face_index);
 
-        if ((distance_support_to_origin - closest_face.distance) < SCALAR(0.4f)) {
+        if ((distance_support_to_origin - closest_face.distance) < SCALAR(0.7f)) {
             goto eh_close_enough;
         }
 

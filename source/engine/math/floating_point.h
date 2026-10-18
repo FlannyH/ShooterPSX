@@ -117,7 +117,7 @@ static inline size_t serialize_scalar(void* destination, scalar_t scalar) {
 static inline size_t deserialize_scalar(const void *const source, scalar_t* scalar) {
     int32_t fixed_point_20_12 = 0;
     memcpy(&fixed_point_20_12, source, sizeof(fixed_point_20_12));
-    *scalar = fixed_to_scalar(fixed_point_20_12);
+    *scalar = ((scalar_t)fixed_point_20_12) / (1 << 12);
     return sizeof(*scalar);
 }
 

@@ -176,26 +176,52 @@ static inline vec3_t vec3_shift_right(vec3_t a, int amount) {
 }
 
 static inline scalar_t vec3_magnitude_squared(const vec3_t a) {
-    const scalar_t x2 = scalar_mul(a.x, a.x);
-    const scalar_t y2 = scalar_mul(a.y, a.y);
-    const scalar_t z2 = scalar_mul(a.z, a.z);
-
-    if (is_infinity(x2) || is_infinity(y2) || is_infinity(z2)) {
-        return INT32_MAX;
-    }
-
-    return x2 + y2 + z2;
+    int64_t x2_one = a.x * a.x;
+    int64_t y2_one = a.y * a.y;
+    int64_t z2_one = a.z * a.z;
+    int64_t result_one = x2_one + y2_one + z2_one;
+    int32_t result = (result_one >> FRAC_BITS);
+    return result;
 }
 
 static inline scalar_t vec3_magnitude(vec3_t a) {
-    // avoid overflows
-    while ((scalar_abs(a.x) > (4*ONE)) || (scalar_abs(a.y) > (4*ONE)) || (scalar_abs(a.z) > (4*ONE))) {
-        a = vec3_shift_right(a, 2);
+    if (a.x == 0 && a.y == 0 && a.z == 0) {
+        return 0;
     }
 
-    scalar_t magnitude = vec3_magnitude_squared(a);
-    if (magnitude == 0) return 0;
-    return scalar_sqrt(magnitude);
+    #ifdef _FLOAT
+    return sqrtf((a.x * a.x) + (a.y * a.y) + (a.z * a.z));
+    #else
+    if (is_infinity(a.x) || is_infinity(a.y) || is_infinity(a.z)) {
+        return INT32_MAX;
+    }
+    int64_t sum = 0;
+    sum += ((int64_t)a.x * (int64_t)a.x);
+    sum += ((int64_t)a.y * (int64_t)a.y);
+    sum += ((int64_t)a.z * (int64_t)a.z);
+
+    int zeros_x = (a.x != 0) ? leading_zeros(a.x) : 32;
+    int zeros_y = (a.y != 0) ? leading_zeros(a.y) : 32;
+    int zeros_z = (a.z != 0) ? leading_zeros(a.z) : 32;
+    int min_zeros = 32;
+    if (zeros_x < min_zeros) min_zeros = zeros_x;
+    if (zeros_y < min_zeros) min_zeros = zeros_y;
+    if (zeros_z < min_zeros) min_zeros = zeros_z;
+
+    int sum_shift_right = 0;
+    if (min_zeros < 32) {
+        int zeros_sum = (min_zeros * 2);
+        sum_shift_right = 36 - zeros_sum;
+    }
+
+    int sum_shifted;
+    if (sum_shift_right >= 0) sum_shifted = sum >> sum_shift_right;
+    if (sum_shift_right < 0) sum_shifted = sum << -sum_shift_right;
+    scalar_t sqrt = int_sqrt(sum_shifted);
+    if (sum_shift_right >= 0) sqrt <<= (sum_shift_right/2);
+    if (sum_shift_right < 0) sqrt >>= -(sum_shift_right/2);
+    return sqrt;
+    #endif
 }
 
 static inline scalar_t vec3_distance(vec3_t a, vec3_t b) {
@@ -211,11 +237,19 @@ static inline vec3_t vec3_neg(vec3_t a) {
 }
 
 static inline vec3_t vec3_cross(vec3_t a, vec3_t b) {
+    #if _FLOAT
     return (vec3_t) {
         scalar_mul(a.y, b.z) - scalar_mul(a.z, b.y),
         scalar_mul(a.z, b.x) - scalar_mul(a.x, b.z),
         scalar_mul(a.x, b.y) - scalar_mul(a.y, b.x),
     };
+    #else
+    return (vec3_t) {
+        (((int64_t)a.y * (int64_t)b.z) - ((int64_t)a.z * (int64_t)b.y)) / FIXED_ONE,
+        (((int64_t)a.z * (int64_t)b.x) - ((int64_t)a.x * (int64_t)b.z)) / FIXED_ONE,
+        (((int64_t)a.x * (int64_t)b.y) - ((int64_t)a.y * (int64_t)b.x)) / FIXED_ONE,
+    };
+    #endif
 }
 
 static inline vec3_t vec3_cross_lh(vec3_t a, vec3_t b) {
@@ -223,16 +257,14 @@ static inline vec3_t vec3_cross_lh(vec3_t a, vec3_t b) {
 }
 
 static inline vec3_t vec3_normalize(vec3_t a) {
-    // avoid overflows
-    while ((scalar_abs(a.x) > (2*ONE)) || (scalar_abs(a.y) > (2*ONE)) || (scalar_abs(a.z) > (2*ONE))) {
-        a = vec3_shift_right(a, 2);
-    }
-
-    scalar_t magnitude = vec3_magnitude_squared(a);
+    scalar_t magnitude = vec3_magnitude(a);
     if (magnitude == 0) {
         return vec3_from_int32s(0, 0, 0);
     }
-    magnitude = scalar_sqrt(magnitude);
+    if (magnitude < 4096) {
+        a = vec3_shift_left(a, 8);
+        magnitude = vec3_magnitude(a);
+    }
 
     const vec3_t a_normalized = vec3_divs(a, magnitude);
     return a_normalized;
