@@ -505,6 +505,7 @@ bool inspect_shape(size_t shape_id, int& render_hull_build_set_cap) {
                 .scale = vec3_from_scalar(SCALAR(16.0 / 1024)), // 1024 because the model is scaled by 1024 for precision
             };
             renderer_set_drawing_id(0, 0);
+            renderer_set_depth_bias(0);
             renderer_draw_mesh_shaded(&editor.resources.gizmos->meshes[2], &trans, 0, 0);
         }
 
@@ -569,6 +570,7 @@ void draw_texture_category(const char* name, texture_category_t category, bool s
 
 void render_3d_debug_stuff() {
     if (editor.render.graphics) {
+        renderer_set_depth_bias(4);
         renderer_draw_model_shaded(editor.level.lvl.graphics, &editor.level.lvl.transform, NULL);
     }
 
@@ -614,6 +616,7 @@ void render_3d_debug_stuff() {
             .scale = vec3_from_scalar(SCALAR(16.0 / 1024)), // 1024 because the model is scaled by 1024 for precision
         };
         renderer_set_drawing_id(0, 0);
+            renderer_set_depth_bias(0);
         renderer_draw_mesh_shaded(&editor.resources.gizmos->meshes[2], &trans, 0, 0);
     }
 }
@@ -1252,6 +1255,7 @@ void collision_stuff() {
                 };
 
                 renderer_set_drawing_id(i, 3);
+                renderer_set_depth_bias(0);
                 renderer_draw_mesh_shaded(&editor.resources.gizmos->meshes[2], &trans, 0, 0);
             }
             else if (editor.level.lvl.shapes[i].type == SHAPE_AABB) {
@@ -1265,10 +1269,12 @@ void collision_stuff() {
                 };
 
                 renderer_set_drawing_id(i, 3);
+                renderer_set_depth_bias(0);
                 renderer_draw_mesh_shaded(&editor.resources.gizmos->meshes[3], &trans, 0, 0);
             }
             else if (editor.level.lvl.shapes[i].type == SHAPE_CONVEX_HULL) {
                 renderer_set_drawing_id(i, 3);
+                renderer_set_depth_bias(0);
                 renderer_draw_mesh_shaded(editor.resources.specialized_meshes[i], &id_transform, 0, 0);
             }
         }
