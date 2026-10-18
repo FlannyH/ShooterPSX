@@ -186,6 +186,7 @@ level_editor: INCLUDE_DIRS = source \
 			   external/glfw/include \
 			   external/imgui \
 			   external/imguizmo \
+			   external/implot \
 			   external/imgui-filebrowser \
 			   $(PATH_LIB_PC)/gl3w/include
 level_editor: INCLUDE_FLAGS = $(patsubst %, -I%, $(INCLUDE_DIRS))
@@ -199,7 +200,7 @@ mkdir_output_pc:
 submodules:
 	# git submodule update --init --recursive
 
-pc_dependencies: submodules .WAIT glfw .WAIT gl3w .WAIT imgui .WAIT imguizmo .WAIT portaudio .WAIT
+pc_dependencies: submodules .WAIT glfw gl3w imgui imguizmo implot portaudio .WAIT
 
 GLFW_LIB_PATHS = $(PATH_LIB_PC)/glfw/src/libglfw3.a \
 				 $(PATH_LIB_PC)/glfw/src/glfw3.lib \
@@ -256,6 +257,27 @@ $(IMGUI_OBJ_DIR)/%.o: $(IMGUI_SRC_DIR)/%.cpp
 imgui: $(OBJ_IMGUI)
 
 # Define the base directories
+IMPLOT_SRC_DIR = external/implot
+IMPLOT_OBJ_DIR = $(PATH_LIB_PC)/implot
+
+# List of source files
+IMPLOT_SRC = \
+    $(IMPLOT_SRC_DIR)/implot.cpp \
+    $(IMPLOT_SRC_DIR)/implot_items.cpp \
+
+# Corresponding object files
+OBJ_IMPLOT = $(IMPLOT_SRC:$(IMPLOT_SRC_DIR)/%.cpp=$(IMPLOT_OBJ_DIR)/%.o)
+
+# Pattern rule for building object files
+$(IMPLOT_OBJ_DIR)/%.o: $(IMPLOT_SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	@echo Compiling $<
+	@$(CXX) $(INCLUDE_FLAGS) -c $< -o $@
+
+# Target rule for building implot
+implot: $(OBJ_IMPLOT)
+
+# Define the base directories
 IMGUIZMO_SRC_DIR = external/imguizmo
 IMGUIZMO_OBJ_DIR = $(PATH_LIB_PC)/imguizmo
 IMGUIZMO_BACKENDS_OBJ_DIR = $(IMGUIZMO_OBJ_DIR)/backends
@@ -298,7 +320,7 @@ $(PATH_BUILD_LEVEL_EDITOR)/LevelEditor: mkdir_output_pc .WAIT pc_dependencies .W
 	@mkdir -p $(PATH_ASSETS)/pc
 	@mkdir -p $(PATH_ASSETS)/level_editor
 	@echo Linking $@
-	@$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(LINKER_FLAGS)
+	@$(CXX) -o $@ $(OBJ_LEVEL_EDITOR) $(OBJ_IMGUI) $(OBJ_IMGUIZMO) $(OBJ_IMPLOT) $(LINKER_FLAGS)
 	@echo Copying assets
 	@cp -r $(PATH_ASSETS)/shared/* $(dir $@)/assets
 	@cp -r $(PATH_ASSETS)/pc/* $(dir $@)/assets

@@ -37,6 +37,7 @@ extern "C" {
 #include "engine/file.h"
 
 #include <ImGuizmo.h>
+#include <implot.h>
 #include <imfilebrowser.h>
 #include <format>
 #endif
@@ -93,6 +94,7 @@ static ImGui::FileBrowser file_dialog(ImGuiFileBrowserFlags_EnterNewFilename);
 
 void debug_layer_init(void) {
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui::StyleColorsDark();
@@ -1578,6 +1580,174 @@ void viewport() {
     ImGui::End();
 }
 
+void math_verification() {
+    ImGui::Begin("Math verification", NULL, ImGuiWindowFlags_None);
+    static vec3_t a = {0, 0, 0};
+    static vec3_t b = {0, 0, 0};
+    // todo: add normalize (i imagine this to be the bad one)
+    const char* ops[] = {
+        "Add",
+        "Sub",
+        "Div",
+        "Dot",
+        "CrossRH",
+        "CrossLH",
+        "Min",
+        "Max",
+        "Normalize",
+        "Square root",
+        "Distance",
+        0
+    };
+    static size_t op_idx = 0;
+    inspect_vec3(&a, "A");
+    inspect_vec3(&b, "B");
+    op_idx = inspect_enum(op_idx, ops, "Operation");
+    vec3_t result3;
+    scalar_t result1;
+    if (op_idx == 0) { result3 = vec3_add(a, b); inspect_vec3(&result3, "Result"); }
+    if (op_idx == 1) { result3 = vec3_sub(a, b); inspect_vec3(&result3, "Result"); }
+    if (op_idx == 2) { result3 = vec3_div(a, b); inspect_vec3(&result3, "Result"); }
+    if (op_idx == 3) { result1 = vec3_dot(a, b); inspect_scalar(&result1, "Result"); }
+    if (op_idx == 4) { result3 = vec3_cross(a, b); inspect_vec3(&result3, "Result"); }
+    if (op_idx == 5) { result3 = vec3_cross_lh(a, b); inspect_vec3(&result3, "Result"); }
+    if (op_idx == 6) { result3 = vec3_min(a, b); inspect_vec3(&result3, "Result"); }
+    if (op_idx == 7) { result3 = vec3_max(a, b); inspect_vec3(&result3, "Result"); }
+    if (op_idx == 8) { result3 = vec3_normalize(a); inspect_vec3(&result3, "Result"); }
+    if (op_idx == 9) { result1 = scalar_sqrt(a.x); inspect_scalar(&result1, "Result"); }
+    if (op_idx == 10) { result1 = vec3_distance(a, b); inspect_scalar(&result1, "Result"); }
+
+    constexpr double data_range = 65536.0;
+    constexpr double data_offset = -32768.0;
+    constexpr double step = 64.0;
+    constexpr size_t value_count = (size_t)ceilf(data_range / step) + 1;
+
+    static bool generated = false;
+    // fixed result
+    static double values[value_count] = {0};
+    static double mul_ones[value_count] = {0};
+    static double mul_1024s[value_count] = {0};
+    static double mul_10240s[value_count] = {0};
+    static double mul_quarters[value_count] = {0};
+    static double divs[value_count] = {0};
+    static double sins[value_count] = {0};
+    static double coss[value_count] = {0};
+    static double sqrts[value_count] = {0};
+    // float result
+    static double values_f[value_count] = {0};
+    static double mul_ones_f[value_count] = {0};
+    static double mul_1024s_f[value_count] = {0};
+    static double mul_10240s_f[value_count] = {0};
+    static double mul_quarters_f[value_count] = {0};
+    static double divs_f[value_count] = {0};
+    static double sins_f[value_count] = {0};
+    static double coss_f[value_count] = {0};
+    static double sqrts_f[value_count] = {0};
+    // error
+    static double values_e[value_count] = {0};
+    static double mul_ones_e[value_count] = {0};
+    static double mul_1024s_e[value_count] = {0};
+    static double mul_10240s_e[value_count] = {0};
+    static double mul_quarters_e[value_count] = {0};
+    static double divs_e[value_count] = {0};
+    static double sins_e[value_count] = {0};
+    static double coss_e[value_count] = {0};
+    static double sqrts_e[value_count] = {0};
+    if (ImGui::Button("Regenerate") || !generated) {
+        generated = true;
+        for (size_t i = 0; i < value_count; ++i) {
+            double value_f = (i * step) + data_offset;
+            scalar_t value = SCALAR(value_f);
+            #define SCALAR_TO_DOUBLE(a) (a >= 0) ? (((double)(a) + 0.5) / FIXED_ONE) : (((double)(a) - 0.5) / FIXED_ONE)
+            values[i] = SCALAR_TO_DOUBLE(value);
+            mul_ones[i] = SCALAR_TO_DOUBLE(scalar_mul(value, ONE));
+            mul_1024s[i] = SCALAR_TO_DOUBLE(scalar_mul(value, 1024*ONE));
+            mul_10240s[i] = SCALAR_TO_DOUBLE(scalar_mul(value, 10240*ONE));
+            mul_quarters[i] = SCALAR_TO_DOUBLE(scalar_mul(value, SCALAR(0.25)));
+            divs[i] = SCALAR_TO_DOUBLE(scalar_div(ONE, value));
+            sins[i] = SCALAR_TO_DOUBLE(trig_sin(value));
+            coss[i] = SCALAR_TO_DOUBLE(trig_cos(value));
+            sqrts[i] = SCALAR_TO_DOUBLE(scalar_sqrt(value));
+
+            values_f[i] = value_f;
+            mul_ones_f[i] = value_f * 1.0;
+            mul_1024s_f[i] = value_f * 1024.0;
+            mul_10240s_f[i] = value_f * 10240.0;
+            mul_quarters_f[i] = value_f * 0.25;
+            divs_f[i] = 1.0 / value_f;
+            sins_f[i] = sin(value_f * 2.0 * 3.14159265358979);
+            coss_f[i] = cos(value_f * 2.0 * 3.14159265358979);
+            sqrts_f[i] = sqrtf(value_f);
+
+            values_e[i] = values_f[i] - values[i];
+            mul_ones_e[i] = mul_ones_f[i] - mul_ones[i];
+            mul_1024s_e[i] = mul_1024s_f[i] - mul_1024s[i];
+            mul_10240s_e[i] = mul_10240s_f[i] - mul_10240s[i];
+            mul_quarters_e[i] = mul_quarters_f[i] - mul_quarters[i];
+            divs_e[i] = divs_f[i] - divs[i];
+            sins_e[i] = sins_f[i] - sins[i];
+            coss_e[i] = coss_f[i] - coss[i];
+            sqrts_e[i] = sqrts_f[i] - sqrts[i];
+        }
+    }
+    if (ImPlot::BeginPlot("values")) {
+        ImPlot::PlotLine("scalar", values_f, values, value_count);
+        ImPlot::PlotLine("float", values_f, values_f, value_count);
+        ImPlot::PlotLine("error", values_f, values_e, value_count);
+        ImPlot::EndPlot();
+    }
+    if (ImPlot::BeginPlot("mul_ones")) {
+        ImPlot::PlotLine("scalar", values_f, mul_ones, value_count);
+        ImPlot::PlotLine("float", values_f, mul_ones_f, value_count);
+        ImPlot::PlotLine("error", values_f, mul_ones_e, value_count);
+        ImPlot::EndPlot();
+    }
+    if (ImPlot::BeginPlot("mul_1024s")) {
+        ImPlot::PlotLine("scalar", values_f, mul_1024s, value_count);
+        ImPlot::PlotLine("float", values_f, mul_1024s_f, value_count);
+        ImPlot::PlotLine("error", values_f, mul_1024s_e, value_count);
+        ImPlot::EndPlot();
+    }
+    if (ImPlot::BeginPlot("mul_10240s")) {
+        ImPlot::PlotLine("scalar", values_f, mul_10240s, value_count);
+        ImPlot::PlotLine("float", values_f, mul_10240s_f, value_count);
+        ImPlot::PlotLine("error", values_f, mul_10240s_e, value_count);
+        ImPlot::EndPlot();
+    }
+    if (ImPlot::BeginPlot("mul_quarters")) {
+        ImPlot::PlotLine("scalar", values_f, mul_quarters, value_count);
+        ImPlot::PlotLine("float", values_f, mul_quarters_f, value_count);
+        ImPlot::PlotLine("error", values_f, mul_quarters_e, value_count);
+        ImPlot::EndPlot();
+    }
+    if (ImPlot::BeginPlot("divs")) {
+        ImPlot::PlotLine("scalar", values_f, divs, value_count);
+        ImPlot::PlotLine("float", values_f, divs_f, value_count);
+        ImPlot::PlotLine("error", values_f, divs_e, value_count);
+        ImPlot::EndPlot();
+    }
+    if (ImPlot::BeginPlot("sins")) {
+        ImPlot::PlotLine("scalar", values_f, sins, value_count);
+        ImPlot::PlotLine("float", values_f, sins_f, value_count);
+        ImPlot::PlotLine("error", values_f, sins_e, value_count);
+        ImPlot::EndPlot();
+    }
+    if (ImPlot::BeginPlot("coss")) {
+        ImPlot::PlotLine("scalar", values_f, coss, value_count);
+        ImPlot::PlotLine("float", values_f, coss_f, value_count);
+        ImPlot::PlotLine("error", values_f, coss_e, value_count);
+        ImPlot::EndPlot();
+    }
+    if (ImPlot::BeginPlot("sqrts")) {
+        ImPlot::PlotLine("scalar", values_f, sqrts, value_count);
+        ImPlot::PlotLine("float", values_f, sqrts_f, value_count);
+        ImPlot::PlotLine("error", values_f, sqrts_e, value_count);
+        ImPlot::EndPlot();
+    }
+
+    ImGui::End();
+}
+
 /// doc: desc: Entry point for the level editor.
 /// doc: desc: It initializes the engine systems, spawns a player and a debug camera, and then enters the main editor loop.
 int main(int argc, char** argv) {
@@ -1659,6 +1829,7 @@ int main(int argc, char** argv) {
         text_editor();
         texture_viewer();
         viewport();
+        math_verification();
 
         renderer_end_frame();
         debug_layer_end();
@@ -1670,5 +1841,6 @@ void debug_layer_close(void) {
     ImGui::SaveIniSettingsToDisk("imgui_layout.ini");
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+    ImPlot::DestroyContext();
     ImGui::DestroyContext();
 }
