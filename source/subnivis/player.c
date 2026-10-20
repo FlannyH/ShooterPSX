@@ -39,6 +39,7 @@ void player_init(player_t* player, vec3_t position, vec3_t rotation, int health,
     player->health = health;
     player->armor = armor;
     player->ammo = ammo;
+    player->initialized = 1;
     player->has_key_blue = 0;
     player->has_key_yellow = 0;
     player->has_gun = 1;
@@ -211,7 +212,7 @@ void update_transform(player_t* self, scalar_t dt, scalar_t time_counter) {
 }
 
 void player_update(player_t* self, level_t* level, const scalar_t dt, const scalar_t time_counter) {
-    if (!self) return;
+    if (!self || !self->initialized) return;
     if (!level) return;
 
     const vec3_t player_right = (vec3_t) {-trig_cos(self->rotation.y),0,+trig_sin(self->rotation.y)};

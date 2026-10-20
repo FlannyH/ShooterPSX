@@ -28,6 +28,7 @@ typedef struct {
     uint8_t health;
     uint8_t armor;
     uint8_t ammo;
+    unsigned int initialized : 1;
     unsigned int has_key_blue : 1;
     unsigned int has_key_yellow : 1;
     unsigned int has_gun : 1;
