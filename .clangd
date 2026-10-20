@@ -1,0 +1,6 @@
+CompileFlags:
+  Remove:
+    - -march=r3000
+    - -mtune=r3000
+  Add:
+    - --target=mipsel-none-elf
