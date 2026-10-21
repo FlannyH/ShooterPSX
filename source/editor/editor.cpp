@@ -1231,6 +1231,10 @@ void collision_stuff() {
         ImGui::Spacing();
         inspect_shape(editor.misc.selected_shape, editor.render.hull_build_set_cap);
 
+        if (input_mapping_held(IM_DELETE_STUFF, 0)) {
+            editor.misc.defer_remove_shape.push_back(editor.misc.selected_shape);
+        }
+
         // If deleted, deselect it
         if (editor.level.lvl.shapes == NULL ||
             editor.misc.selected_shape < 0 ||
@@ -1794,6 +1798,7 @@ int main(int argc, char** argv) {
     input_mapping_register_keyboard(IM_CAMERA_SPEED_DOWN, INPUT_KEY_MINUS, SCALAR(1.0));
     input_mapping_register_mouse(IM_PICK, INPUT_MOUSE_BUTTON_LEFT, SCALAR(1.0));
     input_mapping_register_keyboard(IM_SHAPE_ADD_POINT, INPUT_KEY_P, SCALAR(1.0));
+    input_mapping_register_keyboard(IM_DELETE_STUFF, INPUT_KEY_DELETE, SCALAR(1.0));
 
     initialize();
 

@@ -13,4 +13,5 @@ typedef enum {
     IM_CAMERA_SPEED_DOWN,
     IM_PICK,
     IM_SHAPE_ADD_POINT,
+    IM_DELETE_STUFF,
 } input_ids_t;

@@ -143,6 +143,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         case GLFW_KEY_B: state_keyboard_index = INPUT_KEY_B; break;
         case GLFW_KEY_N: state_keyboard_index = INPUT_KEY_N; break;
         case GLFW_KEY_M: state_keyboard_index = INPUT_KEY_M; break;
+        case GLFW_KEY_DELETE: state_keyboard_index = INPUT_KEY_DELETE; break;
     }
 
     switch (action) {
