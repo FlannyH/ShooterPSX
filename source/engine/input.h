@@ -49,6 +49,7 @@ typedef enum {
     INPUT_KEY_J,           INPUT_KEY_K,            INPUT_KEY_L,             INPUT_KEY_Z,
     INPUT_KEY_X,           INPUT_KEY_C,            INPUT_KEY_V,             INPUT_KEY_B,
     INPUT_KEY_N,           INPUT_KEY_M,
+    INPUT_KEY_DELETE,
     N_INPUT_KEY
 } input_keyboard_t;
 
