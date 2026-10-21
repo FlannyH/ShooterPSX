@@ -577,10 +577,6 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
     if (!mesh) return;
 	++n_meshes_drawn;
 
-#ifdef _LEVEL_EDITOR
-	renderer_set_drawing_id(0, 4);
-#endif
-
 	// Calculate model matrix
 	mat4 model_matrix;
 	glm_mat4_identity(model_matrix);

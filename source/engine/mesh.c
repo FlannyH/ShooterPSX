@@ -171,7 +171,7 @@ void convex_hull_expand(convex_hull_mesh_t* shape, vec3_t new_point) {
     edge_t edges[CONVEX_HULL_LIMIT] = {0};
 
     // iterate over the old faces only, lest we remove the faces we just added
-    for (int fi = 0; fi < shape->n_faces; ++fi) {
+    for (int fi = 0; fi < (int)shape->n_faces; ++fi) {
         vec3_t face_normal = shape->faces[fi].normal;
         vec3_t point_on_face = shape->vertices[shape->faces[fi].a];
 
@@ -191,7 +191,11 @@ void convex_hull_expand(convex_hull_mesh_t* shape, vec3_t new_point) {
 
     // then close the gap by extruding the edges to the new point
     for (size_t i = 0; i < n_edges; ++i) {
-        faces_added[n_faces_added++] = (face_t){ edges[i].a, edges[i].b, new_point_i };
+        vec3_t a = shape->vertices[edges[i].a];
+        vec3_t b = shape->vertices[edges[i].b];
+        vec3_t p = new_point;
+        const vec3_t normal = vec3_normalize(vec3_cross(vec3_sub(b, a), vec3_sub(p, a)));
+        faces_added[n_faces_added++] = (face_t){ edges[i].a, edges[i].b, new_point_i, normal };
         assert(n_faces_added <= CONVEX_HULL_LIMIT);
     }
 

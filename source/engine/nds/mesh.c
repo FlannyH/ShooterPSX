@@ -1,8 +1,8 @@
-#include "mesh.h"
+#include "../mesh.h"
 
 #include "../common.h"
-#include "memory.h"
-#include "file.h"
+#include "../memory.h"
+#include "../file.h"
 
 #include <stdio.h>
 #include <stdlib.h>

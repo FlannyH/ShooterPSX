@@ -1,6 +1,6 @@
 #include "editor.h"
 
-#include "../subnivis/main.h"
+#include "subnivis/main.h"
 
 // todo(editor_externs): desc: figure this extern crap out
 extern "C" {
@@ -13,7 +13,6 @@ extern "C" {
     state_t get_prev_state(void) { return prev_state; }
 }
 
-#include "engine/entity.h"
 #include "camera.h"
 #include "imgui.h"
 
@@ -21,9 +20,8 @@ extern "C" {
 #include <backends/imgui_impl_glfw.h>
 #include <GL/gl3w.h>
 
-#include "engine/texture.h"
+#include <implot.h>
 
-#ifdef _LEVEL_EDITOR
 #include "entities/platform.h"
 #include "entities/trigger.h"
 #include "entities/pickup.h"
@@ -33,14 +31,13 @@ extern "C" {
 #include "editor/input_map.h"
 #include "engine/input_mapping.h"
 #include "engine/renderer.h"
+#include "engine/entity.h"
 #include "engine/mesh.h"
-#include "engine/file.h"
 
 #include <ImGuizmo.h>
-#include <implot.h>
 #include <imfilebrowser.h>
+#include <vector>
 #include <format>
-#endif
 
 // todo(debug_renderer_fix): desc: fix debug renderers for collision, nav, etc
 
@@ -120,6 +117,9 @@ void debug_layer_end(void) {
 	glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 	glClearDepth(1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	float color[] = {0.0f, 0.0f, 0.0f, 0.0f};
+	glClearBufferfv(GL_COLOR, 1, color);
+	glClearBufferfv(GL_COLOR, 2, color);
 
     // Render to window
     ImGui::Render();
@@ -412,6 +412,8 @@ bool inspect_light(size_t light_id) {
 
 // returns if the shape changed
 bool inspect_shape(size_t shape_id, int& render_hull_build_set_cap) {
+    ImGui::PushID((int)shape_id);
+
     bool result = false;
 
     const uint8_t shape_type = editor.level.lvl.shapes[shape_id].type;
@@ -522,6 +524,7 @@ bool inspect_shape(size_t shape_id, int& render_hull_build_set_cap) {
         }
     }
 
+    ImGui::PopID();
     return result;
 }
 
@@ -618,7 +621,7 @@ void render_3d_debug_stuff() {
             .scale = vec3_from_scalar(SCALAR(16.0 / 1024)), // 1024 because the model is scaled by 1024 for precision
         };
         renderer_set_drawing_id(0, 0);
-            renderer_set_depth_bias(0);
+        renderer_set_depth_bias(0);
         renderer_draw_mesh_shaded(&editor.resources.gizmos->meshes[2], &trans, 0, 0);
     }
 }
@@ -942,6 +945,9 @@ void cleanup() {
         // remove deferred shapes
         for (const size_t shape_id : editor.misc.defer_remove_shape) {
             memset(&editor.level.lvl.shapes[shape_id], 0, sizeof(shape_t));
+            if (shape_id == editor.misc.selected_shape) {
+                editor.misc.selected_shape = -1;
+            }
         }
         editor.misc.defer_remove_shape.clear();
 
@@ -984,9 +990,10 @@ void general_info() {
 }
 
 void entity_stuff() {
-    // Entity spawn menu
+    entity_update_all(&editor.misc.player, 0);
+
     ImGui::Begin("Entity spawning");
-    // Entity count:
+    // Pick type
     int entity_count = 0;
     for (size_t i = 0; i < ENTITY_LIST_LENGTH; ++i) {
         if (entity_get_type(i) != ENTITY_NONE) {
@@ -1219,12 +1226,17 @@ void collision_stuff() {
     // Collision inspector menu
     ImGui::Begin("Collision Inspector", NULL, ImGuiWindowFlags_None);
     if (editor.misc.selected_shape >= 0) {
-        ImGui::Text("Selected shape");
+        std::string text = std::format("Selected shape {}", editor.misc.selected_shape);
+        ImGui::Text(text.c_str());
         ImGui::Spacing();
         inspect_shape(editor.misc.selected_shape, editor.render.hull_build_set_cap);
 
         // If deleted, deselect it
-        if (!editor.level.lvl.shapes || editor.level.lvl.shapes[editor.misc.selected_shape].type == SHAPE_NONE) {
+        if (editor.level.lvl.shapes == NULL ||
+            editor.misc.selected_shape < 0 ||
+            editor.misc.selected_shape >= editor.level.lvl.n_shapes ||
+            editor.level.lvl.shapes[editor.misc.selected_shape].type == SHAPE_NONE
+        ) {
             editor.misc.selected_shape = -1;
         }
     }
@@ -1467,10 +1479,6 @@ void viewport() {
                 vec3 translation{}, rotation{}, scale{};
                 ImGuizmo::DecomposeMatrixToComponents(&delta[0][0], &translation[0], &rotation[0], &scale[0]);
 
-                printf("t: %3.3f, %3.3f, %3.3f\t", translation[0], translation[1], translation[2]);
-                printf("r: %3.3f, %3.3f, %3.3f\t", rotation[0], rotation[1], rotation[2]);
-                printf("s: %3.3f, %3.3f, %3.3f\n\n", scale[0], scale[1], scale[2]);
-
                 if (has_selected_entity) {
                     entity_header_t* selected_entity = entity_get_header(editor.misc.selected_entity);
                     if (editor.misc.gizmode == ImGuizmo::TRANSLATE) {
@@ -1559,6 +1567,8 @@ void viewport() {
                     editor.misc.selected_shape = -1;
                     editor.misc.selected_entity = -1;
                     editor.misc.vertex_selected = false;
+
+                    printf("pick info %i, %i\n", pick_info.what, pick_info.index);
 
                     if (pick_info.what == 1) editor.misc.selected_entity = pick_info.index;
                     else if (pick_info.what == 2) editor.misc.selected_light = pick_info.index;

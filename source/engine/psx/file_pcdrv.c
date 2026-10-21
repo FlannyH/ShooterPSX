@@ -18,8 +18,9 @@ typedef enum {
    PC_MODE_READ_WRITE = 2,
 } pc_open_mode_t;
 
-void pc_init() { 
-    __asm__ volatile("break 0, 0x101"); 
+void pc_init() {
+    printf("file init\n");
+    __asm__ volatile("break 0, 0x101");
 }
 
 int pc_open(const char* filename, int access_mode) {
@@ -57,17 +58,17 @@ int pc_lseek(int file_handle, int offset, int seek_mode) {
     return status < 0 ? -info : info;
 }
 
-int pc_close(int file_handle) { 
+int pc_close(int file_handle) {
     register int r_fn __asm__("a1") = file_handle;
     register int status __asm__("v0");
     register int info __asm__("v1");
 
     __asm__ volatile("break 0, 0x104" : "=r"(status), "=r"(info) : "r"(r_fn) : "memory");
-    
+
     return status < 0 ? -info : info;
 }
 
-int pc_file_size(int file_handle) { 
+int pc_file_size(int file_handle) {
     const int end = pc_lseek(file_handle, 0, PC_SEEK_END);
     const int start = pc_lseek(file_handle, 0, PC_SEEK_START);
     return end - start;
@@ -94,13 +95,13 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
     // Allocate space and read data
     if (on_stack) *destination = mem_stack_alloc(data_size, stack);
     else *destination = mem_alloc(data_size, MEM_CAT_FILE);
-    
+
     // Read :D
     pc_read(file_handle, data_size, *destination);
     *size = data_size;
 
     pc_close(file_handle);
-    
+
     return 1;
 }
 

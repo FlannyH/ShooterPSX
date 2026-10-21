@@ -241,7 +241,6 @@ mesh_t* create_debug_mesh_from_raw_triangles(triangle_t* tri, size_t count) {
     mesh->normals = malloc(sizeof(normal_t) * count * 3);
     mesh->name = "debug mesh";
 
-    printf("debug_mesh:\n");
     for (size_t tri_i = 0; tri_i < count; ++tri_i) {
         const vec3_t a = tri[tri_i].v0;
         const vec3_t b = tri[tri_i].v1;
@@ -299,10 +298,10 @@ mesh_t* create_convex_hull_from_point_cloud(vec3_t* points, size_t count, size_t
     uint8_t visit_list[1024] = {0};
 
     // pick 2 points furthest apart
-    int furthest_pair[2] = { 0, 1 };
+    size_t furthest_pair[2] = { 0, 1 };
     scalar_t furthest_distance = 0;
-    for (int i = 0; i < count; ++i) {
-        for (int j = i + 1; j < count; ++j) {
+    for (size_t i = 0; i < count; ++i) {
+        for (size_t j = i + 1; j < count; ++j) {
             const scalar_t distance = vec3_distance(points[i], points[j]);
             if (distance > furthest_distance) {
                 furthest_distance = distance;
@@ -373,10 +372,10 @@ mesh_t* create_convex_hull_from_point_cloud(vec3_t* points, size_t count, size_t
         }
     }
 
-    // extend to point
-    hull.faces[1] = (face_t){ 0, 3, 1, {0} };
-    hull.faces[2] = (face_t){ 0, 2, 3, {0} };
-    hull.faces[3] = (face_t){ 1, 3, 2, {0} };
+    // extend to point - we initialize distance later
+    hull.faces[1] = (face_t){ 0, 3, 1, {0}, 0 };
+    hull.faces[2] = (face_t){ 0, 2, 3, {0}, 0 };
+    hull.faces[3] = (face_t){ 1, 3, 2, {0}, 0 };
     hull.n_faces = 4;
 
     hull.vertices[3] = points[furthest_point_from_triangle_id];

@@ -1,17 +1,16 @@
 #ifndef VEC2_H
 #define VEC2_H
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 #include "scalar.h"
 #include <assert.h>
 #include <stddef.h>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
 
 // todo(vec2_gte_opt): desc: psx gte-accelerated svec2_t math
 // todo(vec2_inline): desc: is inlining the functions actually faster?

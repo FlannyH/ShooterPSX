@@ -1,7 +1,7 @@
-#include "renderer.h"
+#include "../renderer.h"
 
 #include "../common.h"
-#include "structs.h"
+#include "../structs.h"
 #include "../math/vec2.h"
 
 #include <gl2d.h>

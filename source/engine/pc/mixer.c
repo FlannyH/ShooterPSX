@@ -75,7 +75,8 @@ float interpolate_sample(const int16_t* const samples, double sample_index, size
     else return 0.0f;
 }
 
-int pa_callback(const void*, void* output_buffer, unsigned long frames_per_buffer, const PaStreamCallbackTimeInfo* time_info, PaStreamCallbackFlags flags, void* user_data) {
+int pa_callback(const void* _, void* output_buffer, unsigned long frames_per_buffer, const PaStreamCallbackTimeInfo* time_info, PaStreamCallbackFlags flags, void* user_data) {
+    (void)_;
     (void)user_data;
     (void)flags;
     (void)time_info;

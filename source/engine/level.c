@@ -19,8 +19,6 @@ void serialize_shape(uint8_t* shapes, size_t* cursor, const shape_t* shape) {
         (*cursor)++;
     }
 
-    void* where_to = &shapes[*cursor];
-
     switch (shape->type) {
     case SHAPE_NONE:
         *(uint32_t*)(&shapes[*cursor]) = SHAPE_NONE;                  *cursor += sizeof(uint32_t);
@@ -88,7 +86,8 @@ void deserialize_shape(const uint8_t* data, size_t* offset, shape_t* shape) {
     case SHAPE_CONVEX_HULL:
         shape->convex_hull.n_points = *(uint32_t*)(&data[*offset]);    *offset += sizeof(uint32_t);
 #ifdef _LEVEL_EDITOR
-        shape->convex_hull.points = mem_stack_alloc(shape->convex_hull.n_points * sizeof(vec3_t), STACK_LEVEL);
+        shape->convex_hull.points = mem_stack_alloc(MAX_SHAPE_COUNT * sizeof(vec3_t), STACK_LEVEL);
+        memset(shape->convex_hull.points, 0, MAX_SHAPE_COUNT * sizeof(vec3_t));
 #else
         shape->convex_hull.points = mem_stack_alloc(shape->convex_hull.n_points * sizeof(vec3_t), STACK_LEVEL);
 #endif
@@ -157,13 +156,21 @@ level_t level_load(const char* level_path, const uint32_t flags) {
         mem_stack_reset_to_marker(STACK_TEMP, marker);
     }
 
+#ifndef _LEVEL_EDITOR
+    (void)path_collision;
+#endif
+
     level_t level = (level_t) {
 #ifdef _LEVEL_EDITOR
         .collision_mesh_debug = model_load_collision_debug(path_collision, 0, 0),
 #else
         .collision_mesh_debug = NULL,
 #endif
-        .transform = (transform_t){{0, 0, 0}, {0, 0, 0}, {ONE, ONE, ONE}},
+        .transform = (transform_t){
+            .position = {0, 0, 0},
+            .rotation = {0, 0, 0},
+            .scale = {ONE, ONE, ONE}
+        },
         .vislist = vislist_load(path_vislist, 1, STACK_LEVEL),
         // .collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL),
         .collision_bvh = NULL, // todo
@@ -186,7 +193,7 @@ level_t level_load(const char* level_path, const uint32_t flags) {
         level.shapes = mem_stack_alloc(level.n_shapes * sizeof(shape_t), STACK_LEVEL);
 #endif
         size_t offset = 0;
-        for (size_t i = 0; i < level.n_shapes; ++i) {
+        for (int i = 0; i < level.n_shapes; ++i) {
             deserialize_shape(shapes, &offset, &level.shapes[i]);
         }
     }

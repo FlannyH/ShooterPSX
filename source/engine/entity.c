@@ -28,7 +28,6 @@ void entity_update_all(player_t* player, scalar_t dt) {
 	// Reset counters
 	entity_n_active_aabb = 0;
 
-#ifndef _LIGHT_BAKE
 	// Update all entities
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
 		switch (entity_types[i]) {
@@ -41,7 +40,6 @@ void entity_update_all(player_t* player, scalar_t dt) {
 			case ENTITY_TRIGGER: entity_trigger_update(i, player, dt); break;
 		}
 	}
-#endif
 }
 
 int entity_alloc(uint8_t entity_type) {

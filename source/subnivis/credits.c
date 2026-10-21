@@ -1,5 +1,4 @@
 #include "main.h"
-#include "engine/common.h"
 
 #include "subnivis/input_map.h"
 #include "engine/input_mapping.h"
@@ -7,26 +6,6 @@
 #include "engine/music.h"
 #include "subnivis/text.h"
 #include "ui.h"
-
-#include <string.h>
-
-#ifdef _PSX
-#include <psxcd.h>
-#include <psxgpu.h>
-#include <psxgte.h>
-#include <psxspu.h>
-#include <psxpad.h>
-#endif
-
-#ifdef _PC
-#include "engine/pc/psx.h"
-#include "editor/editor.h"
-#endif
-
-#ifdef _NDS
-#include "engine/nds/psx.h"
-#include <filesystem.h>
-#endif
 
 void state_enter_credits(void) {
 	renderer_start_fade_in(FADE_SPEED);

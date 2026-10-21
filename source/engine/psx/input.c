@@ -6,6 +6,7 @@
 
 #include <psxapi.h>
 #include <psxpad.h>
+#include <string.h>
 
 typedef struct {
     scalar_t up, down, left, right;
@@ -22,7 +23,6 @@ typedef struct {
 uint8_t pad_buff[2][34];
 PADTYPE* pad[2] = { NULL, NULL };
 
-// my own shit
 #define N_CONTROLLER 2
 controller_state_t controller_prev[N_CONTROLLER] = {0};
 controller_state_t controller_curr[N_CONTROLLER] = {0};
@@ -47,11 +47,10 @@ scalar_t stick_to_scalar(uint8_t stick_value) {
 }
 
 void input_update(void) {
-    memcpy(controller_prev, controller_curr, sizeof(controller_prev));
-
     for (size_t i = 0; i < N_CONTROLLER; ++i) {
         if (!input_gamepad_connected(i)) continue;
 
+        controller_prev[i] = controller_curr[i];
         controller_curr[i].up     = (pad[i]->btn & PAD_UP) ?       0 : ONE;
         controller_curr[i].down   = (pad[i]->btn & PAD_DOWN) ?     0 : ONE;
         controller_curr[i].left   = (pad[i]->btn & PAD_LEFT) ?     0 : ONE;
@@ -113,6 +112,8 @@ void input_set_gamepad_stick_deadzone(scalar_t new_deadzone) {
 }
 
 scalar_t input_value_gamepad(input_gamepad_t input, int player_id) {
+    if (player_id < 0 || player_id >= N_CONTROLLER) return 0;
+
     switch (input) {
         default:                          return 0;
         case INPUT_GAMEPAD_UP:            return controller_curr[player_id].up;
@@ -150,6 +151,8 @@ scalar_t input_value_mouse(input_mouse_t input) {
 }
 
 scalar_t input_value_gamepad_prev(input_gamepad_t input, int player_id) {
+    if (player_id < 0 || player_id >= N_CONTROLLER) return 0;
+
     switch (input) {
         default:                          return 0;
         case INPUT_GAMEPAD_UP:            return controller_prev[player_id].up;

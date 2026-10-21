@@ -1,37 +1,16 @@
 #include "main.h"
 
-#include "engine/input.h"
+#include <string.h>
+
 #include "engine/input_mapping.h"
 #include "engine/music.h"
 #include "engine/file.h"
 #include "engine/renderer.h"
-#include "subnivis/player.h"
 #include "subnivis/input_map.h"
 
-#ifdef _DEBUG
-#include "test/test.h"
-#endif
-
-#ifdef _PSX
-#include <psxcd.h>
-#include <psxgpu.h>
-#include <psxgte.h>
-#include <psxspu.h>
-#include <psxpad.h>
-#endif
-
-#ifdef _PC
-#include "engine/pc/psx.h"
-#include "editor/editor.h"
-#endif
-
 #ifdef _NDS
-#include "nds/psx.h"
-#include <filesystem.h>
 #include <nds.h>
 #endif
-
-#include <string.h>
 
 int widescreen = 0;
 state_t current_state = STATE_NONE;

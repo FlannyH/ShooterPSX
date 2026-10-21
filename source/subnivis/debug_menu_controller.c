@@ -2,28 +2,8 @@
 
 #include "engine/input_mapping.h"
 #include "engine/renderer.h"
-#include "engine/memory.h"
 #include "subnivis/input_map.h"
-#include "subnivis/text.h"
 #include "ui.h"
-
-#ifdef _PSX
-#include <psxcd.h>
-#include <psxgpu.h>
-#include <psxgte.h>
-#include <psxspu.h>
-#include <psxpad.h>
-#endif
-
-#ifdef _PC
-#include "engine/pc/psx.h"
-#include "editor/editor.h"
-#endif
-
-#ifdef _NDS
-#include "engine/nds/psx.h"
-#include <filesystem.h>
-#endif
 
 void state_enter_debug_menu_controller(void) {
     state_enter_title_screen();

@@ -11,60 +11,6 @@
 #include <string.h>
 #define MAX_EPA_TRIES 8
 
-void dump_current_simplex(size_t i, convex_hull_mesh_t* polytope, size_t closest_face) {
-#ifdef _PC
-    char path[1024] = {0};
-    snprintf(path, 1023, "simplex_%i.obj", i);
-    FILE* o = fopen(&path[0], "wb");
-    fprintf(o, "o simplex_%lu\n", i);
-    for (size_t i = 0; i < polytope->n_vertices; ++i) {
-        fprintf(o, "v %.3f %.3f %.3f\n",
-            ((float)polytope->vertices[i].x) / ONE,
-            ((float)polytope->vertices[i].y) / ONE,
-            ((float)polytope->vertices[i].z) / ONE
-        );
-    }
-    for (size_t i = 0; i < polytope->n_faces; ++i) {
-        fprintf(o, "vn %.3f %.3f %.3f\n",
-            ((float)polytope->faces[i].normal.x) / ONE,
-            ((float)polytope->faces[i].normal.y) / ONE,
-            ((float)polytope->faces[i].normal.z) / ONE
-        );
-    }
-    for (size_t i = 0; i < polytope->n_faces; ++i) {
-        fprintf(o, "f %i//%i %i//%i %i//%i\n",
-           polytope->faces[i].a + 1, i+1,
-           polytope->faces[i].b + 1, i+1,
-           polytope->faces[i].c + 1, i+1
-        );
-    }
-
-    fprintf(o, "o simplex_%lu_closest_face\n", i);
-    fprintf(o, "v %.3f %.3f %.3f\n",
-        ((float)polytope->vertices[polytope->faces[closest_face].a].x) / ONE,
-        ((float)polytope->vertices[polytope->faces[closest_face].a].y) / ONE,
-        ((float)polytope->vertices[polytope->faces[closest_face].a].z) / ONE
-    );
-    fprintf(o, "v %.3f %.3f %.3f\n",
-        ((float)polytope->vertices[polytope->faces[closest_face].a].x) / ONE,
-        ((float)polytope->vertices[polytope->faces[closest_face].a].y) / ONE,
-        ((float)polytope->vertices[polytope->faces[closest_face].a].z) / ONE
-    );
-    fprintf(o, "v %.3f %.3f %.3f\n",
-        ((float)polytope->vertices[polytope->faces[closest_face].a].x) / ONE,
-        ((float)polytope->vertices[polytope->faces[closest_face].a].y) / ONE,
-        ((float)polytope->vertices[polytope->faces[closest_face].a].z) / ONE
-    );
-    fprintf(o, "vn %.3f %.3f %.3f\n",
-        ((float)polytope->faces[closest_face].normal.x) / ONE,
-        ((float)polytope->faces[closest_face].normal.y) / ONE,
-        ((float)polytope->faces[closest_face].normal.z) / ONE
-    );
-    fprintf(o, "f 1//1 2//1 3//1\n");
-    fclose(o);
-#endif
-}
-
 // directions are normalized to make it more predictable with fixed point precision
 
 #define SUPPORT(a, b, dir) vec3_sub(support_shape((a), (dir)), support_shape((b), vec3_neg(dir)))
@@ -332,8 +278,6 @@ vec3_t epa(convex_hull_mesh_t* polytope, shape_t* shape1, shape_t* shape2) {
         const scalar_t distance_support_to_origin = vec3_dot(closest_face.normal, support);
 
 
-        dump_current_simplex(attempt, polytope, closest_face_index);
-
         if ((distance_support_to_origin - closest_face.distance) < SCALAR(0.7f)) {
             goto eh_close_enough;
         }
@@ -343,7 +287,6 @@ vec3_t epa(convex_hull_mesh_t* polytope, shape_t* shape1, shape_t* shape2) {
         closest_face_index = get_face_normals(polytope, 0, interior_point);
     }
 
-    // dump_current_simplex(MAX_EPA_TRIES, polytope);
     // the closest face seems to lie close enough to the minkowski difference's boundaries
     // we can assume this will give us the real penetration direction and distance, so let's return that
     eh_close_enough:

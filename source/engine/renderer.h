@@ -6,7 +6,6 @@ extern "C" {
 #endif
 
 #ifdef _PSX
-#include <psxgte.h>
 #elif defined(_NDS)
 #include "nds/psx.h"
 #else

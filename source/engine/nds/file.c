@@ -1,4 +1,4 @@
-#include "file.h"
+#include "../file.h"
 
 #include "../common.h"
 #include "memory.h"
@@ -19,7 +19,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
     const size_t length = strlen(path) + 2; // Include the null terminator
     char* new_path = mem_stack_alloc(length, STACK_TEMP);
 
-    if (path[length - 3] == ';') {    
+    if (path[length - 3] == ';') {
         new_path[0] = '.';
         memcpy(&new_path[1], path, length - 2);
         new_path[length - 2] = 0;
@@ -42,7 +42,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
         *destination = NULL;
         return 0;
     }
-    
+
     // Get file size
     fseek(file, 0, SEEK_END);
     *size = ftell(file);

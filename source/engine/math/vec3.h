@@ -137,10 +137,19 @@ static inline vec3_t vec3_divs(const vec3_t a, const scalar_t b) {
     };
 }
 
+/// doc: desc: Calculate the dot product between `a` and `b`, and return the result
 static inline scalar_t vec3_dot(const vec3_t a, const vec3_t b) {
+    #ifdef _FLOAT
     return scalar_mul(a.x, b.x)
     +      scalar_mul(a.y, b.y)
     +      scalar_mul(a.z, b.z);
+    #else
+    int64_t result = 0;
+    result += (int64_t)a.x * (int64_t)b.x;
+    result += (int64_t)a.y * (int64_t)b.y;
+    result += (int64_t)a.z * (int64_t)b.z;
+    return (scalar_t)(result >> FRAC_BITS);
+    #endif
 }
 
 static inline vec3_t vec3_min(const vec3_t a, const vec3_t b) {

@@ -10,10 +10,6 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-// todo(input_remap): desc: mappable controls
-//                           have an action system, where external code can link an action index (which could be an
-//                           enum provided by the gameplay code), to a button, whether that be keyboard, gamepad,
-//                           mouse, or multiple at once
 // todo(input_remap_menu): desc: menu to remap controls
 
 typedef enum {

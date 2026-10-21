@@ -1,9 +1,9 @@
-#include <psxgte.h>
+// #include <psxgte.h>
 #include <inline_c.h>
 
 // Vertically the primitive's CLUT to 16 pixels, and then add the fade level to the Y coordinate
 #define SET_DISTANCE_FADE(primitive, fade_level) \
-    (primitive)->clut = ((primitive)->clut & 0b111110000111111) | (fade_level << 6); 
+    (primitive)->clut = ((primitive)->clut & 0b111110000111111) | (fade_level << 6);
 
 #define gte_stsz01( r0, r1 ) __asm__ volatile ( \
 	"swc2	$17, 0( %0 );"	\
@@ -21,13 +21,13 @@
 // #define COPY_UV(src, dest) memcpy(dest, src, sizeof(uint16_t))
 
 static inline void COPY_COLOR(const void* restrict src, void* restrict dest) {
-     *(uint32_t*)dest = *(uint32_t*)src; 
+     *(uint32_t*)dest = *(uint32_t*)src;
 }
-static inline void COPY_POS(const void* restrict src, void* restrict dest) { 
-    *(uint32_t*)dest = *(uint32_t*)src; 
+static inline void COPY_POS(const void* restrict src, void* restrict dest) {
+    *(uint32_t*)dest = *(uint32_t*)src;
 }
-static inline void COPY_UV(const void* restrict src, void* restrict dest) { 
-    *(uint16_t*)dest = *(uint16_t*)src; 
+static inline void COPY_UV(const void* restrict src, void* restrict dest) {
+    *(uint16_t*)dest = *(uint16_t*)src;
 }
 
 static inline void halfway_rgb_uv(void const *restrict src_a, void const *restrict src_b, void *restrict dest) {
@@ -68,8 +68,8 @@ static inline void copy_rgb_uv(uint8_t const *const src, uint8_t* dest) {
         uint8_t u, v;
     };
 
-    struct rgb_uv_t const *const src_cast = (struct rgb_uv_t const *const)src; 
-    struct rgb_uv_t* dest_cast = (struct rgb_uv_t*)dest; 
+    struct rgb_uv_t const *const src_cast = (struct rgb_uv_t const *const)src;
+    struct rgb_uv_t* dest_cast = (struct rgb_uv_t*)dest;
     dest_cast->r = src_cast->r;
     dest_cast->g = src_cast->g;
     dest_cast->b = src_cast->b;
@@ -111,7 +111,7 @@ static inline int frustrum_cull_aabb(const vec3_t min, const vec3_t max) {
     // Find screen aligned bounding box
     aligned_position_t after_min = (aligned_position_t){.x = INT16_MAX, .y = INT16_MAX, .z = INT16_MAX};
     aligned_position_t after_max = (aligned_position_t){.x = INT16_MIN, .y = INT16_MIN, .z = INT16_MIN};
-    
+
     for (size_t i = 0; i < 8; ++i) {
         if (vertices[i].x < after_min.x) after_min.x = vertices[i].x;
         if (vertices[i].x > after_max.x) after_max.x = vertices[i].x;
@@ -164,7 +164,7 @@ void draw_level1_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, 
     // |  /     -->  5--4    + filler at the edges to fix gaps
     // |/            | /
     // 2             2
-    //  
+    //
     // Subdivided triangle
     POLY_GT4* quad_0354 = (POLY_GT4*)next_primitive;    next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
     POLY_GT3* tri_314 = (POLY_GT3*)next_primitive;      next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
@@ -251,7 +251,7 @@ void draw_level1_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, 
 
 void draw_level2_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, const size_t poly_idx, scalar_t otz) {
     // 0-----------1      0--3--4--5--1
-    // |          /       |  |  |  | / 
+    // |          /       |  |  |  | /
     // |        /         6--7--8--9
     // |       /          |  |  | /
     // |     /       -->  A--B--C   + filler at the edges to fix gaps
@@ -302,14 +302,14 @@ void draw_level2_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, 
 
     // Store 012 - we still have those in the GTE registers
     gte_stsxy0(&quad_0367->x0); // XY 0
-    gte_stsxy0(&tri_043->x0);        
-    gte_stsxy0(&tri_A60->x2);        
-    gte_stsxy1(&tri_519->x1);   // XY 1    
-    gte_stsxy1(&tri_415->x1);        
-    gte_stsxy1(&tri_C91->x2);        
-    gte_stsxy2(&tri_DE2->x2);   // XY 2    
-    gte_stsxy2(&tri_2EC->x0);        
-    gte_stsxy2(&tri_2DA->x0);        
+    gte_stsxy0(&tri_043->x0);
+    gte_stsxy0(&tri_A60->x2);
+    gte_stsxy1(&tri_519->x1);   // XY 1
+    gte_stsxy1(&tri_415->x1);
+    gte_stsxy1(&tri_C91->x2);
+    gte_stsxy2(&tri_DE2->x2);   // XY 2
+    gte_stsxy2(&tri_2EC->x0);
+    gte_stsxy2(&tri_2DA->x0);
 
     // Start transform 345
     gte_ldv3(&v3.x, &v4.x, &v5.x);
@@ -317,26 +317,26 @@ void draw_level2_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, 
 
     // Copy attributes for 012
     copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r0, &quad_0367->r0); // v0
-    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r0, &tri_043->r0);             
-    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r0, &tri_A60->r2);             
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r0, &tri_043->r0);
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r0, &tri_A60->r2);
     copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r1, &tri_519->r1);   // v1
-    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r1, &tri_415->r1);             
-    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r1, &tri_C91->r2);             
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r1, &tri_415->r1);
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r1, &tri_C91->r2);
     copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r2, &tri_DE2->r2);   // v2
-    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r2, &tri_2EC->r0);             
-    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r2, &tri_2DA->r0);             
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r2, &tri_2EC->r0);
+    copy_rgb_uv(&mesh->tex_tris[0][poly_idx].r2, &tri_2DA->r0);
 
     // Store transformed 345
     gte_stsxy0(&quad_0367->x1); // XY 3
-    gte_stsxy0(&quad_3478->x0);     
-    gte_stsxy0(&tri_043->x2);       
+    gte_stsxy0(&quad_3478->x0);
+    gte_stsxy0(&tri_043->x2);
     gte_stsxy1(&quad_3478->x1); // XY 4
-    gte_stsxy1(&quad_4589->x0);     
-    gte_stsxy1(&tri_043->x1);       
-    gte_stsxy1(&tri_415->x0);       
+    gte_stsxy1(&quad_4589->x0);
+    gte_stsxy1(&tri_043->x1);
+    gte_stsxy1(&tri_415->x0);
     gte_stsxy2(&quad_4589->x1); // XY 5
-    gte_stsxy2(&tri_519->x0);       
-    gte_stsxy2(&tri_415->x2);       
+    gte_stsxy2(&tri_519->x0);
+    gte_stsxy2(&tri_415->x2);
 
     // Start transform 678
     gte_ldv3(&v6.x, &v7.x, &v8.x);
@@ -355,33 +355,33 @@ void draw_level2_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, 
     halfway_rgb_uv(&vtx_r1, &vtx_r2, &quad_78BC->r3);  // vC: between 1-2
     halfway_rgb_uv(&vtx_r2, &vtx_r0, &quad_67AB->r2);  // vA: between 2-0
     copy_rgb_uv(&vtx_r4, &quad_4589->r0); // v4
-    copy_rgb_uv(&vtx_r4, &tri_043->r1);       
-    copy_rgb_uv(&vtx_r4, &tri_415->r0);     
+    copy_rgb_uv(&vtx_r4, &tri_043->r1);
+    copy_rgb_uv(&vtx_r4, &tri_415->r0);
     copy_rgb_uv(&vtx_rC, &tri_89C->r2);  // vC
     copy_rgb_uv(&vtx_rC, &tri_BCE->r1);
     copy_rgb_uv(&vtx_rC, &tri_C91->r0);
     copy_rgb_uv(&vtx_rC, &tri_2EC->r2);
-    copy_rgb_uv(&vtx_rA, &quad_ABDE->r0); // vA   
-    copy_rgb_uv(&vtx_rA, &tri_2DA->r2);       
+    copy_rgb_uv(&vtx_rA, &quad_ABDE->r0); // vA
+    copy_rgb_uv(&vtx_rA, &tri_2DA->r2);
     copy_rgb_uv(&vtx_rA, &tri_A60->r0);
 
     // Store transformed 678
     gte_stsxy0(&quad_0367->x2);  // XY 6
-    gte_stsxy0(&quad_67AB->x0); 
-    gte_stsxy0(&tri_A60->x1); 
+    gte_stsxy0(&quad_67AB->x0);
+    gte_stsxy0(&tri_A60->x1);
     gte_stsxy1(&quad_0367->x3);  // XY 7
-    gte_stsxy1(&quad_3478->x2); 
-    gte_stsxy1(&quad_67AB->x1); 
-    gte_stsxy1(&quad_78BC->x0); 
+    gte_stsxy1(&quad_3478->x2);
+    gte_stsxy1(&quad_67AB->x1);
+    gte_stsxy1(&quad_78BC->x0);
     gte_stsxy2(&quad_3478->x3); // XY 8
-    gte_stsxy2(&quad_4589->x2);  
-    gte_stsxy2(&quad_78BC->x1); 
-    gte_stsxy2(&tri_89C->x0); 
+    gte_stsxy2(&quad_4589->x2);
+    gte_stsxy2(&quad_78BC->x1);
+    gte_stsxy2(&tri_89C->x0);
 
     // Start transform 9AB
     gte_ldv3(&v9.x, &vA.x, &vB.x);
     gte_rtpt();
-    
+
     // Interpolate attributes for 359
     #define vtx_r3 quad_0367->r1
     #define vtx_r5 quad_4589->r1
@@ -399,17 +399,17 @@ void draw_level2_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, 
 
     // Store transformed 9AB
     gte_stsxy0(&quad_4589->x3); // XY 9
-    gte_stsxy0(&tri_519->x2); 
-    gte_stsxy0(&tri_89C->x1); 
-    gte_stsxy0(&tri_C91->x1); 
+    gte_stsxy0(&tri_519->x2);
+    gte_stsxy0(&tri_89C->x1);
+    gte_stsxy0(&tri_C91->x1);
     gte_stsxy1(&quad_67AB->x2);  // XY A
-    gte_stsxy1(&quad_ABDE->x0); 
-    gte_stsxy1(&tri_2DA->x2); 
-    gte_stsxy1(&tri_A60->x0); 
+    gte_stsxy1(&quad_ABDE->x0);
+    gte_stsxy1(&tri_2DA->x2);
+    gte_stsxy1(&tri_A60->x0);
     gte_stsxy2(&quad_67AB->x3); // XY B
-    gte_stsxy2(&quad_78BC->x2); 
-    gte_stsxy2(&quad_ABDE->x1);  
-    gte_stsxy2(&tri_BCE->x0); 
+    gte_stsxy2(&quad_78BC->x2);
+    gte_stsxy2(&quad_ABDE->x1);
+    gte_stsxy2(&tri_BCE->x0);
 
     // Start transform CDE
     gte_ldv3(&vC.x, &vD.x, &vE.x);
@@ -449,37 +449,37 @@ void draw_level2_subdivided_triangle(const mesh_t* mesh, const size_t vert_idx, 
 
     // Store transformed CDE
     gte_stsxy0(&quad_78BC->x3);  // XY C
-    gte_stsxy0(&tri_89C->x2); 
-    gte_stsxy0(&tri_BCE->x1); 
-    gte_stsxy0(&tri_C91->x0); 
-    gte_stsxy0(&tri_2EC->x2); 
+    gte_stsxy0(&tri_89C->x2);
+    gte_stsxy0(&tri_BCE->x1);
+    gte_stsxy0(&tri_C91->x0);
+    gte_stsxy0(&tri_2EC->x2);
     gte_stsxy1(&quad_ABDE->x2);  // XY D
-    gte_stsxy1(&tri_DE2->x0); 
-    gte_stsxy1(&tri_2DA->x1); 
+    gte_stsxy1(&tri_DE2->x0);
+    gte_stsxy1(&tri_2DA->x1);
     gte_stsxy2(&quad_ABDE->x3);  // XY E
-    gte_stsxy2(&tri_BCE->x2); 
-    gte_stsxy2(&tri_DE2->x1); 
-    gte_stsxy2(&tri_2EC->x1); 
+    gte_stsxy2(&tri_BCE->x2);
+    gte_stsxy2(&tri_DE2->x1);
+    gte_stsxy2(&tri_2EC->x1);
 
     // Copy constant fields
     const uint16_t clut = mesh->tex_tris[0][poly_idx].clut & 0b111110000111111; // reset distance fade palette index
     const uint16_t tpage = mesh->tex_tris[0][poly_idx].tpage;
-    quad_0367->clut = clut;    quad_0367->tpage = tpage; 
-    quad_3478->clut = clut;    quad_3478->tpage = tpage; 
-    quad_4589->clut = clut;    quad_4589->tpage = tpage; 
-    quad_67AB->clut = clut;    quad_67AB->tpage = tpage; 
-    quad_78BC->clut = clut;    quad_78BC->tpage = tpage; 
-    quad_ABDE->clut = clut;    quad_ABDE->tpage = tpage; 
-    tri_519->clut = clut;      tri_519->tpage = tpage; 
-    tri_89C->clut = clut;      tri_89C->tpage = tpage; 
-    tri_BCE->clut = clut;      tri_BCE->tpage = tpage; 
-    tri_DE2->clut = clut;      tri_DE2->tpage = tpage; 
-    tri_043->clut = clut;      tri_043->tpage = tpage; 
-    tri_415->clut = clut;      tri_415->tpage = tpage; 
-    tri_C91->clut = clut;      tri_C91->tpage = tpage; 
-    tri_2EC->clut = clut;      tri_2EC->tpage = tpage; 
-    tri_2DA->clut = clut;      tri_2DA->tpage = tpage; 
-    tri_A60->clut = clut;      tri_A60->tpage = tpage; 
+    quad_0367->clut = clut;    quad_0367->tpage = tpage;
+    quad_3478->clut = clut;    quad_3478->tpage = tpage;
+    quad_4589->clut = clut;    quad_4589->tpage = tpage;
+    quad_67AB->clut = clut;    quad_67AB->tpage = tpage;
+    quad_78BC->clut = clut;    quad_78BC->tpage = tpage;
+    quad_ABDE->clut = clut;    quad_ABDE->tpage = tpage;
+    tri_519->clut = clut;      tri_519->tpage = tpage;
+    tri_89C->clut = clut;      tri_89C->tpage = tpage;
+    tri_BCE->clut = clut;      tri_BCE->tpage = tpage;
+    tri_DE2->clut = clut;      tri_DE2->tpage = tpage;
+    tri_043->clut = clut;      tri_043->tpage = tpage;
+    tri_415->clut = clut;      tri_415->tpage = tpage;
+    tri_C91->clut = clut;      tri_C91->tpage = tpage;
+    tri_2EC->clut = clut;      tri_2EC->tpage = tpage;
+    tri_2DA->clut = clut;      tri_2DA->tpage = tpage;
+    tri_A60->clut = clut;      tri_A60->tpage = tpage;
 
     #undef vtx_r0
     #undef vtx_r1
@@ -650,14 +650,14 @@ void draw_level1_subdivided_quad(const mesh_t* mesh, const size_t vert_idx, cons
 }
 
 void draw_level2_subdivided_quad(const mesh_t* mesh, const size_t vert_idx, const size_t poly_idx, scalar_t otz) {
-    // 0-----------1       0--8--4--9--1    
-    // |           |       |  |  |  |  |    
-    // |           |       F--K--G--L--A    
-    // |           |       |  |  |  |  |  
-    // |           |  -->  7--J--O--H--5  + filler at the edges to fix gaps           
-    // |           |       |  |  |  |  |  
-    // |           |       E--N--I--M--B    
-    // |           |       |  |  |  |  |  
+    // 0-----------1       0--8--4--9--1
+    // |           |       |  |  |  |  |
+    // |           |       F--K--G--L--A
+    // |           |       |  |  |  |  |
+    // |           |  -->  7--J--O--H--5  + filler at the edges to fix gaps
+    // |           |       |  |  |  |  |
+    // |           |       E--N--I--M--B
+    // |           |       |  |  |  |  |
     // 2-----------3       2--D--6--C--3
 
     #define v0 mesh->vtx_pos_and_size[vert_idx + 0]
@@ -1112,7 +1112,7 @@ void draw_level2_subdivided_quad(const mesh_t* mesh, const size_t vert_idx, cons
 static inline void draw_tex_triangle3d_fancy(const mesh_t* mesh, const size_t vert_idx, const size_t poly_idx) {
     // If this is an occluder, don't render it
     if (mesh->vtx_pos_and_size[vert_idx + 0].tex_id == 254) return;
-    
+
     // Transform the 3 vertices
     gte_ldv3(
         &mesh->vtx_pos_and_size[vert_idx + 0].x,
@@ -1134,7 +1134,7 @@ static inline void draw_tex_triangle3d_fancy(const mesh_t* mesh, const size_t ve
 
     // Depth culling
     if ((avg_z + curr_ot_bias) >= ORD_TBL_LENGTH || (avg_z <= 0)) return;
-    
+
     // If very close, subdivide twice
     const int32_t sub2_threshold = ((vsync_enable == 2) ? TRI_THRESHOLD_MUL_SUB2_30 : TRI_THRESHOLD_MUL_SUB2_60) * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub2_threshold) {
@@ -1208,21 +1208,21 @@ static inline void draw_tex_quad3d_fancy(const mesh_t* mesh, const size_t vert_i
     int n_down = 1;
 
     #define poly mesh->tex_quads[drawbuffer][poly_idx]
-    if (poly.x0 < 0)            n_left <<= 1;   
+    if (poly.x0 < 0)            n_left <<= 1;
     if (poly.y0 < 0)            n_up <<= 1;
-    if (poly.x0 > res_x)        n_right <<= 1;  
+    if (poly.x0 > res_x)        n_right <<= 1;
     if (poly.y0 > curr_res_y)   n_down <<= 1;
-    if (poly.x1 < 0)            n_left <<= 1;   
+    if (poly.x1 < 0)            n_left <<= 1;
     if (poly.y1 < 0)            n_up <<= 1;
-    if (poly.x1 > res_x)        n_right <<= 1;  
+    if (poly.x1 > res_x)        n_right <<= 1;
     if (poly.y1 > curr_res_y)   n_down <<= 1;
-    if (poly.x2 < 0)            n_left <<= 1;   
+    if (poly.x2 < 0)            n_left <<= 1;
     if (poly.y2 < 0)            n_up <<= 1;
-    if (poly.x2 > res_x)        n_right <<= 1;  
+    if (poly.x2 > res_x)        n_right <<= 1;
     if (poly.y2 > curr_res_y)   n_down <<= 1;
-    if (poly.x3 < 0)            n_left <<= 1;   
+    if (poly.x3 < 0)            n_left <<= 1;
     if (poly.y3 < 0)            n_up <<= 1;
-    if (poly.x3 > res_x)        n_right <<= 1;  
+    if (poly.x3 > res_x)        n_right <<= 1;
     if (poly.y3 > curr_res_y)   n_down <<= 1;
     #undef poly
 
@@ -1262,7 +1262,7 @@ static inline void draw_tex_quad3d_fancy(const mesh_t* mesh, const size_t vert_i
 static inline void draw_tex_triangle3d_fancy_no_precomp(const mesh_t* mesh, const size_t vert_idx, const size_t poly_idx) {
     // If this is an occluder, don't render it
     if (mesh->vtx_pos_and_size[vert_idx + 0].tex_id == 254) return;
-    
+
     // Transform the 3 vertices
     gte_ldv3(
         &mesh->vtx_pos_and_size[vert_idx + 0].x,
@@ -1284,7 +1284,7 @@ static inline void draw_tex_triangle3d_fancy_no_precomp(const mesh_t* mesh, cons
 
     // Depth culling
     if ((avg_z + curr_ot_bias) >= ORD_TBL_LENGTH || (avg_z <= 0)) return;
-    
+
     // If very close, subdivide twice
     const int32_t sub2_threshold = ((vsync_enable == 2) ? TRI_THRESHOLD_MUL_SUB2_30 : TRI_THRESHOLD_MUL_SUB2_60) * (int32_t)mesh->vtx_pos_and_size[vert_idx + 0].poly_size;
     if (avg_z < sub2_threshold) {
@@ -1306,7 +1306,7 @@ static inline void draw_tex_triangle3d_fancy_no_precomp(const mesh_t* mesh, cons
     else if (clut_fade < 0) clut_fade = 0;
 
     // Store data into primitive struct
-    POLY_GT3* tri = (POLY_GT3*)next_primitive;      
+    POLY_GT3* tri = (POLY_GT3*)next_primitive;
     next_primitive += sizeof(POLY_GT3) / sizeof(*next_primitive);
     setPolyGT3(tri);
     gte_stsxy3_gt3(tri);
@@ -1340,7 +1340,7 @@ static inline void draw_tex_quad3d_fancy_no_precomp(const mesh_t* mesh, const si
     if (p > 1) return;
 
     // Store the first vertex, as it will be pushed out by the RTPS call down a couple lines
-    POLY_GT4* poly = (POLY_GT4*)next_primitive;      
+    POLY_GT4* poly = (POLY_GT4*)next_primitive;
     next_primitive += sizeof(POLY_GT4) / sizeof(*next_primitive);
     gte_stsxy0(&sxy_storage);
     gte_stsxy0(&poly->x0);
@@ -1368,21 +1368,21 @@ static inline void draw_tex_quad3d_fancy_no_precomp(const mesh_t* mesh, const si
     int n_up = 1;
     int n_down = 1;
 
-    if (poly->x0 < 0)            n_left <<= 1;   
+    if (poly->x0 < 0)            n_left <<= 1;
     if (poly->y0 < 0)            n_up <<= 1;
-    if (poly->x0 > res_x)        n_right <<= 1;  
+    if (poly->x0 > res_x)        n_right <<= 1;
     if (poly->y0 > curr_res_y)   n_down <<= 1;
-    if (poly->x1 < 0)            n_left <<= 1;   
+    if (poly->x1 < 0)            n_left <<= 1;
     if (poly->y1 < 0)            n_up <<= 1;
-    if (poly->x1 > res_x)        n_right <<= 1;  
+    if (poly->x1 > res_x)        n_right <<= 1;
     if (poly->y1 > curr_res_y)   n_down <<= 1;
-    if (poly->x2 < 0)            n_left <<= 1;   
+    if (poly->x2 < 0)            n_left <<= 1;
     if (poly->y2 < 0)            n_up <<= 1;
-    if (poly->x2 > res_x)        n_right <<= 1;  
+    if (poly->x2 > res_x)        n_right <<= 1;
     if (poly->y2 > curr_res_y)   n_down <<= 1;
-    if (poly->x3 < 0)            n_left <<= 1;   
+    if (poly->x3 < 0)            n_left <<= 1;
     if (poly->y3 < 0)            n_up <<= 1;
-    if (poly->x3 > res_x)        n_right <<= 1;  
+    if (poly->x3 > res_x)        n_right <<= 1;
     if (poly->y3 > curr_res_y)   n_down <<= 1;
 
     // If all vertices are off to one side of the screen, one of the values will be shifted left 4x.

@@ -6,24 +6,6 @@
 #include "engine/renderer.h"
 #include "ui.h"
 
-#ifdef _PSX
-#include <psxcd.h>
-#include <psxgpu.h>
-#include <psxgte.h>
-#include <psxspu.h>
-#include <psxpad.h>
-#endif
-
-#ifdef _PC
-#include "engine/pc/psx.h"
-#include "editor/editor.h"
-#endif
-
-#ifdef _NDS
-#include "nds/psx.h"
-#include <filesystem.h>
-#endif
-
 void state_enter_debug_menu_main(void) {
     state_enter_title_screen();
 	state.global.state_to_return_to = get_prev_state();

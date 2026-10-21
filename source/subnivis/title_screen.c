@@ -14,7 +14,6 @@
 #ifdef _PSX
 #include <psxcd.h>
 #include <psxgpu.h>
-#include <psxgte.h>
 #include <psxspu.h>
 #include <psxpad.h>
 #endif

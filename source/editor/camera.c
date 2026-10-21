@@ -51,13 +51,6 @@ void move_look(debug_camera_t* self, const scalar_t dt) {
     const vec2_t move_acc = vec2_muls(move, self->acceleration);
     const vec2_t move_acc_dt = vec2_muls(move_acc, dt);
 
-    printf("move:        "); vec2_debug(move);
-    printf("move_acc:    "); vec2_debug(move_acc);
-    printf("move_acc_dt: "); vec2_debug(move_acc_dt);
-    printf("look mouse:  "); vec2_debug(look_mouse);
-    printf("look stick:  "); vec2_debug(look_stick);
-    printf("dt:          "); scalar_debug(dt);
-
     // Moving horizontally
     self->velocity = vec3_add(self->velocity, vec3_muls(forward, move_acc_dt.y));
     self->velocity = vec3_add(self->velocity, vec3_muls(right, move_acc_dt.x));
@@ -67,13 +60,11 @@ void move_look(debug_camera_t* self, const scalar_t dt) {
     if (input_mapping_held(IM_CAMERA_UP, 0))  self->velocity.y += scalar_mul(self->acceleration, dt);
 
     // Looking up and down
-    vec3_debug(self->transform.rotation);
     self->transform.rotation.x += scalar_mul(look_stick.y, dt) + look_mouse.y;
     self->transform.rotation.x = scalar_clamp(self->transform.rotation.x, SCALAR(-0.22), SCALAR(0.22));
 
     // Looking left and right
     self->transform.rotation.y += scalar_mul(look_stick.x, dt) + look_mouse.x;
-    vec3_debug(self->transform.rotation);
 }
 
 void handle_drag(debug_camera_t* self, const scalar_t dt) {

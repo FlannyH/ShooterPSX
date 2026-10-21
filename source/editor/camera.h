@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-#include "../engine/structs.h"
-#include "../engine/math/vec3.h"
+#include "engine/structs.h"
+#include "engine/math/vec3.h"
 
 typedef struct {
     transform_t transform; // graphics space

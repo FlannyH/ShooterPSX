@@ -11,7 +11,6 @@ extern "C" {
 
 #include "../lut.h"
 
-#include <string.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -57,10 +56,6 @@ static inline void scalar_debug(const scalar_t a) {
     printf("\n");
 }
 
-#ifdef _PSX
-#else
-#include <math.h>
-#endif
 #include <stdlib.h>
 
 #ifdef _PSX
@@ -136,7 +131,6 @@ static inline int leading_zeros(int y) {
         else if (y < 0) zeros = __builtin_clz((-y) - 1);
     #endif
 
-    printf("%i has %i zeros\n", y, zeros);
     return zeros;
 }
 
@@ -277,27 +271,45 @@ static inline scalar_t trig_cos(scalar_t angle) {
 }
 
 static inline size_t serialize_scalar(void* destination, scalar_t scalar) {
-    // say we have 16.16, and we serialize to 20.12. when serializing, we need to divide by (1 << 4)
-    int32_t fixed_20_12 = scalar;
+    union {
+        int32_t fixed_20_12;
+        uint8_t bytes[4];
+    } data;
+    data.fixed_20_12 = scalar;
+
     #if (FRAC_BITS < 12)
-    fixed_20_12 <<= (12 - FRAC_BITS);
+    data.fixed_20_12 <<= (12 - FRAC_BITS);
     #else
-    fixed_20_12 >>= (FRAC_BITS - 12);
+    data.fixed_20_12 >>= (FRAC_BITS - 12);
     #endif
-    memcpy(destination, &fixed_20_12, sizeof(fixed_20_12));
+
+    ((uint8_t*)destination)[0] = data.bytes[0];
+    ((uint8_t*)destination)[1] = data.bytes[1];
+    ((uint8_t*)destination)[2] = data.bytes[2];
+    ((uint8_t*)destination)[3] = data.bytes[3];
+
     return sizeof(scalar);
 }
 
 static inline size_t deserialize_scalar(const void *const source, scalar_t* scalar) {
-    // say we have 20.12, and we deserialize to 16.16. when serializing, we need to multiply by (1 << 4)
-    int32_t fixed_20_12 = 0;
-    memcpy(&fixed_20_12, source, sizeof(fixed_20_12));
+    union {
+        int32_t fixed_20_12;
+        uint8_t bytes[4];
+    } data;
+    data.fixed_20_12 = 0;
+
+    data.bytes[0] = ((uint8_t*)source)[0];
+    data.bytes[1] = ((uint8_t*)source)[1];
+    data.bytes[2] = ((uint8_t*)source)[2];
+    data.bytes[3] = ((uint8_t*)source)[3];
+
     #if (FRAC_BITS < 12)
-    fixed_20_12 >>= (12 - FRAC_BITS);
+    data.fixed_20_12 >>= (12 - FRAC_BITS);
     #elif (FRAC_BITS > 12)
-    fixed_20_12 <<= (FRAC_BITS - 12);
+    data.fixed_20_12 <<= (FRAC_BITS - 12);
     #endif
-    *scalar = fixed_20_12;
+
+    *scalar = data.fixed_20_12;
     return sizeof(*scalar);
 }
 

@@ -26,7 +26,7 @@ entity_door_t* entity_door_new(void) {
 }
 
 mesh_t* update_mesh(entity_door_t* door) {
-	mesh_t* mesh;
+	mesh_t* mesh = NULL;
 	if (door->is_rotated) {
 		if (door->is_big_door) {
 			if (door->is_locked) {

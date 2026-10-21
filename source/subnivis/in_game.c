@@ -1,31 +1,12 @@
 #include "main.h"
 #include "engine/common.h"
 
-#include "entities/platform.h"
-#include "entities/trigger.h"
-#include "entities/pickup.h"
-#include "entities/chaser.h"
-#include "entities/crate.h"
-#include "entities/door.h"
 #include "subnivis/input_map.h"
-#include "engine/math/scalar.h"
 #include "engine/input_mapping.h"
 #include "engine/renderer.h"
 #include "engine/entity.h"
 #include "engine/random.h"
-#include "engine/memory.h"
-#include "engine/level.h"
-#include "engine/music.h"
 #include "engine/mesh.h"
-#include "subnivis/text.h"
-
-#ifdef _PSX
-#include <psxcd.h>
-#include <psxgpu.h>
-#include <psxgte.h>
-#include <psxspu.h>
-#include <psxpad.h>
-#endif
 
 #ifdef _PC
 #include "engine/pc/psx.h"
@@ -184,8 +165,8 @@ void state_update_in_game(scalar_t dt) {
 	renderer_set_depth_bias(DEPTH_BIAS_VIEWMODELS);
 
 	// Animate and render gun
-	const vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
-	const scalar_t speed_1d = vec2_magnitude(vel_2d);
+	// const vec2_t vel_2d = {state.in_game.player.velocity.x, state.in_game.player.velocity.z};
+	// const scalar_t speed_1d = vec2_magnitude(vel_2d);
 	if (state.in_game.player.has_gun || 1) {
 
 		transform_t gun_transform;
@@ -326,6 +307,7 @@ void benchmark_mode(void) {
     video_mode_t mode = renderer_get_video_mode();
     mode.bits.widescreen_off0_on1 = 1;
     mode.bits.vsync_frames = 0;
+    renderer_set_video_mode(mode);
     const transform_t benchmark_positions[] = {
         (transform_t){.position = (vec3_t){5849088, 5363200, 1052672}, .rotation = (vec3_t){0, 65536, 0}},     // starting area
         (transform_t){.position = (vec3_t){2695122, 4257280, 7820815}, .rotation = (vec3_t){1272, 43970, 0}},  // near pillar bottom
