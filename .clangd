@@ -2,5 +2,13 @@ CompileFlags:
   Remove:
     - -march=r3000
     - -mtune=r3000
+    - -mcpu=arm946e-s+nofp
+    - -mno-mt
+    - -mno-abicalls
+    - -mno-extern-sdata
+    - -mgpopt
+    - -G
   Add:
     - --target=mipsel-none-elf
+    - --target=arm-none-eabi
+    - -mcpu=arm946e-s
