@@ -215,7 +215,7 @@ void mixer_init(void) {
         NULL,
         &output_parameters,
         MIXER_SAMPLE_RATE,
-        MIXER_BUFFER_SIZE,
+        OUTPUT_BUFFER_SIZE,
         paClipOff,
         &pa_callback,
         NULL // todo(pc_audio_userdata): desc: userdata?

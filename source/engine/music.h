@@ -11,7 +11,8 @@ extern "C" {
 #include <stdint.h>
 
 #define MIXER_SAMPLE_RATE 44100
-#define MIXER_BUFFER_SIZE 256
+#define OUTPUT_BUFFER_SIZE 256
+#define MIXER_BUFFER_SIZE (OUTPUT_BUFFER_SIZE * 2)
 
 // Sound bank header
 #define MAGIC_FSBK 0x4B425346
