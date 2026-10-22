@@ -43,14 +43,13 @@ uint8_t* sequence_pointer = NULL;
 uint8_t* loop_start = NULL;
 uint8_t music_playing = 0;
 uint8_t audio_ticking = 0;
-int16_t wait_timer = 0;
+scalar_t wait_timer = 0;
 
 vec3_t listener_pos = {0};
 vec3_t listener_forward = {0};
 vec3_t listener_right = {0};
 
-scalar_t ms_per_tick = 0;
-scalar_t ms_precision_counter = 0;
+int samples_per_tick = 44;
 
 void audio_load_soundbank(const char* path, soundbank_type_t type) {
 	// Load the SBK file
@@ -216,7 +215,7 @@ void music_play_sequence(uint32_t section) {
 
 	// Initialize variables
 	music_playing = 1;
-	wait_timer = 1;
+	wait_timer = SCALAR(0.25);
 	for (size_t i = 0; i < N_MIDI_CHANNELS; ++i) {
 		midi_channel[i].volume = 127;
 		midi_channel[i].panning = 127;
@@ -314,12 +313,12 @@ void audio_tick(int delta_time) {
 			else if ((command & 0xF0) == 0x80) {
 				uint32_t value = ((((uint32_t)command) << 8) + ((int32_t)(*sequence_pointer++))) & 0xFFF; // Raw value from song data
 				mixer_set_music_tempo(value);
-				ms_per_tick = (value * ONE * 1000) / 49152;
+				samples_per_tick = (value * MIXER_SAMPLE_RATE) / 49152;
 			}
 
 			// Wait a number of ticks
 			else if ((command >= 0xA0) && (command <= 0xBF)) {
-				wait_timer += lut_wait_times[command & 0x1F];
+				wait_timer += lut_wait_times[command & 0x1F] * samples_per_tick;
 			}
 
 			// Set time signature, we ignore for now
@@ -412,10 +411,6 @@ void audio_tick(int delta_time) {
 	}
 
 	// Update channels
-	ms_precision_counter += ms_per_tick * delta_time;
-	int delta_stage_time = ms_precision_counter / ONE;
-	ms_precision_counter -= delta_stage_time * ONE;
-
 	for (int i = 0; i < N_SPU_CHANNELS; ++i) {
 		const spu_channel_t* spu_ch = &spu_channel[i];
 		instrument_region_header_t* region = NULL;
@@ -435,9 +430,6 @@ void audio_tick(int delta_time) {
 		// This code may run before the soundbanks are loaded, so if the instrument region is null, skip this channel
 		if (region == NULL) break;
 
-		// Update volume envelope
-		vol_envs[i].stage_time += delta_stage_time;
-
 		if (vol_envs[i].stage == ENV_STAGE_IDLE) {
 			vol_envs[i].adsr_volume = 0;
 		}
@@ -446,40 +438,53 @@ void audio_tick(int delta_time) {
 			vol_envs[i].stage = ENV_STAGE_RELEASE;
 		}
 
+		// Update volume envelope
+		const scalar_t dt_ms = SCALAR(10 * delta_time) / 441;
+		vol_envs[i].stage_time += dt_ms;
+		int stage_time_ms = vol_envs[i].stage_time / ONE;
+
 		if (vol_envs[i].stage == ENV_STAGE_DELAY) {
 			vol_envs[i].adsr_volume = 0;
-			if (vol_envs[i].stage_time >= region->delay) {
-				vol_envs[i].stage_time -= region->delay;
+			if (stage_time_ms >= region->delay) {
+				vol_envs[i].stage_time -= SCALAR(region->delay);
+				stage_time_ms = vol_envs[i].stage_time / ONE;
 				vol_envs[i].stage = ENV_STAGE_ATTACK;
 			}
 		}
 		if (vol_envs[i].stage == ENV_STAGE_ATTACK) {
 			if (region->attack == 0) {
+				vol_envs[i].stage_time = 0;
+				stage_time_ms = vol_envs[i].stage_time / ONE;
 				vol_envs[i].stage = ENV_STAGE_HOLD;
 			}
 			else {
-				vol_envs[i].adsr_volume = scalar_lerp(0, ADSR_VOLUME_ONE, (vol_envs[i].stage_time * ONE) / region->attack);
-				if (vol_envs[i].stage_time >= region->attack) {
-					vol_envs[i].stage_time -= region->attack;
+				vol_envs[i].adsr_volume = scalar_lerp(0, ADSR_VOLUME_ONE, scalar_div(scalar_clamp(stage_time_ms, 0, region->attack), region->attack));
+				if (stage_time_ms >= region->attack) {
+				    vol_envs[i].stage_time -= SCALAR(region->attack);
+								stage_time_ms = vol_envs[i].stage_time / ONE;
 					vol_envs[i].stage = ENV_STAGE_HOLD;
 				}
 			}
 		}
 		if (vol_envs[i].stage == ENV_STAGE_HOLD) {
 			vol_envs[i].adsr_volume = ADSR_VOLUME_ONE;
-			if (vol_envs[i].stage_time >= region->hold) {
-				vol_envs[i].stage_time -= region->hold;
+			if (stage_time_ms >= region->hold) {
+			    vol_envs[i].stage_time -= SCALAR(region->hold);
+							stage_time_ms = vol_envs[i].stage_time / ONE;
 				vol_envs[i].stage = ENV_STAGE_DECAY;
 			}
 		}
 		if (vol_envs[i].stage == ENV_STAGE_DECAY) {
 			if (region->decay == 0) {
+				vol_envs[i].stage_time = 0;
+				stage_time_ms = vol_envs[i].stage_time / ONE;
 				vol_envs[i].stage = ENV_STAGE_SUSTAIN;
 			}
 			else {
-				vol_envs[i].adsr_volume = scalar_lerp(ADSR_VOLUME_ONE, region->sustain, (vol_envs[i].stage_time * ONE) / region->decay);
-				if (vol_envs[i].stage_time >= region->decay) {
-					vol_envs[i].stage_time -= region->decay;
+				vol_envs[i].adsr_volume = scalar_lerp(ADSR_VOLUME_ONE, region->sustain, scalar_div(scalar_clamp(stage_time_ms, 0, region->decay), region->decay));
+				if (stage_time_ms >= region->decay) {
+					vol_envs[i].stage_time -= SCALAR(region->decay);
+					stage_time_ms = vol_envs[i].stage_time / ONE;
 					vol_envs[i].stage = ENV_STAGE_SUSTAIN;
 				}
 			}
@@ -488,6 +493,7 @@ void audio_tick(int delta_time) {
 			vol_envs[i].adsr_volume = region->sustain * (ADSR_VOLUME_ONE / ADSR_SUSTAIN_MAX);
 			if (region->sustain == 0) {
 				vol_envs[i].stage_time = 0;
+				stage_time_ms = vol_envs[i].stage_time / ONE;
 				vol_envs[i].stage = ENV_STAGE_RELEASE;
 			}
 		}
@@ -498,8 +504,7 @@ void audio_tick(int delta_time) {
 				vol_envs[i].adsr_volume = 0;
 			}
 			else {
-				const uint32_t n_ticks_from_one_to_zero = 256000 / region->release;
-				vol_envs[i].adsr_volume -= (INT32_MAX / n_ticks_from_one_to_zero) * delta_stage_time;
+				vol_envs[i].adsr_volume -= scalar_mul(scalar_div(region->release, 256), dt_ms) * ((ADSR_VOLUME_ONE / ONE) / 1000);
 
 				if (vol_envs[i].adsr_volume <= 0) {
 					vol_envs[i].stage = ENV_STAGE_IDLE;
@@ -517,9 +522,9 @@ void audio_tick(int delta_time) {
 		velocity *= region->volume;                                     // 0-127 * 0-256      = 0 -      32512
 		velocity *= channel_volume;                                     // 0-32512 * 0-127    = 0 -    4129024
 		velocity *= (vol_envs[i].adsr_volume) / (ADSR_VOLUME_ONE >> 8); // 0-4129024 * 0-256  = 0 - 1057030144
-		velocity >>= 12;                                                // 0-1057030144 >> 12 = 0 -     258064
+		velocity >>= 16;                                                // 0-1057030144 >> 16 = 0 -      16129
 
-		scalar_t s_velocity = (velocity * ONE) / 258064;
+		scalar_t s_velocity = (velocity * ONE) / 16129;
 		s_velocity = scalar_mul(s_velocity, s_velocity);
 
 		int pan = channel_panning;
@@ -528,10 +533,16 @@ void audio_tick(int delta_time) {
 		if (pan > 254) pan = 254;
 		if (pan < 0) pan = 0;
 
-		const vec2_t stereo_volume = vec2_from_scalars(
-			scalar_mul((uint32_t)lut_panning[254 - pan], s_velocity),
-			scalar_mul((uint32_t)lut_panning[pan], s_velocity)
+		vec2_t stereo_volume = vec2_from_scalars(
+			((int32_t)lut_panning[254 - pan]),
+			((int32_t)lut_panning[pan])
 		);
+		#if FRAC_BITS > 12
+		stereo_volume = vec2_shift_left(stereo_volume, FRAC_BITS - 12);
+		#elif FRAC_BITS < 12
+		stereo_volume = vec2_shift_right(stereo_volume, 12 - FRAC_BITS);
+		#endif
+		stereo_volume = vec2_muls(stereo_volume, s_velocity);
 
 		mixer_channel_set_volume(i, stereo_volume.x, stereo_volume.y);
 
@@ -563,6 +574,8 @@ void music_set_volume(int volume) {
 void music_stop(void) {
 	music_playing = 0;
 	mixer_channel_key_off(0xFFFFFF); // release all keys
+	// if we happen to be actively processing commands, we want to wait first - we might wanna
+	// load another track right after calling this function
 	while (audio_ticking) {}
 }
 

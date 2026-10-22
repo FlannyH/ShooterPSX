@@ -10,6 +10,9 @@ extern "C" {
 
 #include <stdint.h>
 
+#define MIXER_SAMPLE_RATE 44100
+#define MIXER_BUFFER_SIZE 256
+
 // Sound bank header
 #define MAGIC_FSBK 0x4B425346
 typedef struct {
@@ -77,7 +80,7 @@ typedef struct {
 
 typedef struct {
     int32_t adsr_volume; // 0 = 0.0, 2147483647 = 1.0
-    uint16_t stage_time; // Time in milliseconds how long we've been at this envelope stage
+    scalar_t stage_time; // Time in milliseconds how long we've been at this envelope stage
     uint16_t stage; // What stage we're at now
 } volume_env_t;
 #define ADSR_VOLUME_ONE 2147483647
@@ -162,7 +165,7 @@ typedef enum {
 
 // Common
 void audio_init(void);
-void audio_tick(int delta_time);
+void audio_tick(scalar_t delta_time);
 void audio_load_soundbank(const char* path, soundbank_type_t type);
 void audio_play_sound(int instrument, int pitch_wheel, int in_3d_space, vec3_t position, scalar_t max_distance);
 
