@@ -76,6 +76,7 @@ struct editor_state_t {
     struct editor_misc_t {
         player_t player;
         debug_camera_t camera;
+        bool focus_vertices;
         int selected_entity;
         int selected_light;
         int selected_shape;
@@ -1370,6 +1371,14 @@ void texture_viewer() {
     ImGui::End();
 }
 
+void pick_and_update_selected_vertex_position(const ImVec2 rel_mouse_pos) {
+    float vertex_pos_float[3] = {0};
+    glReadBuffer(GL_COLOR_ATTACHMENT2);
+    glReadPixels((GLint)rel_mouse_pos.x, (GLint)(renderer_height() - rel_mouse_pos.y), 1, 1, GL_RGB, GL_FLOAT, &vertex_pos_float);
+    editor.misc.vertex_selected = true;
+    editor.misc.selected_vertex_position = vec3_from_floats(vertex_pos_float[0], vertex_pos_float[1], vertex_pos_float[2]);
+}
+
 void viewport() {
     int flags = ImGuizmo::IsOver() || ImGuizmo::IsUsingAny() ? ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove : 0;
     ImGui::Begin("Viewport", NULL, flags);
@@ -1399,6 +1408,8 @@ void viewport() {
         ImGui::RadioButton("Rotate", &selected, 1);
         ImGui::SameLine();
         ImGui::RadioButton("Scale", &selected, 2);
+        ImGui::SameLine();
+        ImGui::Checkbox("Focus vertices", &editor.misc.focus_vertices);
         if (selected == 0) editor.misc.gizmode = ImGuizmo::TRANSLATE;
         else if (selected == 1) editor.misc.gizmode = ImGuizmo::ROTATE;
         else if (selected == 2) editor.misc.gizmode = ImGuizmo::SCALE;
@@ -1557,32 +1568,34 @@ void viewport() {
             editor.misc.mouse_over_viewport = 1;
 
             if (input_mapping_pressed(IM_PICK, 0)) {
-                // Read picking buffer
-                struct {
-                    uint8_t index;
-                    uint8_t what;
-                    uint16_t padding;
-                } pick_info;
-                glReadBuffer(GL_COLOR_ATTACHMENT1);
-                glReadPixels((GLint)rel_mouse_pos.x, (GLint)(renderer_height() - rel_mouse_pos.y), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pick_info);
+                if (editor.misc.focus_vertices) {
+                    pick_and_update_selected_vertex_position(rel_mouse_pos);
+                }
 
-                if (!ImGuizmo::IsOver() && !ImGuizmo::IsUsingAny()) {
-                    editor.misc.selected_light = -1;
-                    editor.misc.selected_shape = -1;
-                    editor.misc.selected_entity = -1;
-                    editor.misc.vertex_selected = false;
+                else {
+                    // Read picking buffer
+                    struct {
+                        uint8_t index;
+                        uint8_t what;
+                        uint16_t padding;
+                    } pick_info;
+                    glReadBuffer(GL_COLOR_ATTACHMENT1);
+                    glReadPixels((GLint)rel_mouse_pos.x, (GLint)(renderer_height() - rel_mouse_pos.y), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pick_info);
 
-                    printf("pick info %i, %i\n", pick_info.what, pick_info.index);
+                    if (!ImGuizmo::IsOver() && !ImGuizmo::IsUsingAny()) {
+                        editor.misc.selected_light = -1;
+                        editor.misc.selected_shape = -1;
+                        editor.misc.selected_entity = -1;
+                        editor.misc.vertex_selected = false;
 
-                    if (pick_info.what == 1) editor.misc.selected_entity = pick_info.index;
-                    else if (pick_info.what == 2) editor.misc.selected_light = pick_info.index;
-                    else if (pick_info.what == 3) editor.misc.selected_shape = pick_info.index;
-                    else if (pick_info.what == 4) {
-                        float vertex_pos_float[3] = {0};
-                        glReadBuffer(GL_COLOR_ATTACHMENT2);
-                        glReadPixels((GLint)rel_mouse_pos.x, (GLint)(renderer_height() - rel_mouse_pos.y), 1, 1, GL_RGB, GL_FLOAT, &vertex_pos_float);
-                        editor.misc.vertex_selected = true;
-                        editor.misc.selected_vertex_position = vec3_from_floats(vertex_pos_float[0], vertex_pos_float[1], vertex_pos_float[2]);
+                        printf("pick info %i, %i\n", pick_info.what, pick_info.index);
+
+                        if (pick_info.what == 1) editor.misc.selected_entity = pick_info.index;
+                        else if (pick_info.what == 2) editor.misc.selected_light = pick_info.index;
+                        else if (pick_info.what == 3) editor.misc.selected_shape = pick_info.index;
+                        else if (pick_info.what == 4) {
+                            pick_and_update_selected_vertex_position(rel_mouse_pos);
+                        }
                     }
                 }
             }
