@@ -104,7 +104,29 @@ void entity_init(void) {
 }
 
 void entity_register_collision_box(const entity_collision_box_t* box) {
-	memcpy(&entity_aabb_queue[entity_n_active_aabb++], box, sizeof(entity_collision_box_t));
+    entity_aabb_queue[entity_n_active_aabb++] = *box;
+}
+
+void entity_call_on_hit(int entity_index, int box_index) {
+	switch (entity_get_type(entity_index)) {
+		case ENTITY_DOOR: entity_door_on_hit(entity_index, box_index); break;
+		case ENTITY_PICKUP: entity_pickup_on_hit(entity_index, box_index); break;
+		case ENTITY_CRATE: entity_crate_on_hit(entity_index, box_index); break;
+		case ENTITY_CHASER: entity_chaser_on_hit(entity_index, box_index); break;
+		case ENTITY_PLATFORM: entity_platform_on_hit(entity_index, box_index); break;
+		case ENTITY_TRIGGER: entity_trigger_on_hit(entity_index, box_index); break;
+	}
+}
+
+void entity_call_player_intersect(int entity_index, player_t* player) {
+	switch (entity_get_type(entity_index)) {
+		case ENTITY_DOOR: entity_door_player_intersect(entity_index, player); break;
+		case ENTITY_PICKUP: entity_pickup_player_intersect(entity_index, player); break;
+		case ENTITY_CRATE: entity_crate_player_intersect(entity_index, player); break;
+		case ENTITY_CHASER: entity_chaser_player_intersect(entity_index, player); break;
+		case ENTITY_PLATFORM: entity_platform_player_intersect(entity_index, player); break;
+		case ENTITY_TRIGGER: entity_trigger_player_intersect(entity_index, player); break;
+	}
 }
 
 void entity_defragment(void) {
