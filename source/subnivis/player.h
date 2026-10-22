@@ -34,9 +34,9 @@ typedef struct {
     unsigned int has_gun : 1;
     unsigned int is_grounded : 1;
 } player_t;
-const static scalar_t eye_height = SCALAR(200);
-const static scalar_t player_height = SCALAR(180);
-const static scalar_t player_radius = SCALAR(160);
+const static scalar_t eye_height = SCALAR(170);
+const static scalar_t player_height = SCALAR(178);
+const static scalar_t player_radius = SCALAR(80);
 const static int32_t step_height = SCALAR(100);
 const static scalar_t terminal_velocity_down = SCALAR(-8000.0);
 const static scalar_t terminal_velocity_up = SCALAR(50000.0);

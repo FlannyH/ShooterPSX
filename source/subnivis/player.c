@@ -19,6 +19,7 @@
 #include "engine/input_mapping.h"
 #include "engine/music.h"
 #include "engine/random.h"
+#include "engine/entity.h"
 
 #define FOOTSTEP_TIMER_MAX 350
 
@@ -32,6 +33,7 @@ void player_init(player_t* player, vec3_t position, vec3_t rotation, int health,
     player->velocity = vec3_from_scalar(0);
     player->rotation = rotation;
     player->footstep_timer = 0;
+    player->seconds_since_on_ground = SCALAR(1.0);
     player->ground_entity_id_prev = -1;
     player->ground_entity_id_curr = -1;
     player->ground_entity_prev = (transform_t){0};
@@ -51,9 +53,9 @@ void collide(player_t* self, level_t* level) {
     shape_t player = {0};
     player.type = SHAPE_CAPSULE;
     player.capsule.a = self->position;
-    player.capsule.a.y -= player_radius;
+    player.capsule.a.y += player_radius;
     player.capsule.b = self->position;
-    player.capsule.b.y += player_height + player_radius;
+    player.capsule.b.y += player_height - player_radius;
     player.capsule.radius = player_radius;
 
     convex_hull_mesh_t polytope = {0};
@@ -78,9 +80,22 @@ void collide(player_t* self, level_t* level) {
     }
 
     // todo: entity collision
+	// Intersect entities
+	const size_t n_active_aabb = entity_get_n_active_aabb();
+	for (size_t i = 0; i < n_active_aabb; ++i) {
+		const entity_collision_box_t* const box = entity_get_aabb_queue_entry(i);
+		shape_t shape = (shape_t) {
+		    .type = SHAPE_AABB,
+			.aabb = box->aabb
+		};
+        convex_hull_mesh_t polytope = {0};
+		if (gjk(&polytope, &shape, &player)) {
+		    entity_call_player_intersect(box->entity_index, self);
+		}
+	}
 
     self->position = player.capsule.a;
-    self->position.y += player_radius;
+    self->position.y -= player_radius;
 }
 
 void apply_gravity(player_t* self, const scalar_t dt) {
@@ -203,6 +218,8 @@ void update_transform(player_t* self, scalar_t dt, scalar_t time_counter) {
     }
     #endif
 
+    self->transform.position.y += eye_height;
+
     self->transform.position.x = self->position.x;
     self->transform.position.z = self->position.z;
 
@@ -219,7 +236,7 @@ void player_update(player_t* self, level_t* level, const scalar_t dt, const scal
     audio_update_listener(self->position, player_right);
 
     self->seconds_since_on_ground += dt;
-    self->is_grounded = (self->seconds_since_on_ground < SCALAR(0.1));
+    self->is_grounded = (self->seconds_since_on_ground < SCALAR(0.4)) && (scalar_abs(self->velocity.y) < SCALAR(0.05));
     apply_gravity(self, dt);
     handle_stick_input(self, dt);
     player_handle_drag(self, dt);
