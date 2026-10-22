@@ -76,8 +76,9 @@ void entity_door_update(int slot, player_t* player, scalar_t dt) {
 	const vec3_t player_pos = player->position;
 
 	// distance is calculated at lower scale because vec3_magnitude_squared overflows otherwise
-	const scalar_t distance_from_door_to_player_squared = vec3_magnitude_squared(vec3_muls(vec3_sub(door_pos, player_pos), SCALAR(1.0/64.0)));
-	const int player_close_enough = (distance_from_door_to_player_squared < 45 * ONE);
+	const scalar_t distance_from_door_to_player = vec3_distance(door_pos, player_pos);
+	printf("distance_from_door_to_player: \n"); scalar_debug(distance_from_door_to_player);
+	const int player_close_enough = (distance_from_door_to_player < SCALAR(500));
 
 	// Handle unlocking with key cards
 	if (door->is_locked && player_close_enough) {
@@ -108,7 +109,9 @@ void entity_door_update(int slot, player_t* player, scalar_t dt) {
 	else if (!door->is_open && prev) audio_play_sound(sfx_door_close, 0, 1, door_pos, 3600 * ONE);
 
 	// todo(door_delta_time): desc: implement delta time
-	door->curr_interpolation_value = scalar_lerp(door->curr_interpolation_value, door->is_open ? ONE : 0, ONE / 8);
+	if (door->is_open) door->curr_interpolation_value += dt * 2;
+	else door->curr_interpolation_value -= dt * 2;
+	door->curr_interpolation_value = scalar_clamp(door->curr_interpolation_value, 0, ONE);
 
 	// Find mesh to use - a bit verbose for the sake of avoiding magic numbers, preventing me from shooting myself in the foot later
 	if (door->state_changed) door->entity_header.mesh = update_mesh(door);
@@ -148,8 +151,9 @@ void entity_door_update(int slot, player_t* player, scalar_t dt) {
 	render_transform.scale.z = door->entity_header.scale.x;
 #ifdef _LEVEL_EDITOR
 	renderer_set_drawing_id(slot, 1);
-#endif
+#else
 	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
+#endif
 	renderer_draw_mesh_shaded(door->entity_header.mesh, &render_transform, 0, 0);
 }
 
