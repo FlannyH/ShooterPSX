@@ -377,7 +377,6 @@ void audio_tick(int delta_time) {
 				channel_id = j;
 				break;
 			}
-            // todo(music_channel_allocation_improvement): desc: maybe select based on volume, since an envelope in decay or release at like 2% volume you wont hear that
 			if (vol_envs[j].stage == ENV_STAGE_RELEASE && vol_envs[j].stage_time > max_release_stage_time) {
 				max_release_stage_time = vol_envs[j].stage_time;
 				channel_id = j;

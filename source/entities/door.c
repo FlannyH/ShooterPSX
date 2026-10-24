@@ -108,7 +108,6 @@ void entity_door_update(int slot, player_t* player, scalar_t dt) {
 	if (door->is_open && !prev) audio_play_sound(sfx_door_open, 0, 1, door_pos, 3600 * ONE);
 	else if (!door->is_open && prev) audio_play_sound(sfx_door_close, 0, 1, door_pos, 3600 * ONE);
 
-	// todo(door_delta_time): desc: implement delta time
 	if (door->is_open) door->curr_interpolation_value += dt * 2;
 	else door->curr_interpolation_value -= dt * 2;
 	door->curr_interpolation_value = scalar_clamp(door->curr_interpolation_value, 0, ONE);

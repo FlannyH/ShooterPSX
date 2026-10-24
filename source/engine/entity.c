@@ -11,6 +11,7 @@
 #include "subnivis/main.h"
 
 #include <string.h>
+// todo(entity_state): desc: rework state_vars_t for entities
 extern state_vars_t state;
 
 entity_collision_box_t entity_aabb_queue[ENTITY_AABB_QUEUE_LENGTH];
@@ -21,8 +22,6 @@ size_t entity_n_active_aabb = 0;
 model_t* entity_models = NULL;
 int n_entity_textures = 0;
 int entity_signals[ENTITY_SIGNAL_COUNT];
-
-// todo(entity_overflow): desc:figure out what i meant by "figure out why entities seem to overflow"
 
 void entity_update_all(player_t* player, scalar_t dt) {
 	// Reset counters

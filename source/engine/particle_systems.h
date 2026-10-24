@@ -3,6 +3,6 @@
 
 #include "particles.h"
 
-// todo(particle_test_system): desc: add test system here
+// todo(particle_test_system): desc: add test particle system
 
 #endif

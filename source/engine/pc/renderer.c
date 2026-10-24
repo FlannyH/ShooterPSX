@@ -729,7 +729,6 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	glCullFace(GL_BACK);
 
 	// Draw
-	// todo(pc_quad_deprecated): desc: get rid of quads on pc (they're legacy feature and aren't guaranteed to work)
 	if (mesh->n_triangles) glDrawArrays(GL_TRIANGLES, 0, mesh->n_triangles * 3);
 	if (mesh->n_quads) glDrawArrays(GL_QUADS, mesh->n_triangles * 3, mesh->n_quads * 4);
 

@@ -70,7 +70,6 @@ static inline fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b
     int64_t a_mul_b = a64 * b64;
     int64_t result32 = a_mul_b / ONE;
 
-    // todo(fixed_point_overflow_check): desc: make overflow check default, and add this check in the ps1 code
 // #ifdef _DEBUG
     // overflow check
     if (result32 > INT32_MAX) {
@@ -92,7 +91,6 @@ static inline fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b
 }
 #endif
 
-// todo(fixed_point_ps1_asm_opt): desc: should this be optimized with assembly on ps1?
 static inline fixed20_12_t scalar_div(const fixed20_12_t a, const fixed20_12_t b) {
     int64_t result32 = ((int64_t)a) * ONE;
     if (b != 0) {
@@ -156,7 +154,6 @@ static inline int int_sqrt(int y) {
     return result;
 }
 
-// todo(scalar_sqrt_optimization): desc: optimize sqrt with luts
 static inline fixed20_12_t scalar_sqrt(fixed20_12_t a) {
     if (a <= 0) return 0;
 

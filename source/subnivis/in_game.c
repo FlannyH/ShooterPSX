@@ -19,7 +19,7 @@
 #include <filesystem.h>
 #endif
 
-// todo(in_game_cleanup): desc: separate big functions into multiple smaller ones to make it easier to read
+// todo(in_game_cleanup): desc: in_game: separate big functions into multiple smaller ones to make it easier to read
 
 void update_screen_shake_intensity(scalar_t dt);
 void load_weapon_textures(void);

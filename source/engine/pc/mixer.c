@@ -218,7 +218,7 @@ void mixer_init(void) {
         OUTPUT_BUFFER_SIZE,
         paClipOff,
         &pa_callback,
-        NULL // todo(pc_audio_userdata): desc: userdata?
+        NULL // todo(pc_audio_userdata): desc: userdata for audio buffer access?
     );
     if (error != paNoError || stream == NULL) {
         printf("Failed to open audio stream!\n");

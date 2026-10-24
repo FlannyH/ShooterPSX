@@ -95,7 +95,6 @@ static const char lut_font_letters[] = {
 };
 
 // First quarter of a sine wave cycle as normalized unsigned 16 bit values, so 0 = 0, and 65535 = 1.0
-// todo(sine_wave_scratchpad): desc: maybe put sine lut in scratchpad
 static const uint16_t lut_quarter_sine[] = {
     0x0000, 0x0192, 0x0324, 0x04b6, 0x0648, 0x07da, 0x096c, 0x0afe,
     0x0c90, 0x0e21, 0x0fb3, 0x1144, 0x12d5, 0x1466, 0x15f7, 0x1787,

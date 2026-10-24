@@ -901,7 +901,7 @@ void level_metadata() {
         editor.level.lvl.transform = { {0, 0, 0}, {0, 0, 0}, {ONE, ONE, ONE} };
         editor.level.lvl.vislist = vislist_load(editor.level.path_vislist, 1, STACK_LEVEL);
 
-        // todo(editor_collision_bvh_load): desc: update editor to new collision system
+        // todo(editor_collision_bvh_load): desc: update bvh stuff to new collision system
         // editor.level.lvl.collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL);
         // memset(&editor.level.collision_bvh, 0, sizeof(editor.level.collision_bvh));
 

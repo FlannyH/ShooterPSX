@@ -58,7 +58,7 @@ void texture_pool_init(uint32_t pool_index, uint16_t left, uint16_t top, uint32_
         printf("[ERROR] Texture pool too big (%ux%u), should be max (%ux%u)\n", resolution, resolution, MAX_RES, MAX_RES);
         return;
     }
-    
+
     if (pool_index >= MAX_TEXTURE_POOL_COUNT) {
         printf("[ERROR] Texture pool index (%u) out of bounds, should be between 0 and %i\n", pool_index, MAX_TEXTURE_POOL_COUNT - 1);
         return;
@@ -99,7 +99,7 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
     if (texture_pools[pool_index].occupancy_maps == NULL) return -4;
     if (texture_pools[pool_index].resolution < width) return -5;
     if (texture_pools[pool_index].resolution < height) return -6;
-    
+
     int texture_id = -1;
     for (uint32_t i = 0; i < MAX_TEXTURE_COUNT; ++i) {
         if (texture_pools[pool_index].textures[i].w <= 0 || texture_pools[pool_index].textures[i].h <= 0) {
@@ -107,7 +107,7 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
             break;
         }
     }
-    if (texture_id == -1) { 
+    if (texture_id == -1) {
         printf("could not find empty texture in pool %u\n", pool_index);
         return -1;
     }
@@ -117,9 +117,8 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
     uint32_t block_size = 1;
     uint32_t occupancy_map_index = 0;
 
-    // todo(texture_pool_alloc_opt): desc: figure out a fast way to allocate textures
     // increase block size until we have a block size that can fully contain the smallest axis.
-    // this aligns the texture with the next power of 2, and we can use this to find the max 
+    // this aligns the texture with the next power of 2, and we can use this to find the max
     // mipmap level to sample in the shader.
     while ((block_size < width) && (block_size < height)) {
         curr_res /= 2;
@@ -160,7 +159,7 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
                     if (bit_set != 0) ++collisions;
                 }
             }
-            
+
             if (collisions == 0) {
                 occ_top = dst_top;
                 occ_left = dst_left;
@@ -171,7 +170,7 @@ int texture_pool_alloc(uint32_t pool_index, uint32_t width, uint32_t height) {
 
     // if we get here, there's no space for this texture in this pool
     return -1;
-    
+
     done:
     // update occupancy maps
     const uint32_t top = occ_top * block_size;
@@ -252,7 +251,7 @@ void texture_pool_free(uint32_t pool_index, int* texture_ids, int texture_count)
             const uint32_t bit_index = (line * r) + start_x;
             uint32_t word_index = bit_index / 32;
             int word_bit_counter = bit_index % 32;
-            
+
             // if the starting position is not aligned to a 32-bit boundary, clear part of the first word and realign
             if (word_bit_counter != 0) {
                 uint32_t and_mask = 0xFFFFFFFF;
@@ -260,7 +259,7 @@ void texture_pool_free(uint32_t pool_index, int* texture_ids, int texture_count)
                 and_mask = ~and_mask;
                 occ_map[word_index++] &= and_mask;
             }
-            
+
             // write a bunch of words, should be faster than 32 individual single bit writes lol
             word_bit_counter = 0;
             const int number_of_bits_after_first_word = (end_x - ((start_x + 0x1F) & (~0x1F)));
@@ -270,7 +269,7 @@ void texture_pool_free(uint32_t pool_index, int* texture_ids, int texture_count)
             }
 
             if (number_of_bits_after_first_word == 0) continue;
-            
+
             const uint32_t and_mask = ~((1u << number_of_bits_after_first_word) - 1);
             occ_map[word_index++] &= and_mask;
         }

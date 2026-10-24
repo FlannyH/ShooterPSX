@@ -3,6 +3,7 @@
 #include "backends/imgui_impl_glfw.h"
 #include <string.h>
 
+// todo(input_window): desc: make input window not via an extern
 extern GLFWwindow* window;
 int8_t deadzone = 24;
 int mouse_lock = 0;

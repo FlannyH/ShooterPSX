@@ -90,9 +90,9 @@ typedef struct {
 #define SPU_STAGE_ON 1
 #define SPU_STAGE_OFF 0
 typedef struct {
-    // todo(music_spatial_instruments): desc: add to `spu_stage_on_t` a flag to signify whether it's a spatial note or not
-    vec3_t position; // only if midi_channel == MIDI_CHANNEL_SFX_*
-    scalar_t max_distance; // only if midi_channel == MIDI_CHANNEL_SFX_*
+    // todo(music_spatial_instruments): desc: add to `spu_stage_on_t` a flag to signify whether it's a spatial note or not, instead of hardcoding it for sfx
+    vec3_t position;
+    scalar_t max_distance;
     uint32_t voice_start;
     uint32_t sample_rate;
     uint32_t loop_start; // UINT32_MAX if no loop

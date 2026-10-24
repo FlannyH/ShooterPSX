@@ -329,7 +329,7 @@ imt renderer_get_video_mode(uint32_t video_mode_bitmask, int expected_result) {
 int renderer_get_delta_time_raw(void) {
     int result = vblank_counter;
     vblank_counter = 0;
-    return result; // todo(nds_renderer_get_delta_time_raw): desc: return actual number of vblanks this frame took, probably with a vblank interrupt
+    return result;
 }
 
 int renderer_convert_dt_raw_to_sec(int dt_raw) {
