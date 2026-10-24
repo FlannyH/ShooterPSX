@@ -7,6 +7,23 @@
 #include "subnivis/main.h"
 #include "engine/math/vec3.h"
 
+size_t entity_door_serialize(int slot, uint8_t* dest) {
+    entity_door_t* door_source = (entity_door_t*)entity_get_header(slot);
+    entity_door_t* door_dest = (entity_door_t*)dest;
+    *door_dest = *door_source;
+    serialize_vec3(&door_dest->open_offset, door_dest->open_offset);
+    serialize_scalar(&door_dest->curr_interpolation_value, door_dest->curr_interpolation_value);
+    return sizeof(entity_door_t);
+}
+
+size_t entity_door_deserialize(int slot, const uint8_t* data) {
+    entity_door_t* door = (entity_door_t*)entity_get_header(slot);
+    *door = *(entity_door_t*)data;
+    deserialize_vec3(&door->open_offset, &door->open_offset);
+    deserialize_scalar(&door->curr_interpolation_value, &door->curr_interpolation_value);
+    return sizeof(entity_door_t);
+}
+
 entity_door_t* entity_door_new(void) {
 	// Allocate memory for the entity
 	entity_door_t* entity = (entity_door_t*)entity_get_header(entity_alloc(ENTITY_DOOR));

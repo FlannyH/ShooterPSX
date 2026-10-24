@@ -216,21 +216,48 @@ entity_header_t* entity_get_header(int index) {
 	return (entity_header_t*)(&entity_pool[index * entity_pool_stride]);
 }
 
-void entity_deserialize_and_write_slot(int slot, const entity_header_serialized_t* header) {
-	const uint8_t* src_entity_data = (const uint8_t*)&header[1]; // right after the entity header
+size_t entity_deserialize_and_write_slot(int slot, const entity_header_serialized_t* header, uint8_t type) {
+    size_t entity_size = entity_get_pool_stride();
+	const uint8_t* src_entity_data = (const uint8_t*)header;
 
-	// Find where data needs to be written
-	entity_header_t* dst_entity_header = (entity_header_t*)(entity_pool + (slot * entity_pool_stride));
-	uint8_t* dst_entity_data = (uint8_t*)&dst_entity_header[1]; // right after the entity header
+	switch(type) {
+	    case ENTITY_NONE: break;
+	    case ENTITY_DOOR: entity_size = entity_door_deserialize(slot, src_entity_data); break;
+	    case ENTITY_PICKUP: entity_size = entity_pickup_deserialize(slot, src_entity_data); break;
+	    case ENTITY_CRATE: entity_size = entity_crate_deserialize(slot, src_entity_data); break;
+	    case ENTITY_CHASER: entity_size = entity_chaser_deserialize(slot, src_entity_data); break;
+	    case ENTITY_PLATFORM: entity_size = entity_platform_deserialize(slot, src_entity_data); break;
+	    case ENTITY_TRIGGER: entity_size = entity_trigger_deserialize(slot, src_entity_data); break;
+	}
 
 	// Write entity header
-	dst_entity_header->position = header->position;
-	dst_entity_header->rotation = header->rotation;
-	dst_entity_header->scale = header->scale;
+	entity_header_t* dst_entity_header = entity_get_header(slot);
+	deserialize_vec3(&header->position, &dst_entity_header->position);
+	deserialize_vec3(&header->rotation, &dst_entity_header->rotation);
+	deserialize_vec3(&header->scale, &dst_entity_header->scale);
 	dst_entity_header->mesh = NULL;
 
-	// Copy entity data - we just need to copy everything after the header, so subtract the header size
-	memcpy(dst_entity_data, src_entity_data, entity_pool_stride - sizeof(entity_header_t));
+	return entity_size;
+}
+
+size_t entity_serialize(int slot, uint8_t* dest, uint8_t type) {
+    size_t entity_size = entity_get_pool_stride();
+	switch(type) {
+	    case ENTITY_NONE: break;
+	    case ENTITY_DOOR: entity_door_serialize(slot, dest); entity_size = sizeof(entity_door_t); break;
+	    case ENTITY_PICKUP: entity_pickup_serialize(slot, dest); entity_size = sizeof(entity_pickup_t); break;
+	    case ENTITY_CRATE: entity_crate_serialize(slot, dest); entity_size = sizeof(entity_crate_t); break;
+	    case ENTITY_CHASER: entity_chaser_serialize(slot, dest); entity_size = sizeof(entity_chaser_t); break;
+	    case ENTITY_PLATFORM: entity_platform_serialize(slot, dest); entity_size = sizeof(entity_platform_t); break;
+	    case ENTITY_TRIGGER: entity_trigger_serialize(slot, dest); entity_size = sizeof(entity_trigger_t); break;
+	}
+
+	entity_header_t* src_entity_header = entity_get_header(slot);
+	entity_header_t* dst_entity_header = (entity_header_t*)dest;
+	serialize_vec3(&dst_entity_header->position, src_entity_header->position);
+	serialize_vec3(&dst_entity_header->rotation, src_entity_header->rotation);
+	serialize_vec3(&dst_entity_header->scale, src_entity_header->scale);
+	return entity_size;
 }
 
 size_t entity_get_pool_stride(void) {

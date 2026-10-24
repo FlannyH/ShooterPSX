@@ -5,6 +5,19 @@
 #include "engine/mesh.h"
 #include "subnivis/main.h"
 
+size_t entity_crate_serialize(int slot, uint8_t* dest) {
+    entity_crate_t* crate_source = (entity_crate_t*)entity_get_header(slot);
+    entity_crate_t* crate_dest = (entity_crate_t*)dest;
+    *crate_dest = *crate_source;
+    return sizeof(entity_crate_t);
+}
+
+size_t entity_crate_deserialize(int slot, const uint8_t* data) {
+    entity_crate_t* crate = (entity_crate_t*)entity_get_header(slot);
+    *crate = *(entity_crate_t*)data;
+    return sizeof(entity_crate_t);
+}
+
 entity_crate_t* entity_crate_new(void) {
 	// Allocate memory for the entity
 	entity_crate_t* entity = (entity_crate_t*)entity_get_header(entity_alloc(ENTITY_CRATE));

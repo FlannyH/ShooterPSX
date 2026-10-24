@@ -5,14 +5,45 @@
 
 extern state_vars_t state;
 
+size_t entity_trigger_serialize(int slot, uint8_t* dest) {
+    entity_trigger_t* trigger_source = (entity_trigger_t*)entity_get_header(slot);
+
+    entity_trigger_t* trigger_dest = (entity_trigger_t*)dest;
+    *trigger_dest = *trigger_source;
+
+    if (trigger_source->trigger_type == ENTITY_TRIGGER_TYPE_TELEPORT) {
+        serialize_vec3(&trigger_dest->teleport.destination_pos, trigger_source->teleport.destination_pos);
+        serialize_vec3(&trigger_dest->teleport.destination_rotation_offset, trigger_source->teleport.destination_rotation_offset);
+    }
+    else if (trigger_source->trigger_type == ENTITY_TRIGGER_TYPE_TEXT) {
+        serialize_scalar(&trigger_dest->text.total_display_time, trigger_source->text.total_display_time);
+        serialize_scalar(&trigger_dest->text.curr_display_time, 0);
+    }
+    return sizeof(entity_trigger_t);
+}
+
+size_t entity_trigger_deserialize(int slot, const uint8_t* source) {
+    entity_trigger_t* trigger = (entity_trigger_t*)entity_get_header(slot);
+    *trigger = *(entity_trigger_t*)source;
+    if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TELEPORT) {
+        deserialize_vec3(&trigger->teleport.destination_pos, &trigger->teleport.destination_pos);
+        deserialize_vec3(&trigger->teleport.destination_rotation_offset, &trigger->teleport.destination_rotation_offset);
+    }
+    else if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TEXT) {
+        deserialize_scalar(&trigger->text.total_display_time, &trigger->text.total_display_time);
+        deserialize_scalar(&trigger->text.curr_display_time, &trigger->text.curr_display_time);
+    }
+    return sizeof(entity_trigger_t);
+}
+
 void entity_trigger_update_text(int slot, scalar_t dt) {
     entity_trigger_t* trigger = (entity_trigger_t*)entity_get_header(slot);
 
     // display text for a specified amount of time
-    if (trigger->data_text.curr_display_time > 0) {
-        trigger->data_text.curr_display_time -= dt;
-        const char* text = state.in_game.level.text_entries[trigger->data_text.id];
-        renderer_draw_text((vec2_t){256 * ONE, 176 * ONE}, text, 2, 1, trigger->data_text.color);
+    if (trigger->text.curr_display_time > 0) {
+        trigger->text.curr_display_time -= dt;
+        const char* text = state.in_game.level.text_entries[trigger->text.id];
+        renderer_draw_text((vec2_t){256 * ONE, 176 * ONE}, text, 2, 1, trigger->text.color);
     }
 
     // if the timer is up, either destroy the trigger, or reset it
@@ -102,7 +133,7 @@ void entity_trigger_update(int slot, player_t* player, scalar_t dt) {
             trigger->activated = 1;
 
             if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TEXT) {
-                trigger->data_text.curr_display_time = trigger->data_text.total_display_time;
+                trigger->text.curr_display_time = trigger->text.total_display_time;
             }
         }
 

@@ -6,6 +6,19 @@
 
 #include "engine/music.h"
 
+size_t entity_pickup_serialize(int slot, uint8_t* dest) {
+    entity_pickup_t* pickup_source = (entity_pickup_t*)entity_get_header(slot);
+    entity_pickup_t* pickup_dest = (entity_pickup_t*)dest;
+    *pickup_dest = *pickup_source;
+    return sizeof(entity_pickup_t);
+}
+
+size_t entity_pickup_deserialize(int slot, const uint8_t* data) {
+    entity_pickup_t* pickup = (entity_pickup_t*)entity_get_header(slot);
+    *pickup = *(entity_pickup_t*)data;
+    return sizeof(entity_pickup_t);
+}
+
 entity_pickup_t* entity_pickup_new(void) {
 	// Allocate memory for the entity
     entity_pickup_t* entity = (entity_pickup_t*)entity_get_header(entity_alloc(ENTITY_PICKUP));

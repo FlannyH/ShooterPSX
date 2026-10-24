@@ -86,7 +86,8 @@ typedef struct {
 void entity_init(void);
 int entity_alloc(uint8_t entity_type);
 void entity_set_type(int index, uint8_t type);
-void entity_deserialize_and_write_slot(int slot, const entity_header_serialized_t* header);
+size_t entity_deserialize_and_write_slot(int slot, const entity_header_serialized_t* header, uint8_t type);
+size_t entity_serialize(int slot, uint8_t* dest, uint8_t type);
 void entity_register_collision_box(const entity_collision_box_t* box); // (*box) gets copied, can safely be freed after calling this function
 void entity_call_on_hit(int entity_index, int box_index);
 void entity_call_player_intersect(int entity_index, player_t* player);

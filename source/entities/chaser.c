@@ -18,6 +18,27 @@ extern state_vars_t state;
 #define n_nav_graph_nodes state.in_game.level.collision_bvh.n_nav_graph_nodes
 #define nav_graph_nodes state.in_game.level.collision_bvh.nav_graph_nodes
 
+size_t entity_chaser_serialize(int slot, uint8_t* dest) {
+    entity_chaser_t* chaser_source = (entity_chaser_t*)entity_get_header(slot);
+    entity_chaser_t* chaser_dest = (entity_chaser_t*)dest;
+    *chaser_dest = *chaser_source;
+    serialize_scalar(&chaser_dest->behavior_timer, 0);
+    serialize_vec3(&chaser_dest->last_known_player_pos, (vec3_t){0, 0, 0});
+    serialize_vec3(&chaser_dest->home_position, chaser_source->home_position);
+    serialize_vec3(&chaser_dest->velocity, (vec3_t){0, 0, 0});
+    return sizeof(entity_chaser_t);
+}
+
+size_t entity_chaser_deserialize(int slot, const uint8_t* data) {
+    entity_chaser_t* chaser = (entity_chaser_t*)entity_get_header(slot);
+    *chaser = *(entity_chaser_t*)data;
+    deserialize_scalar(&chaser->behavior_timer, &chaser->behavior_timer);
+    deserialize_vec3(&chaser->last_known_player_pos, &chaser->last_known_player_pos);
+    deserialize_vec3(&chaser->home_position, &chaser->home_position);
+    deserialize_vec3(&chaser->velocity, &chaser->velocity);
+    return sizeof(entity_chaser_t);
+}
+
 entity_chaser_t* entity_chaser_new(void) {
 	// Allocate memory for the entity
 	entity_chaser_t* entity = (entity_chaser_t*)entity_get_header(entity_alloc(ENTITY_CHASER));

@@ -4,6 +4,25 @@
 #include "engine/mesh.h"
 #include "subnivis/main.h"
 
+size_t entity_platform_serialize(int slot, uint8_t* dest) {
+    entity_platform_t* platform_source = (entity_platform_t*)entity_get_header(slot);
+    entity_platform_t* platform_dest = (entity_platform_t*)dest;
+    *platform_dest = *platform_source;
+    serialize_vec3(&platform_dest->position_start, platform_source->position_start);
+    serialize_vec3(&platform_dest->position_end, platform_source->position_end);
+    serialize_scalar(&platform_dest->velocity, 0);
+    return sizeof(entity_platform_t);
+}
+
+size_t entity_platform_deserialize(int slot, const uint8_t* data) {
+    entity_platform_t* platform = (entity_platform_t*)entity_get_header(slot);
+    *platform = *(entity_platform_t*)data;
+    deserialize_vec3(&platform->position_start, &platform->position_start);
+    deserialize_vec3(&platform->position_end, &platform->position_end);
+    deserialize_scalar(&platform->velocity, &platform->velocity);
+    return sizeof(entity_platform_t);
+}
+
 entity_platform_t* entity_platform_new(void) {
 	// Allocate memory for the entity
 	entity_platform_t* entity = (entity_platform_t*)entity_get_header(entity_alloc(ENTITY_PLATFORM));
@@ -11,8 +30,8 @@ entity_platform_t* entity_platform_new(void) {
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
 	entity->entity_header.mesh = model_find_mesh(entity_get_models(), "29_platform_test_horizontal");
-    entity->position_start = (vec3_t){0, 0, 0};;
-    entity->position_end = (vec3_t){0, 0, 0};;
+    entity->position_start = (vec3_t){0, 0, 0};
+    entity->position_end = (vec3_t){0, 0, 0};
     entity->velocity = 512;
     entity->curr_timer_value = 0;
     entity->auto_start_timer = 1000;

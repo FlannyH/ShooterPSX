@@ -203,10 +203,11 @@ level_t level_load(const char* level_path, const uint32_t flags) {
         const intptr_t level_entity_pool_stride = entity_get_pool_stride() - sizeof(entity_header_t) + sizeof(entity_header_serialized_t);
 
         // Deserialize entity data
+        size_t offset = 0;
         for (int i = 0; i < level_header->n_entities; ++i) {
             // Find where data needs to be read
-            const entity_header_serialized_t* src_entity_header = (const entity_header_serialized_t*)(level_entity_pool + (i * level_entity_pool_stride));
-            entity_deserialize_and_write_slot(i, src_entity_header);
+            const entity_header_serialized_t* src_entity_header = (const entity_header_serialized_t*)(level_entity_pool + offset);
+            offset += entity_deserialize_and_write_slot(i, src_entity_header, level_entity_types[i]);
         }
         entity_sanitize();
 

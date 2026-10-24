@@ -336,17 +336,17 @@ bool inspect_entity(size_t entity_id) {
             trigger->trigger_type = (uint8_t)inspect_enum((int)trigger->trigger_type, entity_trigger_type_names, "Trigger type");
             if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TEXT) {
                 float rgb[3] = {
-                    (float)trigger->data_text.color.r / 255.f,
-                    (float)trigger->data_text.color.g / 255.f,
-                    (float)trigger->data_text.color.b / 255.f,
+                    (float)trigger->text.color.r / 255.f,
+                    (float)trigger->text.color.g / 255.f,
+                    (float)trigger->text.color.b / 255.f,
                 };
                 if (ImGui::ColorEdit3("Text color", rgb)) {
-                    trigger->data_text.color.r = (uint8_t)(rgb[0] * 255.f);
-                    trigger->data_text.color.g = (uint8_t)(rgb[1] * 255.f);
-                    trigger->data_text.color.b = (uint8_t)(rgb[2] * 255.f);
+                    trigger->text.color.r = (uint8_t)(rgb[0] * 255.f);
+                    trigger->text.color.g = (uint8_t)(rgb[1] * 255.f);
+                    trigger->text.color.b = (uint8_t)(rgb[2] * 255.f);
                 }
-                result |= ImGui::InputInt("Text entry ID", &trigger->data_text.id, 1, 5);
-                result |= inspect_scalar(&trigger->data_text.total_display_time, "Display time");
+                result |= ImGui::InputInt("Text entry ID", &trigger->text.id, 1, 5);
+                result |= inspect_scalar(&trigger->text.total_display_time, "Display time");
             }
             else if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_SIGNAL) {
                 result |= ImGui::InputInt("Signal ID", &trigger->signal.id, 1, 5);
@@ -653,6 +653,7 @@ void level_metadata() {
         size_t size;
         if (file_read(editor.level.path, &data, &size, 1, STACK_TEMP) == 0) {
             printf("Failed to load level '%s'\n", editor.level.path);
+            return;
         }
         level_header_t* header = (level_header_t*)data;
         char* binary_section = (char*)(&header[1]);
@@ -709,19 +710,10 @@ void level_metadata() {
 
         // Serialize the entities, removing all pointers in the process
         std::vector<uint8_t> entity_data_serialized;
+        entity_data_serialized.resize(ENTITY_LIST_LENGTH * entity_get_pool_stride()); // this is the most we'll ever need
+        size_t offset = 0;
         for (intptr_t i = 0; i < n_entities; ++i) {
-            // Get header
-            const entity_header_t header = *entity_get_header(i);
-
-            // Write entity header
-            write_data_and_get_offset(entity_data_serialized, &header.position, sizeof(vec3_t));
-            write_data_and_get_offset(entity_data_serialized, &header.rotation, sizeof(vec3_t));
-            write_data_and_get_offset(entity_data_serialized, &header.scale, sizeof(vec3_t));
-
-            // Write entity data
-            const uint8_t* entity_data = ((const uint8_t*)entity_get_header(i)) + sizeof(entity_header_t);
-            const size_t size = entity_get_pool_stride() - sizeof(entity_header_t);
-            write_data_and_get_offset(entity_data_serialized, entity_data, size);
+            offset += entity_serialize(i, &entity_data_serialized[offset], entity_get_type(i));
         }
 
         // Serialize text

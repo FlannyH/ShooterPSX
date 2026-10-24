@@ -28,6 +28,8 @@ typedef struct {
 } entity_chaser_t;
 
 entity_chaser_t* entity_chaser_new(void);
+size_t entity_chaser_serialize(int slot, uint8_t* data);
+size_t entity_chaser_deserialize(int slot, const uint8_t* data);
 void entity_chaser_update(int slot, player_t* player, scalar_t dt);
 void entity_chaser_on_hit(int slot, int hitbox_index);
 void entity_chaser_player_intersect(int slot, player_t* player);
