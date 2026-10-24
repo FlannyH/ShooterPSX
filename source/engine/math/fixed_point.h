@@ -100,7 +100,13 @@ static inline fixed20_12_t scalar_div(const fixed20_12_t a, const fixed20_12_t b
         result32 |= INT32_MAX;
         // WARN_IF("division by zero occured in scalar_div", 1);
     }
-    //WARN_IF("division result returned zero but the dividend is not zero, possible lack of precision", result32 == 0 && a != 0);
+    // WARN_IF("division result returned zero but the dividend is not zero, possible lack of precision", result32 == 0 && a != 0);
+    if (result32 > INT32_MAX) {
+        result32 = INT32_MAX;
+    }
+    else if (result32 < INT32_MIN) {
+        result32 = INT32_MIN;
+    }
     return (int32_t)result32;
 }
 

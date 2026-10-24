@@ -304,8 +304,8 @@ void entity_chaser_update(int slot, player_t* player, scalar_t dt) {
 	render_transform.rotation.y = chaser->entity_header.rotation.y;
 	render_transform.rotation.z = chaser->entity_header.rotation.z;
 	render_transform.scale.x = chaser->entity_header.scale.x;
-	render_transform.scale.y = chaser->entity_header.scale.x;
-	render_transform.scale.z = chaser->entity_header.scale.x;
+	render_transform.scale.y = chaser->entity_header.scale.y;
+	render_transform.scale.z = chaser->entity_header.scale.z;
 #ifdef _LEVEL_EDITOR
 	renderer_set_drawing_id(slot, 1);
 #endif

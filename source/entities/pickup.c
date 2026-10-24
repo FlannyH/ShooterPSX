@@ -36,8 +36,8 @@ void entity_pickup_update(int slot, player_t* player, scalar_t dt) {
 	const vec3_t player_pos = vec3_sub(player->position, (vec3_t){0, SCALAR(200), 0});
     vec3_t pickup_to_player = vec3_sub(player_pos, pickup_pos);
     const scalar_t distance_from_pickup_to_player_squared = vec3_magnitude_squared(pickup_to_player);
-	const int close_enough_to_home_in = (distance_from_pickup_to_player_squared < 2000 * ONE) && (distance_from_pickup_to_player_squared > 0);
-	const int close_enough_to_collect = (distance_from_pickup_to_player_squared < 200 * ONE) && (distance_from_pickup_to_player_squared > 0);
+	const int close_enough_to_home_in = (dt > 0) && (distance_from_pickup_to_player_squared < 2000 * ONE) && (distance_from_pickup_to_player_squared > 0);
+	const int close_enough_to_collect = (dt > 0) && (distance_from_pickup_to_player_squared < 200 * ONE) && (distance_from_pickup_to_player_squared > 0);
 
     // Rendering
     if (pickup->entity_header.mesh == NULL) {
@@ -55,26 +55,7 @@ void entity_pickup_update(int slot, player_t* player, scalar_t dt) {
     PANIC_IF("Pickup entity could not find mesh!", pickup->entity_header.mesh == NULL);
     }
 
-    // Rotate
-    #define PICKUP_SPIN_SPEED SCALAR(0.5f)
-    pickup->entity_header.rotation.y += scalar_mul(dt, PICKUP_SPIN_SPEED);
-
-	transform_t render_transform;
-    render_transform.position.x = pickup_pos.x;
-    render_transform.position.y = pickup_pos.y;
-    render_transform.position.z = pickup_pos.z;
-    render_transform.rotation.x = pickup->entity_header.rotation.x;
-    render_transform.rotation.y = pickup->entity_header.rotation.y;
-    render_transform.rotation.z = pickup->entity_header.rotation.z;
-	render_transform.scale.x = pickup->entity_header.scale.x;
-	render_transform.scale.y = pickup->entity_header.scale.x;
-	render_transform.scale.z = pickup->entity_header.scale.x;
-#ifdef _LEVEL_EDITOR
-	renderer_set_drawing_id(slot, 1);
-#endif
-	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
-	renderer_draw_mesh_shaded(pickup->entity_header.mesh, &render_transform, 0, 0);
-
+    // Home in
     if (close_enough_to_home_in) {
         const vec3_t pickup_to_player_norm = vec3_normalize(pickup_to_player);
         const scalar_t home_in_speed = 3 * ONE;
@@ -96,6 +77,26 @@ void entity_pickup_update(int slot, player_t* player, scalar_t dt) {
         audio_play_sound(sfx_to_play, 0, 0, (vec3_t){0, 0, 0}, 1);
         entity_kill(slot);
     }
+
+    // Rotate
+    #define PICKUP_SPIN_SPEED SCALAR(0.5f)
+    pickup->entity_header.rotation.y += scalar_mul(dt, PICKUP_SPIN_SPEED);
+
+	transform_t render_transform;
+    render_transform.position.x = pickup_pos.x;
+    render_transform.position.y = pickup_pos.y;
+    render_transform.position.z = pickup_pos.z;
+    render_transform.rotation.x = pickup->entity_header.rotation.x;
+    render_transform.rotation.y = pickup->entity_header.rotation.y;
+    render_transform.rotation.z = pickup->entity_header.rotation.z;
+	render_transform.scale.x = pickup->entity_header.scale.x;
+	render_transform.scale.y = pickup->entity_header.scale.y;
+	render_transform.scale.z = pickup->entity_header.scale.z;
+#ifdef _LEVEL_EDITOR
+	renderer_set_drawing_id(slot, 1);
+#endif
+	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
+	renderer_draw_mesh_shaded(pickup->entity_header.mesh, &render_transform, 0, 0);
 }
 
 void entity_pickup_on_hit(int slot, int hitbox_index) {

@@ -278,7 +278,7 @@ vec3_t epa(convex_hull_mesh_t* polytope, shape_t* shape1, shape_t* shape2) {
         const scalar_t distance_support_to_origin = vec3_dot(closest_face.normal, support);
 
 
-        if ((distance_support_to_origin - closest_face.distance) < SCALAR(0.7f)) {
+        if ((distance_support_to_origin - closest_face.distance) < SCALAR(1.0f)) {
             goto eh_close_enough;
         }
 
