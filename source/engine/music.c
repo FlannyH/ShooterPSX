@@ -26,14 +26,7 @@ vec3_t sfx_origins[N_SPU_CHANNELS];
 scalar_t sfx_max_distances[N_SPU_CHANNELS];
 
 // Instruments
-sample_header_t* music_sample_headers = NULL;
-instrument_description_t* music_instruments = NULL;
-instrument_region_header_t* music_instrument_regions = NULL;
-size_t n_music_instrument_regions = 0;
-sample_header_t* sfx_sample_headers = NULL;
-instrument_description_t* sfx_instruments = NULL;
-instrument_region_header_t* sfx_instrument_regions = NULL;
-size_t n_sfx_instrument_regions = 0;
+sound_bank_t sound_banks[N_SOUNDBANKS] = {0};
 
 // Sequence
 // todo(music_multi_sequence): allow playing multiple sequences, where each sequence may have an origin point, so that the positions sent to the music code are relative to that origin point
@@ -51,7 +44,11 @@ vec3_t listener_right = {0};
 
 int samples_per_tick = 44;
 
-void audio_load_soundbank(const char* path, soundbank_type_t type) {
+void audio_load_soundbank(const char* path, int slot) {
+    if (slot >= N_SOUNDBANKS) {
+        printf("audio_load_soundbank: slot index %i out of bounds (should be 0..=%i)", slot, N_SOUNDBANKS - 1);
+    }
+
 	// Load the SBK file
 	uint32_t* data;
 	size_t size;
@@ -68,33 +65,35 @@ void audio_load_soundbank(const char* path, soundbank_type_t type) {
 
 	// First upload all the samples to audio RAM
 	const uint32_t* sample_data = ((uint32_t*)(sbk_header+1)) + sbk_header->offset_sample_data / 4;
-    mixer_upload_sample_data(sample_data, sbk_header->length_sample_data, type);
+    mixer_upload_sample_data(sample_data, sbk_header->length_sample_data, slot);
 
 	// Copy the instruments and regions to another part in memory
+	// todo(soundbank_format): desc: rethink soundbank format to decouble samples and regions, and make things more flexible
 	const uint8_t* sample_header_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_sample_headers;
 	const uint8_t* inst_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_descs;
 	const uint8_t* region_data = ((uint8_t*)(sbk_header+1)) + sbk_header->offset_instrument_regions;
-	const size_t inst_size = sizeof(instrument_description_t) * 256;
 	const size_t sample_header_size = sizeof(sample_header_t) * sbk_header->n_samples;
 	const size_t region_size = sizeof(instrument_region_header_t) * sbk_header->n_samples;
-	if (type == SOUNDBANK_TYPE_MUSIC) {
-		music_sample_headers = (sample_header_t*)mem_stack_alloc(sample_header_size, STACK_MUSIC);
-		music_instruments = (instrument_description_t*)mem_stack_alloc(inst_size, STACK_MUSIC);
-		music_instrument_regions = (instrument_region_header_t*)mem_stack_alloc(region_size, STACK_MUSIC);
-		n_music_instrument_regions = sbk_header->n_samples;
-		memcpy(music_sample_headers, sample_header_data, sample_header_size);
-		memcpy(music_instruments, inst_data, inst_size);
-		memcpy(music_instrument_regions, region_data, region_size);
+
+	sound_banks[slot] = (sound_bank_t){0};
+
+	sound_banks[slot].samples = (sample_header_t*)mem_stack_alloc(sample_header_size, STACK_MUSIC);
+	sound_banks[slot].n_samples = sbk_header->n_samples;
+	for (size_t i = 0; i < sbk_header->n_samples; ++i) {
+	    sound_banks[slot].samples[i] = ((sample_header_t*)sample_header_data)[i];
 	}
-	else {
-		sfx_sample_headers = (sample_header_t*)mem_stack_alloc(sample_header_size, STACK_MUSIC);
-		sfx_instruments = (instrument_description_t*)mem_stack_alloc(inst_size, STACK_MUSIC);
-		sfx_instrument_regions = (instrument_region_header_t*)mem_stack_alloc(region_size, STACK_MUSIC);
-		n_sfx_instrument_regions = sbk_header->n_samples;
-		memcpy(sfx_sample_headers, sample_header_data, sample_header_size);
-		memcpy(sfx_instruments, inst_data, inst_size);
-		memcpy(sfx_instrument_regions, region_data, region_size);
+
+	sound_banks[slot].regions = (instrument_region_header_t*)mem_stack_alloc(region_size, STACK_MUSIC);
+	sound_banks[slot].n_regions = sbk_header->n_samples;
+	for (size_t i = 0; i < sbk_header->n_samples; ++i) {
+	    sound_banks[slot].regions[i] = ((instrument_region_header_t*)region_data)[i];
 	}
+
+	for (size_t i = 0; i < N_SBK_INSTRUMENTS; ++i) {
+	    // instruments is always `N_SBK_INSTRUMENTS` values everywhere
+		sound_banks[slot].instruments[i] = ((instrument_description_t*)inst_data)[i];
+	}
+
 	music_stack_seq_offset = mem_stack_get_marker(STACK_MUSIC);
 }
 
@@ -126,21 +125,17 @@ uint32_t calculate_channel_pitch(uint32_t base_sample_rate, int key, int pitch_w
 }
 
 void audio_stage_on(int instrument, int key, int pan, int velocity, int pitch_wheel, int midi_channel, vec3_t position, scalar_t max_distance) {
-	if (sfx_instrument_regions == NULL || music_instrument_regions == NULL) return;
-	if (sfx_instruments == NULL || music_instruments == NULL) return;
-
 	PANIC_IF("note panning out of bounds!", pan < 0 || pan > 255);
 
 	// Find first instrument region that fits, and start playing the note
-	const int is_sfx = (midi_channel >= N_MIDI_CHANNELS);
-	const instrument_description_t* const instr = (is_sfx) ? &sfx_instruments[instrument] : &music_instruments[instrument];
+	const int sbk_i = (midi_channel >= N_MIDI_CHANNELS) ? 1 : 0;
+
+	const instrument_description_t* const instr = &sound_banks[sbk_i].instruments[instrument];
 	const uint16_t n_regions = instr->n_regions;
 	const uint16_t region_id_start = instr->region_start_index;
-
-	if (is_sfx) PANIC_IF("region id will go out of bounds!", (region_id_start >= n_sfx_instrument_regions) || ((region_id_start + n_regions) > n_sfx_instrument_regions));
-	else        PANIC_IF("region id will go out of bounds!", (region_id_start >= n_music_instrument_regions) || ((region_id_start + n_regions) > n_music_instrument_regions));
-	const instrument_region_header_t* regions = (is_sfx) ? &sfx_instrument_regions[region_id_start] : &music_instrument_regions[region_id_start];
-	const sample_header_t* samples = (is_sfx) ? &sfx_sample_headers[0] : &music_sample_headers[0];
+	PANIC_IF("region id will go out of bounds!", (region_id_start >= sound_banks[sbk_i].n_regions) || ((region_id_start + n_regions) > sound_banks[sbk_i].n_regions));
+	const instrument_region_header_t* regions = &sound_banks[sbk_i].regions[region_id_start];
+	const sample_header_t* samples = sound_banks[sbk_i].samples;
 
 	for (size_t i = 0; i < n_regions; ++i) {
 		if (key >= regions[i].key_min
@@ -159,11 +154,16 @@ void audio_stage_on(int instrument, int key, int pan, int velocity, int pitch_wh
 				.velocity = velocity,
 				.position = position,
 				.max_distance = max_distance,
-                .soundbank_type = (is_sfx) ? (SOUNDBANK_TYPE_SFX) : (SOUNDBANK_TYPE_MUSIC)
+				// todo(stage_on_soundbank_type): desc: is_sfx should be handled cleaner, now that music and sfx sbk arent hardcoded in the engine anymore
+                .soundbank_id = sbk_i
 			};
 			n_staged_note_on_events++;
 		}
 	}
+}
+
+sound_bank_t* audio_sound_bank(int sound_bank_slot) {
+    return &sound_banks[sound_bank_slot];
 }
 
 void audio_play_sound(int instrument, int pitch_wheel, int in_3d_space, vec3_t position, scalar_t max_distance) {
@@ -173,6 +173,7 @@ void audio_play_sound(int instrument, int pitch_wheel, int in_3d_space, vec3_t p
 	audio_stage_on(instrument, key, pan, velocity, pitch_wheel, in_3d_space ? MIDI_CHANNEL_SFX_3D : MIDI_CHANNEL_SFX_2D, position, max_distance);
 };
 
+// todo(music_more_sequences): desc: add support for multiple sequences being loaded at once, or even being played at once
 void music_load_sequence(const char* path) {
 	mem_stack_reset_to_marker(STACK_MUSIC, music_stack_seq_offset);
 
@@ -394,7 +395,7 @@ void audio_tick(int delta_time) {
 		if (channel_id >= N_SPU_CHANNELS) break;
 
 		// Trigger note on that channel
-		mixer_channel_set_sample(channel_id, stage_on->voice_start, stage_on->loop_start, stage_on->sample_length, stage_on->soundbank_type);
+		mixer_channel_set_sample(channel_id, stage_on->voice_start, stage_on->loop_start, stage_on->sample_length, stage_on->soundbank_id);
 		mixer_channel_set_sample_rate(channel_id, stage_on->sample_rate);
 		note_on |= 1 << channel_id;
 
@@ -420,10 +421,10 @@ void audio_tick(int delta_time) {
 			const midi_channel_t* midi_ch = &midi_channel[spu_ch->midi_channel];
 			channel_volume = midi_ch->volume;
 			channel_panning = midi_ch->panning;
-			region = &music_instrument_regions[spu_ch->region];
+			region = &sound_banks[0].regions[spu_ch->region];
 		}
 		else {
-			region = &sfx_instrument_regions[spu_ch->region];
+			region = &sound_banks[1].regions[spu_ch->region];
 		}
 
 		// This code may run before the soundbanks are loaded, so if the instrument region is null, skip this channel
@@ -547,8 +548,8 @@ void audio_tick(int delta_time) {
 
 		// Handle channel pitch
 		if (spu_ch->key < 128 && spu_ch->midi_channel < N_MIDI_CHANNELS && vol_envs[i].stage != ENV_STAGE_IDLE) {
-			const uint16_t sample_index = music_instrument_regions[spu_ch->region].sample_index;
-			const uint32_t inst_sample_rate = music_sample_headers[sample_index].sample_rate;
+			const uint16_t sample_index = sound_banks[0].regions[spu_ch->region].sample_index;
+			const uint32_t inst_sample_rate = sound_banks[0].samples[sample_index].sample_rate;
 			const midi_channel_t* midi_ch = &midi_channel[spu_ch->midi_channel];
 			mixer_channel_set_sample_rate(i, calculate_channel_pitch(inst_sample_rate, spu_ch->key, midi_ch->pitch_wheel));
 		}

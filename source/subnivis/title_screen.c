@@ -7,6 +7,7 @@
 #include "engine/music.h"
 #include "subnivis/input_map.h"
 #include "subnivis/text.h"
+#include "misc.h"
 #include "ui.h"
 
 #include <string.h>

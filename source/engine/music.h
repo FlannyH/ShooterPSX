@@ -14,6 +14,9 @@ extern "C" {
 #define OUTPUT_BUFFER_SIZE 256
 #define MIXER_BUFFER_SIZE (OUTPUT_BUFFER_SIZE * 2)
 
+#define N_SOUNDBANKS 2
+#define N_SBK_INSTRUMENTS 256
+
 // Sound bank header
 #define MAGIC_FSBK 0x4B425346
 typedef struct {
@@ -54,6 +57,14 @@ typedef struct {
     uint32_t loop_start;    // Offset (bytes) relative to sample start to return to after the end of a sample.
     uint32_t format;        // 0 = PSX SPU-ADPCM, 1 = Signed little-endian 16-bit PCM
 } sample_header_t;
+
+typedef struct {
+    sample_header_t* samples;
+    instrument_region_header_t* regions;
+    int n_samples;
+    int n_regions;
+    instrument_description_t instruments[N_SBK_INSTRUMENTS];
+} sound_bank_t;
 
 // Dynamic Song Sequence header
 #define MAGIC_FDSS 0x53534446
@@ -102,7 +113,7 @@ typedef struct {
     uint8_t region;
     uint8_t velocity;
     uint8_t panning;
-    uint8_t soundbank_type; // soundbank_type_t
+    uint8_t soundbank_id; // soundbank_type_t
 } spu_stage_on_t;
 
 typedef struct {
@@ -166,9 +177,10 @@ typedef enum {
 
 // Common
 void audio_init(void);
-void audio_tick(scalar_t delta_time);
-void audio_load_soundbank(const char* path, soundbank_type_t type);
+void audio_tick(int delta_time);
+void audio_load_soundbank(const char* path, int type);
 void audio_play_sound(int instrument, int pitch_wheel, int in_3d_space, vec3_t position, scalar_t max_distance);
+sound_bank_t* audio_sound_bank(int soundbank_slot);
 
 // Music
 void music_load_sequence(const char* path);

@@ -136,12 +136,7 @@ int audio_thread(void*) {
 
                 double sample_index = mixer_ch->sample_source + mixer_ch->sample_offset;
                 float sample = 0.0f;
-                if (mixer_ch->soundbank_id == SOUNDBANK_TYPE_MUSIC) {
-                    sample = interpolate_sample(samples[SOUNDBANK_TYPE_MUSIC], sample_index, (size_t)mixer_ch->loop_length, mixer_ch->sample_end, mixer_ch->interpolation_mode);
-                }
-                else if (mixer_ch->soundbank_id == SOUNDBANK_TYPE_SFX) {
-                    sample = interpolate_sample(samples[SOUNDBANK_TYPE_SFX], sample_index, (size_t)mixer_ch->loop_length, mixer_ch->sample_end, mixer_ch->interpolation_mode);
-                }
+                sample = interpolate_sample(samples[mixer_ch->soundbank_id], sample_index, (size_t)mixer_ch->loop_length, mixer_ch->sample_end, mixer_ch->interpolation_mode);
 
                 vol_l += sample * mixer_ch->volume_left;
                 vol_r += sample * mixer_ch->volume_right;
@@ -253,11 +248,11 @@ void mixer_init(void) {
     }
 }
 
-void mixer_upload_sample_data(const void* const sample_data, size_t n_bytes, int soundbank_type) {
-    if (samples[soundbank_type]) mem_free(samples[soundbank_type]);
-    samples[soundbank_type] = mem_alloc(n_bytes + 4, MEM_CAT_AUDIO); // 4 dummy samples required for gaussian sampling
-    memcpy(samples[soundbank_type], sample_data, n_bytes);
-    memset(((uint8_t*)samples[soundbank_type]) + n_bytes, 0, 4);
+void mixer_upload_sample_data(const void* const sample_data, size_t n_bytes, int soundbank_slot) {
+    if (samples[soundbank_slot]) mem_free(samples[soundbank_slot]);
+    samples[soundbank_slot] = mem_alloc(n_bytes + 4, MEM_CAT_AUDIO); // 4 dummy samples required for gaussian sampling
+    memcpy(samples[soundbank_slot], sample_data, n_bytes);
+    memset(((uint8_t*)samples[soundbank_slot]) + n_bytes, 0, 4);
     return;
 }
 
@@ -287,12 +282,11 @@ void mixer_channel_set_volume(size_t channel_index, scalar_t left, scalar_t righ
     mixer_channel[channel_index].volume_right = (float)right / (float)ONE;
 }
 
-void mixer_channel_set_sample(size_t channel_index, size_t sample_source, size_t loop_start, size_t sample_length, int soundbank_type) {
-    if ((soundbank_type == SOUNDBANK_TYPE_MUSIC) &&!samples[SOUNDBANK_TYPE_MUSIC]) printf("attempt to play music notes without the soundbank initialized!\n");
-    if ((soundbank_type == SOUNDBANK_TYPE_SFX) &&!samples[SOUNDBANK_TYPE_SFX]) printf("attempt to play sfx without the soundbank initialized!\n");
+void mixer_channel_set_sample(size_t channel_index, size_t sample_source, size_t loop_start, size_t sample_length, int soundbank_slot) {
+    if (!audio_sound_bank(soundbank_slot)->samples) printf("attempt to play sounds without the soundbank initialized!\n");
     mixer_channel[channel_index].sample_source = ((double)sample_source) / sizeof(int16_t);
     mixer_channel[channel_index].sample_offset = 0.0;
-    mixer_channel[channel_index].soundbank_id = soundbank_type;
+    mixer_channel[channel_index].soundbank_id = soundbank_slot;
     mixer_channel[channel_index].interpolation_mode = INTERPOLATE_GAUSSIAN;
     if (loop_start < 0xF0000000) {
         mixer_channel[channel_index].loop_length = (float)(sample_length - loop_start) / sizeof(int16_t) + 1.0f;
