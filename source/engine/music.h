@@ -17,27 +17,27 @@ extern "C" {
 #define N_SOUNDBANKS 2
 #define N_SBK_INSTRUMENTS 256
 
-// Sound bank header
 #define MAGIC_FSBK 0x4B425346
 typedef struct {
-    uint32_t file_magic;                // File magic: "FSBK"
-    uint32_t n_samples;                 // Number of samples and regions (every region is linked to a unique sample)
-    uint32_t offset_instrument_descs;   // Offset (bytes) to instrument description table, relative to the end of the header
-    uint32_t offset_instrument_regions; // Offset (bytes) to instrument region table, relative to the end of the header
-    uint32_t offset_sample_headers;     // Offset (bytes) to sample header table, relative to the end of the header
-    uint32_t offset_sample_data;        // Offset (bytes) to raw sample data chunk.
-    uint32_t length_sample_data;        // Number of bytes in the sample data chunk
+    uint32_t file_magic;         // File magic: "FSBK"
+    uint32_t n_regions;          // Number of regions in the instrument region table
+    uint32_t length_sample_data; // Number of bytes in the sample data chunk
+    uint32_t offset_sample_data; // Offset (bytes) to raw sample data chunk, relative to end of the header
+    uint32_t offset_regions;     // Offset (bytes) to instrument region table, relative to end of the header
+    uint32_t offset_instruments; // Offset (bytes) to instrument table, relative to end of the header
 } soundbank_header_t;
 
-// Instrument description
 typedef struct {
-    uint16_t region_start_index; // First instrument region index
-    uint16_t n_regions;          // Number of instrument regions
-} instrument_description_t;
+    uint16_t region_start_offset; // Offset to the first entry of the instrument region list
+    uint16_t n_regions;           // Number of consecutive instrument regions to use
+} instrument_t;
 
-// Instrument Region header
 typedef struct {
-    uint16_t sample_index;  // Index into sample header array
+    uint32_t sample_start;  // Offset (bytes) into sample data chunk. Can be written to SPU Sample Start Address
+    uint32_t sample_length; // Number of bytes in this sample. If `loop_start` is not equal to UINT32_MAX, this determines when to jump back to loop_start.
+    uint32_t sample_rate;   // Sample rate (Hz) at MIDI key 60 (C5)
+    int32_t loop_start;     // Offset (bytes) relative to sample start to return to after the end of a sample.
+    uint32_t format;        // 0 = PSX SPU-ADPCM, 1 = Signed little-endian 16-bit PCM
     uint16_t delay;         // Delay stage length in milliseconds
     uint16_t attack;        // Attack stage length in milliseconds
     uint16_t hold;          // Hold stage length in milliseconds
@@ -48,22 +48,12 @@ typedef struct {
     uint16_t panning;       // Panning for this region, 0 = left, 127 = middle, 254 = right
     uint8_t key_min;        // Minimum MIDI key for this instrument region
     uint8_t key_max;        // Maximum MIDI key for this instrument region
-} instrument_region_header_t;
+} region_t;
 
 typedef struct {
-    uint32_t sample_start;  // Offset (bytes) into sample data chunk. Can be written to SPU Sample Start Address
-    uint32_t sample_length; // Number of bytes in this sample. If `loop_start` is not equal to UINT32_MAX, this determines when to jump back to loop_start.
-    uint32_t sample_rate;   // Sample rate (Hz) at MIDI key 60 (C5)
-    uint32_t loop_start;    // Offset (bytes) relative to sample start to return to after the end of a sample.
-    uint32_t format;        // 0 = PSX SPU-ADPCM, 1 = Signed little-endian 16-bit PCM
-} sample_header_t;
-
-typedef struct {
-    sample_header_t* samples;
-    instrument_region_header_t* regions;
-    int n_samples;
+    region_t* regions;
     int n_regions;
-    instrument_description_t instruments[N_SBK_INSTRUMENTS];
+    instrument_t instruments[N_SBK_INSTRUMENTS];
 } sound_bank_t;
 
 // Dynamic Song Sequence header
