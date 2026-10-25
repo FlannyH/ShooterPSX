@@ -32,6 +32,7 @@ extern "C" {
 #include "engine/input_mapping.h"
 #include "engine/renderer.h"
 #include "engine/entity.h"
+#include "engine/music.h"
 #include "engine/mesh.h"
 
 #include <ImGuizmo.h>
@@ -572,6 +573,69 @@ void draw_texture_category(const char* name, texture_category_t category, bool s
     }
 }
 
+void audio_debugger() {
+    static bool show_sample_meta = true;
+    static bool show_env_meta = true;
+    static bool show_misc_meta = true;
+
+    ImGui::Begin("Audio debugger");
+    ImGui::Checkbox("Show sample metadata", &show_sample_meta);
+    ImGui::Checkbox("Show envelope metadata", &show_env_meta);
+    ImGui::Checkbox("Show misc metadata", &show_misc_meta);
+
+    int n_colums = (show_sample_meta * 5) + (show_env_meta * 6) + (show_misc_meta * 4);
+
+    for (size_t sbk_i = 0; sbk_i < N_SOUNDBANKS; sbk_i++) {
+        const sound_bank_t* sbk = audio_sound_bank(sbk_i);
+
+        if (ImGui::TreeNode(std::format("Soundbank {}", sbk_i).c_str())) {
+            if (ImGui::BeginTable("Regions", n_colums, ImGuiTableFlags_Borders)) {
+                if (show_sample_meta) ImGui::TableSetupColumn("sample_start");
+                if (show_sample_meta) ImGui::TableSetupColumn("sample_length");
+                if (show_sample_meta) ImGui::TableSetupColumn("sample_rate");
+                if (show_sample_meta) ImGui::TableSetupColumn("loop_start");
+                if (show_sample_meta) ImGui::TableSetupColumn("format");
+                if (show_env_meta) ImGui::TableSetupColumn("delay");
+                if (show_env_meta) ImGui::TableSetupColumn("attack");
+                if (show_env_meta) ImGui::TableSetupColumn("hold");
+                if (show_env_meta) ImGui::TableSetupColumn("decay");
+                if (show_env_meta) ImGui::TableSetupColumn("sustain");
+                if (show_env_meta) ImGui::TableSetupColumn("release");
+                if (show_misc_meta) ImGui::TableSetupColumn("volume");
+                if (show_misc_meta) ImGui::TableSetupColumn("panning");
+                if (show_misc_meta) ImGui::TableSetupColumn("key_min");
+                if (show_misc_meta) ImGui::TableSetupColumn("key_max");
+                ImGui::TableHeadersRow();
+
+                for (size_t region_i = 0; region_i < sbk->n_regions; ++region_i) {
+                    const region_t* region = &sbk->regions[region_i];
+
+                    ImGui::TableNextRow();
+                    int column_index = 0;
+                    if (show_sample_meta) { ImGui::TableSetColumnIndex(column_index++); ImGui::Text(std::format("{}", region->sample_start).c_str()); }
+                    if (show_sample_meta) { ImGui::TableSetColumnIndex(column_index++); ImGui::Text(std::format("{}", region->sample_length).c_str()); }
+                    if (show_sample_meta) { ImGui::TableSetColumnIndex(column_index++); ImGui::Text(std::format("{}", region->sample_rate).c_str()); }
+                    if (show_sample_meta) { ImGui::TableSetColumnIndex(column_index++); ImGui::Text(std::format("{}", region->loop_start).c_str()); }
+                    if (show_sample_meta) { ImGui::TableSetColumnIndex(column_index++); ImGui::Text(std::format("{}", region->format).c_str()); }
+                    if (show_env_meta) { ImGui::TableSetColumnIndex(column_index++); ImGui::Text(std::format("{} ms", region->delay).c_str()); }
+                    if (show_env_meta) { ImGui::TableSetColumnIndex(column_index++); ImGui::Text(std::format("{} ms", region->attack).c_str()); }
+                    if (show_env_meta) { ImGui::TableSetColumnIndex(column_index++); ImGui::Text(std::format("{} ms", region->hold).c_str()); }
+                    if (show_env_meta) { ImGui::TableSetColumnIndex(column_index++); ImGui::Text(std::format("{} ms", region->decay).c_str()); }
+                    if (show_env_meta) { ImGui::TableSetColumnIndex(column_index++); ImGui::Text(std::format("{}", (float)region->sustain / 65535.0f).c_str()); }
+                    if (show_env_meta) { ImGui::TableSetColumnIndex(column_index++); ImGui::Text(std::format("{} per sec", (float)region->release / 256).c_str()); }
+                    if (show_misc_meta) { ImGui::TableSetColumnIndex(column_index++); ImGui::Text(std::format("{} ms", (float)region->volume / 256).c_str()); }
+                    if (show_misc_meta) { ImGui::TableSetColumnIndex(column_index++); ImGui::Text(std::format("{}", ((float)region->panning - 127) / 127.0f).c_str()); }
+                    if (show_misc_meta) { ImGui::TableSetColumnIndex(column_index++); ImGui::Text(std::format("{}", region->key_min).c_str()); }
+                    if (show_misc_meta) { ImGui::TableSetColumnIndex(column_index++); ImGui::Text(std::format("{}", region->key_max).c_str()); }
+                }
+                ImGui::EndTable();
+            }
+            ImGui::TreePop();
+        }
+    }
+    ImGui::End();
+}
+
 #define PI 3.14159265358979f
 
 void render_3d_debug_stuff() {
@@ -674,6 +738,7 @@ void level_metadata() {
         player_init(&editor.misc.player, editor.level.player_spawn_position, editor.level.player_spawn_rotation, 40, 0, 0);
         editor.misc.camera.transform.position = editor.level.player_spawn_position;
         editor.misc.camera.transform.rotation = editor.level.player_spawn_rotation;
+        music_stop();
     };
 
     auto save = []() {
@@ -1787,6 +1852,7 @@ int main(int argc, char** argv) {
     input_init();
     input_mapping_init();
 	entity_init();
+	audio_init();
     input_set_gamepad_stick_deadzone(SCALAR(36.0/255));
     input_mapping_register_mouse(IM_CAMERA_LOCK, INPUT_MOUSE_BUTTON_RIGHT, SCALAR(1.0));
     input_mapping_register_keyboard(IM_CAMERA_DOWN, INPUT_KEY_LEFT_SHIFT, SCALAR(1.0));
@@ -1850,6 +1916,7 @@ int main(int argc, char** argv) {
         texture_viewer();
         viewport();
         math_verification();
+        audio_debugger();
 
         renderer_end_frame();
         debug_layer_end();
