@@ -66,7 +66,6 @@ CODE_ENGINE_SHARED_C = engine/collision.c \
 			  	  	   ui.c \
 			  	  	   engine/entity.c \
 			  	  	   engine/vislist.c \
-					   test/test.c
 
 CODE_GAME_C = 		   subnivis/debug_menu_main.c \
 					   subnivis/debug_menu_music.c \
