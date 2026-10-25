@@ -107,6 +107,8 @@ void entity_register_collision_box(const entity_collision_box_t* box) {
 }
 
 void entity_call_on_hit(int entity_index, int box_index) {
+	PANIC_IF("index out of bounds", entity_index < 0 || entity_index >= ENTITY_LIST_LENGTH);
+
 	switch (entity_get_type(entity_index)) {
 		case ENTITY_DOOR: entity_door_on_hit(entity_index, box_index); break;
 		case ENTITY_PICKUP: entity_pickup_on_hit(entity_index, box_index); break;
@@ -118,6 +120,8 @@ void entity_call_on_hit(int entity_index, int box_index) {
 }
 
 void entity_call_player_intersect(int entity_index, player_t* player) {
+	PANIC_IF("index out of bounds", entity_index < 0 || entity_index >= ENTITY_LIST_LENGTH);
+
 	switch (entity_get_type(entity_index)) {
 		case ENTITY_DOOR: entity_door_player_intersect(entity_index, player); break;
 		case ENTITY_PICKUP: entity_pickup_player_intersect(entity_index, player); break;
@@ -162,11 +166,15 @@ void entity_sanitize(void) {
 }
 
 void entity_kill(int slot) {
+	PANIC_IF("index out of bounds", slot < 0 || slot >= ENTITY_LIST_LENGTH);
 	// todo(entity_destructors): desc: maybe support destructors?
 	entity_types[slot] = ENTITY_NONE;
 }
 
 void entity_send_player_intersect(int slot, player_t* player) {
+    if (slot < 0) return;
+    if (slot >= ENTITY_LIST_LENGTH) return;
+
 #ifndef _LIGHT_BAKE
 	switch (entity_types[slot]) {
 		case ENTITY_NONE: break;
@@ -196,23 +204,17 @@ model_t* entity_get_models(void) {
 }
 
 void entity_set_type(int index, uint8_t type) {
-#ifdef _DEBUG
 	PANIC_IF("index out of bounds", index < 0 || index >= ENTITY_LIST_LENGTH);
-#endif
 	entity_types[index] = type;
 }
 
 uint8_t entity_get_type(int index) {
-#ifdef _DEBUG
 	PANIC_IF("index out of bounds", index < 0 || index >= ENTITY_LIST_LENGTH);
-#endif
 	return entity_types[index];
 }
 
 entity_header_t* entity_get_header(int index) {
-#ifdef _DEBUG
 	PANIC_IF("index out of bounds", index < 0 || index >= ENTITY_LIST_LENGTH);
-#endif
 	return (entity_header_t*)(&entity_pool[index * entity_pool_stride]);
 }
 
@@ -269,23 +271,17 @@ size_t entity_get_n_active_aabb(void) {
 }
 
 entity_collision_box_t* entity_get_aabb_queue_entry(int index) {
-#ifdef _DEBUG
 	PANIC_IF("index out of bounds", index < 0 || index >= ENTITY_AABB_QUEUE_LENGTH);
-#endif
 	return &entity_aabb_queue[index];
 }
 
 int entity_get_signal(int index) {
-#ifdef _DEBUG
 	PANIC_IF("index out of bounds", index < 0 || index >= ENTITY_SIGNAL_COUNT);
-#endif
 	return entity_signals[index];
 }
 
 void entity_set_signal(int index, int value) {
-#ifdef _DEBUG
 	PANIC_IF("index out of bounds", index < 0 || index >= ENTITY_SIGNAL_COUNT);
-#endif
 	entity_signals[index] = value;
 }
 
