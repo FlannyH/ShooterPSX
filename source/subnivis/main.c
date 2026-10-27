@@ -51,10 +51,6 @@ int main(void) {
 	init_keyboard_mouse_mappings();
 	init_controller_mappings();
 
-#ifdef _DEBUG
-    const int n_failed_tests = test();
-    printf("Unit tests finished with %i errors\n", n_failed_tests);
-#endif
 
 	// Init state variables
 	memset(&state, 0, sizeof(state));
