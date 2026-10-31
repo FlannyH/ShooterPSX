@@ -20,6 +20,7 @@ typedef enum {
 	STATE_DEBUG_MENU_LEVEL,
 	STATE_DEBUG_MENU_MUSIC,
 	STATE_DEBUG_MENU_CONTROLLER,
+	STATE_REMAP_CONTROLS,
 } state_t;
 
 typedef struct {

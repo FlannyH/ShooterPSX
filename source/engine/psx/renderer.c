@@ -174,9 +174,9 @@ void renderer_set_view(const transform_t* camera_transform) {
     position.vz = -position.vz >> FRAC_BITS;
 
     VECTOR rotation;
-    rotation.vx = -camera_transform->rotation.x;
-    rotation.vy = -camera_transform->rotation.y;
-    rotation.vz = -camera_transform->rotation.z;
+    rotation.vx = -camera_transform->rotation.x * 2;
+    rotation.vy = -camera_transform->rotation.y * 2;
+    rotation.vz = -camera_transform->rotation.z * 2;
     HiRotMatrix(&rotation, &view_matrix);
     ApplyMatrixLV(&view_matrix, &position, &position);
     TransMatrix(&view_matrix, &position);

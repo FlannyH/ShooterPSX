@@ -261,6 +261,7 @@ bool inspect_entity(size_t entity_id) {
         ImGui::TreePop();
     }
     if (ImGui::TreeNodeEx("Entity Data", ImGuiTreeNodeFlags_DefaultOpen)) {
+        // todo(entity_inspect): desc: move entity inspect code to entity code instead of editor
         if (entity_type == ENTITY_DOOR) {
             entity_door_t* door = (entity_door_t*)entity_data;
             inspect_vec3(&door->open_offset, "Open offset");
