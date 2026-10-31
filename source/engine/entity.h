@@ -24,6 +24,7 @@ typedef enum {
 	ENTITY_CHASER,
 	ENTITY_PLATFORM,
 	ENTITY_TRIGGER,
+	ENTITY_CINECAM,
 } entity_type_t; // typically represented by a uint8_t
 
 typedef enum {

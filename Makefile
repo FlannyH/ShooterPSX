@@ -78,6 +78,7 @@ CODE_GAME_C = 		   subnivis/debug_menu_main.c \
 					   subnivis/credits.c \
 					   subnivis/in_game.c \
 			  	  	   subnivis/player.c \
+			  	  	   entities/cinecam.c \
 				  	   entities/platform.c \
 				  	   entities/trigger.c \
 				  	   entities/pickup.c \

@@ -23,6 +23,7 @@ extern "C" {
 #include <implot.h>
 
 #include "entities/platform.h"
+#include "entities/cinecam.h"
 #include "entities/trigger.h"
 #include "entities/pickup.h"
 #include "entities/chaser.h"
@@ -357,6 +358,47 @@ bool inspect_entity(size_t entity_id) {
             else if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TELEPORT) {
                 result |= inspect_vec3(&trigger->teleport.destination_pos, "Destination position");
                 result |= inspect_vec3(&trigger->teleport.destination_rotation_offset, "Destination rotation offset");
+            }
+        }
+
+        else if (entity_type == ENTITY_CINECAM) {
+            entity_cinecam_t* cinecam = (entity_cinecam_t*)entity_data;
+            if (ImGui::TreeNode("Nodes")) {
+                for (int i = 0; i < cinecam->n_nodes; ++i) {
+                    transform_t trans = {
+                        .position = editor.misc.selected_vertex_position,
+                        .rotation = vec3_from_scalar(0),
+                        .scale = vec3_from_scalar(SCALAR(32.0 / 1024)), // 1024 because the model is scaled by 1024 for precision
+                    };
+                    renderer_set_drawing_id(0, 0);
+                    renderer_set_depth_bias(0);
+                    renderer_draw_mesh_shaded(&editor.resources.gizmos->meshes[2], &trans, 0, 0);
+                    if (i > 0) renderer_debug_draw_line(cinecam->nodes[i-1].position, cinecam->nodes[i].position, white, &id_transform);
+
+                    if (!ImGui::TreeNode(std::format("Node {}", i).c_str())) continue;
+
+                    ImGui::PushID(i);
+                    if (!cinecam->nodes) break;
+
+                    inspect_vec3(&cinecam->nodes[i].position, "Position");
+                    inspect_vec3(&cinecam->nodes[i].rotation, "Rotation");
+                    inspect_scalar(&cinecam->nodes[i].time_to_next, "Seconds to next node");
+                    if (ImGui::Button("Move viewport to node")) {
+                        editor.misc.camera.transform.position = cinecam->nodes[i].position;
+                        editor.misc.camera.transform.rotation = cinecam->nodes[i].rotation;
+                    }
+                    if (ImGui::Button("Move node to viewport")) {
+                        cinecam->nodes[i].position = editor.misc.camera.transform.position;
+                        cinecam->nodes[i].rotation = editor.misc.camera.transform.rotation;
+                    }
+                    ImGui::PopID();
+                    ImGui::TreePop();
+                }
+                ImGui::TreePop();
+            }
+            if (ImGui::Button("Add")) {
+                cinecam->nodes[cinecam->n_nodes].position = editor.misc.camera.transform.position;
+                cinecam->nodes[cinecam->n_nodes++].rotation = editor.misc.camera.transform.rotation;
             }
         }
 
@@ -776,10 +818,10 @@ void level_metadata() {
 
         // Serialize the entities, removing all pointers in the process
         std::vector<uint8_t> entity_data_serialized;
-        entity_data_serialized.resize(ENTITY_LIST_LENGTH * entity_get_pool_stride()); // this is the most we'll ever need
-        size_t offset = 0;
+        entity_data_serialized.resize(1 * MiB); // 1 MB should be overkill
+        size_t entity_data_cursor = 0;
         for (intptr_t i = 0; i < n_entities; ++i) {
-            offset += entity_serialize(i, &entity_data_serialized[offset], entity_get_type(i));
+            entity_data_cursor += entity_serialize(i, &entity_data_serialized[entity_data_cursor], entity_get_type(i));
         }
 
         // Serialize text
@@ -835,7 +877,7 @@ void level_metadata() {
             .path_model_offset = (uint32_t)write_text_and_get_offset(binary_section, editor.level.path_model),
             .path_model_lod_offset = (uint32_t)write_text_and_get_offset(binary_section, editor.level.path_model_lod),
             .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_types, (n_entities + 3) & ~0x03), // 4-byte padding
-            .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_data_serialized.data(), entity_data_serialized.size() * sizeof(entity_data_serialized[0])),
+            .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_data_serialized.data(), entity_data_cursor),
             .light_data_offset =  (uint32_t)write_data_and_get_offset(binary_section, lights, n_lights * sizeof(light_t)),
             .shape_data_offset =  (uint32_t)write_data_and_get_offset(binary_section, shapes, shape_cursor),
             .level_name_offset = (uint32_t)write_text_and_get_offset(binary_section, editor.level.name),
@@ -1098,6 +1140,10 @@ void entity_stuff() {
                 break;
             case ENTITY_TRIGGER:
                 entity = (entity_header_t*)entity_trigger_new();
+                entity->position = spawn_pos;
+                break;
+            case ENTITY_CINECAM:
+                entity = (entity_header_t*)entity_cinecam_new();
                 entity->position = spawn_pos;
                 break;
         }

@@ -1,6 +1,7 @@
 #include "entity.h"
 
 #include "entities/platform.h"
+#include "entities/cinecam.h"
 #include "entities/trigger.h"
 #include "entities/pickup.h"
 #include "entities/chaser.h"
@@ -37,6 +38,7 @@ void entity_update_all(player_t* player, scalar_t dt) {
 			case ENTITY_CHASER: entity_chaser_update(i, player, dt); break;
 			case ENTITY_PLATFORM: entity_platform_update(i, player, dt); break;
 			case ENTITY_TRIGGER: entity_trigger_update(i, player, dt); break;
+			case ENTITY_CINECAM: entity_cinecam_update(i, player, dt); break;
 		}
 	}
 }
@@ -116,6 +118,7 @@ void entity_call_on_hit(int entity_index, int box_index) {
 		case ENTITY_CHASER: entity_chaser_on_hit(entity_index, box_index); break;
 		case ENTITY_PLATFORM: entity_platform_on_hit(entity_index, box_index); break;
 		case ENTITY_TRIGGER: entity_trigger_on_hit(entity_index, box_index); break;
+		case ENTITY_CINECAM: entity_cinecam_on_hit(entity_index, box_index); break;
 	}
 }
 
@@ -129,6 +132,7 @@ void entity_call_player_intersect(int entity_index, player_t* player) {
 		case ENTITY_CHASER: entity_chaser_player_intersect(entity_index, player); break;
 		case ENTITY_PLATFORM: entity_platform_player_intersect(entity_index, player); break;
 		case ENTITY_TRIGGER: entity_trigger_player_intersect(entity_index, player); break;
+		case ENTITY_CINECAM: entity_cinecam_player_intersect(entity_index, player); break;
 	}
 }
 
@@ -184,6 +188,7 @@ void entity_send_player_intersect(int slot, player_t* player) {
 		case ENTITY_CHASER: entity_chaser_player_intersect(slot, player); break;
 		case ENTITY_PLATFORM: entity_platform_player_intersect(slot, player); break;
 		case ENTITY_TRIGGER: entity_trigger_player_intersect(slot, player); break;
+		case ENTITY_CINECAM: entity_cinecam_player_intersect(slot, player); break;
 	}
 #endif
 }
@@ -196,6 +201,7 @@ const char* entity_names[] = {
 	"ENTITY_CHASER",
 	"ENTITY_PLATFORM",
 	"ENTITY_TRIGGER",
+	"ENTITY_CINECAM",
 	NULL
 };
 
@@ -230,6 +236,7 @@ size_t entity_deserialize_and_write_slot(int slot, const entity_header_serialize
 	    case ENTITY_CHASER: entity_size = entity_chaser_deserialize(slot, src_entity_data); break;
 	    case ENTITY_PLATFORM: entity_size = entity_platform_deserialize(slot, src_entity_data); break;
 	    case ENTITY_TRIGGER: entity_size = entity_trigger_deserialize(slot, src_entity_data); break;
+	    case ENTITY_CINECAM: entity_size = entity_cinecam_deserialize(slot, src_entity_data); break;
 	}
 
 	// Write entity header
@@ -246,12 +253,13 @@ size_t entity_serialize(int slot, uint8_t* dest, uint8_t type) {
     size_t entity_size = entity_get_pool_stride();
 	switch(type) {
 	    case ENTITY_NONE: break;
-	    case ENTITY_DOOR: entity_door_serialize(slot, dest); entity_size = sizeof(entity_door_t); break;
-	    case ENTITY_PICKUP: entity_pickup_serialize(slot, dest); entity_size = sizeof(entity_pickup_t); break;
-	    case ENTITY_CRATE: entity_crate_serialize(slot, dest); entity_size = sizeof(entity_crate_t); break;
-	    case ENTITY_CHASER: entity_chaser_serialize(slot, dest); entity_size = sizeof(entity_chaser_t); break;
-	    case ENTITY_PLATFORM: entity_platform_serialize(slot, dest); entity_size = sizeof(entity_platform_t); break;
-	    case ENTITY_TRIGGER: entity_trigger_serialize(slot, dest); entity_size = sizeof(entity_trigger_t); break;
+	    case ENTITY_DOOR: entity_size = entity_door_serialize(slot, dest); break;
+	    case ENTITY_PICKUP: entity_size = entity_pickup_serialize(slot, dest); break;
+	    case ENTITY_CRATE: entity_size = entity_crate_serialize(slot, dest); break;
+	    case ENTITY_CHASER: entity_size = entity_chaser_serialize(slot, dest); break;
+	    case ENTITY_PLATFORM: entity_size = entity_platform_serialize(slot, dest); break;
+	    case ENTITY_TRIGGER: entity_size = entity_trigger_serialize(slot, dest); break;
+	    case ENTITY_CINECAM: entity_size = entity_cinecam_serialize(slot, dest); break;
 	}
 
 	entity_header_t* src_entity_header = entity_get_header(slot);
