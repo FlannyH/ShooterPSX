@@ -42,7 +42,7 @@ vec3_t listener_pos = {0};
 vec3_t listener_forward = {0};
 vec3_t listener_right = {0};
 
-int samples_per_tick = 44;
+scalar_t sec_per_tick = SCALAR(44);
 
 void audio_load_soundbank(const char* path, int slot) {
     if (slot >= N_SOUNDBANKS) {
@@ -115,6 +115,9 @@ uint32_t calculate_channel_pitch(uint32_t base_sample_rate, int key, int pitch_w
 
 void audio_stage_on(int instrument, int key, int pan, int velocity, int pitch_wheel, int midi_channel, vec3_t position, scalar_t max_distance) {
 	PANIC_IF("note panning out of bounds!", pan < 0 || pan > 255);
+	if (n_staged_note_on_events >= MAX_STAGED_NOTE_EVENTS) {
+	    return;
+	}
 
 	// Find first instrument region that fits, and start playing the note
 	const int sbk_i = (midi_channel >= N_MIDI_CHANNELS) ? 1 : 0;
@@ -202,7 +205,7 @@ void music_play_sequence(uint32_t section) {
 
 	// Initialize variables
 	music_playing = 1;
-	wait_timer = SCALAR(0.25);
+	wait_timer = 0;
 	for (size_t i = 0; i < N_MIDI_CHANNELS; ++i) {
 		midi_channel[i].volume = 127;
 		midi_channel[i].panning = 127;
@@ -215,11 +218,11 @@ void music_play_sequence(uint32_t section) {
 	n_staged_note_off_events = 0;
 }
 
-void audio_tick(int delta_time) {
+void audio_tick(int ticks) {
 	audio_ticking = 1;
 	if (music_playing != 0) {
 		// Handle commands
-		wait_timer -= delta_time;
+		wait_timer -= ticks;
 		while (wait_timer < 0) {
 			const uint8_t command = *sequence_pointer++;
 
@@ -300,12 +303,12 @@ void audio_tick(int delta_time) {
 			else if ((command & 0xF0) == 0x80) {
 				uint32_t value = ((((uint32_t)command) << 8) + ((int32_t)(*sequence_pointer++))) & 0xFFF; // Raw value from song data
 				mixer_set_music_tempo(value);
-				samples_per_tick = (value * MIXER_SAMPLE_RATE) / 49152;
+				sec_per_tick = ((int64_t)value << FRAC_BITS) / 49152;
 			}
 
 			// Wait a number of ticks
 			else if ((command >= 0xA0) && (command <= 0xBF)) {
-				wait_timer += lut_wait_times[command & 0x1F] * samples_per_tick;
+				wait_timer += lut_wait_times[command & 0x1F];
 			}
 
 			// Set time signature, we ignore for now
@@ -425,7 +428,6 @@ void audio_tick(int delta_time) {
 		}
 
 		// Update volume envelope
-		const scalar_t dt_ms = SCALAR(10 * delta_time) / 441;
 		vol_envs[i].stage_time += dt_ms;
 		int stage_time_ms = vol_envs[i].stage_time / ONE;
 

@@ -99,21 +99,23 @@ int audio_thread(void*) {
 
     double prev_sec_per_tick = 0;
 
+    double timer = 0;
+
     while (1) {
         if (mixer_sec_per_tick != prev_sec_per_tick) {
             interval.tv_nsec = mixer_sec_per_tick * 1000000000;
             prev_sec_per_tick = mixer_sec_per_tick;
         }
 
-        int x = 0;
-
         while ((mixer_buffer.head - mixer_buffer.tail) < MIXER_BUFFER_SIZE) {
             // Update mixer channels
             float vol_l = 0.0;
             float vol_r = 0.0;
 
-            if (x++ % 64 == 0) {
-                audio_tick(64);
+            timer += 1.0 / MIXER_SAMPLE_RATE;
+            if (timer > mixer_sec_per_tick) {
+                audio_tick(1);
+                timer -= mixer_sec_per_tick;
             }
 
             for (int channel_index = 0; channel_index < N_SPU_CHANNELS; ++channel_index) {

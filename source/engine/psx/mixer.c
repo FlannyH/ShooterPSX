@@ -30,15 +30,16 @@ void mixer_init(void) {
 }
 
 void mixer_upload_sample_data(const void* const sample_data, size_t n_bytes, int soundbank_type) {
-	if (soundbank_type == SOUNDBANK_TYPE_MUSIC) SpuSetTransferStartAddr(SBK_MUSIC_OFFSET);
-	if (soundbank_type == SOUNDBANK_TYPE_SFX)   SpuSetTransferStartAddr(SBK_SFX_OFFSET);
+	// todo(psx_factor_out_sbk_sample_offset): desc: factor out soundbank sample offset
+	if (soundbank_type == 0) SpuSetTransferStartAddr(SBK_MUSIC_OFFSET);
+	if (soundbank_type == 1) SpuSetTransferStartAddr(SBK_SFX_OFFSET);
 	SpuWrite(sample_data, n_bytes);
 	SpuIsTransferCompleted(SPU_TRANSFER_WAIT);
 }
 
 void mixer_global_set_volume(scalar_t left, scalar_t right) {
-    SPU_MASTER_VOL_L = left * 4;
-    SPU_MASTER_VOL_R = right * 4;
+    SPU_MASTER_VOL_L = (scalar_clamp(left, -ONE, ONE) * 16300) / ONE;
+    SPU_MASTER_VOL_R = (scalar_clamp(right, -ONE, ONE) * 16300) / ONE;
 }
 
 void mixer_set_music_tempo(uint32_t raw_tempo) {
@@ -51,8 +52,8 @@ void mixer_channel_set_sample_rate(size_t channel_index, scalar_t sample_rate) {
 }
 
 void mixer_channel_set_volume(size_t channel_index, scalar_t left, scalar_t right) {
-    SPU_CH_VOL_L(channel_index) = left * 4;
-    SPU_CH_VOL_R(channel_index) = right * 4;
+    SPU_CH_VOL_L(channel_index) = (scalar_clamp(left, -ONE, ONE) * 16300) / ONE;
+    SPU_CH_VOL_R(channel_index) = (scalar_clamp(right, -ONE, ONE) * 16300) / ONE;
 }
 
 void mixer_channel_set_sample(size_t channel_index, size_t sample_source, size_t loop_start, size_t sample_length, int soundbank_type) {
@@ -61,8 +62,8 @@ void mixer_channel_set_sample(size_t channel_index, size_t sample_source, size_t
     (void)sample_length;
 
     uint32_t corrected_sample_offset = sample_source;
-    if (soundbank_type == SOUNDBANK_TYPE_SFX)   corrected_sample_offset += SBK_SFX_OFFSET;
-    if (soundbank_type == SOUNDBANK_TYPE_MUSIC) corrected_sample_offset += SBK_MUSIC_OFFSET;
+    if (soundbank_type == 0) corrected_sample_offset += SBK_MUSIC_OFFSET;
+    if (soundbank_type == 1) corrected_sample_offset += SBK_SFX_OFFSET;
 
     SPU_CH_ADSR1(channel_index) = 0x00FF; // constant sustain
     SPU_CH_ADSR2(channel_index) = 0x0000;
