@@ -84,6 +84,7 @@ void renderer_apply_fade(scalar_t fade_level);
 void renderer_tick_fade(void);
 void renderer_start_fade_in(scalar_t speed);
 void renderer_start_fade_out(scalar_t speed);
+void renderer_stop_fade(void);
 int renderer_is_fading(void);
 int renderer_get_fade_level(void);
 void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const transform_t* model_transform);

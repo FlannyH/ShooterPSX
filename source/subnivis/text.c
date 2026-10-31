@@ -4,7 +4,8 @@
 const char* text_main_menu[] = {
     "START",
     "SETTINGS",
-    "CREDITS"
+    "CREDITS",
+    "DEBUG",
 };
 
 const char* text_settings[] = {
@@ -107,16 +108,6 @@ const char* text_debug_menu_main[] = {
     "MAIN MENU"
 };
 
-const char* text_debug_menu_music[] = {
-    "MUSIC TEST",
-    "level1.dss",
-    "level2.dss",
-    "level3.dss",
-    "subnivis.dss",
-    "jungle.dss",
-    "EXIT"
-};
-
 const char* text_debug_menu_level[] = {
     "LEVEL SELECT",
     "test.lvl",
@@ -132,5 +123,4 @@ int n_text_settings = sizeof(text_settings) / sizeof(const char*);
 int n_text_pause_menu = sizeof(text_pause_menu) / sizeof(const char*);
 int n_text_credits = sizeof(text_credits) / sizeof(const char*);
 int n_text_debug_menu_main = sizeof(text_debug_menu_main) / sizeof(const char*);
-int n_text_debug_menu_music = sizeof(text_debug_menu_music) / sizeof(const char*);
 int n_text_debug_menu_level = sizeof(text_debug_menu_level) / sizeof(const char*);

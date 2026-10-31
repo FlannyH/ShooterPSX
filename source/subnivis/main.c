@@ -126,29 +126,29 @@ int main(void) {
 }
 
 void init_keyboard_mouse_mappings(void) {
-    input_mapping_register_keyboard(IM_JUMP,         INPUT_KEY_SPACE,          SCALAR(1.0));
-    input_mapping_register_keyboard(IM_MOVE_X,       INPUT_KEY_A,              SCALAR(-1.0));
-    input_mapping_register_keyboard(IM_MOVE_X,       INPUT_KEY_D,              SCALAR(+1.0));
-    input_mapping_register_keyboard(IM_MOVE_Y,       INPUT_KEY_W,              SCALAR(+1.0));
-    input_mapping_register_keyboard(IM_MOVE_Y,       INPUT_KEY_S,              SCALAR(-1.0));
-    input_mapping_register_mouse   (IM_LOOK_MOUSE_X, INPUT_MOUSE_DELTA_X,      mouse_sensitivity);
-    input_mapping_register_mouse   (IM_LOOK_MOUSE_Y, INPUT_MOUSE_DELTA_Y,      mouse_sensitivity);
-    input_mapping_register_keyboard(IM_MENU_UP,      INPUT_KEY_UP,             SCALAR(1.0));
-    input_mapping_register_keyboard(IM_MENU_UP,      INPUT_KEY_W,              SCALAR(1.0));
-    input_mapping_register_keyboard(IM_MENU_DOWN,    INPUT_KEY_DOWN,           SCALAR(1.0));
-    input_mapping_register_keyboard(IM_MENU_DOWN,    INPUT_KEY_S,              SCALAR(1.0));
-    input_mapping_register_keyboard(IM_MENU_LEFT,    INPUT_KEY_LEFT,           SCALAR(1.0));
-    input_mapping_register_keyboard(IM_MENU_LEFT,    INPUT_KEY_A,              SCALAR(1.0));
-    input_mapping_register_keyboard(IM_MENU_RIGHT,   INPUT_KEY_RIGHT,          SCALAR(1.0));
-    input_mapping_register_keyboard(IM_MENU_RIGHT,   INPUT_KEY_D,              SCALAR(1.0));
-    input_mapping_register_keyboard(IM_MENU_GO,      INPUT_KEY_SPACE,          SCALAR(1.0));
-    input_mapping_register_keyboard(IM_MENU_PREVIEW, INPUT_KEY_ENTER,          SCALAR(1.0));
-    input_mapping_register_keyboard(IM_MENU_TAB,     INPUT_KEY_TAB,            SCALAR(1.0));
-    input_mapping_register_keyboard(IM_START_PAUSE,  INPUT_KEY_ESC,            SCALAR(1.0));
-    input_mapping_register_keyboard(IM_FULL_SCREEN,  INPUT_KEY_F11,            SCALAR(1.0));
-    input_mapping_register_mouse   (IM_SHOOT,        INPUT_MOUSE_BUTTON_RIGHT, SCALAR(1.0));
-    input_mapping_register_keyboard(IM_DEBUG_DOWN,   INPUT_KEY_DOWN,           SCALAR(1.0));
-    input_mapping_register_keyboard(IM_DEBUG_UP,     INPUT_KEY_UP,             SCALAR(1.0));
+    input_mapping_register_keyboard(IM_JUMP,             INPUT_KEY_SPACE,          SCALAR(1.0));
+    input_mapping_register_keyboard(IM_MOVE_X,           INPUT_KEY_A,              SCALAR(-1.0));
+    input_mapping_register_keyboard(IM_MOVE_X,           INPUT_KEY_D,              SCALAR(+1.0));
+    input_mapping_register_keyboard(IM_MOVE_Y,           INPUT_KEY_W,              SCALAR(+1.0));
+    input_mapping_register_keyboard(IM_MOVE_Y,           INPUT_KEY_S,              SCALAR(-1.0));
+    input_mapping_register_mouse   (IM_LOOK_MOUSE_X,     INPUT_MOUSE_DELTA_X,      mouse_sensitivity);
+    input_mapping_register_mouse   (IM_LOOK_MOUSE_Y,     INPUT_MOUSE_DELTA_Y,      mouse_sensitivity);
+    input_mapping_register_keyboard(IM_MENU_UP,          INPUT_KEY_UP,             SCALAR(1.0));
+    input_mapping_register_keyboard(IM_MENU_UP,          INPUT_KEY_W,              SCALAR(1.0));
+    input_mapping_register_keyboard(IM_MENU_DOWN,        INPUT_KEY_DOWN,           SCALAR(1.0));
+    input_mapping_register_keyboard(IM_MENU_DOWN,        INPUT_KEY_S,              SCALAR(1.0));
+    input_mapping_register_keyboard(IM_MENU_LEFT,        INPUT_KEY_LEFT,           SCALAR(1.0));
+    input_mapping_register_keyboard(IM_MENU_LEFT,        INPUT_KEY_A,              SCALAR(1.0));
+    input_mapping_register_keyboard(IM_MENU_RIGHT,       INPUT_KEY_RIGHT,          SCALAR(1.0));
+    input_mapping_register_keyboard(IM_MENU_RIGHT,       INPUT_KEY_D,              SCALAR(1.0));
+    input_mapping_register_keyboard(IM_MENU_GO,          INPUT_KEY_SPACE,          SCALAR(1.0));
+    input_mapping_register_keyboard(IM_MENU_PREVIEW,     INPUT_KEY_ENTER,          SCALAR(1.0));
+    input_mapping_register_keyboard(IM_MENU_TAB,         INPUT_KEY_TAB,            SCALAR(1.0));
+    input_mapping_register_keyboard(IM_START_PAUSE,      INPUT_KEY_ESC,            SCALAR(1.0));
+    input_mapping_register_keyboard(IM_FULL_SCREEN,      INPUT_KEY_F11,            SCALAR(1.0));
+    input_mapping_register_mouse   (IM_SHOOT,            INPUT_MOUSE_BUTTON_RIGHT, SCALAR(1.0));
+    input_mapping_register_keyboard(IM_DEBUG_DOWN,       INPUT_KEY_DOWN,           SCALAR(1.0));
+    input_mapping_register_keyboard(IM_DEBUG_UP,         INPUT_KEY_UP,             SCALAR(1.0));
 }
 
 void init_controller_mappings(void) {
@@ -163,7 +163,7 @@ void init_controller_mappings(void) {
     input_mapping_register_gamepad(IM_MENU_LEFT,    INPUT_GAMEPAD_LEFT,          SCALAR(1.0));
     input_mapping_register_gamepad(IM_MENU_RIGHT,   INPUT_GAMEPAD_RIGHT,         SCALAR(1.0));
     input_mapping_register_gamepad(IM_MENU_GO,      INPUT_GAMEPAD_SOUTH,         SCALAR(1.0));
-    input_mapping_register_gamepad(IM_MENU_PREVIEW, INPUT_GAMEPAD_WEST,          SCALAR(1.0));
+    input_mapping_register_gamepad(IM_MENU_PREVIEW, INPUT_GAMEPAD_EAST,          SCALAR(1.0));
     input_mapping_register_gamepad(IM_MENU_TAB,     INPUT_GAMEPAD_SELECT,        SCALAR(1.0));
     input_mapping_register_gamepad(IM_START_PAUSE,  INPUT_GAMEPAD_START,         SCALAR(1.0));
     input_mapping_register_gamepad(IM_SHOOT,        INPUT_GAMEPAD_R2,            SCALAR(1.0));

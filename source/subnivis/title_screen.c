@@ -78,6 +78,12 @@ void state_enter_title_screen(void) {
 	renderer_start_fade_in(FADE_SPEED);
 }
 
+#ifdef _DEBUG
+#define N_BUTTONS_TITLE 4
+#else
+#define N_BUTTONS_TITLE 3
+#endif
+
 void state_update_title_screen(scalar_t dt) {
     (void)dt;
 	renderer_begin_frame(&id_transform);
@@ -85,7 +91,7 @@ void state_update_title_screen(scalar_t dt) {
     ui_render_logo();
 
 	// Draw buttons
-	for (int y = 0; y < 3; ++y) {
+	for (int y = 0; y < N_BUTTONS_TITLE; ++y) {
 		// Left handle, right handle, middle bar, text
 		pixel32_t color = (pixel32_t){128, 128, 128, 255};
 		if (y == state.title_screen.button_selected) {
@@ -112,7 +118,7 @@ void state_update_title_screen(scalar_t dt) {
 		state.title_screen.button_selected--;
 		state.title_screen.button_pressed = 0;
 	}
-	if (input_mapping_pressed(IM_MENU_DOWN, 0) && state.title_screen.button_selected < 2) {
+	if (input_mapping_pressed(IM_MENU_DOWN, 0) && state.title_screen.button_selected < (N_BUTTONS_TITLE-1)) {
 		state.title_screen.button_selected++;
 		state.title_screen.button_pressed = 0;
 	}
@@ -121,18 +127,21 @@ void state_update_title_screen(scalar_t dt) {
 	}
 
 	// Handle button presses
-	if (input_mapping_released(IM_MENU_GO, 0)) {
+	if (input_mapping_released(IM_MENU_GO, 0) && state.title_screen.button_pressed) {
 		state.title_screen.button_pressed = 0;
 		switch (state.title_screen.button_selected) {
-			case 0: // start game
+			case 0:
 				state.in_game.level_load_path = "levels/level1.lvl";
 				set_current_state(STATE_IN_GAME);
 				break;
-			case 1: // settings
+			case 1:
 				set_current_state(STATE_SETTINGS);
 				break;
-			case 2: // credits
+			case 2:
 				set_current_state(STATE_CREDITS);
+				break;
+			case 3:
+				set_current_state(STATE_DEBUG_MENU_MAIN);
 				break;
 		}
 	}
@@ -159,6 +168,7 @@ void state_update_title_screen(scalar_t dt) {
 	}
 	renderer_end_frame();
 }
+
 void state_exit_title_screen(void) {
 	renderer_start_fade_out(FADE_SPEED);
 	while (renderer_is_fading()) {

@@ -18,6 +18,7 @@ typedef enum {
     IM_FULL_SCREEN,
     IM_SHOOT,
 
+    IM_DEBUG_PLAY_MUSIC,
     IM_DEBUG_DOWN,
     IM_DEBUG_UP
 } input_ids_t;

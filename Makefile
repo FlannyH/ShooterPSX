@@ -146,7 +146,7 @@ LINKER_FLAGS =
 all: submodules tools assets pc level_editor psx nds
 
 # PC target
-pc: DEFINES = _PC
+pc: DEFINES = _PC _DEBUG
 pc: LIBRARIES = glfw3 portaudio stdc++
 ifeq ($(OS),Windows_NT)
 pc: LIBRARIES += gdi32 opengl32 winmm ole32 SetupAPI

@@ -26,15 +26,15 @@
 
 void state_enter_debug_menu_level(void) {
     state_enter_title_screen();
+    renderer_stop_fade();
 	state.global.state_to_return_to = get_prev_state();
 	state.title_screen.button_pressed = 0;
-	renderer_start_fade_in(FADE_SPEED);
-	while (renderer_is_fading()) {
-		renderer_delta_time(DT_TICK);
-		renderer_begin_frame(&id_transform);
-		ui_render_background();
-		renderer_end_frame();
-	}
+    for (int i = 0; i < 2; ++i) {
+        renderer_begin_frame(&id_transform);
+        ui_render_background();
+    	renderer_end_frame();
+    	input_update();
+    }
 }
 
 void state_update_debug_menu_level(scalar_t dt) {
@@ -46,7 +46,7 @@ void state_update_debug_menu_level(scalar_t dt) {
 	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_debug_menu_level[0], 1, 1, white);
 
 	// Draw settings text and box
-	for (int i = 0; i < 4; ++i) {
+	for (int i = 0; i < 6; ++i) {
 		pixel32_t color = (pixel32_t){128, 128, 128, 255};
 		if (i == state.debug_menu_level.button_selected) {
 			if (state.debug_menu_level.button_pressed) {
@@ -69,7 +69,7 @@ void state_update_debug_menu_level(scalar_t dt) {
 		state.debug_menu_level.button_selected--;
 		state.debug_menu_level.button_pressed = 0;
 	}
-	if (input_mapping_pressed(IM_MENU_DOWN, 0) && state.debug_menu_level.button_selected < 4) {
+	if (input_mapping_pressed(IM_MENU_DOWN, 0) && state.debug_menu_level.button_selected < 5) {
 		state.debug_menu_level.button_selected++;
 		state.debug_menu_level.button_pressed = 0;
 	}
@@ -109,13 +109,10 @@ void state_update_debug_menu_level(scalar_t dt) {
 }
 
 void state_exit_debug_menu_level(void) {
-	renderer_start_fade_out(FADE_SPEED);
-
-	while (renderer_is_fading()) {
-		renderer_delta_time(DT_TICK);
-		renderer_begin_frame(&id_transform);
-		input_update();
-		ui_render_background();
-		renderer_end_frame();
-	}
+    for (int i = 0; i < 2; ++i) {
+        renderer_begin_frame(&id_transform);
+        ui_render_background();
+    	renderer_end_frame();
+    	input_update();
+    }
 }

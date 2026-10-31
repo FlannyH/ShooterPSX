@@ -245,6 +245,11 @@ void renderer_start_fade_out(scalar_t seconds) {
     fade_speed = scalar_div((MAX_FADE_LEVEL), (seconds));
 }
 
+void renderer_stop_fade(void) {
+    fade_level = 0;
+    fade_speed = 0;
+}
+
 int renderer_is_fading(void) {
     if (fade_speed > 0 && fade_level < MAX_FADE_LEVEL) return 1;
     if (fade_speed < 0 && fade_level > 0) return 1;

@@ -10,15 +10,15 @@
 
 void state_enter_debug_menu_music(void) {
     state_enter_title_screen();
+    renderer_stop_fade();
 	state.global.state_to_return_to = get_prev_state();
 	state.title_screen.button_pressed = 0;
-	renderer_start_fade_in(FADE_SPEED);
-	while (renderer_is_fading()) {
-		renderer_delta_time(DT_TICK);
-		renderer_begin_frame(&id_transform);
-		ui_render_background();
-		renderer_end_frame();
-	}
+    for (int i = 0; i < 2; ++i) {
+        renderer_begin_frame(&id_transform);
+        ui_render_background();
+    	renderer_end_frame();
+    	input_update();
+    }
 }
 
 extern volume_env_t vol_envs[N_SPU_CHANNELS];
@@ -27,63 +27,45 @@ void state_update_debug_menu_music(scalar_t dt) {
 	(void)dt;
 
 	char* songs[] = {
-		"audio/music/level1.dss",
-		"audio/music/level2.dss",
-		"audio/music/level3.dss",
-		"audio/music/subnivis.dss",
-		"audio/music/jungle.dss",
+	    "audio/music/black.dss",
+	    "audio/music/combust.dss",
+	    "audio/music/e1m1.dss",
+	    "audio/music/e3m3.dss",
+	    "audio/music/energia.dss",
+	    "audio/music/jungle.dss",
+	    "audio/music/justice.dss",
+	    "audio/music/level1.dss",
+	    "audio/music/level2.dss",
+	    "audio/music/level3.dss",
+	    "audio/music/pitchtst.dss",
+	    "audio/music/subnivis.dss",
+	    "audio/music/newsong.dss",
+		0
+	};
+	char* sbk[] = {
+	    "audio/instr.sbk",
+	    "audio/instr.sbk",
+	    "audio/instr.sbk",
+	    "audio/instr.sbk",
+	    "audio/instr.sbk",
+	    "audio/jungle.sbk",
+	    "audio/instr.sbk",
+	    "audio/instr.sbk",
+	    "audio/instr.sbk",
+	    "audio/instr.sbk",
+	    "audio/instr.sbk",
+	    "audio/instr.sbk",
+	    "audio/newsong.sbk",
+		0
 	};
 
-	// Handle button navigation
-	if (input_mapping_pressed(IM_MENU_UP, 0) && state.debug_menu_music.button_selected > 0) {
-		state.debug_menu_music.button_selected--;
-		state.debug_menu_music.button_pressed = 0;
-	}
-	if (input_mapping_pressed(IM_MENU_DOWN, 0) && state.debug_menu_music.button_selected < 5) {
-		state.debug_menu_music.button_selected++;
-		state.debug_menu_music.button_pressed = 0;
-	}
-	if (input_mapping_pressed(IM_MENU_GO, 0)) {
-		state.debug_menu_music.button_pressed = 1;
-	}
+	static int music_selected = 0;
 
-	// Handle button presses
-	if (input_mapping_released(IM_MENU_GO, 0)) {
-		state.debug_menu_music.button_pressed = 0;
-		switch (state.debug_menu_music.button_selected) {
-			case 0:
-			case 1:
-			case 2:
-			case 3:
-				music_stop();
-				mem_stack_release(STACK_TEMP);
-				mem_stack_release(STACK_MUSIC);
-				audio_load_soundbank("audio/instr.sbk", SOUNDBANK_TYPE_MUSIC);
-				mem_stack_release(STACK_TEMP);
-				audio_load_soundbank("audio/sfx.sbk", SOUNDBANK_TYPE_SFX);
-				mem_stack_release(STACK_TEMP);
-				music_load_sequence(songs[state.debug_menu_music.button_selected]);
-				music_set_volume(255);
-				music_play_sequence(0);
-				break;
-			case 4:
-				music_stop();
-				mem_stack_release(STACK_TEMP);
-				mem_stack_release(STACK_MUSIC);
-				audio_load_soundbank("audio/jungle.sbk", SOUNDBANK_TYPE_MUSIC);
-				mem_stack_release(STACK_TEMP);
-				audio_load_soundbank("audio/sfx.sbk", SOUNDBANK_TYPE_SFX);
-				mem_stack_release(STACK_TEMP);
-				music_load_sequence(songs[state.debug_menu_music.button_selected]);
-				music_set_volume(255);
-				music_play_sequence(0);
-				break;
+	if (input_mapping_pressed(IM_MENU_UP, 0)) music_selected++;
+	if (input_mapping_pressed(IM_MENU_DOWN, 0)) music_selected--;
 
-			case 5:
-				set_current_state(STATE_DEBUG_MENU_MAIN);
-				break;
-		}
-	}
+	if (music_selected < 0) music_selected = 0;
+	if (songs[music_selected] == 0) --music_selected;
 
 	// SFX debug
 	if (input_mapping_pressed(IM_MENU_LEFT, 0)) {
@@ -93,38 +75,38 @@ void state_update_debug_menu_music(scalar_t dt) {
 	if (input_mapping_pressed(IM_MENU_RIGHT, 0)) {
 		state.debug_menu_music.sfx_id++;
 	}
-	if (input_mapping_pressed(IM_MENU_PREVIEW, 0)) {
+	if (input_mapping_pressed(IM_MENU_TAB, 0)) {
 		audio_play_sound(state.debug_menu_music.sfx_id, 0, 1, (vec3_t){0, 0, 0}, ONE * 16);
+	}
+	if (input_mapping_pressed(IM_MENU_PREVIEW, 0)) {
+		music_stop();
+		mem_stack_release(STACK_TEMP);
+		mem_stack_release(STACK_MUSIC);
+		audio_load_soundbank(sbk[music_selected], SOUNDBANK_TYPE_MUSIC);
+		mem_stack_release(STACK_TEMP);
+		audio_load_soundbank("audio/sfx.sbk", SOUNDBANK_TYPE_SFX);
+		mem_stack_release(STACK_TEMP);
+		music_load_sequence(songs[music_selected]);
+		music_set_volume(255);
+		music_play_sequence(0);
 	}
 
 	renderer_begin_frame(&id_transform);
 
     ui_render_background();
 
-	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_debug_menu_music[0], 1, 1, white);
-
-	// Draw settings text and box
-	for (int i = 0; i < 6; ++i) {
-		pixel32_t color = (pixel32_t){128, 128, 128, 255};
-		if (i == state.debug_menu_music.button_selected) {
-			if (state.debug_menu_music.button_pressed) {
-				color.r = 64;
-				color.g = 64;
-				color.b = 64;
-			}
-			else {
-				color.r = 255;
-				color.g = 255;
-				color.b = 255;
-			}
-		}
-		renderer_draw_text((vec2_t){40*ONE, (96 + (24 * i))*ONE}, text_debug_menu_music[i+1], 1, 0, white);
-		renderer_draw_2d_quad_axis_aligned((vec2_t){128*ONE, (96 + (24 * i))*ONE}, (vec2_t){224*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, color, 2, 5, TEX_CAT_MISC);
-	}
+	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, "MUSIC DEBUG", 1, 1, white);
 
 	char text[32];
-	sprintf(text, "sfx: %i", state.debug_menu_music.sfx_id);
+	sprintf(text, "sfx: %i\nmusic: %s", state.debug_menu_music.sfx_id, &songs[music_selected][12]);
 	renderer_draw_text((vec2_t){32*ONE, 32*ONE}, text, 1, 0, white);
+
+	// exiting
+	renderer_draw_text((vec2_t){120*ONE, 216*ONE}, "EXIT", 1, 1, white);
+	renderer_draw_2d_quad_axis_aligned((vec2_t){120*ONE, 216*ONE}, (vec2_t){200*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, white, 2, 5, TEX_CAT_MISC);
+	if (input_mapping_pressed(IM_MENU_GO, 0)) {
+	    set_current_state(STATE_DEBUG_MENU_MAIN);
+	}
 
 	// Draw black background behind debug for readability sake
 	renderer_draw_2d_quad_axis_aligned((vec2_t){376*ONE, 156 * ONE}, (vec2_t){258*ONE, 160*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, black, 2, NO_TEXTURE, 0);
@@ -167,12 +149,10 @@ void state_update_debug_menu_music(scalar_t dt) {
 }
 
 void state_exit_debug_menu_music(void) {
-	renderer_start_fade_out(FADE_SPEED);
-
-	while (renderer_is_fading()) {
-		renderer_delta_time(DT_TICK);
-		renderer_begin_frame(&id_transform);
-		ui_render_background();
-		renderer_end_frame();
-	}
+    for (int i = 0; i < 2; ++i) {
+        renderer_begin_frame(&id_transform);
+        ui_render_background();
+    	renderer_end_frame();
+    	input_update();
+    }
 }
