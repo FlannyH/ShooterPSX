@@ -27,6 +27,8 @@ PADTYPE* pad[2] = { NULL, NULL };
 controller_state_t controller_prev[N_CONTROLLER] = {0};
 controller_state_t controller_curr[N_CONTROLLER] = {0};
 
+int settle_timer = 15;
+
 void input_init(void) {
     memset(pad_buff, 0, sizeof(pad_buff));
     InitPAD(&pad_buff[0][0], 34, &pad_buff[1][0], 34);
@@ -47,6 +49,11 @@ scalar_t stick_to_scalar(uint8_t stick_value) {
 }
 
 void input_update(void) {
+    if (settle_timer > 0) {
+        settle_timer--;
+        return;
+    }
+
     for (size_t i = 0; i < N_CONTROLLER; ++i) {
         if (!input_gamepad_connected(i)) continue;
 
