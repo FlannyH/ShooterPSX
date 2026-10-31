@@ -139,6 +139,11 @@ void state_enter_debug_menu_controller(void);
 void state_update_debug_menu_controller(scalar_t dt);
 void state_exit_debug_menu_controller(void);
 
+// Remap controls
+void state_enter_remap_controls(void);
+void state_update_remap_controls(scalar_t dt);
+void state_exit_remap_controls(void);
+
 void init_keyboard_mouse_mappings(void);
 void init_controller_mappings(void);
 
