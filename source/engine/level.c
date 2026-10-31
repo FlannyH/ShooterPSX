@@ -171,7 +171,8 @@ level_t level_load(const char* level_path, const uint32_t flags) {
             .rotation = {0, 0, 0},
             .scale = {ONE, ONE, ONE}
         },
-        .vislist = vislist_load(path_vislist, 1, STACK_LEVEL),
+        //.vislist = vislist_load(path_vislist, 1, STACK_LEVEL),
+        .vislist = NULL, // todo
         // .collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL),
         .collision_bvh = NULL, // todo
         .n_level_textures = n_level_textures,
