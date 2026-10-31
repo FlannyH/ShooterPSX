@@ -165,14 +165,40 @@ static inline scalar_t vec2_magnitude_squared(const vec2_t a) {
 }
 
 static inline scalar_t vec2_magnitude(vec2_t a) {
-    // avoid overflows
-    while ((scalar_abs(a.x) > (2*ONE)) || (scalar_abs(a.y) > (2*ONE))) {
-        a = vec2_shift_right(a, 2);
+    if (a.x == 0 && a.y == 0) {
+        return 0;
     }
 
-    scalar_t magnitude = vec2_magnitude_squared(a);
-    if (magnitude == 0) return 0;
-    return scalar_sqrt(magnitude);
+    #ifdef _FLOAT
+    return sqrtf((a.x * a.x) + (a.y * a.y));
+    #else
+    if (is_infinity(a.x) || is_infinity(a.y)) {
+        return INT32_MAX;
+    }
+    int64_t sum = 0;
+    sum += ((int64_t)a.x * (int64_t)a.x);
+    sum += ((int64_t)a.y * (int64_t)a.y);
+
+    int zeros_x = (a.x != 0) ? leading_zeros(a.x) : 32;
+    int zeros_y = (a.y != 0) ? leading_zeros(a.y) : 32;
+    int min_zeros = 32;
+    if (zeros_x < min_zeros) min_zeros = zeros_x;
+    if (zeros_y < min_zeros) min_zeros = zeros_y;
+
+    int sum_shift_right = 0;
+    if (min_zeros < 32) {
+        int zeros_sum = (min_zeros * 2);
+        sum_shift_right = 36 - zeros_sum;
+    }
+
+    int sum_shifted;
+    if (sum_shift_right >= 0) sum_shifted = sum >> sum_shift_right;
+    if (sum_shift_right < 0) sum_shifted = sum << -sum_shift_right;
+    scalar_t sqrt = int_sqrt(sum_shifted);
+    if (sum_shift_right >= 0) sqrt <<= (sum_shift_right/2);
+    if (sum_shift_right < 0) sqrt >>= -(sum_shift_right/2);
+    return sqrt;
+    #endif
 }
 
 static inline scalar_t vec2_distance(vec2_t a, vec2_t b) {
