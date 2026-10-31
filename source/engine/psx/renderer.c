@@ -1,18 +1,21 @@
-#include "renderer.h"
-#include "../renderer.h"
-
 #include <string.h>
 #include <assert.h>
 #include <psxgte.h>
 #include <psxgpu.h>
+#undef ONE
+#include "../math/scalar.h"
+
+#include "renderer.h"
+#include "../renderer.h"
 
 #include "../common.h"
 
-#include "../math/scalar.h"
 #include "../texture_pool.h"
 #include "../collision.h"
 #include "../particles.h"
 #include "../lut.h"
+
+#define GTE_ONE (1 << 12)
 
 #define TRI_THRESHOLD_MUL_SUB2_30 3
 #define TRI_THRESHOLD_MUL_SUB1_30 7
@@ -191,9 +194,9 @@ void renderer_begin_frame(const transform_t* camera_transform) {
     // todo(psx_renderer_pal_aspect): desc: bespoke correction for PAL output
     aspect_matrix = (MATRIX){
         .m = {
-            {(ONE * res_x) / (widescreen ? 427 : 320), 0, 0},
-            {0, -ONE, 0}, // PS1 screen space is +Y=down, so invert the Y component
-            {0, 0, ONE},
+            {(GTE_ONE * res_x) / (widescreen ? 427 : 320), 0, 0},
+            {0, -GTE_ONE, 0}, // PS1 screen space is +Y=down, so invert the Y component
+            {0, 0, GTE_ONE},
         },
         .t = {0, 0, 0},
     };
@@ -256,9 +259,9 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform,
     else HiRotMatrix((VECTOR*)&model_transform->rotation, &model_matrix); // VECTOR and vec3_t are identical bitwise
 
     VECTOR position = {
-        model_transform->position.x / ONE,
-        model_transform->position.y / ONE,
-        model_transform->position.z / ONE,
+        model_transform->position.x / GTE_ONE,
+        model_transform->position.y / GTE_ONE,
+        model_transform->position.z / GTE_ONE,
     };
     TransMatrix(&model_matrix, &position);
 
