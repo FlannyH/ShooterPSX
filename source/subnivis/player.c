@@ -148,7 +148,7 @@ void handle_stick_input(player_t* self, const scalar_t dt) {
 
     // Looking up and down
     self->rotation.x += look_mouse.y;
-    self->rotation.x += scalar_mul(look_stick.y, dt);
+    self->rotation.x -= scalar_mul(look_stick.y, dt);
     self->rotation.x = scalar_clamp(self->rotation.x, SCALAR(-0.22), SCALAR(0.22));
 
     // Looking left and right

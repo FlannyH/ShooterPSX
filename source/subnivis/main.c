@@ -45,7 +45,7 @@ int main(void) {
 	audio_init();
 
 	input_init();
-	input_set_gamepad_stick_deadzone(SCALAR(36.0/128));
+	input_set_gamepad_stick_deadzone(SCALAR(0.1));
 
 	input_mapping_init();
 	init_keyboard_mouse_mappings();

@@ -1,11 +1,12 @@
 #include "../input.h"
 #include "GLFW/glfw3.h"
 #include "backends/imgui_impl_glfw.h"
+#include "engine/math/vec2.h"
 #include <string.h>
 
 // todo(input_window): desc: make input window not via an extern
 extern GLFWwindow* window;
-int8_t deadzone = 24;
+scalar_t deadzone = SCALAR(0.1);
 int mouse_lock = 0;
 int mouse_lock_prev = 0;
 
@@ -178,6 +179,15 @@ void input_init(void) {
     glfwSetJoystickCallback(joystick_callback);
 }
 
+vec2_t apply_deadzone(vec2_t v) {
+    scalar_t length = vec2_magnitude(v);
+    vec2_t dir = vec2_divs(v, length);
+    length -= deadzone;
+    length = scalar_div(length, ONE - deadzone);
+    length = scalar_clamp(length, 0, ONE);
+    return vec2_muls(dir, length);
+}
+
 void update_controller(int i) {
     if (controller_ids[i] == -1) return;
     if (!glfwJoystickPresent(controller_ids[i])) return;
@@ -185,7 +195,6 @@ void update_controller(int i) {
     int n_axes = 0, n_buttons = 0, n_hats = 0;
     const float* axes = glfwGetJoystickAxes(controller_ids[i], &n_axes);
     const unsigned char* buttons = glfwGetJoystickButtons(controller_ids[i], &n_buttons);
-    const unsigned char* hats = glfwGetJoystickHats(controller_ids[i], &n_hats);
 
     // todo(verify_controller_defaults): desc: verify controller defaults (only tested on switch)
     if (n_buttons >= 18) {
@@ -207,12 +216,14 @@ void update_controller(int i) {
         state_new_gamepad[INPUT_GAMEPAD_R3][i] = buttons[13] ? ONE : 0;
     }
     if (n_axes >= 2) {
-        state_new_gamepad[INPUT_GAMEPAD_STICK_LEFT_X][i] = SCALAR(+axes[0]);
-        state_new_gamepad[INPUT_GAMEPAD_STICK_LEFT_Y][i] = SCALAR(-axes[1]);
+        const vec2_t left_stick = apply_deadzone((vec2_t){SCALAR(+axes[0]), SCALAR(-axes[1])});
+        state_new_gamepad[INPUT_GAMEPAD_STICK_LEFT_X][i] = left_stick.x;
+        state_new_gamepad[INPUT_GAMEPAD_STICK_LEFT_Y][i] = left_stick.y;
     }
     if (n_axes >= 4) {
-        state_new_gamepad[INPUT_GAMEPAD_STICK_RIGHT_X][i] = SCALAR(+axes[2]);
-        state_new_gamepad[INPUT_GAMEPAD_STICK_RIGHT_Y][i] = SCALAR(-axes[3]);
+        const vec2_t right_stick = apply_deadzone((vec2_t){SCALAR(+axes[2]), SCALAR(-axes[3])});
+        state_new_gamepad[INPUT_GAMEPAD_STICK_RIGHT_X][i] = right_stick.x;
+        state_new_gamepad[INPUT_GAMEPAD_STICK_RIGHT_Y][i] = right_stick.y;
     }
 }
 
