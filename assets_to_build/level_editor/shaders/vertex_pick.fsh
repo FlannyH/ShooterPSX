@@ -17,7 +17,6 @@ void main() {
 
     vertex_picking = out_position_ws;
 
-    // todo(gouraud_obj_picking_fix): desc: verify object picking correctness
     object_picking.x = float(drawing_id) / 255.0;
     object_picking.y = float(drawing_what) / 255.0;
 }

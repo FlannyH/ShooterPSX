@@ -50,8 +50,8 @@ void main() {
 	out_texcoord = in_texcoord;
 	out_normal = in_normal;
 	out_texture = in_texture;
-	
-	// todo(gouraud_double_code): desc: resolve duplicate vertex lighting code
+
+	// todo(gouraud_double_code): desc: resolve duplicate vertex lighting code (custom glsl include handler?)
 	if (vertex_lighting != 0) {
 		for (int i = 0; i < 256; ++i) {
 			if (abs(lights[i].type - 0.0) < 0.5) continue;
@@ -62,7 +62,7 @@ void main() {
 			if (abs(lights[i].type - 2.0) < 0.5) { // Point
 				vec3 surface_to_light = (lights[i].direction_position * -8.0) - (out_position_ws / 4096.0);
 				vec3 light_dir = normalize(surface_to_light) * vec3(-1.0, -1.0, 1.0);
-				float distance2 = dot(surface_to_light, surface_to_light); // todo: is this in the right units?
+				float distance2 = dot(surface_to_light, surface_to_light); // todo(gouraud_vsh_distance_calc): desc: pass frac bits or have a way to define it from c code
 
 				vec3 add_light_color = clamp(dot(out_normal, light_dir), 0.0, 1.0) * lights[i].color * lights[i].intensity;
 				out_color.xyz += (add_light_color / distance2);
