@@ -3,16 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define MAX_ID_COUNT 128
-#define MAX_MAPPING_COUNT 8
-
-typedef enum {
-    INPUT_TYPE_NONE = 0,
-    INPUT_TYPE_GAMEPAD,
-    INPUT_TYPE_KEYBOARD,
-    INPUT_TYPE_MOUSE,
-} input_type_t;
-
 typedef struct {
     input_type_t type;
     scalar_t scale;
@@ -66,6 +56,16 @@ void input_mapping_register_mouse(int id, input_mouse_t input, scalar_t scale) {
         .mouse = input,
         .scale = scale
     });
+}
+
+void input_mapping_clear(int id, input_type_t type) {
+    size_t i = 0;
+    while (i < input_map[id].n_inputs) {
+        if (input_map[id].inputs[i].type != type) {
+            ++i; continue;
+        }
+        input_map[id].inputs[i] = input_map[id].inputs[--input_map[id].n_inputs];
+    }
 }
 
 scalar_t input_mapping_value(int id, int player_id) {

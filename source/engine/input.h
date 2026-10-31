@@ -69,7 +69,7 @@ typedef enum {
 
 void input_init(void);
 void input_update(void);
-int input_gamepad_connected(int player_id);
+int input_player_connected(int player_id);
 void input_lock_mouse(void);
 void input_unlock_mouse(void);
 void input_rumble(scalar_t left_strength, scalar_t right_enable);
@@ -80,6 +80,15 @@ scalar_t input_value_mouse(input_mouse_t input);
 scalar_t input_value_gamepad_prev(input_gamepad_t input, int player_id);
 scalar_t input_value_keyboard_prev(input_keyboard_t input);
 scalar_t input_value_mouse_prev(input_mouse_t input);
+
+// on consoles, controllers are simple
+// - on handhelds you have 1 controller at index 0
+// - on consoles you have clearly numbered controller slots
+// on pc, a controller is a concept. it could be a virtual device at any arbitrary index
+// this means that at least the pc platform needs more machinery to identify controllers
+int input_device_connected(int device_id);
+const char* input_gamepad_device_name(int device_id);
+void input_gamepad_link_player_device(int player_id, int device_id);
 
 #ifdef __cplusplus
 }

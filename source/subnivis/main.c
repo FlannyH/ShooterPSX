@@ -59,7 +59,7 @@ int main(void) {
 	state.global.show_debug = 0;
 
 	// Let's start here
-	current_state = STATE_DEBUG_MENU_MAIN;
+	current_state = STATE_REMAP_CONTROLS;
 	prev_state = STATE_NONE;
 
     while (!renderer_should_close()) {
@@ -91,6 +91,7 @@ int main(void) {
                 case STATE_DEBUG_MENU_LEVEL:      state_exit_debug_menu_level();      break;
                 case STATE_DEBUG_MENU_MUSIC:      state_exit_debug_menu_music();      break;
                 case STATE_DEBUG_MENU_CONTROLLER: state_exit_debug_menu_controller(); break;
+                case STATE_REMAP_CONTROLS:        state_exit_remap_controls();        break;
             }
             // Enter the current state
             switch(current_state) {
@@ -104,6 +105,7 @@ int main(void) {
                 case STATE_DEBUG_MENU_LEVEL:      state_enter_debug_menu_level();      break;
                 case STATE_DEBUG_MENU_MUSIC:      state_enter_debug_menu_music();      break;
                 case STATE_DEBUG_MENU_CONTROLLER: state_enter_debug_menu_controller(); break;
+                case STATE_REMAP_CONTROLS:        state_enter_remap_controls();        break;
             }
         }
 
@@ -120,6 +122,7 @@ int main(void) {
             case STATE_DEBUG_MENU_LEVEL:      state_update_debug_menu_level(delta_time);      break;
             case STATE_DEBUG_MENU_MUSIC:      state_update_debug_menu_music(delta_time);      break;
             case STATE_DEBUG_MENU_CONTROLLER: state_update_debug_menu_controller(delta_time); break;
+            case STATE_REMAP_CONTROLS:        state_update_remap_controls(delta_time);        break;
 		}
 	}
     return 0;

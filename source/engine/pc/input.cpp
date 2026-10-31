@@ -10,6 +10,7 @@ int mouse_lock = 0;
 int mouse_lock_prev = 0;
 
 #define MAX_CONTROLLERS 4
+int controller_ids[MAX_CONTROLLERS] = {-1, -1, -1, -1};
 
 // callbacks write here
 scalar_t state_new_gamepad[N_INPUT_GAMEPAD][MAX_CONTROLLERS];
@@ -177,7 +178,50 @@ void input_init(void) {
     glfwSetJoystickCallback(joystick_callback);
 }
 
+void update_controller(int i) {
+    if (controller_ids[i] == -1) return;
+    if (!glfwJoystickPresent(controller_ids[i])) return;
+
+    int n_axes = 0, n_buttons = 0, n_hats = 0;
+    const float* axes = glfwGetJoystickAxes(controller_ids[i], &n_axes);
+    const unsigned char* buttons = glfwGetJoystickButtons(controller_ids[i], &n_buttons);
+    const unsigned char* hats = glfwGetJoystickHats(controller_ids[i], &n_hats);
+
+    // todo(verify_controller_defaults): desc: verify controller defaults (only tested on switch)
+    if (n_buttons >= 18) {
+        state_new_gamepad[INPUT_GAMEPAD_UP][i] = buttons[14] ? ONE : 0;
+        state_new_gamepad[INPUT_GAMEPAD_DOWN][i] = buttons[16] ? ONE : 0;
+        state_new_gamepad[INPUT_GAMEPAD_LEFT][i] = buttons[17] ? ONE : 0;
+        state_new_gamepad[INPUT_GAMEPAD_RIGHT][i] = buttons[15] ? ONE : 0;
+        state_new_gamepad[INPUT_GAMEPAD_NORTH][i] = buttons[2] ? ONE : 0;
+        state_new_gamepad[INPUT_GAMEPAD_SOUTH][i] = buttons[0] ? ONE : 0;
+        state_new_gamepad[INPUT_GAMEPAD_WEST][i] = buttons[3] ? ONE : 0;
+        state_new_gamepad[INPUT_GAMEPAD_EAST][i] = buttons[1] ? ONE : 0;
+        state_new_gamepad[INPUT_GAMEPAD_START][i] = buttons[10] ? ONE : 0;
+        state_new_gamepad[INPUT_GAMEPAD_SELECT][i] = buttons[9] ? ONE : 0;
+        state_new_gamepad[INPUT_GAMEPAD_L1][i] = buttons[5] ? ONE : 0;
+        state_new_gamepad[INPUT_GAMEPAD_R1][i] = buttons[6] ? ONE : 0;
+        state_new_gamepad[INPUT_GAMEPAD_L2][i] = buttons[7] ? ONE : 0;
+        state_new_gamepad[INPUT_GAMEPAD_R2][i] = buttons[8] ? ONE : 0;
+        state_new_gamepad[INPUT_GAMEPAD_L3][i] = buttons[12] ? ONE : 0;
+        state_new_gamepad[INPUT_GAMEPAD_R3][i] = buttons[13] ? ONE : 0;
+    }
+    if (n_axes >= 2) {
+        state_new_gamepad[INPUT_GAMEPAD_STICK_LEFT_X][i] = SCALAR(+axes[0]);
+        state_new_gamepad[INPUT_GAMEPAD_STICK_LEFT_Y][i] = SCALAR(-axes[1]);
+    }
+    if (n_axes >= 4) {
+        state_new_gamepad[INPUT_GAMEPAD_STICK_RIGHT_X][i] = SCALAR(+axes[2]);
+        state_new_gamepad[INPUT_GAMEPAD_STICK_RIGHT_Y][i] = SCALAR(-axes[3]);
+    }
+}
+
 void input_update(void) {
+    memset(state_new_gamepad, 0, sizeof(state_new_gamepad));
+    for (int i = 0; i < MAX_CONTROLLERS; ++i) {
+        update_controller(i);
+    }
+
     // prev = curr
     memcpy(state_prev_gamepad, state_curr_gamepad, sizeof(state_prev_gamepad));
     memcpy(state_prev_keyboard, state_curr_keyboard, sizeof(state_prev_keyboard));
@@ -232,4 +276,20 @@ void input_rumble(scalar_t left_strength, scalar_t right_enable) {
 
 void input_set_gamepad_stick_deadzone(scalar_t new_deadzone) {
     deadzone = new_deadzone;
+}
+
+int input_device_connected(int device_id)  {
+    return glfwJoystickPresent(device_id);
+}
+
+const char* input_gamepad_device_name(int device_id) {
+    return glfwGetJoystickName(device_id);
+}
+
+void input_gamepad_link_player_device(int player_id, int device_id) {
+    controller_ids[player_id] = device_id;
+}
+
+int input_player_connected(int player_id) {
+    return (controller_ids[player_id] != -1);
 }

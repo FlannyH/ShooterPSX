@@ -26,6 +26,7 @@ PADTYPE* pad[2] = { NULL, NULL };
 #define N_CONTROLLER 2
 controller_state_t controller_prev[N_CONTROLLER] = {0};
 controller_state_t controller_curr[N_CONTROLLER] = {0};
+int controller_ids[N_CONTROLLER] = { 0, 1 };
 
 int settle_timer = 15;
 
@@ -55,7 +56,7 @@ void input_update(void) {
     }
 
     for (size_t i = 0; i < N_CONTROLLER; ++i) {
-        if (!input_gamepad_connected(i)) continue;
+        if (!input_player_connected(i)) continue;
 
         controller_prev[i] = controller_curr[i];
         controller_curr[i].up     = (pad[i]->btn & PAD_UP) ?       0 : ONE;
@@ -84,8 +85,16 @@ void input_update(void) {
     }
 }
 
-int input_gamepad_connected(int player_id) {
-    return (pad[player_id]->stat == 0);
+int input_player_connected(int player_id) {
+    return input_device_connected(controller_ids[player_id]);
+}
+
+char* input_gamepad_name(int player_id) {
+    switch (player_id) {
+        case 1: return "Controller 1";
+        case 2: return "Controller 2";
+        default: return NULL;
+    }
 }
 
 void input_lock_mouse(void) {}
@@ -194,4 +203,18 @@ scalar_t input_value_keyboard_prev(input_keyboard_t input) {
 scalar_t input_value_mouse_prev(input_mouse_t input) {
     (void)input;
     return 0;
+}
+
+int input_device_connected(int device_id)  {
+    return (pad[device_id]->stat == 0);
+}
+
+const char* input_gamepad_device_name(int device_id) {
+    if (device_id == 0) return "Controller 1";
+    if (device_id == 1) return "Controller 2";
+    return NULL;
+}
+
+void input_gamepad_link_player_device(int player_id, int device_id) {
+    controller_ids[player_id] = device_id;
 }

@@ -38,7 +38,7 @@ void input_update(void) {
     controller_curr[0].select = (key_state & KEY_SELECT) ? 1 : 0;
 }
 
-int input_gamepad_connected(int player_id) {
+int input_player_connected(int player_id) {
     return (player_id == 0);
 }
 
