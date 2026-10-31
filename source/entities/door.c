@@ -94,7 +94,6 @@ void entity_door_update(int slot, player_t* player, scalar_t dt) {
 
 	// distance is calculated at lower scale because vec3_magnitude_squared overflows otherwise
 	const scalar_t distance_from_door_to_player = vec3_distance(door_pos, player_pos);
-	printf("distance_from_door_to_player: \n"); scalar_debug(distance_from_door_to_player);
 	const int player_close_enough = (distance_from_door_to_player < SCALAR(500));
 
 	// Handle unlocking with key cards

@@ -14,7 +14,8 @@ void state_enter_debug_menu_music(void) {
 	state.global.state_to_return_to = get_prev_state();
 	state.title_screen.button_pressed = 0;
     for (int i = 0; i < 2; ++i) {
-        renderer_begin_frame(&id_transform);
+        renderer_begin_frame();
+        renderer_set_view(&id_transform);
         ui_render_background();
     	renderer_end_frame();
     	input_update();
@@ -91,9 +92,10 @@ void state_update_debug_menu_music(scalar_t dt) {
 		music_play_sequence(0);
 	}
 
-	renderer_begin_frame(&id_transform);
+	renderer_begin_frame();
+	renderer_set_view(&id_transform);
 
-    ui_render_background();
+	ui_render_background();
 
 	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, "MUSIC DEBUG", 1, 1, white);
 
@@ -150,7 +152,8 @@ void state_update_debug_menu_music(scalar_t dt) {
 
 void state_exit_debug_menu_music(void) {
     for (int i = 0; i < 2; ++i) {
-        renderer_begin_frame(&id_transform);
+        renderer_begin_frame();
+        renderer_set_view(&id_transform);
         ui_render_background();
     	renderer_end_frame();
     	input_update();

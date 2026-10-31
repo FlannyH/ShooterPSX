@@ -81,7 +81,8 @@ void state_update_in_game(scalar_t dt) {
 	camera_transform.position.x += scalar_mul((ONE * (random_u32() & 0xFF)) / 256, state.in_game.screen_shake_intensity_position);
 	camera_transform.position.y += scalar_mul((ONE * (random_u32() & 0xFF)) / 256, state.in_game.screen_shake_intensity_position);
 	camera_transform.position.z += scalar_mul((ONE * (random_u32() & 0xFF)) / 256, state.in_game.screen_shake_intensity_position);
-	renderer_begin_frame(&camera_transform);
+	renderer_begin_frame();
+	renderer_set_view(&camera_transform);
 
 #ifdef BENCHMARK_MODE
     benchmark_mode();
@@ -108,6 +109,8 @@ void state_update_in_game(scalar_t dt) {
     }
 	else {
 #endif
+		entity_update_all(&state.in_game.player, dt);
+
 		(void)n_sections;
 #if defined(_PSX) && defined(FPS_COUNTER)
 		const uint32_t timer_value_before = TIMER_VALUE(1) & 0xFFFF; // Get start time
@@ -125,7 +128,6 @@ void state_update_in_game(scalar_t dt) {
 		renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists);
 #endif
 
-		entity_update_all(&state.in_game.player, dt);
 #ifdef BENCHMARK_MODE
 		// In benchmark mode the world should be paused, so dt = 0
 		player_update(&state.in_game.player, &state.in_game.level.collision_bvh, 0, state.global.time_counter);

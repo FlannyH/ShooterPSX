@@ -424,9 +424,8 @@ void renderer_init(void) {
 	texture_pool_init(0, 0, 0, 2048);
 }
 double lasttime = 0.0;
-void renderer_begin_frame(const transform_t *camera_transform) {
+void renderer_begin_frame(void) {
 	curr_depth_bias = 0;
-    cam_transform = *camera_transform;
 	lasttime = glfwGetTime();
 	// Set up viewport
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -488,61 +487,12 @@ void renderer_begin_frame(const transform_t *camera_transform) {
 		}
 	}
 
-	// Convert from PS1 to GLM
-    vec3 position = {
-        -(float)camera_transform->position.x / ONE,
-        -(float)camera_transform->position.y / ONE,
-        -(float)camera_transform->position.z / ONE
-    };
-	const vec3 rotation = {
-		-((float)camera_transform->rotation.x * (2 * PI / ONE)),
-		-((float)camera_transform->rotation.y * (2 * PI / ONE)),
-		-((float)camera_transform->rotation.z * (2 * PI / ONE))
-	};
-
-	// Set view matrix
-	glm_mat4_identity(view_matrix_normal);
-
-	// Apply rotation
-	glm_rotate_x(view_matrix_normal, rotation[0], view_matrix_normal);
-	glm_rotate_y(view_matrix_normal, rotation[1], view_matrix_normal);
-	glm_rotate_z(view_matrix_normal, rotation[2], view_matrix_normal);
-
-	// Apply translation
-	glm_translate(view_matrix_normal, position);
-
-    // Set view matrix for top down debug
-    vec3 top_down_position = { position[0], position[1] + 12000, position[2] };
-    glm_mat4_identity(view_matrix_topdown);
-    glm_rotate_x(view_matrix_topdown, PI / 2.0f, view_matrix_topdown);
-    glm_rotate_z(view_matrix_topdown, PI, view_matrix_topdown);
-    glm_translate(view_matrix_topdown, top_down_position);
-
-    glm_mat4_identity(view_matrix_third_person);
-    vec3 distance = { 0, 0, 400 };
-    glm_translate(view_matrix_third_person, distance);
-
-    // Apply rotation
-    glm_rotate_x(view_matrix_third_person, rotation[0], view_matrix_third_person);
-    glm_rotate_y(view_matrix_third_person, rotation[1], view_matrix_third_person);
-    glm_rotate_z(view_matrix_third_person, rotation[2], view_matrix_third_person);
-
-    // Apply translation
-    glm_translate(view_matrix_third_person, position);
-
 	// Clear screen
 	glStencilMask(0xFF);
 	float clear_color0[] = { 0.1f, 0.1f, 0.2f, 1.0f}; glClearBufferfv(GL_COLOR, 0, clear_color0);
 	float clear_color1[] = { 0.0f, 0.0f, 0.0f, 0.0f}; glClearBufferfv(GL_COLOR, 1, clear_color1);
 	float clear_color2[] = { 0.0f, 0.0f, 0.0f, 0.0f}; glClearBufferfv(GL_COLOR, 2, clear_color2);
 	glClearDepth(1.0); glClear(GL_DEPTH_BUFFER_BIT);
-
-	memcpy(view_matrix, view_matrix_normal, sizeof(view_matrix_normal));
-
-	camera_dir.x = view_matrix_normal[2][0] * ONE;
-	camera_dir.y = view_matrix_normal[2][1] * ONE;
-	camera_dir.z = view_matrix_normal[2][2] * ONE;
-	memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
 
 	n_total_triangles = 0;
 }
@@ -1193,4 +1143,35 @@ int renderer_debug_fetch_atlas(void) {
 
 void* renderer_get_window(void) {
     return window;
+}
+
+void renderer_set_view(const transform_t* view_transform) {
+    cam_transform = *view_transform;
+	// Convert from PS1 to GLM
+    vec3 position = {
+        -(float)view_transform->position.x / ONE,
+        -(float)view_transform->position.y / ONE,
+        -(float)view_transform->position.z / ONE
+    };
+	const vec3 rotation = {
+		-((float)view_transform->rotation.x * (2 * PI / ONE)),
+		-((float)view_transform->rotation.y * (2 * PI / ONE)),
+		-((float)view_transform->rotation.z * (2 * PI / ONE))
+	};
+
+	// Set view matrix
+	glm_mat4_identity(view_matrix);
+
+	// Apply rotation
+	glm_rotate_x(view_matrix, rotation[0], view_matrix);
+	glm_rotate_y(view_matrix, rotation[1], view_matrix);
+	glm_rotate_z(view_matrix, rotation[2], view_matrix);
+
+	// Apply translation
+	glm_translate(view_matrix, position);
+
+	camera_dir.x = view_matrix[2][0] * ONE;
+	camera_dir.y = view_matrix[2][1] * ONE;
+	camera_dir.z = view_matrix[2][2] * ONE;
+	memcpy(&camera_pos, &view_transform->position, sizeof(camera_pos));
 }

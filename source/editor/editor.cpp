@@ -1901,7 +1901,8 @@ int main(int argc, char** argv) {
         }
 
         debug_camera_update(&editor.misc.camera, dt, mouse_lock);
-        renderer_begin_frame(&editor.misc.camera.transform);
+        renderer_begin_frame();
+        renderer_set_view(&editor.misc.camera.transform);
 
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
 

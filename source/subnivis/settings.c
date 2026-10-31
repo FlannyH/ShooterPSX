@@ -28,7 +28,8 @@ void state_enter_settings(void) {
 	state.title_screen.button_pressed = 0;
 	renderer_start_fade_in(FADE_SPEED);
 	while (renderer_is_fading()) {
-		renderer_begin_frame(&id_transform);
+        renderer_begin_frame();
+        renderer_set_view(&id_transform);
 		ui_render_background();
 		renderer_end_frame();
 	}
@@ -36,7 +37,8 @@ void state_enter_settings(void) {
 
 void state_update_settings(scalar_t dt) {
 	(void)dt;
-	renderer_begin_frame(&id_transform);
+    renderer_begin_frame();
+    renderer_set_view(&id_transform);
 
     ui_render_background();
 
@@ -117,7 +119,8 @@ void state_exit_settings(void) {
 	renderer_start_fade_out(FADE_SPEED);
 
 	while (renderer_is_fading()) {
-		renderer_begin_frame(&id_transform);
+        renderer_begin_frame();
+        renderer_set_view(&id_transform);
 		ui_render_background();
 
 		renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_settings[0], 1, 1, white);

@@ -10,7 +10,8 @@
 void state_enter_credits(void) {
 	renderer_start_fade_in(FADE_SPEED);
 	while (renderer_is_fading()) {
-		renderer_begin_frame(&id_transform);
+        renderer_begin_frame();
+        renderer_set_view(&id_transform);
 		ui_render_background();
 		renderer_end_frame();
 	}
@@ -19,7 +20,8 @@ void state_enter_credits(void) {
 }
 
 void state_update_credits(scalar_t dt) {
-	renderer_begin_frame(&id_transform);
+    renderer_begin_frame();
+    renderer_set_view(&id_transform);
 	ui_render_background();
 
 	for (int i = 0; i < n_text_credits; ++i) {
@@ -40,7 +42,8 @@ void state_exit_credits(void) {
 	// Fade
 	renderer_start_fade_out(FADE_SPEED);
 	while (renderer_is_fading()) {
-		renderer_begin_frame(&id_transform);
+        renderer_begin_frame();
+        renderer_set_view(&id_transform);
 		ui_render_background();
 
 		for (int i = 0; i < n_text_credits; ++i) {

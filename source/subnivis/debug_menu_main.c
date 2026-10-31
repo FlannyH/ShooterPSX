@@ -12,7 +12,8 @@ void state_enter_debug_menu_main(void) {
 	state.global.state_to_return_to = get_prev_state();
 	state.title_screen.button_pressed = 0;
     for (int i = 0; i < 2; ++i) {
-        renderer_begin_frame(&id_transform);
+        renderer_begin_frame();
+        renderer_set_view(&id_transform);
         ui_render_background();
     	renderer_end_frame();
     	input_update();
@@ -21,7 +22,8 @@ void state_enter_debug_menu_main(void) {
 
 void state_update_debug_menu_main(scalar_t dt) {
 	(void)dt;
-	renderer_begin_frame(&id_transform);
+	renderer_begin_frame();
+	renderer_set_view(&id_transform);
 
     ui_render_background();
 
@@ -79,7 +81,8 @@ void state_update_debug_menu_main(scalar_t dt) {
 
 void state_exit_debug_menu_main(void) {
     for (int i = 0; i < 2; ++i) {
-        renderer_begin_frame(&id_transform);
+        renderer_begin_frame();
+        renderer_set_view(&id_transform);
         ui_render_background();
     	renderer_end_frame();
     	input_update();

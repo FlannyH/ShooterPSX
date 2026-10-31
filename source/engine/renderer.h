@@ -73,8 +73,9 @@ typedef union {
 
 // Functions
 void renderer_init(void); // Initializes the renderer by configuring the GPU, setting the video mode, and preparing the drawing environment
-void renderer_begin_frame(const transform_t* camera_transform); // Applies the camera transform to the renderer, preparing it for a new frame
+void renderer_begin_frame(void); // preparing it for a new frame
 void renderer_end_frame(void); // Draws the render queue, swaps the drawbuffer, clears the render queue, and applies the display environments
+void renderer_set_view(const transform_t* view_transform); // Any 3D draw calls after this will use this view matrix
 void renderer_draw_model_shaded(const model_t* model, const transform_t* model_transform, visfield_t* vislist); // Draws a 3D model at a given transform using shaded triangle primitives
 void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform, int local, int facing_camera); // Draws a 3D mesh at a given transform using shaded triangle primitives. Setting local to 1 draws it relative to the camera view.
 void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, texture_category_t category);

@@ -165,16 +165,7 @@ void renderer_init(void) {
     drawn_first_frame = 0;
 }
 
-void renderer_begin_frame(const transform_t* camera_transform) {
-    mem_stack_release(STACK_TEMP);
-
-    // Set the next primitive to draw to be the first primitive in the buffer
-    uint32_t* primitive_buffer_on_temp_stack = (uint32_t*)mem_stack_alloc(256 * KiB, STACK_TEMP);
-    next_primitive = &primitive_buffer_on_temp_stack[drawbuffer * ((128 * KiB) / sizeof(uint32_t))];
-
-	renderer_set_depth_bias(0);
-
-    // Get camera position
+void renderer_set_view(const transform_t* camera_transform) {
     VECTOR position;
     memcpy(&position, &camera_transform->position, sizeof(position));
     memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
@@ -200,12 +191,22 @@ void renderer_begin_frame(const transform_t* camera_transform) {
         },
         .t = {0, 0, 0},
     };
-    CompMatrixLV(&aspect_matrix, &view_matrix, &view_matrix);
 
-    // Handle metadata
+    CompMatrixLV(&aspect_matrix, &view_matrix, &view_matrix);
 	camera_dir.x = view_matrix.m[2][0];
 	camera_dir.y = view_matrix.m[2][1];
 	camera_dir.z = view_matrix.m[2][2];
+}
+
+void renderer_begin_frame() {
+    mem_stack_release(STACK_TEMP);
+
+    // Set the next primitive to draw to be the first primitive in the buffer
+    uint32_t* primitive_buffer_on_temp_stack = (uint32_t*)mem_stack_alloc(256 * KiB, STACK_TEMP);
+    next_primitive = &primitive_buffer_on_temp_stack[drawbuffer * ((128 * KiB) / sizeof(uint32_t))];
+
+	renderer_set_depth_bias(0);
+
     n_meshes_drawn = 0;
 }
 
