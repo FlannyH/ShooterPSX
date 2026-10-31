@@ -20,6 +20,7 @@ typedef struct {
 } controller_state_t;
 
 // ps1 stuff
+scalar_t deadzone = SCALAR(0.1);
 uint8_t pad_buff[2][34];
 PADTYPE* pad[2] = { NULL, NULL };
 
@@ -49,6 +50,15 @@ scalar_t stick_to_scalar(uint8_t stick_value) {
     return x;
 }
 
+vec2_t apply_deadzone(vec2_t v) {
+    scalar_t length = vec2_magnitude(v);
+    vec2_t dir = vec2_divs(v, length);
+    length -= deadzone;
+    length = scalar_div(length, ONE - deadzone);
+    length = scalar_clamp(length, 0, ONE);
+    return vec2_muls(dir, length);
+}
+
 void input_update(void) {
     if (settle_timer > 0) {
         settle_timer--;
@@ -76,10 +86,12 @@ void input_update(void) {
         controller_curr[i].l3     = (pad[i]->btn & PAD_L3) ?       0 : ONE;
         controller_curr[i].r3     = (pad[i]->btn & PAD_R3) ?       0 : ONE;
 
-        controller_curr[i].stick_left.x = stick_to_scalar(pad[i]->ls_x);
-        controller_curr[i].stick_left.y = stick_to_scalar(pad[i]->ls_y);
-        controller_curr[i].stick_right.x = stick_to_scalar(pad[i]->rs_x);
-        controller_curr[i].stick_right.y = stick_to_scalar(pad[i]->rs_y);
+        const vec2_t left_stick = apply_deadzone((vec2_t){stick_to_scalar(pad[i]->ls_x), -stick_to_scalar(pad[i]->ls_y)});
+        controller_curr[i].stick_left.x = left_stick.x;
+        controller_curr[i].stick_left.y = left_stick.y;
+        const vec2_t right_stick = apply_deadzone((vec2_t){stick_to_scalar(pad[i]->rs_x), -stick_to_scalar(pad[i]->rs_y)});
+        controller_curr[i].stick_right.x = right_stick.x;
+        controller_curr[i].stick_right.y = right_stick.y;
 
         // todo: mouse
     }
@@ -124,7 +136,7 @@ void input_rumble(scalar_t left_strength, scalar_t right_enable) {
 }
 
 void input_set_gamepad_stick_deadzone(scalar_t new_deadzone) {
-    (void)new_deadzone;
+    deadzone = new_deadzone;
 }
 
 scalar_t input_value_gamepad(input_gamepad_t input, int player_id) {
@@ -206,6 +218,7 @@ scalar_t input_value_mouse_prev(input_mouse_t input) {
 }
 
 int input_device_connected(int device_id)  {
+    if (device_id < 0 || device_id >= 2) return 0;
     return (pad[device_id]->stat == 0);
 }
 
