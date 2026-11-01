@@ -7,6 +7,29 @@
 #include "subnivis/main.h"
 #include "engine/math/vec3.h"
 
+#ifdef _LEVEL_EDITOR
+#include "editor/editor.h"
+
+int entity_door_inspect(int slot) {
+    entity_door_t* door = (entity_door_t*)entity_get_header(slot);
+
+    int result = 0;
+
+    int is_locked = (int)door->is_locked;
+    int is_big_door = (int)door->is_big_door;
+    int is_rotated = (int)door->is_rotated;
+    int open_by_signal = (int)door->open_by_signal;
+    result |= inspect_vec3(&door->open_offset, "Open offset");
+    result |= inspect_int(&door->signal_id, "Signal ID", 0, ENTITY_SIGNAL_COUNT, 0);
+    if (inspect_bool(&is_locked, "Locked")) { door->is_locked = (int)is_locked; door->state_changed = 1; result |= 1;}
+    if (inspect_bool(&is_big_door, "Big door")) { door->is_big_door = (int)is_big_door; door->state_changed = 1; result |= 1;}
+    if (inspect_bool(&is_rotated, "Rotated")) { door->is_rotated = (int)is_rotated; door->state_changed = 1; result |= 1;}
+    if (inspect_bool(&open_by_signal, "Open by signal")) { door->open_by_signal = (int)open_by_signal; door->state_changed = 1; result |= 1;}
+
+    return result;
+}
+#endif
+
 size_t entity_door_serialize(int slot, uint8_t* dest) {
     entity_door_t* door_source = (entity_door_t*)entity_get_header(slot);
     entity_door_t* door_dest = (entity_door_t*)dest;

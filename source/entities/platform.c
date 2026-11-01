@@ -4,6 +4,47 @@
 #include "engine/mesh.h"
 #include "subnivis/main.h"
 
+#ifdef _LEVEL_EDITOR
+#include "editor/editor.h"
+
+int entity_platform_inspect(int slot) {
+    int result = 0;
+
+    entity_platform_t* platform = (entity_platform_t*)entity_get_header(slot);
+    result |= inspect_vec3(&platform->position_start, "Start position");
+    result |= inspect_vec3(&platform->position_end, "End position");
+    result |= inspect_scalar(&platform->velocity, "Velocity");
+    result |= inspect_int(&platform->curr_timer_value, "Current timer value (ms)", 0, 0, 1);
+    result |= inspect_int(&platform->auto_start_timer, "Auto start to end timer (ms)", 0, 0, 1);
+    result |= inspect_int(&platform->auto_return_timer, "Auto end to start timer (ms)", 0, 0, 1);
+    result |= inspect_int(&platform->signal_id, "Signal ID", 0, ENTITY_SIGNAL_COUNT, 1);
+    int listen_to_signal = platform->listen_to_signal;
+    int target_is_end = platform->target_is_end;
+    int auto_start = platform->auto_start;
+    int auto_return = platform->auto_return;
+    int move_on_player_collision = platform->move_on_player_collision;
+    if (inspect_bool(&listen_to_signal, "Listen to signal")) { platform->listen_to_signal = (int)listen_to_signal; result |= 1; }
+    if (inspect_bool(&target_is_end, "Target is end position")) { platform->target_is_end = (int)target_is_end; result |= 1; }
+    if (inspect_bool(&auto_start, "Start automatically")) { platform->auto_start = (int)auto_start; result |= 1; }
+    if (inspect_bool(&auto_return, "Return automatically")) { platform->auto_return = (int)auto_return; result |= 1; }
+    if (inspect_bool(&move_on_player_collision, "Move on player collision")) { platform->move_on_player_collision = (int)move_on_player_collision; result |= 1; }
+
+    const aabb_t start_pos_debug = (aabb_t) {
+        .min = vec3_sub(platform->position_start, vec3_from_scalar(ONE / 2)),
+        .max = vec3_add(platform->position_start, vec3_from_scalar(ONE / 2)),
+    };
+    const aabb_t end_pos_debug = (aabb_t) {
+        .min = vec3_sub(platform->position_end, vec3_from_scalar(ONE / 2)),
+        .max = vec3_add(platform->position_end, vec3_from_scalar(ONE / 2)),
+    };
+    renderer_debug_draw_aabb(&start_pos_debug, red, &id_transform);
+    renderer_debug_draw_aabb(&end_pos_debug, green, &id_transform);
+    renderer_debug_draw_line(platform->position_start, platform->position_end, blue, &id_transform);
+
+    return result;
+}
+#endif
+
 size_t entity_platform_serialize(int slot, uint8_t* dest) {
     entity_platform_t* platform_source = (entity_platform_t*)entity_get_header(slot);
     entity_platform_t* platform_dest = (entity_platform_t*)dest;

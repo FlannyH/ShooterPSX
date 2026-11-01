@@ -1,6 +1,60 @@
 #include "cinecam.h"
 #include "engine/renderer.h"
 
+#ifdef _LEVEL_EDITOR
+#include "editor/editor.h"
+
+int entity_cinecam_inspect(int slot) {
+    entity_cinecam_t* cinecam = (entity_cinecam_t*)entity_get_header(slot);
+
+    int result = 0;
+
+    if (inspect_tree_push("Nodes")) {
+        for (int i = 0; i < cinecam->n_nodes; ++i) {
+            renderer_set_drawing_id(0, 0);
+            renderer_set_depth_bias(0);
+            editor_draw_sphere((transform_t) {
+                .position = editor_selected_vertex_position(),
+                .rotation = vec3_from_scalar(0),
+                .scale = vec3_from_scalar(SCALAR(32)),
+            });
+            if (i > 0) renderer_debug_draw_line(cinecam->nodes[i-1].position, cinecam->nodes[i].position, white, &id_transform);
+
+            char node_name[] = "Node 9999\n";
+            snprintf(node_name, sizeof(node_name), "Node %i", i);
+            if (!inspect_tree_push(node_name)) continue;
+
+            inspect_index_push(i);
+            if (!cinecam->nodes) break;
+
+            result |= inspect_vec3(&cinecam->nodes[i].position, "Position");
+            result |= inspect_vec3(&cinecam->nodes[i].rotation, "Rotation");
+            result |= inspect_scalar(&cinecam->nodes[i].time_to_next, "Seconds to next node");
+            if (inspect_button("Move viewport to node")) {
+                editor_set_viewport_position(cinecam->nodes[i].position);
+                editor_set_viewport_rotation(cinecam->nodes[i].rotation);
+                result |= 1;
+            }
+            if (inspect_button("Move node to viewport")) {
+                cinecam->nodes[i].position = editor_get_viewport_position();
+                cinecam->nodes[i].rotation = editor_get_viewport_rotation();
+                result |= 1;
+            }
+            inspect_index_pop();
+            inspect_tree_pop();
+        }
+        inspect_tree_pop();
+    }
+    if (inspect_button("Add")) {
+        cinecam->nodes[cinecam->n_nodes].position = editor_get_viewport_position();
+        cinecam->nodes[cinecam->n_nodes++].rotation = editor_get_viewport_rotation();
+        result |= 1;
+    }
+
+    return result;
+}
+#endif
+
 entity_cinecam_t* entity_cinecam_new(void) {
 	entity_cinecam_t* entity = (entity_cinecam_t*)entity_get_header(entity_alloc(ENTITY_CINECAM));
 	entity->entity_header.position = (vec3_t){0, 0, 0};

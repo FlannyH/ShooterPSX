@@ -5,6 +5,39 @@
 
 extern state_vars_t state;
 
+#ifdef _LEVEL_EDITOR
+#include "editor/editor.h"
+
+int entity_trigger_inspect(int slot) {
+    entity_trigger_t* trigger = (entity_trigger_t*)entity_get_header(slot);
+
+    int result = 0;
+
+    int destroy_on_player_intersect = (int)trigger->destroy_on_player_intersect;
+    if (inspect_bool(&destroy_on_player_intersect, "Destroy on player intersect")) {
+        trigger->destroy_on_player_intersect = destroy_on_player_intersect;
+        result |= 1;
+    }
+
+    trigger->trigger_type = (uint8_t)inspect_enum((int)trigger->trigger_type, entity_trigger_type_names, "Trigger type");
+    if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TEXT) {
+        result |= inspect_pixel32(&trigger->text.color, "Text color");
+        result |= inspect_int(&trigger->text.id, "Text entry ID", 0, 255, 0);
+        result |= inspect_scalar(&trigger->text.total_display_time, "Display time");
+    }
+    else if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_SIGNAL) {
+        result |= inspect_int(&trigger->signal.id, "Signal ID", 0, ENTITY_SIGNAL_COUNT, 0);
+        result |= inspect_int(&trigger->signal.value_to_send, "Value to send", 1, 100, 0);
+    }
+    else if (trigger->trigger_type == ENTITY_TRIGGER_TYPE_TELEPORT) {
+        result |= inspect_vec3(&trigger->teleport.destination_pos, "Destination position");
+        result |= inspect_vec3(&trigger->teleport.destination_rotation_offset, "Destination rotation offset");
+    }
+
+    return result;
+}
+#endif
+
 size_t entity_trigger_serialize(int slot, uint8_t* dest) {
     entity_trigger_t* trigger_source = (entity_trigger_t*)entity_get_header(slot);
 

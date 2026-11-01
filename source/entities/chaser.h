@@ -34,6 +34,10 @@ void entity_chaser_update(int slot, player_t* player, scalar_t dt);
 void entity_chaser_on_hit(int slot, int hitbox_index);
 void entity_chaser_player_intersect(int slot, player_t* player);
 
+#ifdef _LEVEL_EDITOR
+int entity_chaser_inspect(int slot);
+#endif
+
 const static scalar_t chaser_acceleration = SCALAR(20);
 const static scalar_t chaser_max_speed = SCALAR(300);
 const static scalar_t chaser_drag = SCALAR(4);

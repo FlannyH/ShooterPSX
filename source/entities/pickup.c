@@ -6,6 +6,26 @@
 
 #include "engine/music.h"
 
+#ifdef _LEVEL_EDITOR
+#include "editor/editor.h"
+
+int entity_pickup_inspect(int slot) {
+    entity_pickup_t* pickup = (entity_pickup_t*)entity_get_header(slot);
+
+    int result = 0;
+
+    const size_t old_type = (size_t)pickup->type;
+    const size_t new_type = inspect_enum((size_t)pickup->type, pickup_names, "Pickup type");
+    if (old_type != new_type) {
+        pickup->type = new_type;
+        pickup->entity_header.mesh = NULL; // force refresh mesh data
+        result |= 1;
+    }
+
+    return result;
+}
+#endif
+
 size_t entity_pickup_serialize(int slot, uint8_t* dest) {
     entity_pickup_t* pickup_source = (entity_pickup_t*)entity_get_header(slot);
     entity_pickup_t* pickup_dest = (entity_pickup_t*)dest;

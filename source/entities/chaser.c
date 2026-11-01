@@ -5,6 +5,16 @@
 #include "engine/mesh.h"
 #include "subnivis/main.h"
 
+#ifdef _LEVEL_EDITOR
+#include "editor/editor.h"
+
+int entity_chaser_inspect(int slot) {
+    entity_chaser_t* chaser = (entity_chaser_t*)entity_get_header(slot);
+    if (inspect_vec3(&chaser->home_position, "Home position")) return 1;
+    return 0;
+}
+#endif
+
 extern state_vars_t state;
 #define CHASER_BEHAVIOUR_PERIOD 16
 #define CHASER_REACTION_TIME_MIN 200 // in milliseconds

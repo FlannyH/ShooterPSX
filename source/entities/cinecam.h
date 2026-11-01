@@ -29,6 +29,10 @@ void entity_cinecam_update(int slot, player_t* player, scalar_t dt);
 void entity_cinecam_on_hit(int slot, int hitbox_index);
 void entity_cinecam_player_intersect(int slot, player_t* player);
 
+#ifdef _LEVEL_EDITOR
+int entity_cinecam_inspect(int slot);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

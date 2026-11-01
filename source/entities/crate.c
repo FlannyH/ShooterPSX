@@ -5,6 +5,25 @@
 #include "engine/mesh.h"
 #include "subnivis/main.h"
 
+#ifdef _LEVEL_EDITOR
+#include "editor/editor.h"
+
+int entity_crate_inspect(int slot) {
+    entity_crate_t* crate = (entity_crate_t*)entity_get_header(slot);
+
+    int result = 0;
+
+    const uint8_t old_val = crate->pickup_to_spawn;
+    crate->pickup_to_spawn = inspect_enum((size_t)crate->pickup_to_spawn, pickup_names, "Pickup type to spawn");
+    const uint8_t new_val = crate->pickup_to_spawn;
+    if (old_val != new_val) {
+        result |= 1;
+    }
+
+    return result;
+}
+#endif
+
 size_t entity_crate_serialize(int slot, uint8_t* dest) {
     entity_crate_t* crate_source = (entity_crate_t*)entity_get_header(slot);
     entity_crate_t* crate_dest = (entity_crate_t*)dest;
