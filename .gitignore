@@ -19,3 +19,4 @@ compile_commands.json
 comport.txt
 *.sh
 /.gram
+docs/source/**

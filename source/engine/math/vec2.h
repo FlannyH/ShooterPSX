@@ -23,6 +23,7 @@ typedef struct {
     int16_t x, y; // 2D position
 } svec2_t;
 
+/// doc: desc: Construct a `vec2_t` from two float values, converting each component to a scalar value in the process
 static inline vec2_t vec2_from_floats(const float x, const float y) {
     return (vec2_t) {
         SCALAR(x),
@@ -30,6 +31,7 @@ static inline vec2_t vec2_from_floats(const float x, const float y) {
     };
 }
 
+/// doc: desc: Print a formatted `vec2_t` using `print_scalar`
 static inline void vec2_debug(const vec2_t a) {
     print_scalar(a.x);
     printf(", ");
@@ -37,10 +39,12 @@ static inline void vec2_debug(const vec2_t a) {
     printf("\n");
 }
 
+/// doc: desc: Construct a `vec2_t`, setting each component to the same scalar value `a`
 static inline vec2_t vec2_from_scalar(const scalar_t a) {
     return (vec2_t){ a, a };
 }
 
+/// doc: desc: Construct a `vec2_t` from two scalar values
 static inline vec2_t vec2_from_scalars(const scalar_t x, const scalar_t y) {
     return (vec2_t){ x, y };
 }
@@ -50,6 +54,7 @@ static inline vec2_t vec2_from_ints(int x, int y) {
     return (vec2_t){ SCALAR(x), SCALAR(y) };
 }
 
+/// doc: desc: Construct a `vec2_t` from the two 16-bit integers in `vec`
 static inline vec2_t vec2_from_svec2(svec2_t vec) {
     return (vec2_t) {
         (scalar_t)vec.x * ONE,
@@ -57,6 +62,7 @@ static inline vec2_t vec2_from_svec2(svec2_t vec) {
     };
 }
 
+/// doc: desc: Construct an `svec2_t` from a fixed point `vec2_t`
 static inline svec2_t svec2_from_vec2(vec2_t vec) {
     return (svec2_t) {
         (int16_t)(vec.x / ONE),
@@ -64,6 +70,7 @@ static inline svec2_t svec2_from_vec2(vec2_t vec) {
     };
 }
 
+/// doc: desc: Add each component from `a` and `b` together separately , and return the result
 static inline vec2_t vec2_add(const vec2_t a, const vec2_t b) {
     return (vec2_t) {
         (a.x + b.x),
@@ -71,6 +78,7 @@ static inline vec2_t vec2_add(const vec2_t a, const vec2_t b) {
     };
 }
 
+/// doc: desc: Add a single value `b` to each component of `a`
 static inline vec2_t vec2_adds(const vec2_t a, const scalar_t b) {
     return (vec2_t) {
         (a.x + b),
@@ -78,6 +86,7 @@ static inline vec2_t vec2_adds(const vec2_t a, const scalar_t b) {
     };
 }
 
+/// doc: desc: Subtract each component from `a` and `b` from eachother, and return the result
 static inline vec2_t vec2_sub(const vec2_t a, const vec2_t b) {
     return (vec2_t) {
         (a.x - b.x),
@@ -85,6 +94,7 @@ static inline vec2_t vec2_sub(const vec2_t a, const vec2_t b) {
     };
 }
 
+/// doc: desc: Subtract a single value `b` from each component of `a`, and return the result
 static inline vec2_t vec2_subs(const vec2_t a, const scalar_t b) {
     return (vec2_t) {
         (a.x - b),
@@ -92,6 +102,7 @@ static inline vec2_t vec2_subs(const vec2_t a, const scalar_t b) {
     };
 }
 
+/// doc: desc: Multiply each component from `a` and `b` together separately , and return the result
 static inline vec2_t vec2_mul(const vec2_t a, const vec2_t b) {
     return (vec2_t) {
         scalar_mul(a.x, b.x),
@@ -99,6 +110,7 @@ static inline vec2_t vec2_mul(const vec2_t a, const vec2_t b) {
     };
 }
 
+/// doc: desc: Multiply each component from `a` with a single value `b`, and return the result
 static inline vec2_t vec2_muls(const vec2_t a, const scalar_t b) {
     return (vec2_t) {
         scalar_mul(a.x, b),
@@ -106,6 +118,7 @@ static inline vec2_t vec2_muls(const vec2_t a, const scalar_t b) {
     };
 }
 
+/// doc: desc: Divide each component from `a` with each component from `b`, and return the result
 static inline vec2_t vec2_div(const vec2_t a, const vec2_t b) {
     return (vec2_t) {
         scalar_div(a.x, b.x),
@@ -113,6 +126,7 @@ static inline vec2_t vec2_div(const vec2_t a, const vec2_t b) {
     };
 }
 
+/// doc: desc: Divide each component from `a` with a single value `b`, and return the result
 static inline vec2_t vec2_divs(const vec2_t a, const scalar_t b) {
     return (vec2_t) {
         scalar_div(a.x, b),
@@ -120,11 +134,13 @@ static inline vec2_t vec2_divs(const vec2_t a, const scalar_t b) {
     };
 }
 
+/// doc: desc: Calculate the dot product between `a` and `b`, and return the result
 static inline scalar_t vec2_dot(const vec2_t a, const vec2_t b) {
     return scalar_mul(a.x, b.x)
     +      scalar_mul(a.y, b.y);
 }
 
+/// doc: desc: Get the lowest value for each separate component of `a` and `b`
 static inline vec2_t vec2_min(const vec2_t a, const vec2_t b) {
     return (vec2_t) {
         scalar_min(a.x, b.x),
@@ -132,6 +148,7 @@ static inline vec2_t vec2_min(const vec2_t a, const vec2_t b) {
     };
 }
 
+/// doc: desc: Get the highest value for each separate component of `a` and `b`
 static inline vec2_t vec2_max(const vec2_t a, const vec2_t b) {
     return (vec2_t) {
         scalar_max(a.x, b.x),
@@ -139,6 +156,7 @@ static inline vec2_t vec2_max(const vec2_t a, const vec2_t b) {
     };
 }
 
+/// doc: desc: Shift each component of `a` left by `amount` bits. Equivalent to `a * (1 << shift)`
 static inline vec2_t vec2_shift_left(const vec2_t a, const int amount) {
     return (vec2_t) {
         scalar_shift_left(a.x, amount),
@@ -146,6 +164,7 @@ static inline vec2_t vec2_shift_left(const vec2_t a, const int amount) {
     };
 }
 
+/// doc: desc: Shift each component `a` right by `amount` bits. Equivalent to `a / (1 << shift)`
 static inline vec2_t vec2_shift_right(const vec2_t a, const int amount) {
     return (vec2_t) {
         scalar_shift_right(a.x, amount),
@@ -153,6 +172,7 @@ static inline vec2_t vec2_shift_right(const vec2_t a, const int amount) {
     };
 }
 
+/// doc: desc: Calculate the squared magnitude/length of `a`. If we don't need the exact distance, but just need something to compare distances, this is more efficient to use than `vec2_magnitude`, as we can avoid the square root at the end
 static inline scalar_t vec2_magnitude_squared(const vec2_t a) {
     const scalar_t x2 = scalar_mul(a.x, a.x);
     const scalar_t y2 = scalar_mul(a.y, a.y);
@@ -164,6 +184,7 @@ static inline scalar_t vec2_magnitude_squared(const vec2_t a) {
     return x2 + y2;
 }
 
+/// doc: desc: Calculate the magnitude/length of `a`. This involves a square root operation, so use this wisely, and consider `vec2_magnitude_squared`
 static inline scalar_t vec2_magnitude(vec2_t a) {
     if (a.x == 0 && a.y == 0) {
         return 0;
@@ -201,10 +222,12 @@ static inline scalar_t vec2_magnitude(vec2_t a) {
     #endif
 }
 
+/// doc: desc: Calculate the distance between two vectors, by calling `vec2_magnitude` on `b - a`
 static inline scalar_t vec2_distance(vec2_t a, vec2_t b) {
     return vec2_magnitude(vec2_sub(a, b));
 }
 
+/// doc: desc: Return `-a`, as in `a` with all its components negated
 static inline vec2_t vec2_neg(vec2_t a) {
     return (vec2_t) {
         -a.x,
@@ -212,14 +235,17 @@ static inline vec2_t vec2_neg(vec2_t a) {
     };
 }
 
+/// doc: desc: Calculate the right-handed cross product
 static inline scalar_t vec2_cross(const vec2_t a, const vec2_t b) {
     return (scalar_mul(a.x, b.y) - scalar_mul(a.y, b.x));
 }
 
+/// doc: desc: Calculate the left-handed cross product
 static inline scalar_t vec2_cross_lh(const vec2_t a, const vec2_t b) {
     return (scalar_mul(a.x, b.y) - scalar_mul(a.y, b.x));
 }
 
+/// doc: desc:  Return a vector with the same direction, but length 1.0. by calculating `a / vec2_magnitude(a)`, correcting for fixed point overflows
 static inline vec2_t vec2_normalize(vec2_t a) {
     // avoid overflows
     while ((scalar_abs(a.x) > (2*ONE)) || (scalar_abs(a.y) > (2*ONE))) {
@@ -236,6 +262,7 @@ static inline vec2_t vec2_normalize(vec2_t a) {
     return a_normalized;
 }
 
+/// doc: desc: Clamp each component between min and max separately, see `scalar_clamp`
 static inline vec2_t vec2_clamp(vec2_t a, vec2_t min, vec2_t max) {
     return (vec2_t) {
         scalar_clamp(a.x, min.x, max.x),
@@ -243,6 +270,7 @@ static inline vec2_t vec2_clamp(vec2_t a, vec2_t min, vec2_t max) {
     };
 }
 
+/// doc: desc: Linearly interpolate each component separately, see `scalar_lerp`
 static inline vec2_t vec2_lerp(vec2_t a, vec2_t b, scalar_t t) {
     return (vec2_t) {
         a.x + scalar_mul(b.x - a.x, t),
@@ -250,10 +278,15 @@ static inline vec2_t vec2_lerp(vec2_t a, vec2_t b, scalar_t t) {
     };
 }
 
+/// doc: desc: Returns 1 if the two vectors are equal, 0 otherwise
 static inline int vec2_equal(vec2_t a, vec2_t b) {
     return (a.x == b.x) && (a.y == b.y);
 }
 
+/// doc: desc: Serializes and writes a `vec2_t` to `destination`
+/// doc: desc: Returns number of bytes written
+/// doc: param(void* destination): Where to store the serialized vector
+/// doc: param(vec2_t vec): Which vector to serialize
 static inline size_t serialize_vec2(void* destination, vec2_t vec) {
     intptr_t dest_i = (intptr_t)destination;
     serialize_scalar((void*)(dest_i + offsetof(vec2_t, x)), vec.x);
@@ -261,6 +294,9 @@ static inline size_t serialize_vec2(void* destination, vec2_t vec) {
     return sizeof(vec);
 }
 
+/// doc: desc: Reads and deserializes a scalar, and then returns that scalar
+/// doc: param(void* source): Where to read the serialized vector from
+/// doc: param(vec2_t* vec): Where to store the deserialized vector to
 static inline size_t deserialize_vec2(const void *const source, vec2_t* vec) {
     assert(source);
     assert(vec);

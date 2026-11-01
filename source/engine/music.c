@@ -44,6 +44,9 @@ vec3_t listener_right = {0};
 
 scalar_t sec_per_tick = SCALAR(44);
 
+/// doc: desc: Load an audio soundbank from disk into memory, uploading audio sample data into sound memory, and storing sample headers and instrument parameters to system RAM
+/// doc: param(char* path): Path to soundbank file
+/// doc: param(int type): What slot to load the soundbank into
 void audio_load_soundbank(const char* path, int slot) {
     if (slot >= N_SOUNDBANKS) {
         printf("audio_load_soundbank: slot index %i out of bounds (should be 0..=%i)", slot, N_SOUNDBANKS - 1);
@@ -83,6 +86,8 @@ void audio_load_soundbank(const char* path, int slot) {
 	music_stack_seq_offset = mem_stack_get_marker(STACK_MUSIC);
 }
 
+/// doc: desc: Initialize the audio mixer so it's ready to receive sample data and music instructions. See `mixer_init()`
+/// doc: desc: This function needs to be called before any other audio related functions
 void audio_init(void) {
 	mixer_init();
 	listener_pos = (vec3_t){0, 0, 0};
@@ -160,6 +165,7 @@ void audio_play_sound(int instrument, int pitch_wheel, int in_3d_space, vec3_t p
 };
 
 // todo(music_more_sequences): desc: add support for multiple sequences being loaded at once, or even being played at once
+/// doc: desc: Load an audio sequence from `path` into memory, ready to be played using `music_play_sequence()`
 void music_load_sequence(const char* path) {
 	mem_stack_reset_to_marker(STACK_MUSIC, music_stack_seq_offset);
 
@@ -179,6 +185,7 @@ void music_load_sequence(const char* path) {
 	curr_loaded_seq = (dyn_song_seq_header_t*)data;
 }
 
+/// doc: desc: Start playing the currently loaded music sequence, starting from section id `section`
 void music_play_sequence(uint32_t section) {
 	if (curr_loaded_seq == NULL) {
 		printf("[ERROR] Attempt to play with no sequence loaded!");
@@ -215,6 +222,8 @@ void music_play_sequence(uint32_t section) {
 	n_staged_note_off_events = 0;
 }
 
+/// doc: desc: Main sequencer logic. This function gets called on a timer after calling `audio_init()`
+/// doc: desc: It processes sequencer commands, like in music sequences, and calls the platform-dependent mixer code to play sounds
 void audio_tick(int ticks) {
 	audio_ticking = 1;
 	if (music_playing != 0) {
@@ -549,6 +558,8 @@ void audio_tick(int ticks) {
 	audio_ticking = 0;
 }
 
+/// doc: desc: Set the global volume of the audio mixer
+/// doc: param(int volume): Value between 0 - 255, where 255 represents 100% volume
 void music_set_volume(int volume) {
 	if (volume < 0) volume = 0;
 	if (volume > 255) volume = 255;
@@ -556,6 +567,7 @@ void music_set_volume(int volume) {
 	mixer_global_set_volume(volume, volume);
 }
 
+/// doc: desc: Release all currently playing keys, stop playing the sequence
 void music_stop(void) {
 	music_playing = 0;
 	mixer_channel_key_off(0xFFFFFF); // release all keys
@@ -564,6 +576,9 @@ void music_stop(void) {
 	while (audio_ticking) {}
 }
 
+/// doc: desc: The audio listener position and right vector determine how 3D sound effects get panned in stereo. This function determines what values get passed into that stereo panning calculation
+/// doc: param(vec3_t position): Listener position in world space
+/// doc: param(vec3_t right): The vector pointing towards the right side. If a sound comes from that direction, in a way where a sound is coming from `position + (distance * right)` it will be panned furthest to the right
 void audio_update_listener(const vec3_t position, const vec3_t right) {
 	listener_pos = position;
 	listener_right = right;

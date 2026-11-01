@@ -13,6 +13,10 @@
 #include <assert.h>
 #include <string.h>
 
+/// doc: desc: Serialize a `shape` into a `shapes` byte buffer, ready to be written to disc
+/// doc: param(uint8_t* shapes): Buffer to append the serialized shape data to
+/// doc: param(size_t* cursor):  Where in the buffer we currently are writing
+/// doc: param(shape_t* shape): The shape to serialize
 void serialize_shape(uint8_t* shapes, size_t* cursor, const shape_t* shape) {
     // align to word
     while (*cursor % 4 != 0) {
@@ -55,6 +59,10 @@ void serialize_shape(uint8_t* shapes, size_t* cursor, const shape_t* shape) {
     }
 }
 
+/// doc: desc: Deserialize a shape from a `data` buffer at a given `offset`, storing it to where `shape` points
+/// doc: param(uint8_t* data): Serialized data to read
+/// doc: param(size_t* offset): Offset in that serialized data, will be updated in this function
+/// doc: param(shape_t* shape): Shape struct to write the deserialized data into
 void deserialize_shape(const uint8_t* data, size_t* offset, shape_t* shape) {
     assert(shape != NULL);
     assert((*offset % 4) == 0);
@@ -98,6 +106,12 @@ void deserialize_shape(const uint8_t* data, size_t* offset, shape_t* shape) {
     }
 }
 
+/// doc: desc: Load a level file from `level_path`, and load its corresponding level data depending on the `flags` set
+/// doc: desc: Loading a level can be a very resource heavy operation, depending on the platform. It may involve a decent number of disc/cartridge reads, memory management, and data processing.
+/// doc: desc: It will return a `level_t` struct, which is populated according to what was passed into `flags`
+/// doc: desc: On PS1, this first waits for rendering to finish. The temorary memory stack is quite limited, and GPU commands are stored in the same memory stack. Since loading levels takes up a lot of temporary RAM as we shuttle data around the system, we need to steal some from the renderer until this function finishes.
+/// doc: param(char* level_path): Path to the `.lvl` level definition file
+/// doc: param(uint32_t flags): Which parts of the level to load into memory. See `level_load_flags_t`
 level_t level_load(const char* level_path, const uint32_t flags) {
 #ifdef _PSX
     // Wait until done rendering (it uses the temporary stack), then clear the memory stacks

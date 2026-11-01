@@ -5,6 +5,7 @@
 #include "engine/math/vec3.h"
 #include "engine/math/vec2.h"
 
+/// doc: desc: Return a default initialized debug camera
 debug_camera_t debug_camera_new(void) {
     return (debug_camera_t) {
         .transform = {
@@ -85,6 +86,10 @@ void handle_drag(debug_camera_t* self, const scalar_t dt) {
     }
 }
 
+/// doc: desc: Main debug camera logic. It calls the helper functions defined above, smoothly moving the debug camera according to user input
+/// doc: param(debug_camera_t* self): The debug camera you intend to move around
+/// doc: param(scalar_t dt): Delta time in seconds
+/// doc: param(int register_input): 1 or 0 depending on whether the debug camera should currently accept input
 void debug_camera_update(debug_camera_t* self, const scalar_t dt, const int register_input) {
     // Change max move speed based on scroll input
     if (input_mapping_value(IM_CAMERA_SPEED_UP, 0) > 0) {
