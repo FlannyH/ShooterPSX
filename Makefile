@@ -509,9 +509,11 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/pc/shaders/gouraud.fsh \
 					  $(PATH_ASSETS)/pc/audio/instr.sbk \
 					  $(PATH_ASSETS)/pc/audio/sfx.sbk \
 					  $(PATH_ASSETS)/pc/audio/jungle.sbk \
+					  $(PATH_ASSETS)/pc/audio/newsong.sbk \
 					  $(PATH_ASSETS)/psx/audio/instr.sbk \
 					  $(PATH_ASSETS)/psx/audio/sfx.sbk \
 					  $(PATH_ASSETS)/psx/audio/jungle.sbk \
+					  $(PATH_ASSETS)/psx/audio/newsong.sbk \
 					  $(PATH_ASSETS)/shared/audio/music/black.dss \
 					  $(PATH_ASSETS)/shared/audio/music/combust.dss \
 					  $(PATH_ASSETS)/shared/audio/music/e1m1.dss \
@@ -524,6 +526,7 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/pc/shaders/gouraud.fsh \
 					  $(PATH_ASSETS)/shared/audio/music/pitchtst.dss \
 					  $(PATH_ASSETS)/shared/audio/music/subnivis.dss \
 					  $(PATH_ASSETS)/shared/audio/music/jungle.dss \
+					  $(PATH_ASSETS)/shared/audio/music/newsong.dss \
 					  .WAIT \
 					  $(PATH_ASSETS)/shared/models/entity.txc \
 					  $(PATH_ASSETS)/shared/models/level.txc \
