@@ -18,3 +18,4 @@ assets_to_build/audio/samples/downsample.py
 compile_commands.json
 comport.txt
 *.sh
+/.gram
