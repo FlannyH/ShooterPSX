@@ -134,7 +134,7 @@ level_t level_load(const char* level_path, const uint32_t flags) {
     const char* path_bank = (const char*)((binary_section + level_header->path_bank_offset));
     const char* path_textures = (const char*)((binary_section + level_header->path_texture_offset));
     const char* path_collision = (const char*)((binary_section + level_header->path_collision_offset));
-    const char* path_vislist = (const char*)((binary_section + level_header->path_vislist_offset));
+    // const char* path_vislist = (const char*)((binary_section + level_header->path_vislist_offset));
     const char* path_graphics = (const char*)((binary_section + level_header->path_model_offset));
     const char* level_entity_pool = (const char*)((binary_section + level_header->entity_pool_offset));
     const uint8_t* level_entity_types = (const uint8_t*)((binary_section + level_header->entity_types_offset));
@@ -166,18 +166,18 @@ level_t level_load(const char* level_path, const uint32_t flags) {
 #else
         .collision_mesh_debug = NULL,
 #endif
-        .transform = (transform_t){
-            .position = {0, 0, 0},
-            .rotation = {0, 0, 0},
-            .scale = {ONE, ONE, ONE}
+        .transform = (transform_t) {
+            .position = (vec3_t) {0, 0, 0},
+            .rotation = (vec3_t) {0, 0, 0},
+            .scale = (vec3_t) {ONE, ONE, ONE}
         },
         //.vislist = vislist_load(path_vislist, 1, STACK_LEVEL),
-        .vislist = NULL, // todo
+        .vislist = {}, // todo
         // .collision_bvh = bvh_from_file(path_collision, 1, STACK_LEVEL),
-        .collision_bvh = NULL, // todo
+        .collision_bvh = {}, // todo
         .n_level_textures = n_level_textures,
         .player_spawn_position = level_header->player_spawn_position,
-        .player_spawn_rotation = level_header->player_spawn_rotation,
+        .player_spawn_rotation = level_header->player_spawn_rotation
     };
     mem_stack_reset_to_marker(STACK_TEMP, marker);
 

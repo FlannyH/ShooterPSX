@@ -167,7 +167,7 @@ void shape_defragment() {
     editor.level.lvl.n_shapes = last_valid + 1;
 
     // defragment up to last valid entry
-    size_t i = 0;
+    int i = 0;
     while (i < editor.level.lvl.n_shapes) {
         if (editor.level.lvl.shapes[i].type != SHAPE_NONE) {
             ++i;
@@ -175,7 +175,7 @@ void shape_defragment() {
         }
 
         --editor.level.lvl.n_shapes;
-        for (size_t j = i; j < editor.level.lvl.n_shapes; ++j) {
+        for (int j = i; j < editor.level.lvl.n_shapes; ++j) {
             editor.level.lvl.shapes[j] = editor.level.lvl.shapes[j + 1];
         }
         memset(&editor.level.lvl.shapes[editor.level.lvl.n_shapes], 0, sizeof(shape_t));
@@ -650,7 +650,7 @@ void audio_debugger() {
                 if (show_misc_meta) ImGui::TableSetupColumn("key_max");
                 ImGui::TableHeadersRow();
 
-                for (size_t region_i = 0; region_i < sbk->n_regions; ++region_i) {
+                for (int region_i = 0; region_i < sbk->n_regions; ++region_i) {
                     const region_t* region = &sbk->regions[region_i];
 
                     ImGui::TableNextRow();
@@ -1017,7 +1017,7 @@ void level_metadata() {
 void initialize() {
     if (editor.initialized) return;
 
-    memset(&editor, 0, sizeof(editor));
+    editor = {};
 
     editor.resources.gizmos = model_load("editor/gizmos.msh", 0, (stack_t)0, TEX_CAT_PERSISTENT, 0);
     uint32_t n_tex = texture_collection_load("editor/gizmos.txc", &editor.resources.gizmo_textures, 1, STACK_TEMP);
@@ -1046,7 +1046,7 @@ void cleanup() {
         // remove deferred shapes
         for (const size_t shape_id : editor.misc.defer_remove_shape) {
             memset(&editor.level.lvl.shapes[shape_id], 0, sizeof(shape_t));
-            if (shape_id == editor.misc.selected_shape) {
+            if ((int)shape_id == editor.misc.selected_shape) {
                 editor.misc.selected_shape = -1;
             }
         }
@@ -1364,9 +1364,6 @@ void collision_stuff() {
         ImGui::TreePop();
     }
     ImGui::End();
-
-    static int counter = 0;
-    counter += 1;
 
     if (editor.render.collision) {
         for (int i = 0; i < MAX_SHAPE_COUNT && editor.level.lvl.shapes; ++i) {
@@ -1921,7 +1918,6 @@ int main(int argc, char** argv) {
     initialize();
 
     scalar_t dt = SCALAR(1.0/ 24.0);
-    scalar_t time_counter = 0;
     int mouse_lock = 0;
     input_unlock_mouse();
 
@@ -1933,7 +1929,6 @@ int main(int argc, char** argv) {
         // Delta time
         dt = renderer_delta_time(DT_TICK);
         dt = scalar_min(dt, SCALAR(1.0 / 24.0));
-        time_counter += dt;
 
         input_update();
 

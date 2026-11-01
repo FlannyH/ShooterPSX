@@ -195,7 +195,7 @@ void convex_hull_expand(convex_hull_mesh_t* shape, vec3_t new_point) {
         vec3_t b = shape->vertices[edges[i].b];
         vec3_t p = new_point;
         const vec3_t normal = vec3_normalize(vec3_cross(vec3_sub(b, a), vec3_sub(p, a)));
-        faces_added[n_faces_added++] = (face_t){ edges[i].a, edges[i].b, new_point_i, normal };
+        faces_added[n_faces_added++] = (face_t){ edges[i].a, edges[i].b, new_point_i, normal, 0 };
         assert(n_faces_added <= CONVEX_HULL_LIMIT);
     }
 

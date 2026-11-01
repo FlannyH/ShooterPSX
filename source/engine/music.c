@@ -74,9 +74,6 @@ void audio_load_soundbank(const char* path, int slot) {
 	sound_banks[slot].n_regions = sbk_header->n_regions;
 	for (int i = 0; i < (int)sbk_header->n_regions; ++i) {
 	    sound_banks[slot].regions[i] = regions[i];
-	    region_t* aaa = &sound_banks[slot].regions[i];
-	    region_t* aab = &regions[i];
-	    int x = 0;
 	}
 
 	for (int i = 0; i < N_SBK_INSTRUMENTS; ++i) {
@@ -428,6 +425,7 @@ void audio_tick(int ticks) {
 		}
 
 		// Update volume envelope
+		const scalar_t dt_ms = (1000 * ticks * sec_per_tick);
 		vol_envs[i].stage_time += dt_ms;
 		int stage_time_ms = vol_envs[i].stage_time / ONE;
 

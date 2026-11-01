@@ -5,7 +5,6 @@
 extern "C" {
 #endif
 
-#include <stdlib.h>
 #include <stdio.h>
 
 #ifndef _NDS
@@ -70,11 +69,13 @@ inline static void warn_if(const char* error_if_false, const int condition, cons
 #define WARN_IF(error_if_false, condition) (warn_if(error_if_false, condition, __LINE__, __FILE__))
 #define PANIC_IF(error_if_false, condition) (panic_if(error_if_false, condition, __LINE__, __FILE__))
 
+// todo(profiling): desc: clean up profiling
 #ifdef _PC
     #define PROFILE(name, function, timer) function
 #elif defined(_NDS)
     #define PROFILE(name, function, timer) function
-#else
+#elif defined(_PSX)
+    #include <hwregs_c.h>
     #ifdef _DEBUG
         #define PROFILE(name, function, timer) { \
             TIMER_CTRL(timer) = 0b0100000000;\

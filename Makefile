@@ -369,7 +369,7 @@ psx: LIBRARIES = gcc \
 psx: CC = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-gcc$(EXE_EXT)
 psx: CXX = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-g++$(EXE_EXT)
 psx: OBJDUMP = $(PSN00BSDK_PATH)/bin/mipsel-none-elf-objdump$(EXE_EXT)
-psx: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -O2 -Wno-unused-function -fanalyzer -g -Wa,--strip-local-absolute -ffreestanding -fno-builtin -nostdlib -fdata-sections -ffunction-sections -fsigned-char -fno-strict-overflow -fdiagnostics-color=always -msoft-float -march=r3000 -mtune=r3000 -mabi=32 -mno-mt -mno-llsc -G8 -fno-pic -mno-abicalls -mgpopt -mno-extern-sdata -MMD -MP  -fuse-linker-plugin
+psx: CFLAGS += $(patsubst %, -D%, $(DEFINES)) -O2 -Wno-unused-function -g -Wa,--strip-local-absolute -ffreestanding -fno-builtin -nostdlib -fdata-sections -ffunction-sections -fsigned-char -fno-strict-overflow -fdiagnostics-color=always -msoft-float -march=r3000 -mtune=r3000 -mabi=32 -mno-mt -mno-llsc -G8 -fno-pic -mno-abicalls -mgpopt -mno-extern-sdata -MMD -MP  -fuse-linker-plugin
 psx: CXXFLAGS += $(patsubst %, -D%, $(DEFINES)) -O2 -std=c++20  -fuse-linker-plugin
 psx: LINKER_FLAGS += $(patsubst %, -l%, $(LIBRARIES)) $(patsubst %, -L%, $(PATH_LIB_PSX)) -nostdlib -Wl,-gc-sections -G8 -static -T$(PSN00BSDK_LIBS)/ldscripts/exe.ld  -save-temps -flto
 psx: INCLUDE_DIRS = source \
@@ -653,7 +653,7 @@ clean_assets:
 
 rebuild_assets: clean_assets assets
 
-clean:
+clean_full:
 	rm -rf $(PATH_TEMP)
 	rm -rf $(PATH_BUILD)
 	rm -rf $(PATH_ASSETS)
@@ -661,3 +661,12 @@ clean:
 	cargo clean --manifest-path=tools/obj2psx/Cargo.toml
 	cargo clean --manifest-path=tools/midi2psx/Cargo.toml
 	cargo clean --manifest-path=tools/psx_vislist_generator/Cargo.toml
+
+clean:
+	rm -rf $(PATH_TEMP_PSX)
+	rm -rf $(PATH_TEMP_NDS)
+	rm -rf $(PATH_TEMP_PC)/obj
+	rm -rf $(PATH_TEMP_PC)/assets
+	rm $(PATH_TEMP_PC)/assets.sfa
+	rm -rf $(PATH_BUILD)
+	rm -rf $(PATH_TOOLS_BIN)

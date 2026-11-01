@@ -345,7 +345,8 @@ mesh_t* create_convex_hull_from_point_cloud(vec3_t* points, size_t count, size_t
 
     hull.faces[0] = (face_t){
         0, 1, 2,
-        vec3_normalize(vec3_cross_lh(vec3_normalize(ab), vec3_normalize(ap)))
+        vec3_normalize(vec3_cross_lh(vec3_normalize(ab), vec3_normalize(ap))),
+        0
     };
     hull.n_faces = 1;
 

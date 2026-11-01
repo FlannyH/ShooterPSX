@@ -15,3 +15,6 @@ assets_to_build/audio/samples/downsample.py
 .vscode/nops.bat
 *.log
 /.zed
+compile_commands.json
+comport.txt
+*.sh

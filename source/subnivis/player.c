@@ -194,8 +194,6 @@ void handle_jump(player_t* self) {
 }
 
 void update_transform(player_t* self, scalar_t dt, scalar_t time_counter) {
-    const vec2_t vel_2d = {self->velocity.x, self->velocity.z};
-    const scalar_t speed_1d = vec2_magnitude(vel_2d);
 
     #ifdef _DEBUG_CAMERA
     (void)time_counter;
@@ -205,7 +203,9 @@ void update_transform(player_t* self, scalar_t dt, scalar_t time_counter) {
     self->transform.position.y = self->position.y;
 
     #else
-    self->transform.position.y = self->position.y + scalar_mul(trig_sin(time_counter * 4), speed_1d / 64);
+    const vec2_t vel_2d = {self->velocity.x, self->velocity.z};
+    const scalar_t speed_1d = vec2_magnitude(vel_2d);
+    self->transform.position.y = self->position.y + scalar_mul(trig_sin(time_counter * 2), speed_1d / 64);
 
     self->footstep_timer += dt;
     if (self->footstep_timer >= FOOTSTEP_TIMER_MAX) {

@@ -184,13 +184,19 @@ static inline vec3_t vec3_shift_right(vec3_t a, int amount) {
     };
 }
 
+/// doc: desc: Calculate the squared magnitude/length of `a`. If we don't need the exact distance, but just need something to compare distances, this is more efficient to use than `vec3_magnitude`, as we can avoid the square root at the end
 static inline scalar_t vec3_magnitude_squared(const vec3_t a) {
-    int64_t x2_one = a.x * a.x;
-    int64_t y2_one = a.y * a.y;
-    int64_t z2_one = a.z * a.z;
-    int64_t result_one = x2_one + y2_one + z2_one;
-    int32_t result = (result_one >> FRAC_BITS);
-    return result;
+    const int64_t x2_one = a.x * a.x;
+    const int64_t y2_one = a.y * a.y;
+    const int64_t z2_one = a.z * a.z;
+    const int64_t result_one = x2_one + y2_one + z2_one;
+    if (result_one >= (INT32_MAX * (int64_t)ONE)) {
+        return INT32_MAX;
+    }
+    else if (result_one <= (INT32_MIN * (int64_t)ONE)) {
+        return INT32_MIN;
+    }
+    return (scalar_t)(result_one >> FRAC_BITS);
 }
 
 static inline scalar_t vec3_magnitude(vec3_t a) {
@@ -254,9 +260,9 @@ static inline vec3_t vec3_cross(vec3_t a, vec3_t b) {
     };
     #else
     return (vec3_t) {
-        (((int64_t)a.y * (int64_t)b.z) - ((int64_t)a.z * (int64_t)b.y)) / FIXED_ONE,
-        (((int64_t)a.z * (int64_t)b.x) - ((int64_t)a.x * (int64_t)b.z)) / FIXED_ONE,
-        (((int64_t)a.x * (int64_t)b.y) - ((int64_t)a.y * (int64_t)b.x)) / FIXED_ONE,
+        (scalar_t)((((int64_t)a.y * (int64_t)b.z) - ((int64_t)a.z * (int64_t)b.y)) / FIXED_ONE),
+        (scalar_t)((((int64_t)a.z * (int64_t)b.x) - ((int64_t)a.x * (int64_t)b.z)) / FIXED_ONE),
+        (scalar_t)((((int64_t)a.x * (int64_t)b.y) - ((int64_t)a.y * (int64_t)b.x)) / FIXED_ONE),
     };
     #endif
 }

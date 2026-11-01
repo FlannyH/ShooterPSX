@@ -20,7 +20,7 @@ size_t entity_cinecam_serialize(int slot, uint8_t* data) {
 
     *n_nodes = cinecam_source->n_nodes;
 
-    for (size_t i = 0; i < cinecam_source->n_nodes; ++i) {
+    for (int i = 0; i < cinecam_source->n_nodes; ++i) {
         cinecam_node_t* node = &nodes[i];
         const cinecam_node_t* source = &cinecam_source->nodes[i];
         serialize_vec3(&node->position, source->position);
@@ -49,7 +49,7 @@ size_t entity_cinecam_deserialize(int slot, const uint8_t* data) {
 
 	cinecam_dest->n_nodes = *n_nodes;
 
-	for (int i = 0; i < *n_nodes; ++i) {
+	for (uint32_t i = 0; i < *n_nodes; ++i) {
         const cinecam_node_t* node = &nodes_src[i];
         cinecam_node_t* dest = &cinecam_dest->nodes[i];
         deserialize_vec3(&node->position, &dest->position);
@@ -129,9 +129,12 @@ void entity_cinecam_update(int slot, player_t* player, scalar_t dt) {
 }
 
 void entity_cinecam_on_hit(int slot, int hitbox_index) {
-
+    (void)slot;
+    (void)hitbox_index;
 }
 
 void entity_cinecam_player_intersect(int slot, player_t* player) {
+    (void)slot;
+    (void)player;
 
 }

@@ -192,7 +192,7 @@ void update_controller(int i) {
     if (controller_ids[i] == -1) return;
     if (!glfwJoystickPresent(controller_ids[i])) return;
 
-    int n_axes = 0, n_buttons = 0, n_hats = 0;
+    int n_axes = 0, n_buttons = 0;
     const float* axes = glfwGetJoystickAxes(controller_ids[i], &n_axes);
     const unsigned char* buttons = glfwGetJoystickButtons(controller_ids[i], &n_buttons);
 
