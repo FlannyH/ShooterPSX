@@ -67,18 +67,54 @@ size_t entity_cinecam_deserialize(int slot, const uint8_t* data) {
     return size;
 }
 
+scalar_t catmull_rom(scalar_t p0, scalar_t p1, scalar_t p2, scalar_t p3, scalar_t t) {
+    p0 = scalar_shift_right(p0, 4);
+    p1 = scalar_shift_right(p1, 4);
+    p2 = scalar_shift_right(p2, 4);
+    p3 = scalar_shift_right(p3, 4);
+    scalar_t t2 = scalar_mul(t, t);
+    scalar_t t3 = scalar_mul(t2, t);
+    scalar_t a = scalar_mul(2 * ONE, p1);
+    scalar_t b = scalar_mul(-p0 + p2, t);
+    scalar_t c = scalar_mul((2*p0) - (5*p1) + (4*p2) - p3, t2);
+    scalar_t d = scalar_mul(-p0 + (3*p1) - (3*p2) + p3, t3);
+    return scalar_shift_left((a+b+c+d)/2, 4);
+}
+
+vec3_t spline_point(vec3_t p0, vec3_t p1, vec3_t p2, vec3_t p3, scalar_t t) {
+    return (vec3_t) {
+        .x = catmull_rom(p0.x, p1.x, p2.x, p3.x, t),
+        .y = catmull_rom(p0.y, p1.y, p2.y, p3.y, t),
+        .z = catmull_rom(p0.z, p1.z, p2.z, p3.z, t),
+    };
+}
+
 void entity_cinecam_update(int slot, player_t* player, scalar_t dt) {
+    (void)player;
     entity_cinecam_t* cinecam = (entity_cinecam_t*)entity_get_header(slot);
 
     // interpolate
     int prev_index = scalar_clamp((cinecam->progress / ONE), 0, cinecam->n_nodes - 2);
     int target_index = prev_index + 1;
     scalar_t t = cinecam->progress % ONE;
+
+    #if 0 // linear interpolation
     cinecam->entity_header.position = vec3_lerp(cinecam->nodes[prev_index].position, cinecam->nodes[target_index].position, t);
     cinecam->entity_header.rotation = vec3_lerp(cinecam->nodes[prev_index].rotation, cinecam->nodes[target_index].rotation, t);
-    scalar_t velocity = scalar_lerp(cinecam->nodes[prev_index].time_to_next, cinecam->nodes[target_index].time_to_next, t); // distance / seconds
-    vec3_t dir = vec3_normalize(vec3_sub(cinecam->entity_header.position, cinecam->nodes[target_index].position));
-    if (cinecam->n_nodes > 1) cinecam->progress += scalar_div(dt, cinecam->nodes[prev_index].time_to_next);
+    scalar_t time_to_next = scalar_lerp(cinecam->nodes[prev_index].time_to_next, cinecam->nodes[target_index].time_to_next, t);
+    #endif
+
+    #if 1 // silly interpolation
+    cinecam_node_t* n0 = &cinecam->nodes[scalar_clamp(prev_index-1, 0, cinecam->n_nodes - 1)];
+    cinecam_node_t* n1 = &cinecam->nodes[scalar_clamp(prev_index, 0, cinecam->n_nodes - 1)];
+    cinecam_node_t* n2 = &cinecam->nodes[scalar_clamp(target_index, 0, cinecam->n_nodes - 1)];
+    cinecam_node_t* n3 = &cinecam->nodes[scalar_clamp(target_index+1, 0, cinecam->n_nodes - 1)];
+    cinecam->entity_header.position = spline_point(n0->position, n1->position, n2->position, n3->position, t);
+    cinecam->entity_header.rotation = spline_point(n0->rotation, n1->rotation, n2->rotation, n3->rotation, t);
+    scalar_t time_to_next = catmull_rom(n0->time_to_next, n1->time_to_next, n2->time_to_next, n3->time_to_next, t);
+    #endif
+
+    if (cinecam->n_nodes > 1) cinecam->progress += scalar_div(dt, time_to_next);
     if (cinecam->progress > 0 && cinecam->progress > SCALAR(cinecam->n_nodes-1)) {
         entity_kill(slot);
         return;
