@@ -194,20 +194,20 @@ void state_update_in_game(scalar_t dt) {
 	}
 
 	// Animate and render sword
-	{
-		transform_t sword_transform;
-		sword_transform.position.x = SCALAR(-165) + (trig_sin(state.global.time_counter * 6) * speed_1d) / 32;
-		sword_transform.position.y = SCALAR(-135) + (trig_cos(state.global.time_counter * 12) * speed_1d) / 64;
-		sword_transform.position.z = SCALAR(180);
-		sword_transform.rotation.x = 0;
-		sword_transform.rotation.y = 0;
-		sword_transform.rotation.z = 0;
-		sword_transform.scale.x = ONE;
-		sword_transform.scale.y = ONE;
-		sword_transform.scale.z = ONE;
-		if (widescreen) sword_transform.position.x -= 52;
-		renderer_draw_mesh_shaded(&state.in_game.m_weapons->meshes[0], &sword_transform, 1, 0);
-	}
+	// {
+	// 	transform_t sword_transform;
+	// 	sword_transform.position.x = SCALAR(-165) + (trig_sin(state.global.time_counter * 6) * speed_1d) / 32;
+	// 	sword_transform.position.y = SCALAR(-135) + (trig_cos(state.global.time_counter * 12) * speed_1d) / 64;
+	// 	sword_transform.position.z = SCALAR(180);
+	// 	sword_transform.rotation.x = 0;
+	// 	sword_transform.rotation.y = 0;
+	// 	sword_transform.rotation.z = 0;
+	// 	sword_transform.scale.x = ONE;
+	// 	sword_transform.scale.y = ONE;
+	// 	sword_transform.scale.z = ONE;
+	// 	if (widescreen) sword_transform.position.x -= 52;
+	// 	renderer_draw_mesh_shaded(&state.in_game.m_weapons->meshes[0], &sword_transform, 1, 0);
+	// }
 
 	renderer_end_frame();
 
