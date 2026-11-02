@@ -1,6 +1,7 @@
 #include "editor.h"
 
 #include "subnivis/main.h"
+#include "subnivis/entity.h"
 
 // todo(editor_externs): desc: figure this extern crap out
 extern "C" {
@@ -25,13 +26,6 @@ extern "C" {
 #include "editor/input_map.h"
 #include "engine/input_mapping.h"
 #include "engine/renderer.h"
-#include "entities/chaser.h"
-#include "entities/cinecam.h"
-#include "entities/crate.h"
-#include "entities/door.h"
-#include "entities/pickup.h"
-#include "entities/platform.h"
-#include "entities/trigger.h"
 #include "engine/entity.h"
 #include "engine/music.h"
 #include "engine/mesh.h"
@@ -102,6 +96,7 @@ void debug_layer_init(void) {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 430");
     ImGui::LoadIniSettingsFromDisk("imgui_layout.ini");
+	subnivis_register_entities();
 }
 
 void debug_layer_begin(void) {
@@ -262,15 +257,8 @@ int inspect_entity(size_t entity_id) {
         ImGui::TreePop();
     }
     if (ImGui::TreeNodeEx("Entity Data", ImGuiTreeNodeFlags_DefaultOpen)) {
-        // todo(entity_inspect): desc: move entity inspect code to entity code instead of editor
-        if (entity_type == ENTITY_DOOR) entity_door_inspect(entity_id);
-        else if (entity_type == ENTITY_PICKUP) entity_pickup_inspect(entity_id);
-        else if (entity_type == ENTITY_CRATE) entity_crate_inspect(entity_id);
-        else if (entity_type == ENTITY_PLATFORM) entity_platform_inspect(entity_id);
-        else if (entity_type == ENTITY_TRIGGER) entity_trigger_inspect(entity_id);
-        else if (entity_type == ENTITY_CINECAM) entity_cinecam_inspect(entity_id);
-        else if (entity_type == ENTITY_CHASER) entity_chaser_inspect(entity_id);
-
+        const entity_reg_t* entity_funcs = entity_register_get(entity_get_type(entity_id));
+        entity_funcs->inspect(entity_id);
         ImGui::TreePop();
     }
 
@@ -998,41 +986,8 @@ void entity_stuff() {
         // Figure out where to spawn - in front of the camera
         const vec3_t forward = renderer_get_forward_vector();
         const vec3_t spawn_pos = vec3_add((editor.misc.vertex_selected) ? (editor.misc.selected_vertex_position) : (editor.misc.camera.transform.position), vec3_muls(forward, 80 * ONE));
-
-        entity_header_t* entity;
-
-        switch (curr_selected_entity_type) {
-            case ENTITY_DOOR:
-                entity = (entity_header_t*)entity_door_new();
-                entity->position = spawn_pos;
-                break;
-            case ENTITY_PICKUP:
-                entity = (entity_header_t*)entity_pickup_new();
-                entity->position = spawn_pos;
-                break;
-            case ENTITY_CRATE:
-                entity = (entity_header_t*)entity_crate_new();
-                entity->position = spawn_pos;
-                break;
-            case ENTITY_CHASER:
-                entity = (entity_header_t*)entity_chaser_new();
-                entity->position = spawn_pos;
-                break;
-            case ENTITY_PLATFORM:
-                entity = (entity_header_t*)entity_platform_new();
-                entity->position = spawn_pos;
-                ((entity_platform_t*)entity)->position_start = spawn_pos;
-                ((entity_platform_t*)entity)->position_end = vec3_add(spawn_pos, vec3_from_scalars(0, ONE * 16, 0));
-                break;
-            case ENTITY_TRIGGER:
-                entity = (entity_header_t*)entity_trigger_new();
-                entity->position = spawn_pos;
-                break;
-            case ENTITY_CINECAM:
-                entity = (entity_header_t*)entity_cinecam_new();
-                entity->position = spawn_pos;
-                break;
-        }
+        const entity_reg_t* entity_funcs = entity_register_get(curr_selected_entity_type);
+        entity_funcs->new_fn(spawn_pos);
     }
 
     if (ImGui::Button("Defragment")) {

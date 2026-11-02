@@ -1,12 +1,5 @@
 #include "entity.h"
 
-#include "entities/platform.h"
-#include "entities/cinecam.h"
-#include "entities/trigger.h"
-#include "entities/pickup.h"
-#include "entities/chaser.h"
-#include "entities/crate.h"
-#include "entities/door.h"
 #include "renderer.h"
 #include "mesh.h"
 #include "subnivis/main.h"
@@ -15,6 +8,7 @@
 // todo(entity_state): desc: rework state_vars_t for entities
 extern state_vars_t state;
 
+entity_reg_t entity_register[ENTITY_LIST_LENGTH] = {0};
 entity_collision_box_t entity_aabb_queue[ENTITY_AABB_QUEUE_LENGTH];
 uint8_t entity_types[ENTITY_LIST_LENGTH];
 uint8_t* entity_pool = NULL;
@@ -25,21 +19,12 @@ int n_entity_textures = 0;
 int entity_signals[ENTITY_SIGNAL_COUNT];
 
 void entity_update_all(player_t* player, scalar_t dt) {
-	// Reset counters
 	entity_n_active_aabb = 0;
 
 	// Update all entities
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
-		switch (entity_types[i]) {
-			case ENTITY_NONE: break;
-			case ENTITY_DOOR: entity_door_update(i, player, dt); break;
-			case ENTITY_PICKUP: entity_pickup_update(i, player, dt); break;
-			case ENTITY_CRATE: entity_crate_update(i, player, dt); break;
-			case ENTITY_CHASER: entity_chaser_update(i, player, dt); break;
-			case ENTITY_PLATFORM: entity_platform_update(i, player, dt); break;
-			case ENTITY_TRIGGER: entity_trigger_update(i, player, dt); break;
-			case ENTITY_CINECAM: entity_cinecam_update(i, player, dt); break;
-		}
+    	entity_reg_t* entity_funcs = &entity_register[entity_get_type(i)];
+    	if (entity_funcs->update) entity_funcs->update(i, player, dt);
 	}
 }
 
@@ -55,19 +40,6 @@ int entity_alloc(uint8_t entity_type) {
 	return -1;
 }
 
-// Make sure to update entity_union when adding new entity types
-typedef struct {
-	union {
-		entity_header_t header;
-		entity_door_t door;
-		entity_pickup_t pickup;
-		entity_crate_t crate;
-		entity_chaser_t chaser;
-		entity_platform_t platform;
-		entity_trigger_t trigger;
-	};
-} entity_union;
-
 void entity_init(void) {
 	mem_stack_release(STACK_ENTITY);
 
@@ -75,10 +47,10 @@ void entity_init(void) {
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) entity_types[i] = ENTITY_NONE;
 
 	entity_n_active_aabb = 0;
+	if (entity_pool_stride == 0) entity_pool_stride = sizeof(entity_header_t);
 
 	// Allocate entity pool
-	entity_pool_stride = sizeof(entity_union);
-	entity_pool = mem_stack_alloc(ENTITY_LIST_LENGTH * sizeof(entity_union), STACK_ENTITY);
+	entity_pool = mem_stack_alloc(ENTITY_LIST_LENGTH * entity_pool_stride, STACK_ENTITY);
 
     // Load entity textures
 	texture_cpu_t* entity_textures;
@@ -104,36 +76,28 @@ void entity_init(void) {
 	memset(entity_signals, 0, sizeof(entity_signals));
 }
 
+void entity_register_type(uint8_t entity_type, entity_reg_t registration) {
+    entity_register[entity_type] = registration;
+}
+
+const entity_reg_t* entity_register_get(uint8_t entity_type) {
+    return &entity_register[entity_type];
+}
+
 void entity_register_collision_box(const entity_collision_box_t* box) {
     entity_aabb_queue[entity_n_active_aabb++] = *box;
 }
 
 void entity_call_on_hit(int entity_index, int box_index) {
 	PANIC_IF("index out of bounds", entity_index < 0 || entity_index >= ENTITY_LIST_LENGTH);
-
-	switch (entity_get_type(entity_index)) {
-		case ENTITY_DOOR: entity_door_on_hit(entity_index, box_index); break;
-		case ENTITY_PICKUP: entity_pickup_on_hit(entity_index, box_index); break;
-		case ENTITY_CRATE: entity_crate_on_hit(entity_index, box_index); break;
-		case ENTITY_CHASER: entity_chaser_on_hit(entity_index, box_index); break;
-		case ENTITY_PLATFORM: entity_platform_on_hit(entity_index, box_index); break;
-		case ENTITY_TRIGGER: entity_trigger_on_hit(entity_index, box_index); break;
-		case ENTITY_CINECAM: entity_cinecam_on_hit(entity_index, box_index); break;
-	}
+	entity_reg_t* entity_funcs = &entity_register[entity_get_type(entity_index)];
+	if (entity_funcs->update) entity_funcs->on_hit(entity_index, box_index);
 }
 
 void entity_call_player_intersect(int entity_index, player_t* player) {
 	PANIC_IF("index out of bounds", entity_index < 0 || entity_index >= ENTITY_LIST_LENGTH);
-
-	switch (entity_get_type(entity_index)) {
-		case ENTITY_DOOR: entity_door_player_intersect(entity_index, player); break;
-		case ENTITY_PICKUP: entity_pickup_player_intersect(entity_index, player); break;
-		case ENTITY_CRATE: entity_crate_player_intersect(entity_index, player); break;
-		case ENTITY_CHASER: entity_chaser_player_intersect(entity_index, player); break;
-		case ENTITY_PLATFORM: entity_platform_player_intersect(entity_index, player); break;
-		case ENTITY_TRIGGER: entity_trigger_player_intersect(entity_index, player); break;
-		case ENTITY_CINECAM: entity_cinecam_player_intersect(entity_index, player); break;
-	}
+	entity_reg_t* entity_funcs = &entity_register[entity_get_type(entity_index)];
+	if (entity_funcs->update) entity_funcs->player_intersect(entity_index, player);
 }
 
 void entity_defragment(void) {
@@ -152,10 +116,14 @@ void entity_defragment(void) {
 			entity_types[end] = temp;
 		}
 		{
-			entity_union* pool = (entity_union*)entity_pool;
-			const entity_union temp = pool[start];
-			pool[start] = pool[end];
-			pool[end] = temp;
+            uint8_t* ptr_to_start = &entity_pool[start * entity_pool_stride];
+            uint8_t* ptr_to_end = &entity_pool[end * entity_pool_stride];
+
+            for (size_t i = 0; i < entity_pool_stride; ++i) {
+    			const uint8_t temp = *ptr_to_start;
+    			*ptr_to_start = *ptr_to_end;
+    			*ptr_to_end = temp;
+            }
 		}
 	}
 }
@@ -163,9 +131,9 @@ void entity_defragment(void) {
 // Sets the mesh pointer, which is only valid for the runtime of this program, to null.
 // It will be recalculated in the entity code later
 void entity_sanitize(void) {
-	entity_union* pool = (entity_union*)entity_pool;
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
-		pool[i].header.mesh = NULL;
+	    entity_header_t* header = (entity_header_t*)(&entity_pool[i * entity_pool_stride]);
+		header->mesh = NULL;
 	}
 }
 
@@ -179,18 +147,8 @@ void entity_send_player_intersect(int slot, player_t* player) {
     if (slot < 0) return;
     if (slot >= ENTITY_LIST_LENGTH) return;
 
-#ifndef _LIGHT_BAKE
-	switch (entity_types[slot]) {
-		case ENTITY_NONE: break;
-		case ENTITY_DOOR: entity_door_player_intersect(slot, player); break;
-		case ENTITY_PICKUP: entity_pickup_player_intersect(slot, player); break;
-		case ENTITY_CRATE: entity_crate_player_intersect(slot, player); break;
-		case ENTITY_CHASER: entity_chaser_player_intersect(slot, player); break;
-		case ENTITY_PLATFORM: entity_platform_player_intersect(slot, player); break;
-		case ENTITY_TRIGGER: entity_trigger_player_intersect(slot, player); break;
-		case ENTITY_CINECAM: entity_cinecam_player_intersect(slot, player); break;
-	}
-#endif
+	entity_reg_t* entity_funcs = &entity_register[entity_get_type(slot)];
+    if (entity_funcs->update) entity_funcs->player_intersect(slot, player);
 }
 
 const char* entity_names[] = {
@@ -228,16 +186,8 @@ size_t entity_deserialize_and_write_slot(int slot, const entity_header_serialize
     size_t entity_size = entity_get_pool_stride();
 	const uint8_t* src_entity_data = (const uint8_t*)header;
 
-	switch(type) {
-	    case ENTITY_NONE: break;
-	    case ENTITY_DOOR: entity_size = entity_door_deserialize(slot, src_entity_data); break;
-	    case ENTITY_PICKUP: entity_size = entity_pickup_deserialize(slot, src_entity_data); break;
-	    case ENTITY_CRATE: entity_size = entity_crate_deserialize(slot, src_entity_data); break;
-	    case ENTITY_CHASER: entity_size = entity_chaser_deserialize(slot, src_entity_data); break;
-	    case ENTITY_PLATFORM: entity_size = entity_platform_deserialize(slot, src_entity_data); break;
-	    case ENTITY_TRIGGER: entity_size = entity_trigger_deserialize(slot, src_entity_data); break;
-	    case ENTITY_CINECAM: entity_size = entity_cinecam_deserialize(slot, src_entity_data); break;
-	}
+	entity_reg_t* entity_funcs = &entity_register[type];
+    entity_size = (entity_funcs->deserialize != NULL) ? entity_funcs->deserialize(slot, src_entity_data) : 0;
 
 	// Write entity header
 	entity_header_t* dst_entity_header = entity_get_header(slot);
@@ -251,16 +201,9 @@ size_t entity_deserialize_and_write_slot(int slot, const entity_header_serialize
 
 size_t entity_serialize(int slot, uint8_t* dest, uint8_t type) {
     size_t entity_size = entity_get_pool_stride();
-	switch(type) {
-	    case ENTITY_NONE: break;
-	    case ENTITY_DOOR: entity_size = entity_door_serialize(slot, dest); break;
-	    case ENTITY_PICKUP: entity_size = entity_pickup_serialize(slot, dest); break;
-	    case ENTITY_CRATE: entity_size = entity_crate_serialize(slot, dest); break;
-	    case ENTITY_CHASER: entity_size = entity_chaser_serialize(slot, dest); break;
-	    case ENTITY_PLATFORM: entity_size = entity_platform_serialize(slot, dest); break;
-	    case ENTITY_TRIGGER: entity_size = entity_trigger_serialize(slot, dest); break;
-	    case ENTITY_CINECAM: entity_size = entity_cinecam_serialize(slot, dest); break;
-	}
+
+	entity_reg_t* entity_funcs = &entity_register[type];
+    entity_size = (entity_funcs->serialize != NULL) ? entity_funcs->serialize(slot, dest) : 0;
 
 	entity_header_t* src_entity_header = entity_get_header(slot);
 	entity_header_t* dst_entity_header = (entity_header_t*)dest;

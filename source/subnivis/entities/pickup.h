@@ -31,7 +31,7 @@ typedef struct {
     uint8_t type;
 } entity_pickup_t;
 
-entity_pickup_t* entity_pickup_new(void);
+entity_header_t* entity_pickup_new(vec3_t spawn_pos);
 size_t entity_pickup_serialize(int slot, uint8_t* data);
 size_t entity_pickup_deserialize(int slot, const uint8_t* data);
 void entity_pickup_update(int slot, player_t* player, scalar_t dt);

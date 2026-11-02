@@ -23,7 +23,7 @@ typedef struct {
     unsigned int move_on_player_collision : 1;
 } entity_platform_t;
 
-entity_platform_t* entity_platform_new(void);
+entity_header_t* entity_platform_new(vec3_t spawn_pos);
 size_t entity_platform_serialize(int slot, uint8_t* dest);
 size_t entity_platform_deserialize(int slot, const uint8_t* data);
 void entity_platform_update(int slot, player_t* player, scalar_t dt);

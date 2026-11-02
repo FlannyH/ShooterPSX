@@ -16,50 +16,8 @@ extern "C" {
 #define ENTITY_LIST_LENGTH 256
 #define ENTITY_SIGNAL_COUNT 64
 
-typedef enum {
-	ENTITY_NONE,
-	ENTITY_DOOR,
-	ENTITY_PICKUP,
-	ENTITY_CRATE,
-	ENTITY_CHASER,
-	ENTITY_PLATFORM,
-	ENTITY_TRIGGER,
-	ENTITY_CINECAM,
-} entity_type_t; // typically represented by a uint8_t
-
-typedef enum {
-	ENTITY_MESH_DOOR_SMALL_LOCKED = 0,
-	ENTITY_MESH_DOOR_SMALL_LOCKED_ROTATED,
-	ENTITY_MESH_DOOR_SMALL_UNLOCKED,
-	ENTITY_MESH_DOOR_SMALL_UNLOCKED_ROTATED,
-	ENTITY_MESH_DOOR_BIG_LOCKED,
-	ENTITY_MESH_DOOR_BIG_LOCKED_ROTATED,
-	ENTITY_MESH_DOOR_BIG_UNLOCKED,
-	ENTITY_MESH_DOOR_BIG_UNLOCKED_ROTATED,
-	ENTITY_MESH_PICKUP_AMMO_SMALL,
-	ENTITY_MESH_PICKUP_AMMO_BIG,
-	ENTITY_MESH_PICKUP_ARMOR_SMALL,
-	ENTITY_MESH_PICKUP_ARMOR_BIG,
-	ENTITY_MESH_PICKUP_HEALTH_SMALL,
-	ENTITY_MESH_PICKUP_HEALTH_BIG,
-	ENTITY_MESH_PICKUP_KEY_BLUE,
-	ENTITY_MESH_PICKUP_KEY_YELLOW,
-	ENTITY_MESH_PICKUP_DAMAGE,
-	ENTITY_MESH_PICKUP_FIRE_RATE,
-	ENTITY_MESH_PICKUP_INVINCIBILITY,
-	ENTITY_MESH_CHASER_IDLE,
-	ENTITY_MESH_CHASER_AIM,
-	ENTITY_MESH_CHASER_HEAD_BROKEN,
-	ENTITY_MESH_CHASER_HEAD_NORMAL,
-	ENTITY_MESH_CHASER_BODY,
-	ENTITY_MESH_CHASER_ARM,
-	ENTITY_MESH_CHASER_BOTTOM1,
-	ENTITY_MESH_CHASER_BOTTOM2,
-	ENTITY_MESH_CHASER_GUN,
-	ENTITY_MESH_CRATE,
-	ENTITY_MESH_PLATFORM_TEST_HORIZONTAL,
-	N_ENTITY_MESH_IDS,
-} entity_mesh_id_t;
+// doc: desc: Entities with type 0 are considered empty slots
+#define ENTITY_NONE 0
 
 // All entities must have this data. Add it as the first member of an entity struct.
 typedef struct {
@@ -84,7 +42,32 @@ typedef struct {
 	unsigned int not_move_player_along : 1; // if the player is standing on this box, should they be moved along with the entity this collision box belongs to?
 } entity_collision_box_t;
 
+typedef entity_header_t* (*entity_new_func_t)(vec3_t position);
+typedef size_t (*entity_deserialize_func_t)(int slot, const uint8_t* data);
+typedef size_t (*entity_serialize_func_t)(int slot, uint8_t* data);
+typedef void (*entity_update_func_t)(int slot, player_t* player, scalar_t dt);
+typedef void (*entity_on_hit_func_t)(int slot, int hitbox_index);
+typedef void (*entity_player_intersect_func_t)(int slot, player_t* player);
+#ifdef _LEVEL_EDITOR
+typedef int (*entity_inspect_func_t)(int slot);
+#endif
+
+typedef struct {
+    uint32_t struct_size;
+    entity_new_func_t new_fn;
+    entity_deserialize_func_t deserialize;
+    entity_serialize_func_t serialize;
+    entity_update_func_t update;
+    entity_on_hit_func_t on_hit;
+    entity_player_intersect_func_t player_intersect;
+    #ifdef _LEVEL_EDITOR
+    entity_inspect_func_t inspect;
+    #endif
+} entity_reg_t;
+
 void entity_init(void);
+void entity_register_type(uint8_t entity_type, entity_reg_t registration);
+const entity_reg_t* entity_register_get(uint8_t entity_type);
 int entity_alloc(uint8_t entity_type);
 void entity_set_type(int index, uint8_t type);
 size_t entity_deserialize_and_write_slot(int slot, const entity_header_serialized_t* header, uint8_t type);

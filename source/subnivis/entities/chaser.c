@@ -4,6 +4,7 @@
 #include "engine/renderer.h"
 #include "engine/mesh.h"
 #include "subnivis/main.h"
+#include "subnivis/entity.h"
 
 #ifdef _LEVEL_EDITOR
 #include "editor/editor.h"
@@ -49,10 +50,10 @@ size_t entity_chaser_deserialize(int slot, const uint8_t* data) {
     return sizeof(entity_chaser_t);
 }
 
-entity_chaser_t* entity_chaser_new(void) {
+entity_header_t* entity_chaser_new(vec3_t spawn_pos) {
 	// Allocate memory for the entity
 	entity_chaser_t* entity = (entity_chaser_t*)entity_get_header(entity_alloc(ENTITY_CHASER));
-	entity->entity_header.position = (vec3_t){ 0, 0, 0 };
+	entity->entity_header.position = spawn_pos;
 	entity->entity_header.rotation = (vec3_t){ 0, 0, 0 };
 	entity->entity_header.scale = (vec3_t){ ONE, ONE, ONE };
 	entity->entity_header.mesh = model_find_mesh(entity_get_models(), "19_enemy_chaser_idle");
@@ -62,7 +63,7 @@ entity_chaser_t* entity_chaser_new(void) {
 	entity->velocity = vec3_from_scalar(0);
 	entity->behavior_timer = 0;
 	entity->last_known_player_pos = vec3_from_scalar(0);
-	return entity;
+	return (entity_header_t*)entity;
 }
 
 void decide_action(entity_chaser_t* chaser, const vec3_t player_pos) {

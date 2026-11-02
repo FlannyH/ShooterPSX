@@ -6,6 +6,7 @@
 #include "engine/music.h"
 #include "engine/file.h"
 #include "engine/renderer.h"
+#include "subnivis/entity.h"
 #include "subnivis/input_map.h"
 
 #ifdef _NDS
@@ -51,6 +52,7 @@ int main(void) {
 	init_keyboard_mouse_mappings();
 	init_controller_mappings();
 
+	subnivis_register_entities();
 
 	// Init state variables
 	memset(&state, 0, sizeof(state));

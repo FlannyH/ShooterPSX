@@ -2,6 +2,7 @@
 
 #include "engine/renderer.h"
 #include "engine/mesh.h"
+#include "subnivis/entity.h"
 #include "subnivis/main.h"
 
 #ifdef _LEVEL_EDITOR
@@ -64,15 +65,15 @@ size_t entity_platform_deserialize(int slot, const uint8_t* data) {
     return sizeof(entity_platform_t);
 }
 
-entity_platform_t* entity_platform_new(void) {
+entity_header_t* entity_platform_new(vec3_t spawn_pos) {
 	// Allocate memory for the entity
 	entity_platform_t* entity = (entity_platform_t*)entity_get_header(entity_alloc(ENTITY_PLATFORM));
-	entity->entity_header.position = (vec3_t){0, 0, 0};
+	entity->entity_header.position = spawn_pos;
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
 	entity->entity_header.mesh = model_find_mesh(entity_get_models(), "29_platform_test_horizontal");
-    entity->position_start = (vec3_t){0, 0, 0};
-    entity->position_end = (vec3_t){0, 0, 0};
+    entity->position_start = spawn_pos;
+    entity->position_end = vec3_add(spawn_pos, vec3_from_scalars(0, ONE * 16, 0));;
     entity->velocity = 512;
     entity->curr_timer_value = 0;
     entity->auto_start_timer = 1000;
@@ -82,7 +83,7 @@ entity_platform_t* entity_platform_new(void) {
 	entity->target_is_end = 0;
 	entity->auto_start = 0;
 	entity->auto_return = 0;
-	return entity;
+	return (entity_header_t*)entity;
 }
 
 void entity_platform_update(int slot, player_t* player, scalar_t dt) {

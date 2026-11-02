@@ -75,17 +75,18 @@ CODE_GAME_C = 		   subnivis/debug_menu_main.c \
 					   subnivis/title_screen.c \
 					   subnivis/pause_menu.c \
 					   subnivis/settings.c \
+					   subnivis/entity.c \
 					   subnivis/credits.c \
 					   subnivis/in_game.c \
 			  	  	   subnivis/player.c \
-			  	  	   entities/cinecam.c \
-				  	   entities/platform.c \
-				  	   entities/trigger.c \
-				  	   entities/pickup.c \
-				  	   entities/chaser.c \
-				  	   entities/crate.c \
 					   subnivis/text.c \
-				  	   entities/door.c
+			  	  	   subnivis/entities/cinecam.c \
+				  	   subnivis/entities/platform.c \
+				  	   subnivis/entities/trigger.c \
+				  	   subnivis/entities/pickup.c \
+				  	   subnivis/entities/chaser.c \
+				  	   subnivis/entities/crate.c \
+				  	   subnivis/entities/door.c
 
 # Source files specific to PSX
 CODE_ENGINE_PSX_C = engine/psx/file.c \

@@ -1,6 +1,7 @@
 #include "trigger.h"
 
 #include "engine/renderer.h"
+#include "subnivis/entity.h"
 #include "subnivis/main.h"
 
 extern state_vars_t state;
@@ -116,9 +117,9 @@ void entity_trigger_update_teleport(int slot, player_t* player) {
     }
 }
 
-entity_trigger_t* entity_trigger_new(void) {
+entity_header_t* entity_trigger_new(vec3_t spawn_pos) {
     entity_trigger_t* entity = (entity_trigger_t*)entity_get_header(entity_alloc(ENTITY_TRIGGER));
-    entity->entity_header.position = (vec3_t){0, 0, 0};
+    entity->entity_header.position = spawn_pos;
     entity->entity_header.rotation = (vec3_t){0, 0, 0};
     entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
     entity->destroy_on_player_intersect = 1;
@@ -126,7 +127,7 @@ entity_trigger_t* entity_trigger_new(void) {
     entity->intersecting_prev = 0;
     entity->activated = 0;
     entity->trigger_type = ENTITY_TRIGGER_TYPE_NONE;
-    return entity;
+    return (entity_header_t*)entity;
 }
 
 void entity_trigger_update(int slot, player_t* player, scalar_t dt) {

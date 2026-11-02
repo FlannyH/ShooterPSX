@@ -27,7 +27,7 @@ typedef struct {
     vec3_t velocity;
 } entity_chaser_t;
 
-entity_chaser_t* entity_chaser_new(void);
+entity_header_t* entity_chaser_new(vec3_t spawn_pos);
 size_t entity_chaser_serialize(int slot, uint8_t* data);
 size_t entity_chaser_deserialize(int slot, const uint8_t* data);
 void entity_chaser_update(int slot, player_t* player, scalar_t dt);

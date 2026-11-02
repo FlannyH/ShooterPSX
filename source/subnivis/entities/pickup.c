@@ -3,6 +3,7 @@
 #include "engine/renderer.h"
 #include "engine/mesh.h"
 #include "subnivis/main.h"
+#include "subnivis/entity.h"
 
 #include "engine/music.h"
 
@@ -39,15 +40,15 @@ size_t entity_pickup_deserialize(int slot, const uint8_t* data) {
     return sizeof(entity_pickup_t);
 }
 
-entity_pickup_t* entity_pickup_new(void) {
+entity_header_t* entity_pickup_new(vec3_t spawn_pos) {
 	// Allocate memory for the entity
     entity_pickup_t* entity = (entity_pickup_t*)entity_get_header(entity_alloc(ENTITY_PICKUP));
-	entity->entity_header.position = (vec3_t){0, 0, 0};
+	entity->entity_header.position = spawn_pos;
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
     entity->type = PICKUP_TYPE_AMMO_SMALL;
     entity->entity_header.mesh = NULL;
-    return entity;
+    return (entity_header_t*)entity;
 }
 
 void entity_pickup_update(int slot, player_t* player, scalar_t dt) {

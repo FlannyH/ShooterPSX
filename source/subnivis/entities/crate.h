@@ -12,7 +12,7 @@ typedef struct {
     uint8_t pickup_to_spawn;
 } entity_crate_t;
 
-entity_crate_t* entity_crate_new(void);
+entity_header_t* entity_crate_new(vec3_t spawn_pos);
 size_t entity_crate_deserialize(int slot, const uint8_t* data);
 size_t entity_crate_serialize(int slot, uint8_t* data);
 void entity_crate_update(int slot, player_t* player, scalar_t dt);

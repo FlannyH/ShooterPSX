@@ -4,6 +4,7 @@
 #include "engine/renderer.h"
 #include "engine/mesh.h"
 #include "subnivis/main.h"
+#include "subnivis/entity.h"
 
 #ifdef _LEVEL_EDITOR
 #include "editor/editor.h"
@@ -37,15 +38,15 @@ size_t entity_crate_deserialize(int slot, const uint8_t* data) {
     return sizeof(entity_crate_t);
 }
 
-entity_crate_t* entity_crate_new(void) {
+entity_header_t* entity_crate_new(vec3_t spawn_pos) {
 	// Allocate memory for the entity
 	entity_crate_t* entity = (entity_crate_t*)entity_get_header(entity_alloc(ENTITY_CRATE));
-	entity->entity_header.position = (vec3_t){0, 0, 0};
+	entity->entity_header.position = spawn_pos;
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
 	entity->entity_header.mesh = model_find_mesh(entity_get_models(), "28_crate");
     entity->pickup_to_spawn = PICKUP_TYPE_NONE;
-	return entity;
+	return (entity_header_t*)entity;
 }
 
 void entity_crate_update(int slot, player_t* player, scalar_t dt) {

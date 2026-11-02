@@ -5,6 +5,7 @@
 #include "engine/music.h"
 #include "engine/mesh.h"
 #include "subnivis/main.h"
+#include "subnivis/entity.h"
 #include "engine/math/vec3.h"
 
 #ifdef _LEVEL_EDITOR
@@ -47,10 +48,10 @@ size_t entity_door_deserialize(int slot, const uint8_t* data) {
     return sizeof(entity_door_t);
 }
 
-entity_door_t* entity_door_new(void) {
+entity_header_t* entity_door_new(vec3_t spawn_pos) {
 	// Allocate memory for the entity
 	entity_door_t* entity = (entity_door_t*)entity_get_header(entity_alloc(ENTITY_DOOR));
-	entity->entity_header.position = (vec3_t){0, 0, 0};
+	entity->entity_header.position = spawn_pos;
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
 	entity->curr_interpolation_value = 0;
@@ -62,7 +63,7 @@ entity_door_t* entity_door_new(void) {
 	entity->signal_id = 0;
 	entity->open_offset = (vec3_t){0, 64 * ONE, 0};
 	entity->entity_header.mesh = NULL;
-	return entity;
+	return (entity_header_t*)entity;
 }
 
 mesh_t* update_mesh(entity_door_t* door) {

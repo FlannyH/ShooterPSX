@@ -58,9 +58,9 @@ int entity_cinecam_inspect(int slot) {
 }
 #endif
 
-entity_cinecam_t* entity_cinecam_new(void) {
+entity_header_t* entity_cinecam_new(vec3_t spawn_pos) {
 	entity_cinecam_t* entity = (entity_cinecam_t*)entity_get_header(entity_alloc(ENTITY_CINECAM));
-	entity->entity_header.position = (vec3_t){0, 0, 0};
+	entity->entity_header.position = spawn_pos;
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
 	entity->entity_header.mesh = NULL;
@@ -68,7 +68,7 @@ entity_cinecam_t* entity_cinecam_new(void) {
 	entity->nodes = mem_alloc(PATH_CAMERA_MAX_NODES * sizeof(*entity->nodes), MEM_CAT_UNDEFINED);
 	entity->progress = 0;
 	entity->active = 0;
-	return entity;
+	return (entity_header_t*)entity;
 }
 
 size_t entity_cinecam_serialize(int slot, uint8_t* data) {

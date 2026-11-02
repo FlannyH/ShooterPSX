@@ -44,7 +44,7 @@ typedef struct {
     };
 } entity_trigger_t;
 
-entity_trigger_t* entity_trigger_new(void);
+entity_header_t* entity_trigger_new(vec3_t spawn_pos);
 size_t entity_trigger_serialize(int slot, uint8_t* dest);
 size_t entity_trigger_deserialize(int slot, const uint8_t* source);
 void entity_trigger_update(int slot, player_t* player, scalar_t dt);

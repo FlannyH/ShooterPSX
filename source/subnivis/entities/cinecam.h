@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "engine/entity.h"
+#include "subnivis/entity.h"
 
 #define PATH_CAMERA_MAX_NODES 256
 
@@ -23,7 +23,7 @@ typedef struct {
 	int active;
 } entity_cinecam_t;
 
-entity_cinecam_t* entity_cinecam_new(void);
+entity_header_t* entity_cinecam_new(vec3_t spawn_pos);
 size_t entity_cinecam_serialize(int slot, uint8_t* data);
 size_t entity_cinecam_deserialize(int slot, const uint8_t* data);
 void entity_cinecam_update(int slot, player_t* player, scalar_t dt);
