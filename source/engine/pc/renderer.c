@@ -31,9 +31,6 @@
 GLFWwindow* window;
 mat4 perspective_matrix;
 mat4 view_matrix;
-mat4 view_matrix_topdown;
-mat4 view_matrix_third_person;
-mat4 view_matrix_normal;
 GLuint shader_gouraud;
 GLuint shader_blit;
 GLuint vao;
@@ -977,9 +974,9 @@ int renderer_should_close(void) { return glfwWindowShouldClose(window); }
 
 vec3_t renderer_get_forward_vector(void) {
     return vec3_from_floats(
-        -view_matrix_normal[0][2],
-        -view_matrix_normal[1][2],
-        -view_matrix_normal[2][2]
+        -view_matrix[0][2],
+        -view_matrix[1][2],
+        -view_matrix[2][2]
     );
 }
 

@@ -20,6 +20,7 @@ typedef struct {
 	int32_t n_nodes;
 	cinecam_node_t* nodes;
 	scalar_t progress;
+	int active;
 } entity_cinecam_t;
 
 entity_cinecam_t* entity_cinecam_new(void);

@@ -44,6 +44,9 @@ int entity_cinecam_inspect(int slot) {
             inspect_tree_pop();
         }
         inspect_tree_pop();
+
+        inspect_scalar(&cinecam->progress, "Progress");
+        inspect_bool(&cinecam->active, "Active");
     }
     if (inspect_button("Add")) {
         cinecam->nodes[cinecam->n_nodes].position = editor_get_viewport_position();
@@ -63,6 +66,8 @@ entity_cinecam_t* entity_cinecam_new(void) {
 	entity->entity_header.mesh = NULL;
 	entity->n_nodes = 1;
 	entity->nodes = mem_alloc(PATH_CAMERA_MAX_NODES * sizeof(*entity->nodes), MEM_CAT_UNDEFINED);
+	entity->progress = 0;
+	entity->active = 0;
 	return entity;
 }
 
@@ -112,6 +117,11 @@ size_t entity_cinecam_deserialize(int slot, const uint8_t* data) {
 	}
 
 	cinecam_dest->progress = 0;
+	#ifndef _LEVEL_EDITOR
+	cinecam_dest->active = 1;
+	#else
+	cinecam_dest->active = 0;
+	#endif
 
     size_t size = 3 * sizeof(vec3_t); // header
     size += sizeof(*n_nodes);
@@ -146,6 +156,8 @@ vec3_t spline_point(vec3_t p0, vec3_t p1, vec3_t p2, vec3_t p3, scalar_t t) {
 void entity_cinecam_update(int slot, player_t* player, scalar_t dt) {
     (void)player;
     entity_cinecam_t* cinecam = (entity_cinecam_t*)entity_get_header(slot);
+
+    if (!cinecam->active) return;
 
     // interpolate
     int prev_index = scalar_clamp((cinecam->progress / ONE), 0, cinecam->n_nodes - 2);

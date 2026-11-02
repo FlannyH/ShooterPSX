@@ -8,11 +8,11 @@ void mixer_init(void) {
     // todo
 }
 
-void mixer_upload_sample_data(const void* const sample_data, size_t n_bytes, soundbank_type_t soundbank_type) {
+void mixer_upload_sample_data(const void* const sample_data, size_t n_bytes, int soundbank_slot) {
     // todo
     (void)sample_data;
     (void)n_bytes;
-    (void)soundbank_type;
+    (void)soundbank_slot;
 }
 
 void mixer_global_set_volume(scalar_t left, scalar_t right) {
@@ -39,13 +39,13 @@ void mixer_channel_set_volume(size_t channel_index, scalar_t left, scalar_t righ
     (void)right;
 }
 
-void mixer_channel_set_sample(size_t channel_index, size_t sample_source, size_t loop_start, size_t sample_length, soundbank_type_t soundbank_type) {
+void mixer_channel_set_sample(size_t channel_index, size_t sample_source, size_t loop_start, size_t sample_length, int soundbank_slot) {
     // todo
     (void)channel_index;
     (void)sample_source;
     (void)loop_start;
     (void)sample_length;
-    (void)soundbank_type;
+    (void)soundbank_slot;
 }
 
 void mixer_channel_key_on(uint32_t channel_bits) {

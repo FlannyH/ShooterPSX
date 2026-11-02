@@ -25,6 +25,13 @@ extern "C" {
 #include "editor/input_map.h"
 #include "engine/input_mapping.h"
 #include "engine/renderer.h"
+#include "entities/chaser.h"
+#include "entities/cinecam.h"
+#include "entities/crate.h"
+#include "entities/door.h"
+#include "entities/pickup.h"
+#include "entities/platform.h"
+#include "entities/trigger.h"
 #include "engine/entity.h"
 #include "engine/music.h"
 #include "engine/mesh.h"
@@ -239,13 +246,13 @@ size_t inspect_enum(size_t value, const char** names, const char* label) {
 }
 
 // returns whether data changed
-bool inspect_entity(size_t entity_id) {
+int inspect_entity(size_t entity_id) {
     const uint8_t entity_type = entity_get_type(entity_id);
-    if (entity_type == ENTITY_NONE) return false;
+    if (entity_type == ENTITY_NONE) return 0;
 
     entity_header_t* entity_data = entity_get_header(entity_id);
 
-    bool result = false;
+    int result = 0;
 
     if (ImGui::TreeNodeEx("Entity Header", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (entity_data->mesh) ImGui::Text("Mesh: %s", entity_data->mesh->name);
@@ -269,7 +276,7 @@ bool inspect_entity(size_t entity_id) {
 
     if (ImGui::Button("Delete")) {
         entity_kill(entity_id);
-        return true;
+        return 1;
     }
 
     // Render its registered bounding boxes
@@ -285,7 +292,7 @@ bool inspect_entity(size_t entity_id) {
 }
 
 // returns whether data changed
-bool inspect_light(size_t light_id) {
+int inspect_light(size_t light_id) {
     const uint8_t light_type = editor.level.lvl.lights[light_id].type;
     if (light_type == LIGHT_NONE) return false;
 
@@ -889,7 +896,6 @@ void level_metadata() {
         editor.misc.player.transform.rotation = editor.level.player_spawn_rotation;
         editor.misc.camera.transform.position = editor.level.player_spawn_position;
         editor.misc.camera.transform.rotation = editor.level.player_spawn_position;
-        player_update(&editor.misc.player, &editor.level.lvl, 0, 0); // Tick the player with 0 delta time to update the camera transform
     }
     ImGui::End();
 }
@@ -1823,14 +1829,16 @@ int main(int argc, char** argv) {
         }
 
         debug_camera_update(&editor.misc.camera, dt, mouse_lock);
-        renderer_begin_frame();
-        renderer_set_view(&editor.misc.camera.transform);
 
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
 
+        renderer_begin_frame();
+
         cleanup();
-        render_3d_debug_stuff();
         level_metadata();
+        renderer_set_view(&editor.misc.camera.transform);
+        // player_update(&editor.misc.player, &editor.level.lvl, 0, 0); // Tick the player with 0 delta time to update the camera transform
+        render_3d_debug_stuff();
         general_info();
         entity_stuff();
         light_stuff();
@@ -1875,7 +1883,9 @@ vec3_t editor_get_viewport_rotation(void) {
 }
 
 void editor_draw_sphere(transform_t transform) {
-    transform.scale /= 1024;
+    transform.scale.x /= 1024;
+    transform.scale.y /= 1024;
+    transform.scale.z /= 1024;
     renderer_draw_mesh_shaded(&editor.resources.gizmos->meshes[2], &transform, 0, 0);
 }
 
@@ -1892,16 +1902,16 @@ int inspect_bool(int *value, const char *label) {
     return (b_before ^ b_after);
 }
 
-int inspect_pixel32(pixel32_t *vec, const char *label) {
+int inspect_pixel32(pixel32_t* pixel, const char* label) {
     float rgb[3] = {
-        (float)trigger->text.color.r / 255.f,
-        (float)trigger->text.color.g / 255.f,
-        (float)trigger->text.color.b / 255.f,
+        (float)pixel->r / 255.f,
+        (float)pixel->g / 255.f,
+        (float)pixel->b / 255.f,
     };
-    if (ImGui::ColorEdit3("Text color", rgb)) {
-        trigger->text.color.r = (uint8_t)(rgb[0] * 255.f);
-        trigger->text.color.g = (uint8_t)(rgb[1] * 255.f);
-        trigger->text.color.b = (uint8_t)(rgb[2] * 255.f);
+    if (ImGui::ColorEdit3(label, rgb)) {
+        pixel->r = (uint8_t)(rgb[0] * 255.f);
+        pixel->g = (uint8_t)(rgb[1] * 255.f);
+        pixel->b = (uint8_t)(rgb[2] * 255.f);
         return 1;
     }
     return 0;

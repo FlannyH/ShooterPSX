@@ -25,7 +25,7 @@ void editor_draw_sphere(transform_t transform);
 
 int inspect_int(int* value, const char* label, int min, int max, int draggable);
 int inspect_bool(int* value, const char* label);
-int inspect_pixel32(pixel32_t* vec, const char* label);
+int inspect_pixel32(pixel32_t* pixel, const char* label);
 int inspect_vec3(vec3_t* vec, const char* label);
 int inspect_svec3_4_12(svec3_t* vec, const char* label);
 int inspect_scalar(scalar_t* scalar, const char* label);
