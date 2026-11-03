@@ -276,15 +276,15 @@ static inline scalar_t trig_cos(scalar_t angle) {
 
 static inline size_t serialize_scalar(void* destination, scalar_t scalar) {
     union {
-        int32_t fixed_20_12;
+        int32_t fixed_16_16;
         uint8_t bytes[4];
     } data;
-    data.fixed_20_12 = scalar;
+    data.fixed_16_16 = scalar;
 
-    #if (FRAC_BITS < 12)
-    data.fixed_20_12 <<= (12 - FRAC_BITS);
+    #if (FRAC_BITS < 16)
+    data.fixed_16_16 <<= (16 - FRAC_BITS);
     #else
-    data.fixed_20_12 >>= (FRAC_BITS - 12);
+    data.fixed_16_16 >>= (FRAC_BITS - 16);
     #endif
 
     ((uint8_t*)destination)[0] = data.bytes[0];
@@ -297,23 +297,23 @@ static inline size_t serialize_scalar(void* destination, scalar_t scalar) {
 
 static inline size_t deserialize_scalar(const void *const source, scalar_t* scalar) {
     union {
-        int32_t fixed_20_12;
+        int32_t fixed_16_16;
         uint8_t bytes[4];
     } data;
-    data.fixed_20_12 = 0;
+    data.fixed_16_16 = 0;
 
     data.bytes[0] = ((uint8_t*)source)[0];
     data.bytes[1] = ((uint8_t*)source)[1];
     data.bytes[2] = ((uint8_t*)source)[2];
     data.bytes[3] = ((uint8_t*)source)[3];
 
-    #if (FRAC_BITS < 12)
-    data.fixed_20_12 >>= (12 - FRAC_BITS);
-    #elif (FRAC_BITS > 12)
-    data.fixed_20_12 <<= (FRAC_BITS - 12);
+    #if (FRAC_BITS < 16)
+    data.fixed_16_16 >>= (16 - FRAC_BITS);
+    #elif (FRAC_BITS > 16)
+    data.fixed_16_16 <<= (FRAC_BITS - 16);
     #endif
 
-    *scalar = data.fixed_20_12;
+    *scalar = data.fixed_16_16;
     return sizeof(*scalar);
 }
 

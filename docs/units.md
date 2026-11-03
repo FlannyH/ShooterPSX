@@ -1,9 +1,5 @@
 # Units
 
-This document explains how scalar numbers are stored in the assets
+Most of the engine uses 16.16 fixed point, where 1.0 = 65536. 
 
-*Model space:* 1.0 = 1 (16 bit)
-
-*Collision space:* 1.0 = 512 (32 bit)
-
-*Graphics space:* 1.0 = 4096 (32 bit) for positions and scales, 1.0 = 4096 = 360 degrees for rotations
+Rule of thumb: 32-bit is 16.16, and 16-bit is just the integer part of that
