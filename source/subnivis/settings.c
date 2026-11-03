@@ -4,7 +4,7 @@
 #include "engine/input_mapping.h"
 #include "engine/renderer.h"
 #include "subnivis/text.h"
-#include "ui.h"
+#include "engine/ui.h"
 
 #ifdef _PSX
 #include <psxcd.h>

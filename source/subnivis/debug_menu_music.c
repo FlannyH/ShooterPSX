@@ -5,8 +5,8 @@
 #include "engine/music.h"
 #include "subnivis/input_map.h"
 #include "subnivis/text.h"
+#include "engine/ui.h"
 #include "misc.h"
-#include "ui.h"
 
 void state_enter_debug_menu_music(void) {
     state_enter_title_screen();

@@ -4,7 +4,7 @@
 #include "subnivis/text.h"
 #include "engine/input_mapping.h"
 #include "engine/renderer.h"
-#include "ui.h"
+#include "engine/ui.h"
 
 void state_enter_debug_menu_main(void) {
     state_enter_title_screen();

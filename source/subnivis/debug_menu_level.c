@@ -5,7 +5,7 @@
 #include "engine/memory.h"
 #include "subnivis/input_map.h"
 #include "subnivis/text.h"
-#include "ui.h"
+#include "engine/ui.h"
 
 #ifdef _PSX
 #include <psxcd.h>

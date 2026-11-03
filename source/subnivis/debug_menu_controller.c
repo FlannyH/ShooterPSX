@@ -2,8 +2,8 @@
 
 #include "engine/input_mapping.h"
 #include "engine/renderer.h"
-#include "subnivis/input_map.h"
-#include "ui.h"
+#include "input_map.h"
+#include "engine/ui.h"
 
 void state_enter_debug_menu_controller(void) {
     state_enter_title_screen();

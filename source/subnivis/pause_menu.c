@@ -9,8 +9,8 @@
 #include "subnivis/input_map.h"
 #include "engine/input_mapping.h"
 #include "engine/music.h"
+#include "engine/ui.h"
 #include "subnivis/text.h"
-#include "ui.h"
 
 #ifdef _PSX
 #include <psxcd.h>

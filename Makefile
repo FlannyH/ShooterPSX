@@ -63,7 +63,7 @@ CODE_ENGINE_SHARED_C = engine/collision.c \
 			  	  	   engine/renderer_shared.c \
 					   engine/texture.c \
 					   engine/texture_pool.c \
-			  	  	   ui.c \
+			  	  	   engine/ui.c \
 			  	  	   engine/entity.c \
 			  	  	   engine/vislist.c \
 

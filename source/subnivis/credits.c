@@ -1,11 +1,11 @@
 #include "main.h"
 
-#include "subnivis/input_map.h"
+#include "input_map.h"
 #include "engine/input_mapping.h"
 #include "engine/renderer.h"
 #include "engine/music.h"
-#include "subnivis/text.h"
-#include "ui.h"
+#include "text.h"
+#include "engine/ui.h"
 
 void state_enter_credits(void) {
 	renderer_start_fade_in(FADE_SPEED);
