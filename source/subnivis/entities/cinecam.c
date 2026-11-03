@@ -153,8 +153,9 @@ vec3_t spline_point(vec3_t p0, vec3_t p1, vec3_t p2, vec3_t p3, scalar_t t) {
     };
 }
 
-void entity_cinecam_update(int slot, player_t* player, scalar_t dt) {
+void entity_cinecam_update(int slot, player_t* player, scalar_t dt, level_t* level) {
     (void)player;
+    (void)level;
     entity_cinecam_t* cinecam = (entity_cinecam_t*)entity_get_header(slot);
 
     if (!cinecam->active) return;

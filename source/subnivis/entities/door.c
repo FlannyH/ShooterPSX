@@ -109,8 +109,9 @@ mesh_t* update_mesh(entity_door_t* door) {
 	return mesh;
 }
 
-void entity_door_update(int slot, player_t* player, scalar_t dt) {
+void entity_door_update(int slot, player_t* player, scalar_t dt, level_t* level) {
 	(void)dt;
+	(void)level;
 	entity_door_t* door = (entity_door_t*)entity_get_header(slot);
 
 	vec3_t door_pos = door->entity_header.position;

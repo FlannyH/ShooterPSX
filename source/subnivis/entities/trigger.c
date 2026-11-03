@@ -70,13 +70,13 @@ size_t entity_trigger_deserialize(int slot, const uint8_t* source) {
     return sizeof(entity_trigger_t);
 }
 
-void entity_trigger_update_text(int slot, scalar_t dt) {
+void entity_trigger_update_text(int slot, scalar_t dt, level_t* level) {
     entity_trigger_t* trigger = (entity_trigger_t*)entity_get_header(slot);
 
     // display text for a specified amount of time
     if (trigger->text.curr_display_time > 0) {
         trigger->text.curr_display_time -= dt;
-        const char* text = state.in_game.level.text_entries[trigger->text.id];
+        const char* text = level->text_entries[trigger->text.id];
         renderer_draw_text((vec2_t){256 * ONE, 176 * ONE}, text, 2, 1, trigger->text.color);
     }
 
@@ -130,15 +130,15 @@ entity_header_t* entity_trigger_new(vec3_t spawn_pos) {
     return (entity_header_t*)entity;
 }
 
-void entity_trigger_update(int slot, player_t* player, scalar_t dt) {
+void entity_trigger_update(int slot, player_t* player, scalar_t dt, level_t* level) {
     (void)player;
     entity_trigger_t* trigger = (entity_trigger_t*)entity_get_header(slot);
 
     // when the trigger is idle, detect player collision
     if (trigger->activated) {
         switch (trigger->trigger_type) {
-            case ENTITY_TRIGGER_TYPE_NONE:     entity_trigger_update_text(slot, dt);         break;
-            case ENTITY_TRIGGER_TYPE_TEXT:     entity_trigger_update_text(slot, dt);         break;
+            case ENTITY_TRIGGER_TYPE_NONE:     break;
+            case ENTITY_TRIGGER_TYPE_TEXT:     entity_trigger_update_text(slot, dt, level); break;
             case ENTITY_TRIGGER_TYPE_SIGNAL:   entity_trigger_update_signal(slot);           break;
             case ENTITY_TRIGGER_TYPE_TELEPORT: entity_trigger_update_teleport(slot, player); break;
         }

@@ -23,7 +23,7 @@ typedef struct {
 entity_header_t* entity_door_new(vec3_t spawn_pos);
 size_t entity_door_serialize(int slot, uint8_t* data);
 size_t entity_door_deserialize(int slot, const uint8_t* data);
-void entity_door_update(int slot, player_t* player, scalar_t dt);
+void entity_door_update(int slot, player_t* player, scalar_t dt, level_t* level);
 void entity_door_on_hit(int slot, int hitbox_index);
 void entity_door_player_intersect(int slot, player_t* player);
 

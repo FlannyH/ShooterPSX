@@ -45,7 +45,7 @@ typedef struct {
 typedef entity_header_t* (*entity_new_func_t)(vec3_t position);
 typedef size_t (*entity_deserialize_func_t)(int slot, const uint8_t* data);
 typedef size_t (*entity_serialize_func_t)(int slot, uint8_t* data);
-typedef void (*entity_update_func_t)(int slot, player_t* player, scalar_t dt);
+typedef void (*entity_update_func_t)(int slot, player_t* player, scalar_t dt, level_t* level);
 typedef void (*entity_on_hit_func_t)(int slot, int hitbox_index);
 typedef void (*entity_player_intersect_func_t)(int slot, player_t* player);
 #ifdef _LEVEL_EDITOR
@@ -77,7 +77,7 @@ void entity_call_on_hit(int entity_index, int box_index);
 void entity_call_player_intersect(int entity_index, player_t* player);
 void entity_defragment(void);
 void entity_sanitize(void);
-void entity_update_all(player_t* player, scalar_t dt);
+void entity_update_all(player_t* player, scalar_t dt, level_t* level);
 void entity_kill(int slot);
 void entity_send_player_intersect(int slot, player_t* player);
 uint8_t entity_get_type(int index);

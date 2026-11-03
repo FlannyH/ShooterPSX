@@ -16,7 +16,6 @@ int entity_chaser_inspect(int slot) {
 }
 #endif
 
-extern state_vars_t state;
 #define CHASER_BEHAVIOUR_PERIOD 16
 #define CHASER_REACTION_TIME_MIN 200 // in milliseconds
 #define CHASER_REACTION_TIME_MAX 400
@@ -26,8 +25,8 @@ extern state_vars_t state;
 #define CHASER_NODE_REACH_DISTANCE_SQUARED (800*1000)
 
 // Slightly cursed but it makes the rest of the code more readable so eh
-#define n_nav_graph_nodes state.in_game.level.collision_bvh.n_nav_graph_nodes
-#define nav_graph_nodes state.in_game.level.collision_bvh.nav_graph_nodes
+// #define n_nav_graph_nodes state.in_game.level.collision_bvh.n_nav_graph_nodes
+// #define nav_graph_nodes state.in_game.level.collision_bvh.nav_graph_nodes
 
 size_t entity_chaser_serialize(int slot, uint8_t* dest) {
     entity_chaser_t* chaser_source = (entity_chaser_t*)entity_get_header(slot);
@@ -124,7 +123,7 @@ typedef enum {
 	STRAFE,
 } find_target_operator_t;
 
-void find_target_node(entity_chaser_t* chaser, vec3_t target_position, find_target_operator_t target_operator) {
+void find_target_node(entity_chaser_t* chaser, vec3_t target_position, find_target_operator_t target_operator, level_t* level) {
 	// Update the target node to the closest neighbour node
 
 	chaser->behavior_timer = random_range(CHASER_REACTION_TIME_MIN, CHASER_REACTION_TIME_MAX);
@@ -132,14 +131,14 @@ void find_target_node(entity_chaser_t* chaser, vec3_t target_position, find_targ
 		scalar_t fav_distance_squared = (target_operator == FURTHEST) ? 0 : INT32_MAX;
 
 		for (size_t i = 0; i < 4; ++i) {
-			const uint16_t neighbor_id = nav_graph_nodes[chaser->curr_navmesh_node].neighbor_ids[i];
+			const uint16_t neighbor_id = level->collision_bvh.nav_graph_nodes[chaser->curr_navmesh_node].neighbor_ids[i];
 			if (
 				neighbor_id == 0xFFFF || // ignore explicitly invalid ids
-				neighbor_id >= n_nav_graph_nodes || // array bounds check
+				neighbor_id >= level->collision_bvh.n_nav_graph_nodes || // array bounds check
 				neighbor_id == chaser->curr_navmesh_node // never stay on the same node, keep moving
 			) continue;
 
-			const vec3_t node_position = vec3_from_svec3(nav_graph_nodes[neighbor_id].position);
+			const vec3_t node_position = vec3_from_svec3(level->collision_bvh.nav_graph_nodes[neighbor_id].position);
 			const scalar_t distance_from_node_to_target_position_squared = vec3_magnitude_squared(vec3_sub(node_position, target_position));
 
 			switch (target_operator) {
@@ -169,7 +168,7 @@ void find_target_node(entity_chaser_t* chaser, vec3_t target_position, find_targ
 	}
 }
 
-void entity_chaser_update(int slot, player_t* player, scalar_t dt) {
+void entity_chaser_update(int slot, player_t* player, scalar_t dt, level_t* level) {
 	entity_chaser_t* chaser = (entity_chaser_t*)entity_get_header(slot);
 	const vec3_t chaser_pos = chaser->entity_header.position;
 
@@ -224,11 +223,11 @@ void entity_chaser_update(int slot, player_t* player, scalar_t dt) {
 	entity_register_collision_box(&box_head);
 
 	// If the enemy doesn't know where it is, figure that out
-	if (chaser->curr_navmesh_node < 0 || chaser->curr_navmesh_node >= n_nav_graph_nodes) {
+	if (chaser->curr_navmesh_node < 0 || chaser->curr_navmesh_node >= level->collision_bvh.n_nav_graph_nodes) {
 		scalar_t curr_min_distance = INT32_MAX;
 
-		for (int i = 0; i < n_nav_graph_nodes; ++i) {
-			const vec3_t node_position = vec3_from_svec3(nav_graph_nodes[i].position);
+		for (size_t i = 0; i < level->collision_bvh.n_nav_graph_nodes; ++i) {
+			const vec3_t node_position = vec3_from_svec3(level->collision_bvh.nav_graph_nodes[i].position);
 			const scalar_t distance_squared = vec3_magnitude_squared(vec3_sub(node_position, chaser_pos));
 			if (distance_squared >= 0 && distance_squared < curr_min_distance) {
 				curr_min_distance = distance_squared;
@@ -246,20 +245,20 @@ void entity_chaser_update(int slot, player_t* player, scalar_t dt) {
 				break;
 			case CHASER_RETURN_HOME:
 				if (vec3_magnitude_squared(vec3_sub(chaser_pos, chaser->home_position)) > CHASER_NODE_REACH_DISTANCE_SQUARED) {
-					find_target_node(chaser, chaser->home_position, CLOSEST);
+					find_target_node(chaser, chaser->home_position, CLOSEST, level);
 				}
 				decide_action(chaser, player->position);
 				break;
 			case CHASER_CHASE:
-				find_target_node(chaser, player->position, CLOSEST);
+				find_target_node(chaser, player->position, CLOSEST, level);
 				decide_action(chaser, player->position);
 				break;
 			case CHASER_FLEE:
-				find_target_node(chaser, player->position, FURTHEST);
+				find_target_node(chaser, player->position, FURTHEST, level);
 				decide_action(chaser, player->position);
 				break;
 			case CHASER_STRAFE:
-				find_target_node(chaser, player->position, STRAFE);
+				find_target_node(chaser, player->position, STRAFE, level);
 				decide_action(chaser, player->position);
 				break;
 			case CHASER_SHOOT:
@@ -294,8 +293,8 @@ void entity_chaser_update(int slot, player_t* player, scalar_t dt) {
 	}
 
 	// Add a force towards the target node
-	if (chaser->target_navmesh_node >= 0 && chaser->target_navmesh_node < n_nav_graph_nodes) {
-		const vec3_t target_pos = vec3_from_svec3(nav_graph_nodes[chaser->target_navmesh_node].position);
+	if (chaser->target_navmesh_node >= 0 && chaser->target_navmesh_node < level->collision_bvh.n_nav_graph_nodes) {
+		const vec3_t target_pos = vec3_from_svec3(level->collision_bvh.nav_graph_nodes[chaser->target_navmesh_node].position);
 		const vec3_t target_dir = vec3_normalize(vec3_sub(target_pos, chaser_pos));
 		chaser->velocity = vec3_add(chaser->velocity, vec3_muls(target_dir, scalar_mul(chaser_acceleration, dt)));
 

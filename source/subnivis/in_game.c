@@ -109,7 +109,7 @@ void state_update_in_game(scalar_t dt) {
     }
 	else {
 #endif
-		entity_update_all(&state.in_game.player, dt);
+		entity_update_all(&state.in_game.player, dt, &state.in_game.level);
 
 		(void)n_sections;
 #if defined(_PSX) && defined(FPS_COUNTER)

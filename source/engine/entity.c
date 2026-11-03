@@ -18,13 +18,13 @@ model_t* entity_models = NULL;
 int n_entity_textures = 0;
 int entity_signals[ENTITY_SIGNAL_COUNT];
 
-void entity_update_all(player_t* player, scalar_t dt) {
+void entity_update_all(player_t* player, scalar_t dt, level_t* level) {
 	entity_n_active_aabb = 0;
 
 	// Update all entities
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
     	entity_reg_t* entity_funcs = &entity_register[entity_get_type(i)];
-    	if (entity_funcs->update) entity_funcs->update(i, player, dt);
+    	if (entity_funcs->update) entity_funcs->update(i, player, dt, level);
 	}
 }
 

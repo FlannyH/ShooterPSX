@@ -51,7 +51,8 @@ entity_header_t* entity_pickup_new(vec3_t spawn_pos) {
     return (entity_header_t*)entity;
 }
 
-void entity_pickup_update(int slot, player_t* player, scalar_t dt) {
+void entity_pickup_update(int slot, player_t* player, scalar_t dt, level_t* level) {
+    (void)level;
 	entity_pickup_t* pickup = (entity_pickup_t*)entity_get_header(slot);
 	const vec3_t pickup_pos = pickup->entity_header.position;
 	const vec3_t player_pos = vec3_sub(player->position, (vec3_t){0, SCALAR(200), 0});

@@ -4,15 +4,6 @@
 #include "subnivis/entity.h"
 
 // todo(editor_externs): desc: figure this extern crap out
-extern "C" {
-    int widescreen = 0;
-    state_vars_t state = (state_vars_t){};
-    state_t current_state = STATE_NONE;
-    state_t prev_state = STATE_NONE;
-    void set_current_state(state_t state) { current_state = state; }
-    state_t get_current_state(void) { return current_state; }
-    state_t get_prev_state(void) { return prev_state; }
-}
 
 #include "camera.h"
 #include "imgui.h"
@@ -965,7 +956,7 @@ void general_info() {
 }
 
 void entity_stuff() {
-    entity_update_all(&editor.misc.player, 0);
+    entity_update_all(&editor.misc.player, 0, &editor.level.lvl);
 
     ImGui::Begin("Entity spawning");
     // Pick type
