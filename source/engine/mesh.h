@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include "memory.h"
 #include "collision.h"
 
 #include <stdint.h>

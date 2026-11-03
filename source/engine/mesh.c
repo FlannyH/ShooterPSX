@@ -2,9 +2,7 @@
 #include "mesh.h"
 #include "file.h"
 #include "common.h"
-#include "renderer.h"
 #include "structs.h"
-#include "texture.h"
 
 #include <assert.h>
 #include <stdio.h>

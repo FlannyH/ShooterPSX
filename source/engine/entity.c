@@ -2,11 +2,8 @@
 
 #include "renderer.h"
 #include "mesh.h"
-#include "subnivis/main.h"
 
 #include <string.h>
-// todo(entity_state): desc: rework state_vars_t for entities
-extern state_vars_t state;
 
 entity_reg_t entity_register[ENTITY_LIST_LENGTH] = {0};
 entity_collision_box_t entity_aabb_queue[ENTITY_AABB_QUEUE_LENGTH];

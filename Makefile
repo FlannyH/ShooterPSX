@@ -88,6 +88,16 @@ CODE_GAME_C = 		   subnivis/debug_menu_main.c \
 				  	   subnivis/entities/crate.c \
 				  	   subnivis/entities/door.c
 
+CODE_EDITOR_C =        subnivis/entity.c \
+			  	  	   subnivis/entities/cinecam.c \
+				  	   subnivis/entities/platform.c \
+				  	   subnivis/entities/trigger.c \
+				  	   subnivis/entities/pickup.c \
+				  	   subnivis/entities/chaser.c \
+				  	   subnivis/entities/crate.c \
+				  	   subnivis/entities/door.c \
+			  	  	   subnivis/player.c
+
 # Source files specific to PSX
 CODE_ENGINE_PSX_C = engine/psx/file.c \
 				    engine/psx/input.c \
@@ -128,7 +138,7 @@ CODE_PC_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PC_C) 	$(CODE_GAME_MAIN)
 CODE_PC_CPP			    = $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_PC_CPP)
 CODE_NDS_C				= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_NDS_C) 	$(CODE_GAME_MAIN) 		$(CODE_GAME_C)
 CODE_NDS_CPP			= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_NDS_CPP)
-CODE_LEVEL_EDITOR_C		= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PC_C) 	$(CODE_LEVEL_EDITOR) 	$(CODE_GAME_C)
+CODE_LEVEL_EDITOR_C		= $(CODE_ENGINE_SHARED_C)  		$(CODE_ENGINE_PC_C) 	$(CODE_LEVEL_EDITOR) 	$(CODE_EDITOR_C)
 CODE_LEVEL_EDITOR_CPP	= $(CODE_ENGINE_SHARED_CPP) 	$(CODE_ENGINE_PC_CPP)   editor/editor.cpp
 
 OBJ_PSX					= 	$(patsubst %.c, 	$(PATH_OBJ_PSX)/%.o,	        $(CODE_PSX_C))				\

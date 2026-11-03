@@ -3,13 +3,7 @@
 
 #include "texture_pool.h"
 #include "renderer.h"
-#include "common.h"
 #include "memory.h"
-
-#ifdef _PSX
-#include <psxgpu.h>
-#include "psx/renderer.h"
-#endif
 
 #define MAX_RES_SHIFTS 12 // 12 makes the max texture pool resolution 4096x4096
 #define MAX_RES (1<<MAX_RES_SHIFTS)

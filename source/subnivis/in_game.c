@@ -26,7 +26,7 @@ void load_weapon_textures(void);
 void benchmark_mode(void);
 void fps_counter(scalar_t dt);
 void draw_hud(void);
-void draw_debug_info(scalar_t dt, const int n_sections);
+void draw_debug_info(scalar_t dt, const int n_sections, level_t* level);
 void shoot(const transform_t camera_transform);
 char debug_text_buffer[64] = {0};
 int fps = 0;
@@ -104,7 +104,7 @@ void state_update_in_game(scalar_t dt) {
 	// if (input_pressed(PAD_SELECT, 0)) state.global.show_debug = !state.global.show_debug;
 
 	if (state.global.show_debug) {
-        draw_debug_info(dt, n_sections);
+        draw_debug_info(dt, n_sections, &state.in_game.level);
     }
 	else {
 #endif
@@ -214,7 +214,7 @@ void state_update_in_game(scalar_t dt) {
 	mem_stack_release(STACK_TEMP);
 }
 
-void draw_debug_info(scalar_t dt, const int n_sections) {
+void draw_debug_info(scalar_t dt, const int n_sections, level_t* level) {
 #if defined(_DEBUG) && defined(_PSX)
     // Run the game logic within PROFILE calls, which prints the time (in hblanks) a function took to complete
     PROFILE("lvl_gfx", renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists), 1);

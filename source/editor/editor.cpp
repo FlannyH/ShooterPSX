@@ -1,6 +1,5 @@
 #include "editor.h"
 
-#include "subnivis/main.h"
 #include "subnivis/entity.h"
 
 // todo(editor_externs): desc: figure this extern crap out

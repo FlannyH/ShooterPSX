@@ -1,6 +1,5 @@
 #include "level.h"
 
-#include "engine/math/scalar.h"
 #include "engine/math/vec3.h"
 #include "memory.h"
 #include "renderer.h"

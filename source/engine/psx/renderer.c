@@ -185,7 +185,7 @@ void renderer_set_view(const transform_t* camera_transform) {
     // todo(psx_renderer_pal_aspect): desc: bespoke correction for PAL output
     aspect_matrix = (MATRIX){
         .m = {
-            {(GTE_ONE * res_x) / (widescreen ? 427 : 320), 0, 0},
+            {(GTE_ONE * res_x) / (renderer_get_video_mode().bits.widescreen_off0_on1 ? 427 : 320), 0, 0},
             {0, -GTE_ONE, 0}, // PS1 screen space is +Y=down, so invert the Y component
             {0, 0, GTE_ONE},
         },
