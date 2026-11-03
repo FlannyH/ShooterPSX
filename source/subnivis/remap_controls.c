@@ -49,7 +49,6 @@ void state_enter_remap_controls(void) {
 	while (renderer_is_fading()) {
 		renderer_delta_time(DT_TICK);
         renderer_begin_frame();
-        renderer_set_view(&id_transform);
 		ui_render_background();
 		renderer_end_frame();
 	}
@@ -59,7 +58,6 @@ void state_update_remap_controls(scalar_t dt) {
 	(void)dt;
 
     renderer_begin_frame();
-    renderer_set_view(&id_transform);
 
 	ui_render_background();
 

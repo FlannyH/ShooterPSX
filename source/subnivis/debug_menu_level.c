@@ -31,7 +31,6 @@ void state_enter_debug_menu_level(void) {
 	state.title_screen.button_pressed = 0;
     for (int i = 0; i < 2; ++i) {
         renderer_begin_frame();
-        renderer_set_view(&id_transform);
         ui_render_background();
     	renderer_end_frame();
     	input_update();
@@ -41,7 +40,6 @@ void state_enter_debug_menu_level(void) {
 void state_update_debug_menu_level(scalar_t dt) {
 	(void)dt;
 	renderer_begin_frame();
-	renderer_set_view(&id_transform);
 
     ui_render_background();
 
@@ -113,7 +111,6 @@ void state_update_debug_menu_level(scalar_t dt) {
 void state_exit_debug_menu_level(void) {
     for (int i = 0; i < 2; ++i) {
         renderer_begin_frame();
-        renderer_set_view(&id_transform);
         ui_render_background();
     	renderer_end_frame();
     	input_update();

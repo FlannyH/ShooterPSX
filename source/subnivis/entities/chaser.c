@@ -231,7 +231,7 @@ void entity_chaser_update(int slot, player_t* player, scalar_t dt, level_t* leve
 			const scalar_t distance_squared = vec3_magnitude_squared(vec3_sub(node_position, chaser_pos));
 			if (distance_squared >= 0 && distance_squared < curr_min_distance) {
 				curr_min_distance = distance_squared;
-				chaser->curr_navmesh_node = i;
+				chaser->curr_navmesh_node = (int16_t)i;
 			}
 		}
 	}

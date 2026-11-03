@@ -434,7 +434,7 @@ void renderer_begin_frame(void) {
 #endif
 	if (aspect != prev_aspect) {
 		// Recreate projection matrix
-		widescreen = (aspect >= 16.0f/10.0f);
+		video_mode.bits.widescreen_off0_on1 = (aspect >= 16.0f/10.0f);
 		glm_perspective(glm_rad(90.0f), aspect, 0.1f, 100000.f, perspective_matrix);
 		prev_window_w = window_w;
 		prev_window_h = window_h;

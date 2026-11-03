@@ -82,7 +82,6 @@ void state_update_in_game(scalar_t dt) {
 	camera_transform.position.y += scalar_mul((ONE * (random_u32() & 0xFF)) / 256, state.in_game.screen_shake_intensity_position);
 	camera_transform.position.z += scalar_mul((ONE * (random_u32() & 0xFF)) / 256, state.in_game.screen_shake_intensity_position);
 	renderer_begin_frame();
-	renderer_set_view(&camera_transform);
 
 #ifdef BENCHMARK_MODE
     benchmark_mode();
@@ -181,7 +180,7 @@ void state_update_in_game(scalar_t dt) {
 			gun_transform.position.y = SCALAR(-135);// + (trig_cos(state.global.time_counter * 12) * speed_1d) / (80 * ONE) + scalar_mul(state.in_game.gun_animation_timer_sqrt, 50);
 			gun_transform.position.z = SCALAR(125) - scalar_mul(state.in_game.gun_animation_timer_sqrt, 225);
 		}
-		if (widescreen) gun_transform.position.x += 30;
+		if (renderer_get_video_mode().bits.widescreen_off0_on1) gun_transform.position.x += 30;
 		gun_transform.rotation.x = 0 + scalar_mul(state.in_game.gun_animation_timer_sqrt, 9500);
 		gun_transform.rotation.y = 0;
 		gun_transform.rotation.z = 0;

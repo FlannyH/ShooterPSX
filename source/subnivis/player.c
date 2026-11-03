@@ -2,6 +2,7 @@
 #include "engine/collision.h"
 #include "engine/math/vec2.h"
 #include "engine/math/vec3.h"
+#include "engine/renderer.h"
 
 #ifdef _PSX
 #include <psxpad.h>
@@ -244,4 +245,5 @@ void player_update(player_t* self, level_t* level, const scalar_t dt, const scal
 
     collide(self, level);
     update_transform(self, dt, time_counter);
+    renderer_set_view(&self->transform);
 }

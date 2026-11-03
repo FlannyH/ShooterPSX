@@ -13,7 +13,6 @@
 #include <nds.h>
 #endif
 
-int widescreen = 0;
 state_t current_state = STATE_NONE;
 state_t prev_state = STATE_NONE;
 state_vars_t state;
