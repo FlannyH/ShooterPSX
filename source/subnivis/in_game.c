@@ -218,7 +218,7 @@ void draw_debug_info(scalar_t dt, const int n_sections) {
 #if defined(_DEBUG) && defined(_PSX)
     // Run the game logic within PROFILE calls, which prints the time (in hblanks) a function took to complete
     PROFILE("lvl_gfx", renderer_draw_model_shaded(state.in_game.level.graphics, &state.in_game.level.transform, state.in_game.level.vislist.vislists), 1);
-    PROFILE("entity", entity_update_all(&state.in_game.player, dt), 1);
+    PROFILE("entity", entity_update_all(&state.in_game.player, dt, level), 1);
     PROFILE("player", player_update(&state.in_game.player, &state.in_game.level, dt, state.global.time_counter), 1);
 
     // Print some useful debug info to the screen
