@@ -1843,8 +1843,9 @@ int inspect_int(int *value, const char *label, int min, int max, int draggable) 
 int inspect_bool(int *value, const char *label) {
     bool b_before = !!(*value);
     bool b_after = b_before;
-    return (int)ImGui::Checkbox(label, &b_after);
-    return (b_before ^ b_after);
+    int result = (int)ImGui::Checkbox(label, &b_after);
+    if (result) *value = b_after;
+    return result;
 }
 
 int inspect_pixel32(pixel32_t* pixel, const char* label) {
