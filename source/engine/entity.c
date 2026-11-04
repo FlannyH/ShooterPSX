@@ -88,13 +88,13 @@ void entity_register_collision_box(const entity_collision_box_t* box) {
 void entity_call_on_hit(int entity_index, int box_index) {
 	PANIC_IF("index out of bounds", entity_index < 0 || entity_index >= ENTITY_LIST_LENGTH);
 	entity_reg_t* entity_funcs = &entity_register[entity_get_type(entity_index)];
-	if (entity_funcs->update) entity_funcs->on_hit(entity_index, box_index);
+	if (entity_funcs->on_hit) entity_funcs->on_hit(entity_index, box_index);
 }
 
 void entity_call_player_intersect(int entity_index, player_t* player) {
 	PANIC_IF("index out of bounds", entity_index < 0 || entity_index >= ENTITY_LIST_LENGTH);
 	entity_reg_t* entity_funcs = &entity_register[entity_get_type(entity_index)];
-	if (entity_funcs->update) entity_funcs->player_intersect(entity_index, player);
+	if (entity_funcs->player_intersect) entity_funcs->player_intersect(entity_index, player);
 }
 
 void entity_defragment(void) {
@@ -138,14 +138,6 @@ void entity_kill(int slot) {
 	PANIC_IF("index out of bounds", slot < 0 || slot >= ENTITY_LIST_LENGTH);
 	// todo(entity_destructors): desc: maybe support destructors?
 	entity_types[slot] = ENTITY_NONE;
-}
-
-void entity_send_player_intersect(int slot, player_t* player) {
-    if (slot < 0) return;
-    if (slot >= ENTITY_LIST_LENGTH) return;
-
-	entity_reg_t* entity_funcs = &entity_register[entity_get_type(slot)];
-    if (entity_funcs->update) entity_funcs->player_intersect(slot, player);
 }
 
 const char* entity_names[] = {

@@ -79,7 +79,6 @@ void entity_defragment(void);
 void entity_sanitize(void);
 void entity_update_all(player_t* player, scalar_t dt, level_t* level);
 void entity_kill(int slot);
-void entity_send_player_intersect(int slot, player_t* player);
 uint8_t entity_get_type(int index);
 entity_header_t* entity_get_header(int index);
 model_t* entity_get_models(void);
