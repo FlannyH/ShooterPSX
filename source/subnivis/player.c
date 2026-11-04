@@ -63,6 +63,8 @@ void collide(player_t* self, level_t* level) {
 
     for (int i = 0; (i < level->n_shapes) && level->shapes; ++i) {
         if (level->shapes[i].type == SHAPE_NONE) continue;
+        if (level->shapes[i].flags.non_solid) continue;
+
         if (gjk(&polytope, &level->shapes[i], &player)) {
             const vec3_t penetration = epa(&polytope, &level->shapes[i], &player);
             move_shape(&player, penetration);

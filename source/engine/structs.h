@@ -43,6 +43,13 @@ typedef struct {
 
 typedef struct {
     uint8_t type;
+    uint8_t surface_type;
+    struct {
+        uint16_t non_solid : 1;
+        uint16_t floor_reachable : 1;
+        uint16_t kill : 1;
+        uint16_t nav_consider : 1;
+    } flags;
     union {
         sphere_t sphere;
         capsule_t capsule;

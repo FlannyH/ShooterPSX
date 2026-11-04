@@ -18,34 +18,37 @@ void serialize_shape(uint8_t* shapes, size_t* cursor, const shape_t* shape) {
         (*cursor)++;
     }
 
+    shapes[*cursor] = shape->type; *cursor += sizeof(shape->type);
+    shapes[*cursor] = shape->surface_type; *cursor += sizeof(shape->surface_type);
+    uint16_t flags = 0;
+    flags |= shape->flags.non_solid * (1 << 0);
+    flags |= shape->flags.floor_reachable * (1 << 1);
+    flags |= shape->flags.kill * (1 << 2);
+    flags |= shape->flags.nav_consider * (1 << 3);
+    *(uint16_t*)(&shapes[*cursor]) = flags; *cursor += sizeof(flags);
+
     switch (shape->type) {
     case SHAPE_NONE:
-        *(uint32_t*)(&shapes[*cursor]) = SHAPE_NONE;                  *cursor += sizeof(uint32_t);
         break;
     case SHAPE_SPHERE:
-        *(uint32_t*)(&shapes[*cursor]) = SHAPE_SPHERE;                *cursor += sizeof(uint32_t);
         *cursor += serialize_vec3(&shapes[*cursor], shape->sphere.center);
         *cursor += serialize_scalar(&shapes[*cursor], shape->sphere.radius);
         break;
     case SHAPE_CAPSULE:
-        *(uint32_t*)(&shapes[*cursor]) = SHAPE_CAPSULE;               *cursor += sizeof(uint32_t);
         *cursor += serialize_vec3(&shapes[*cursor], shape->capsule.a);
         *cursor += serialize_vec3(&shapes[*cursor], shape->capsule.b);
         *cursor += serialize_scalar(&shapes[*cursor], shape->capsule.radius);
         break;
     case SHAPE_TRIANGLE:
-        *(uint32_t*)(&shapes[*cursor]) = SHAPE_TRIANGLE;              *cursor += sizeof(uint32_t);
         *cursor += serialize_vec3(&shapes[*cursor], shape->triangle.v0);
         *cursor += serialize_vec3(&shapes[*cursor], shape->triangle.v1);
         *cursor += serialize_vec3(&shapes[*cursor], shape->triangle.v2);
         break;
     case SHAPE_AABB:
-        *(uint32_t*)(&shapes[*cursor]) = SHAPE_AABB;                  *cursor += sizeof(uint32_t);
         *cursor += serialize_vec3(&shapes[*cursor], shape->aabb.min);
         *cursor += serialize_vec3(&shapes[*cursor], shape->aabb.max);
         break;
     case SHAPE_CONVEX_HULL:
-        *(uint32_t*)(&shapes[*cursor]) = SHAPE_CONVEX_HULL;           *cursor += sizeof(uint32_t);
         *(uint32_t*)(&shapes[*cursor]) = shape->convex_hull.n_points; *cursor += sizeof(uint32_t);
         for (size_t i = 0; i < shape->convex_hull.n_points; ++i) {
             *cursor += serialize_vec3(&shapes[*cursor], shape->convex_hull.points[i]);
@@ -58,10 +61,15 @@ void deserialize_shape(const uint8_t* data, size_t* offset, shape_t* shape) {
     assert(shape != NULL);
     assert((*offset % 4) == 0);
 
-    const uint32_t type = *(uint32_t*)(&data[*offset]);                *offset += sizeof(uint32_t);
-    shape->type = (uint8_t)type;
+    shape->type =         *(uint8_t*)(&data[*offset]); *offset += sizeof(uint8_t);
+    shape->surface_type = *(uint8_t*)(&data[*offset]); *offset += sizeof(uint8_t);
+    uint16_t flags =      *(uint16_t*)(&data[*offset]); *offset += sizeof(uint16_t);
+    shape->flags.non_solid = (flags & (1 << 0));
+    shape->flags.floor_reachable = (flags & (1 << 1));
+    shape->flags.kill = (flags & (1 << 2));
+    shape->flags.nav_consider = (flags & (1 << 3));
 
-    switch(type) {
+    switch(shape->type) {
     case SHAPE_NONE:
         break;
     case SHAPE_SPHERE:

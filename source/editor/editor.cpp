@@ -308,7 +308,21 @@ int inspect_shape(size_t shape_id, int& render_hull_build_set_cap) {
 
     bool result = false;
 
+    int non_solid = (editor.level.lvl.shapes[shape_id].flags.non_solid != 0);
+    int floor_reachable = (editor.level.lvl.shapes[shape_id].flags.floor_reachable != 0);
+    int kill = (editor.level.lvl.shapes[shape_id].flags.kill != 0);
+    int nav_consider = (editor.level.lvl.shapes[shape_id].flags.nav_consider != 0);
+    result |= inspect_bool(&non_solid, "Disable collision");
+    result |= inspect_bool(&floor_reachable, "Kill zone");
+    result |= inspect_bool(&kill, "Floor reachable by player");
+    result |= inspect_bool(&nav_consider, "Floor reachable by entity");
+    editor.level.lvl.shapes[shape_id].flags.non_solid = non_solid;
+    editor.level.lvl.shapes[shape_id].flags.floor_reachable = floor_reachable;
+    editor.level.lvl.shapes[shape_id].flags.kill = kill;
+    editor.level.lvl.shapes[shape_id].flags.nav_consider = nav_consider;
+
     const uint8_t shape_type = editor.level.lvl.shapes[shape_id].type;
+
     if (shape_type == SHAPE_NONE) return false;
     else if (shape_type == SHAPE_SPHERE) {
         inspect_vec3(&editor.level.lvl.shapes[shape_id].sphere.center, "Center");
