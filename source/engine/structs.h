@@ -132,6 +132,7 @@ typedef struct {
     POLY_GT4* tex_quads[2]; // double buffered
     aligned_position_t* vtx_pos_and_size;
     aabb_t bounds;
+    uint32_t name_hash;
     char* name;
     int optimized_for_single_render_per_frame;
 } mesh_t;

@@ -77,7 +77,7 @@ int strings_are_equal(const char* a, const char* b) {
 mesh_t* model_find_mesh(const model_t* model, uint32_t mesh_name_hash) {
     for (size_t i = 0; i < model->n_meshes; ++i) {
         mesh_t* mesh = &model->meshes[i];
-        if (mesh->name_hash ==  mesh_name_hash) {
+        if (mesh->name_hash == mesh_name_hash) {
             return mesh;
         }
     }
