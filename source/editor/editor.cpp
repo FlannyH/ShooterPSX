@@ -1766,6 +1766,8 @@ int main(int argc, char** argv) {
     int mouse_lock = 0;
     input_unlock_mouse();
 
+    renderer_set_view(&editor.misc.camera.transform);
+
     while (!renderer_should_close()) {
 	    mem_stack_release(STACK_TEMP);
 
@@ -1795,11 +1797,10 @@ int main(int argc, char** argv) {
 
         cleanup();
         level_metadata();
-        renderer_set_view(&editor.misc.camera.transform);
         // player_update(&editor.misc.player, &editor.level.lvl, 0, 0); // Tick the player with 0 delta time to update the camera transform
+        entity_stuff();
         render_3d_debug_stuff();
         general_info();
-        entity_stuff();
         light_stuff();
         collision_stuff();
         text_editor();
@@ -1810,6 +1811,8 @@ int main(int argc, char** argv) {
 
         renderer_end_frame();
         debug_layer_end();
+
+        renderer_set_view(&editor.misc.camera.transform);
     }
 }
 

@@ -13,12 +13,16 @@ int entity_cinecam_inspect(int slot) {
         for (int i = 0; i < cinecam->n_nodes; ++i) {
             renderer_set_drawing_id(0, 0);
             renderer_set_depth_bias(0);
+
             editor_draw_sphere((transform_t) {
                 .position = editor_selected_vertex_position(),
                 .rotation = vec3_from_scalar(0),
                 .scale = vec3_from_scalar(SCALAR(32)),
             });
-            if (i > 0) renderer_debug_draw_line(cinecam->nodes[i-1].position, cinecam->nodes[i].position, white, &id_transform);
+
+            if ((i > 0) && (cinecam->n_nodes > 1)) {
+                renderer_debug_draw_line(cinecam->nodes[i-1].position, cinecam->nodes[i].position, white, &id_transform);
+            }
 
             char node_name[] = "Node 9999\n";
             snprintf(node_name, sizeof(node_name), "Node %i", i);
@@ -40,14 +44,26 @@ int entity_cinecam_inspect(int slot) {
                 cinecam->nodes[i].rotation = editor_get_viewport_rotation();
                 result |= 1;
             }
+            if (inspect_button("Remove node")) {
+                cinecam->n_nodes--;
+                for (int j = i; j < cinecam->n_nodes; ++j) {
+                    cinecam->nodes[j] = cinecam->nodes[j + 1];
+                }
+                i--;
+                result |= 1;
+            }
             inspect_index_pop();
             inspect_tree_pop();
         }
         inspect_tree_pop();
 
-        inspect_scalar(&cinecam->progress, "Progress");
-        inspect_bool(&cinecam->active, "Active");
     }
+    inspect_bool(&cinecam->active, "Active");
+    inspect_scalar(&cinecam->progress, "Progress");
+
+    if (cinecam->progress < 0) cinecam->progress = 0;
+    if (cinecam->progress > SCALAR(cinecam->n_nodes)) cinecam->progress = SCALAR(cinecam->n_nodes);
+
     if (inspect_button("Add")) {
         cinecam->nodes[cinecam->n_nodes].position = editor_get_viewport_position();
         cinecam->nodes[cinecam->n_nodes++].rotation = editor_get_viewport_rotation();
@@ -73,62 +89,51 @@ entity_header_t* entity_cinecam_new(vec3_t spawn_pos) {
 
 size_t entity_cinecam_serialize(int slot, uint8_t* data) {
     entity_cinecam_t* cinecam_source = (entity_cinecam_t*)entity_get_header(slot);
+    size_t cursor = sizeof(vec3_t) * 3;
 
-    uint32_t* n_nodes = (uint32_t*)(data + sizeof(vec3_t) * 3);
-    cinecam_node_t* nodes = (cinecam_node_t*)&n_nodes[1];
+    // metadata
+    *(int32_t*)(data + cursor) = cinecam_source->n_nodes; cursor += sizeof(int32_t);
+    cursor += serialize_scalar(data + cursor, cinecam_source->progress);;
+    *(int32_t*)(data + cursor) = cinecam_source->active; cursor += sizeof(int32_t);
+    *(int32_t*)(data + cursor) = cinecam_source->signal_id; cursor += sizeof(int32_t);
 
-    *n_nodes = cinecam_source->n_nodes;
-
+    // path
     for (int i = 0; i < cinecam_source->n_nodes; ++i) {
-        cinecam_node_t* node = &nodes[i];
         const cinecam_node_t* source = &cinecam_source->nodes[i];
-        serialize_vec3(&node->position, source->position);
-        serialize_vec3(&node->rotation, source->rotation);
-        serialize_scalar(&node->time_to_next, source->time_to_next);
+        cursor += serialize_vec3(data + cursor, source->position);
+        cursor += serialize_vec3(data + cursor, source->rotation);
+        cursor += serialize_scalar(data + cursor, source->time_to_next);
     }
-    size_t size = 3 * sizeof(vec3_t); // header
-    size += sizeof(cinecam_source->n_nodes);
-    size += cinecam_source->n_nodes * sizeof(nodes[0].position);
-    size += cinecam_source->n_nodes * sizeof(nodes[0].rotation);
-    size += cinecam_source->n_nodes * sizeof(nodes[0].time_to_next);
-    return size;
+
+    return cursor - sizeof(vec3_t) * 3;
 }
 
 size_t entity_cinecam_deserialize(int slot, const uint8_t* data) {
     entity_cinecam_t* cinecam_dest = (entity_cinecam_t*)entity_get_header(slot);
-    uint32_t* n_nodes = (uint32_t*)(data + (sizeof(vec3_t) * 3));
-    cinecam_node_t* nodes_src = (cinecam_node_t*)(&n_nodes[1]);
+    size_t cursor = sizeof(vec3_t) * 3;
 
-    cinecam_dest->n_nodes = *n_nodes;
+    // metadata
+    cinecam_dest->n_nodes = *(int32_t*)(data + cursor); cursor += sizeof(int32_t);
+    cursor += deserialize_scalar(data + cursor, &cinecam_dest->progress);
+    cinecam_dest->active = *(int32_t*)(data + cursor); cursor += sizeof(int32_t);
+    cinecam_dest->signal_id = *(int32_t*)(data + cursor); cursor += sizeof(int32_t);
+
+    // path
     #ifdef _LEVEL_EDITOR
 	cinecam_dest->nodes = mem_alloc(PATH_CAMERA_MAX_NODES * sizeof(cinecam_node_t), MEM_CAT_UNDEFINED);
 	#else
-	cinecam_dest->nodes = mem_stack_alloc(*n_nodes * sizeof(cinecam_node_t), STACK_ENTITY);
+	cinecam_dest->nodes = mem_stack_alloc(cinecam_dest->n_nodes * sizeof(cinecam_node_t), STACK_ENTITY);
 	#endif
-
-	cinecam_dest->n_nodes = *n_nodes;
-
-	for (uint32_t i = 0; i < *n_nodes; ++i) {
-        const cinecam_node_t* node = &nodes_src[i];
+	for (int i = 0; i < cinecam_dest->n_nodes; ++i) {
         cinecam_node_t* dest = &cinecam_dest->nodes[i];
-        deserialize_vec3(&node->position, &dest->position);
-        deserialize_vec3(&node->rotation, &dest->rotation);
-        deserialize_scalar(&node->time_to_next, &dest->time_to_next);
+        cursor += deserialize_vec3(data + cursor, &dest->position);
+        cursor += deserialize_vec3(data + cursor, &dest->rotation);
+        cursor += deserialize_scalar(data + cursor, &dest->time_to_next);
 	}
 
 	cinecam_dest->progress = 0;
-	#ifndef _LEVEL_EDITOR
-	cinecam_dest->active = 1;
-	#else
-	cinecam_dest->active = 0;
-	#endif
 
-    size_t size = 3 * sizeof(vec3_t); // header
-    size += sizeof(*n_nodes);
-    size += (*n_nodes) * sizeof(vec3_t); // position
-    size += (*n_nodes) * sizeof(vec3_t); // rotation
-    size += (*n_nodes) * sizeof(scalar_t); // velocity
-    return size;
+    return cursor - sizeof(vec3_t) * 3;
 }
 
 scalar_t catmull_rom(scalar_t p0, scalar_t p1, scalar_t p2, scalar_t p3, scalar_t t) {
@@ -158,6 +163,10 @@ void entity_cinecam_update(int slot, player_t* player, scalar_t dt, level_t* lev
     (void)level;
     entity_cinecam_t* cinecam = (entity_cinecam_t*)entity_get_header(slot);
 
+    if (entity_get_signal(cinecam->signal_id)) {
+        cinecam->active = 1;
+    }
+
     if (!cinecam->active) return;
 
     // interpolate
@@ -171,7 +180,7 @@ void entity_cinecam_update(int slot, player_t* player, scalar_t dt, level_t* lev
     scalar_t time_to_next = scalar_lerp(cinecam->nodes[prev_index].time_to_next, cinecam->nodes[target_index].time_to_next, t);
     #endif
 
-    #if 1 // silly interpolation
+    #if 1 // catmull-rom interpolation
     cinecam_node_t* n0 = &cinecam->nodes[scalar_clamp(prev_index-1, 0, cinecam->n_nodes - 1)];
     cinecam_node_t* n1 = &cinecam->nodes[scalar_clamp(prev_index, 0, cinecam->n_nodes - 1)];
     cinecam_node_t* n2 = &cinecam->nodes[scalar_clamp(target_index, 0, cinecam->n_nodes - 1)];

@@ -216,7 +216,7 @@ entity_collision_box_t* entity_get_aabb_queue_entry(int index) {
 }
 
 int entity_get_signal(int index) {
-	PANIC_IF("index out of bounds", index < 0 || index >= ENTITY_SIGNAL_COUNT);
+	if (index < 0 || index >= ENTITY_SIGNAL_COUNT) return 0;
 	return entity_signals[index];
 }
 

@@ -21,6 +21,7 @@ typedef struct {
 	cinecam_node_t* nodes;
 	scalar_t progress;
 	int active;
+	int signal_id;
 } entity_cinecam_t;
 
 entity_header_t* entity_cinecam_new(vec3_t spawn_pos);
