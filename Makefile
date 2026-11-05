@@ -499,6 +499,7 @@ COMPILED_ASSET_LIST = $(PATH_ASSETS)/pc/shaders/gouraud.fsh \
 					  $(PATH_ASSETS)/pc/shaders/blit.vsh \
 					  $(PATH_ASSETS)/level_editor/shaders/vertex_pick.fsh \
 					  $(PATH_ASSETS)/level_editor/shaders/vertex_pick.vsh \
+					  $(PATH_ASSETS)/shared/levels/benchmark1.lvl \
 					  $(PATH_ASSETS)/shared/levels/test.lvl \
 					  $(PATH_ASSETS)/shared/levels/test2.lvl \
 					  $(PATH_ASSETS)/shared/levels/test3.lvl \

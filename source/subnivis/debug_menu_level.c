@@ -43,10 +43,10 @@ void state_update_debug_menu_level(scalar_t dt) {
 
     ui_render_background();
 
-	renderer_draw_text((vec2_t){256*ONE, 64*ONE}, text_debug_menu_level[0], 1, 1, white);
+	renderer_draw_text((vec2_t){256*ONE, 32*ONE}, text_debug_menu_level[0], 1, 1, white);
 
 	// Draw settings text and box
-	for (int i = 0; i < 6; ++i) {
+	for (int i = 0; i < 7; ++i) {
 		pixel32_t color = (pixel32_t){128, 128, 128, 255};
 		if (i == state.debug_menu_level.button_selected) {
 			if (state.debug_menu_level.button_pressed) {
@@ -60,8 +60,8 @@ void state_update_debug_menu_level(scalar_t dt) {
 				color.b = 255;
 			}
 		}
-		renderer_draw_text((vec2_t){64*ONE, (96 + (24 * i))*ONE}, text_debug_menu_level[i+1], 1, 0, white);
-		renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, (96 + (24 * i))*ONE}, (vec2_t){448*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, color, 2, 5, TEX_CAT_MISC);
+		renderer_draw_text((vec2_t){64*ONE, (64 + (24 * i))*ONE}, text_debug_menu_level[i+1], 1, 0, white);
+		renderer_draw_2d_quad_axis_aligned((vec2_t){256*ONE, (64 + (24 * i))*ONE}, (vec2_t){448*ONE, 20*ONE}, (vec2_t){0*ONE, 144*ONE}, (vec2_t){192*ONE, 164*ONE}, color, 2, 5, TEX_CAT_MISC);
 	}
 
 	// Handle button navigation
@@ -69,7 +69,7 @@ void state_update_debug_menu_level(scalar_t dt) {
 		state.debug_menu_level.button_selected--;
 		state.debug_menu_level.button_pressed = 0;
 	}
-	if (input_mapping_pressed(IM_MENU_DOWN, 0) && state.debug_menu_level.button_selected < 5) {
+	if (input_mapping_pressed(IM_MENU_DOWN, 0) && state.debug_menu_level.button_selected < 6) {
 		state.debug_menu_level.button_selected++;
 		state.debug_menu_level.button_pressed = 0;
 	}
@@ -80,6 +80,7 @@ void state_update_debug_menu_level(scalar_t dt) {
 	// Handle button presses
 	if (input_mapping_released(IM_MENU_GO, 0)) {
 		char* levels[] = {
+			"levels/benchmark1.lvl",
 			"levels/test.lvl",
 			"levels/test2.lvl",
 			"levels/test3.lvl",
@@ -90,16 +91,13 @@ void state_update_debug_menu_level(scalar_t dt) {
 		state.debug_menu_level.button_pressed = 0;
 
 		switch (state.debug_menu_level.button_selected) {
-			case 0:
-			case 1:
-			case 2:
-			case 3:
-			case 4:
+			case 0: case 1: case 2:
+			case 3: case 4: case 5:
 				mem_stack_release(STACK_TEMP);
 				state.in_game.level_load_path = levels[state.debug_menu_level.button_selected];
 				set_current_state(STATE_IN_GAME);
 				break;
-			case 5:
+			case 6:
 				set_current_state(STATE_DEBUG_MENU_MAIN);
 				break;
 		}

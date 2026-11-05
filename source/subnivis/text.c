@@ -110,6 +110,7 @@ const char* text_debug_menu_main[] = {
 
 const char* text_debug_menu_level[] = {
     "LEVEL SELECT",
+    "benchmark1.lvl",
     "test.lvl",
     "test2.lvl",
     "test3.lvl",
