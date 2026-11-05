@@ -146,6 +146,7 @@ typedef struct {
     normal_t* normals;
     aabb_t bounds;
     texture_category_t tex_category;
+    uint32_t name_hash;
     char* name;
 } mesh_t;
 #endif

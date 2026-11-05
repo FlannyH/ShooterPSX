@@ -141,14 +141,15 @@ void entity_kill(int slot) {
 }
 
 const char* entity_names[] = {
-	"ENTITY_NONE",
-	"ENTITY_DOOR",
-	"ENTITY_PICKUP",
-	"ENTITY_CRATE",
-	"ENTITY_CHASER",
-	"ENTITY_PLATFORM",
-	"ENTITY_TRIGGER",
-	"ENTITY_CINECAM",
+	"(none)",
+	"Door",
+	"Pickup",
+	"Crate",
+	"Chaser enemy",
+	"Platform",
+	"Trigger box",
+	"Cinecam",
+	"Benchmarker",
 	NULL
 };
 

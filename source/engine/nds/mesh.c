@@ -86,6 +86,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
         model->meshes[i].bounds.min.z = mesh_descriptions[i].z_min;
         model->meshes[i].bounds.max.z = mesh_descriptions[i].z_max;
         model->meshes[i].name = string;
+        model->meshes[i].name_hash = hash_string(string);
     }
 
     printf("done with model %s\n", path);

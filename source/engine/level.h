@@ -95,7 +95,7 @@ typedef enum {
 } level_load_flags_t;
 
 #define MAX_LIGHT_COUNT 256
-#define MAX_SHAPE_COUNT 256 // todo: make this bigger as fit
+#define MAX_SHAPE_COUNT 256
 
 void serialize_shape(uint8_t* shapes, size_t* cursor, const shape_t* shape);
 void deserialize_shape(const uint8_t* data, size_t* offset, shape_t* shape);

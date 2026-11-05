@@ -325,9 +325,9 @@ void renderer_init(void) {
 	}
 
 	glGenTextures(1, &textures);
-	glObjectLabel(GL_TEXTURE, textures, -1, "texture atlas pixel data");
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textures);
+	glObjectLabel(GL_TEXTURE, textures, -1, "texture atlas pixel data");
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, zero_data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST_MIPMAP_NEAREST);
@@ -346,8 +346,8 @@ void renderer_init(void) {
 	}
 	glActiveTexture(GL_TEXTURE0);
 	glGenTextures(1, &texture_metadata);
-	glObjectLabel(GL_TEXTURE, texture_metadata, -1, "texture atlas metadata");
 	glBindTexture(GL_TEXTURE_2D, texture_metadata);
+	glObjectLabel(GL_TEXTURE, texture_metadata, -1, "texture atlas metadata");
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
@@ -376,8 +376,8 @@ void renderer_init(void) {
 
 	// Create depth attachment
 	glGenTextures(1, &fb_depth);
-	glObjectLabel(GL_TEXTURE, fb_depth, -1, "game fb depth");
 	glBindTexture(GL_TEXTURE_2D, fb_depth);
+	glObjectLabel(GL_TEXTURE, fb_depth, -1, "game fb depth");
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -388,8 +388,8 @@ void renderer_init(void) {
 #ifdef _LEVEL_EDITOR
 	// Create object picking framebuffer data
 	glGenTextures(1, &picking_fb_texture);
-	glObjectLabel(GL_TEXTURE, picking_fb_texture, -1, "editor object picking texture");
 	glBindTexture(GL_TEXTURE_2D, picking_fb_texture);
+	glObjectLabel(GL_TEXTURE, picking_fb_texture, -1, "editor object picking texture");
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, 0, GL_RG, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -398,8 +398,8 @@ void renderer_init(void) {
 
     // Create vertex picking framebuffer data
 	glGenTextures(1, &closest_vertex_fb_texture);
-	glObjectLabel(GL_TEXTURE, picking_fb_texture, -1, "editor vertex picking texture");
 	glBindTexture(GL_TEXTURE_2D, closest_vertex_fb_texture);
+	glObjectLabel(GL_TEXTURE, picking_fb_texture, -1, "editor vertex picking texture");
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, 320 * RESOLUTION_SCALING, 240 * RESOLUTION_SCALING, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -567,6 +567,39 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 		glm_rotate_z(model_matrix, (float)model_transform->rotation.z * 2 * PI / ONE, model_matrix);
 	}
 
+	if (mesh->vbo_vertices == 0) {
+		glGenVertexArrays(1, &mesh->vao);
+		glBindVertexArray(mesh->vao);
+		char vbo_name[256] = {0};
+		if (mesh->name) {
+		    snprintf(vbo_name, sizeof(vbo_name), "%s (vao)", mesh->name);
+		}
+		glObjectLabel(GL_BUFFER, mesh->vao, -1, vbo_name);
+		glGenBuffers(1, &mesh->vbo_vertices);
+		snprintf(vbo_name, sizeof(vbo_name), "%s (vertex buffer)", mesh->name);
+		glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_vertices);
+		glObjectLabel(GL_BUFFER, mesh->vbo_vertices, -1, vbo_name);
+		glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(vertex_3d_t), mesh->vertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glEnableVertexAttribArray(2);
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(vertex_3d_t), (const void*)offsetof(vertex_3d_t, x));
+		glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(vertex_3d_t), (const void*)offsetof(vertex_3d_t, r));
+		glVertexAttribPointer(2, 2, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(vertex_3d_t), (const void*)offsetof(vertex_3d_t, u));
+		glVertexAttribPointer(3, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(vertex_3d_t), (const void*)offsetof(vertex_3d_t, tex_id));
+
+		if (mesh->vbo_normals == 0 && mesh->normals) {
+			glGenBuffers(1, &mesh->vbo_normals);
+			snprintf(vbo_name, sizeof(vbo_name), "%s (normals)", mesh->name);
+			glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_normals);
+			glObjectLabel(GL_BUFFER, mesh->vbo_normals, -1, vbo_name);
+			glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(normal_t), mesh->normals, GL_STATIC_DRAW);
+			glEnableVertexAttribArray(4);
+			glVertexAttribPointer(4, 3, GL_BYTE, GL_TRUE, sizeof(normal_t), 0);
+		}
+	}
+
 #ifdef _LEVEL_EDITOR
 	// Vertex picking
 	glUseProgram(shader_vertex_pick);
@@ -613,39 +646,6 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t *model_transform,
 	glUniform1i(glGetUniformLocation(shader_gouraud, "tex"), 0);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "tex_meta"), 1);
 	glBindVertexArray(mesh->vao);
-
-	if (mesh->vbo_vertices == 0) {
-		glGenVertexArrays(1, &mesh->vao);
-		glBindVertexArray(mesh->vao);
-		char vbo_name[256] = {0};
-		if (mesh->name) {
-		    snprintf(vbo_name, sizeof(vbo_name), "%s (vao)", mesh->name);
-		}
-		glObjectLabel(GL_BUFFER, mesh->vao, -1, vbo_name);
-		glGenBuffers(1, &mesh->vbo_vertices);
-		snprintf(vbo_name, sizeof(vbo_name), "%s (vertex buffer)", mesh->name);
-		glObjectLabel(GL_BUFFER, mesh->vbo_vertices, -1, vbo_name);
-		glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_vertices);
-		glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(vertex_3d_t), mesh->vertices, GL_STATIC_DRAW);
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-		glEnableVertexAttribArray(2);
-		glEnableVertexAttribArray(3);
-		glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(vertex_3d_t), (const void*)offsetof(vertex_3d_t, x));
-		glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(vertex_3d_t), (const void*)offsetof(vertex_3d_t, r));
-		glVertexAttribPointer(2, 2, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(vertex_3d_t), (const void*)offsetof(vertex_3d_t, u));
-		glVertexAttribPointer(3, 1, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(vertex_3d_t), (const void*)offsetof(vertex_3d_t, tex_id));
-
-		if (mesh->vbo_normals == 0 && mesh->normals) {
-			glGenBuffers(1, &mesh->vbo_normals);
-			snprintf(vbo_name, sizeof(vbo_name), "%s (normals)", mesh->name);
-			glObjectLabel(GL_BUFFER, mesh->vbo_normals, -1, vbo_name);
-			glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_normals);
-			glBufferData(GL_ARRAY_BUFFER, ((mesh->n_triangles * 3) + (mesh->n_quads * 4)) * sizeof(normal_t), mesh->normals, GL_STATIC_DRAW);
-			glEnableVertexAttribArray(4);
-			glVertexAttribPointer(4, 3, GL_BYTE, GL_TRUE, sizeof(normal_t), 0);
-		}
-	}
 
 	// Set matrices
 	glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "proj_matrix"), 1, GL_FALSE, &perspective_matrix[0][0]);
@@ -694,6 +694,8 @@ void renderer_set_drawing_id(int id, int what) {
 }
 
 void renderer_update_window_res(int width, int height) {
+    if (width < 4) width = 4;
+    if (height < 4) height = 4;
 	window_w = width;
 	window_h = height;
 	render_w = width;

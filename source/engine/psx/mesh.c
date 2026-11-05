@@ -81,6 +81,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
         model->meshes[mesh_id].bounds.min.z = mesh_descriptions[mesh_id].z_min;
         model->meshes[mesh_id].bounds.max.z = mesh_descriptions[mesh_id].z_max;
         model->meshes[mesh_id].name = string;
+        model->meshes[mesh_id].name_hash = hash_string(string);
         model->meshes[mesh_id].optimized_for_single_render_per_frame = optimize_for_single_render_per_frame;
 
         // Pre-allocate the GPU primitive buffers - let's hope this fits!

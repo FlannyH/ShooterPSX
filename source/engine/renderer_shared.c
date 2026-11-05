@@ -272,7 +272,6 @@ int renderer_get_fade_level(void) {
     return fade_level;
 }
 
-#ifdef _USE_TEXTURE_POOLS
 void renderer_free_texture(int index, texture_category_t category) {
     texture_entry_t* entry = renderer_get_texture_entry(category, index);
     if (entry == NULL) return;
@@ -341,5 +340,3 @@ void renderer_free_texture_category(texture_category_t category) {
         texture_pool_free(i, &textures[i * MAX_TEXTURE_COUNT], n_textures[i]);
     }
 }
-
-#endif

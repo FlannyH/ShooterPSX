@@ -12,6 +12,9 @@
 #include <assert.h>
 #include <string.h>
 
+#define SOUNDBANK_MUSIC 0
+#define SOUNDBANK_SFX 1
+
 void serialize_shape(uint8_t* shapes, size_t* cursor, const shape_t* shape) {
     // align to word
     while (*cursor % 4 != 0) {
@@ -265,9 +268,8 @@ level_t level_load(const char* level_path, const uint32_t flags) {
         music_stop();
         mem_stack_release(STACK_MUSIC);
         if (path_music[0] != 0 && path_bank[0] != 0) {
-            // todo(level_load_audio): desc: not hardcode seperate sfx soundbanks
-            audio_load_soundbank(path_bank, 0); mem_stack_reset_to_marker(STACK_TEMP, marker);
-            audio_load_soundbank("audio/sfx.sbk", 1); mem_stack_reset_to_marker(STACK_TEMP, marker);
+            audio_load_soundbank(path_bank, SOUNDBANK_MUSIC); mem_stack_reset_to_marker(STACK_TEMP, marker);
+            audio_load_soundbank("audio/sfx.sbk", SOUNDBANK_SFX); mem_stack_reset_to_marker(STACK_TEMP, marker);
             music_load_sequence(path_music);
             music_play_sequence(0);
             music_set_volume(255);

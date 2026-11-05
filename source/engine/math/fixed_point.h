@@ -60,7 +60,6 @@ static inline void scalar_debug(const scalar_t a) {
 
 #ifdef _PSX
 static inline fixed20_12_t scalar_mul(const fixed20_12_t a, const fixed20_12_t b) {
-    // todo(fixed_point_overflow_check): desc: scalar_mul ps1 check overflow
     const int64_t prod64 = (int64_t)a * (int64_t)b;
     return prod64 / ONE;
 }

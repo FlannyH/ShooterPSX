@@ -2,7 +2,8 @@
 
 #include "subnivis/entity.h"
 
-// todo(editor_externs): desc: figure this extern crap out
+// todo(editor_memory_debugger): desc: memory debugger
+// ideally with a hex editor per memory stack, meters for the stack, and maybe if i figure out my own dynamic allocator a visualizer with a strip?
 
 #include "camera.h"
 #include "imgui.h"
@@ -617,7 +618,6 @@ void level_metadata() {
     ImGui::Begin("Level Metadata");
     auto load = []() {
         mem_debug();
-        // todo: how is this gonna work? we'll find out
         if (editor.level.lvl.graphics) {
             for (uint32_t i = 0; i < editor.level.lvl.graphics->n_meshes; ++i) {
                 mem_free(editor.level.lvl.graphics->meshes[i].vertices);
@@ -1557,7 +1557,7 @@ void math_verification() {
     ImGui::Begin("Math verification", NULL, ImGuiWindowFlags_None);
     static vec3_t a = {0, 0, 0};
     static vec3_t b = {0, 0, 0};
-    // todo: add normalize (i imagine this to be the bad one)
+
     const char* ops[] = {
         "Add",
         "Sub",

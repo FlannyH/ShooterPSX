@@ -1,5 +1,6 @@
 #include "../mesh.h"
 #include "../file.h"
+#include "../common.h"
 
 #include <assert.h>
 #include <stddef.h>
@@ -82,6 +83,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
         model->meshes[i].bounds.min.z = mesh_descriptions[i].z_min;
         model->meshes[i].bounds.max.z = mesh_descriptions[i].z_max;
         model->meshes[i].name = string;
+        model->meshes[i].name_hash = hash_string(string);
         model->meshes[i].tex_category = tex_category;
 
         // Convert quads to triangles
@@ -173,6 +175,7 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
     model->meshes[0].vbo_normals = 0;
     model->meshes[0].vao = 0;
     model->meshes[0].name = NULL;
+    model->meshes[0].name_hash = 0;
 
     // Since collision model is only meant to be see in the level
     // editor, don't bother calculating bounding boxes for culling
@@ -240,6 +243,7 @@ mesh_t* create_debug_mesh_from_raw_triangles(triangle_t* tri, size_t count) {
     mesh->vertices = malloc(sizeof(vertex_3d_t) * count * 3);
     mesh->normals = malloc(sizeof(normal_t) * count * 3);
     mesh->name = "debug mesh";
+    mesh->name_hash = hash_string(mesh->name);
 
     for (size_t tri_i = 0; tri_i < count; ++tri_i) {
         const vec3_t a = tri[tri_i].v0;

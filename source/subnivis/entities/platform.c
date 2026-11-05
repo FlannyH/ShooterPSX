@@ -71,7 +71,7 @@ entity_header_t* entity_platform_new(vec3_t spawn_pos) {
 	entity->entity_header.position = spawn_pos;
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
-	entity->entity_header.mesh = model_find_mesh(entity_get_models(), "29_platform_test_horizontal");
+	entity->entity_header.mesh = model_find_mesh(entity_get_models(), hash_string("29_platform_test_horizontal"));
     entity->position_start = spawn_pos;
     entity->position_end = vec3_add(spawn_pos, vec3_from_scalars(0, ONE * 16, 0));;
     entity->velocity = 512;
@@ -123,7 +123,7 @@ void entity_platform_update(int slot, player_t* player, scalar_t dt, level_t* le
 
 	// Make this platform solid based on the mesh bounding box
 	if (platform->entity_header.mesh == NULL) {
-		platform->entity_header.mesh = model_find_mesh(entity_get_models(), "29_platform_test_horizontal");
+		platform->entity_header.mesh = model_find_mesh(entity_get_models(), hash_string("29_platform_test_horizontal"));
 	}
 
 	const aabb_t mesh_bounds_translated = {

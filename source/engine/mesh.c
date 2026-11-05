@@ -74,15 +74,13 @@ int strings_are_equal(const char* a, const char* b) {
     return (*a == '\0' && *b == '\0');
 }
 
-// todo(mesh_find_hash_opt): desc: calculate and compare hashes instead of string compare
-mesh_t* model_find_mesh(const model_t* model, const char* mesh_name) {
+mesh_t* model_find_mesh(const model_t* model, uint32_t mesh_name_hash) {
     for (size_t i = 0; i < model->n_meshes; ++i) {
         mesh_t* mesh = &model->meshes[i];
-        if (strings_are_equal(mesh->name, mesh_name)) {
+        if (mesh->name_hash ==  mesh_name_hash) {
             return mesh;
         }
     }
-    printf("[ERROR] Could not find mesh with name '%s'!\n", mesh_name);
     return 0;
 }
 

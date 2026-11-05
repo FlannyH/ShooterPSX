@@ -18,7 +18,7 @@ model_t* model_load_collision_debug(const char *path, int on_stack, stack_t stac
 collision_mesh_t* model_load_collision(const char *path, int on_stack, stack_t stack);
 aabb_t triangle_get_bounds(const triangle_3d_t *self);
 aabb_t collision_triangle_get_bounds(const collision_triangle_3d_t* self);
-mesh_t* model_find_mesh(const model_t* model, const char* mesh_name);
+mesh_t* model_find_mesh(const model_t* model, uint32_t mesh_name_hash);
 
 size_t get_face_normals(convex_hull_mesh_t* polytope, size_t start_index, vec3_t center);
 void convex_hull_expand(convex_hull_mesh_t* shape, vec3_t support);

@@ -6,27 +6,18 @@ extern "C" {
 #endif
 
 #include <stdio.h>
+#include <stdint.h>
 
-#ifndef _NDS
-
-#define _USE_TEXTURE_POOLS
-#define PAL
-
-#ifndef _DEBUG_CAMERA
-#define _DEBUG_CAMERA
-#endif
-
-#ifndef _DEBUG
-// #define _DEBUG
-#endif
-
-// #define _DEBUG_VERBOSE
-// #define _PCDRV
-
-#endif
-
-// #define BENCHMARK_MODE
-#define FPS_COUNTER
+static uint32_t hash_string(const char* s) {
+    uint32_t h = 3323198485;
+    while (*s) {
+        h ^= *s;
+        h *= 0x5bd1e995;
+        h ^= h >> 15;
+        ++s;
+    }
+    return h;
+}
 
 #define ALWAYS_INLINE __attribute__((always_inline)) inline
 #define ALIGNED(a)      __attribute__((aligned((a))))

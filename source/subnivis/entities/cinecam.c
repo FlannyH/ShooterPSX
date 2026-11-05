@@ -105,7 +105,7 @@ size_t entity_cinecam_serialize(int slot, uint8_t* data) {
         cursor += serialize_scalar(data + cursor, source->time_to_next);
     }
 
-    return cursor - sizeof(vec3_t) * 3;
+    return cursor;
 }
 
 size_t entity_cinecam_deserialize(int slot, const uint8_t* data) {
@@ -133,7 +133,7 @@ size_t entity_cinecam_deserialize(int slot, const uint8_t* data) {
 
 	cinecam_dest->progress = 0;
 
-    return cursor - sizeof(vec3_t) * 3;
+    return cursor;
 }
 
 scalar_t catmull_rom(scalar_t p0, scalar_t p1, scalar_t p2, scalar_t p3, scalar_t t) {

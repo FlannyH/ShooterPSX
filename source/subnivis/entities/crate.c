@@ -44,7 +44,7 @@ entity_header_t* entity_crate_new(vec3_t spawn_pos) {
 	entity->entity_header.position = spawn_pos;
 	entity->entity_header.rotation = (vec3_t){0, 0, 0};
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
-	entity->entity_header.mesh = model_find_mesh(entity_get_models(), "28_crate");
+	entity->entity_header.mesh = model_find_mesh(entity_get_models(), hash_string("28_crate"));
     entity->pickup_to_spawn = PICKUP_TYPE_NONE;
 	return (entity_header_t*)entity;
 }
@@ -91,7 +91,7 @@ void entity_crate_update(int slot, player_t* player, scalar_t dt, level_t* level
 	renderer_set_drawing_id(slot, 1);
 #endif
 	if (crate->entity_header.mesh == NULL) {
-		crate->entity_header.mesh = model_find_mesh(entity_get_models(), "28_crate");
+		crate->entity_header.mesh = model_find_mesh(entity_get_models(), hash_string("28_crate"));
 	}
 	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
 	renderer_draw_mesh_shaded(crate->entity_header.mesh, &render_transform, 0, 0);

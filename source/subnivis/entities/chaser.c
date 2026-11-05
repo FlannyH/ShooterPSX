@@ -55,7 +55,7 @@ entity_header_t* entity_chaser_new(vec3_t spawn_pos) {
 	entity->entity_header.position = spawn_pos;
 	entity->entity_header.rotation = (vec3_t){ 0, 0, 0 };
 	entity->entity_header.scale = (vec3_t){ ONE, ONE, ONE };
-	entity->entity_header.mesh = model_find_mesh(entity_get_models(), "19_enemy_chaser_idle");
+	entity->entity_header.mesh = model_find_mesh(entity_get_models(), hash_string("19_enemy_chaser_idle"));
 	entity->curr_navmesh_node = -1;
 	entity->target_navmesh_node = -1;
 	entity->state = CHASER_WAIT;
@@ -320,7 +320,7 @@ void entity_chaser_update(int slot, player_t* player, scalar_t dt, level_t* leve
 	renderer_set_drawing_id(slot, 1);
 #endif
 	if (chaser->entity_header.mesh == NULL) {
-		chaser->entity_header.mesh = model_find_mesh(entity_get_models(), "19_enemy_chaser_idle");
+		chaser->entity_header.mesh = model_find_mesh(entity_get_models(), hash_string("19_enemy_chaser_idle"));
 	}
 	renderer_set_depth_bias(DEPTH_BIAS_LEVEL);
 	renderer_draw_mesh_shaded(chaser->entity_header.mesh, &render_transform, 0, 1);
