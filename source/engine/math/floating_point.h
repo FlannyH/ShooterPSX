@@ -110,13 +110,13 @@ static inline scalar_t trig_cos(scalar_t angle) {
 
 static inline size_t serialize_scalar(void* destination, scalar_t scalar) {
     int32_t fixed_point_20_12 = (int32_t)(roundf(scalar * FIXED_ONE));
-    memcpy(destination, &fixed_point_20_12, sizeof(fixed_point_20_12));
+    mem_copy(destination, &fixed_point_20_12, sizeof(fixed_point_20_12));
     return sizeof(fixed_point_20_12);
 }
 
 static inline size_t deserialize_scalar(const void *const source, scalar_t* scalar) {
     int32_t fixed_point_20_12 = 0;
-    memcpy(&fixed_point_20_12, source, sizeof(fixed_point_20_12));
+    mem_copy(&fixed_point_20_12, source, sizeof(fixed_point_20_12));
     *scalar = ((scalar_t)fixed_point_20_12) / (1 << 12);
     return sizeof(*scalar);
 }

@@ -2,6 +2,7 @@
 #include "GLFW/glfw3.h"
 #include "backends/imgui_impl_glfw.h"
 #include "engine/math/vec2.h"
+#include "engine/memory.h"
 #include <string.h>
 
 // todo(input_window): desc: make input window not via an extern
@@ -234,14 +235,14 @@ void input_update(void) {
     }
 
     // prev = curr
-    memcpy(state_prev_gamepad, state_curr_gamepad, sizeof(state_prev_gamepad));
-    memcpy(state_prev_keyboard, state_curr_keyboard, sizeof(state_prev_keyboard));
-    memcpy(state_prev_mouse, state_curr_mouse, sizeof(state_prev_mouse));
+    mem_copy(state_prev_gamepad, state_curr_gamepad, sizeof(state_prev_gamepad));
+    mem_copy(state_prev_keyboard, state_curr_keyboard, sizeof(state_prev_keyboard));
+    mem_copy(state_prev_mouse, state_curr_mouse, sizeof(state_prev_mouse));
 
     // curr = new
-    memcpy(state_curr_gamepad, state_new_gamepad, sizeof(state_curr_gamepad));
-    memcpy(state_curr_keyboard, state_new_keyboard, sizeof(state_curr_keyboard));
-    memcpy(state_curr_mouse, state_new_mouse, sizeof(state_curr_mouse));
+    mem_copy(state_curr_gamepad, state_new_gamepad, sizeof(state_curr_gamepad));
+    mem_copy(state_curr_keyboard, state_new_keyboard, sizeof(state_curr_keyboard));
+    mem_copy(state_curr_mouse, state_new_mouse, sizeof(state_curr_mouse));
 
     state_curr_mouse[INPUT_MOUSE_DELTA_X] = state_curr_mouse[INPUT_MOUSE_POS_X] - state_prev_mouse[INPUT_MOUSE_POS_X];
     state_curr_mouse[INPUT_MOUSE_DELTA_Y] = state_curr_mouse[INPUT_MOUSE_POS_Y] - state_prev_mouse[INPUT_MOUSE_POS_Y];

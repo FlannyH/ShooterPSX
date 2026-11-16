@@ -1171,5 +1171,5 @@ void renderer_set_view(const transform_t* view_transform) {
 	camera_dir.x = view_matrix[2][0] * ONE;
 	camera_dir.y = view_matrix[2][1] * ONE;
 	camera_dir.z = view_matrix[2][2] * ONE;
-	memcpy(&camera_pos, &view_transform->position, sizeof(camera_pos));
+	mem_copy(&camera_pos, &view_transform->position, sizeof(camera_pos));
 }

@@ -255,9 +255,9 @@ mesh_t* create_debug_mesh_from_raw_triangles(triangle_t* tri, size_t count) {
         svec3_t sa = svec3_from_vec3(a);
         svec3_t sb = svec3_from_vec3(b);
         svec3_t sc = svec3_from_vec3(c);
-        memcpy(&mesh->vertices[index + 0].x, &sa.x, sizeof(int16_t) * 3);
-        memcpy(&mesh->vertices[index + 1].x, &sb.x, sizeof(int16_t) * 3);
-        memcpy(&mesh->vertices[index + 2].x, &sc.x, sizeof(int16_t) * 3);
+        mem_copy(&mesh->vertices[index + 0].x, &sa.x, sizeof(int16_t) * 3);
+        mem_copy(&mesh->vertices[index + 1].x, &sb.x, sizeof(int16_t) * 3);
+        mem_copy(&mesh->vertices[index + 2].x, &sc.x, sizeof(int16_t) * 3);
         mesh->vertices[index + 0].tex_id = 255;
         mesh->vertices[index + 1].tex_id = 255;
         mesh->vertices[index + 2].tex_id = 255;
@@ -272,9 +272,9 @@ mesh_t* create_debug_mesh_from_raw_triangles(triangle_t* tri, size_t count) {
             scalar_clamp(((normal.y + ONE) * 127) / (2 * ONE), 0, 255),
             scalar_clamp(((normal.z + ONE) * 127) / (2 * ONE), 0, 255),
         };
-        memcpy(&mesh->vertices[index + 0].r, rgb, sizeof(rgb));
-        memcpy(&mesh->vertices[index + 1].r, rgb, sizeof(rgb));
-        memcpy(&mesh->vertices[index + 2].r, rgb, sizeof(rgb));
+        mem_copy(&mesh->vertices[index + 0].r, rgb, sizeof(rgb));
+        mem_copy(&mesh->vertices[index + 1].r, rgb, sizeof(rgb));
+        mem_copy(&mesh->vertices[index + 2].r, rgb, sizeof(rgb));
         mesh->normals[3*tri_i + 2].x =
         mesh->normals[3*tri_i + 1].x =
         mesh->normals[3*tri_i].x = (normal.x * 127) / ONE;

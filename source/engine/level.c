@@ -260,7 +260,7 @@ level_t level_load(const char* level_path, const uint32_t flags) {
 #else
         level.lights = mem_stack_alloc(level.n_lights * sizeof(light_t), STACK_LEVEL);
 #endif
-        memcpy(level.lights, lights, level.n_lights * sizeof(light_t));
+        mem_copy(level.lights, lights, level.n_lights * sizeof(light_t));
     }
 
     if (flags & LEVEL_LOAD_MUSIC) {

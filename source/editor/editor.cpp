@@ -670,14 +670,14 @@ void level_metadata() {
         level_header_t* header = (level_header_t*)data;
         char* binary_section = (char*)(&header[1]);
 
-        strncpy(editor.level.path_music, binary_section + header->path_music_offset, 255);
-        strncpy(editor.level.path_bank, binary_section + header->path_bank_offset, 255);
-        strncpy(editor.level.path_textures, binary_section + header->path_texture_offset, 255);
-        strncpy(editor.level.path_collision, binary_section + header->path_collision_offset, 255);
-        strncpy(editor.level.path_vislist, binary_section + header->path_vislist_offset, 255);
-        strncpy(editor.level.path_model, binary_section + header->path_model_offset, 255);
-        strncpy(editor.level.path_model_lod, binary_section + header->path_model_lod_offset, 255);
-        strncpy(editor.level.name, binary_section + header->level_name_offset, 255);
+        mem_string_copy(editor.level.path_music, binary_section + header->path_music_offset, 255);
+        mem_string_copy(editor.level.path_bank, binary_section + header->path_bank_offset, 255);
+        mem_string_copy(editor.level.path_textures, binary_section + header->path_texture_offset, 255);
+        mem_string_copy(editor.level.path_collision, binary_section + header->path_collision_offset, 255);
+        mem_string_copy(editor.level.path_vislist, binary_section + header->path_vislist_offset, 255);
+        mem_string_copy(editor.level.path_model, binary_section + header->path_model_offset, 255);
+        mem_string_copy(editor.level.path_model_lod, binary_section + header->path_model_lod_offset, 255);
+        mem_string_copy(editor.level.name, binary_section + header->level_name_offset, 255);
 
         entity_init();
         editor.level.lvl = level_load(editor.level.path, LEVEL_LOAD_ALL);

@@ -66,7 +66,7 @@ void file_init(const char* path) {
     }
 
     // Copy file table to a more permanent location in RAM
-    memcpy(&archive_header, header, sizeof(fsfa_header_t));
+    mem_copy(&archive_header, header, sizeof(fsfa_header_t));
     size_t item_table_size = archive_header.n_items * sizeof(fsfa_item_t);
     item_table_size = (item_table_size | SECTOR_SIZE_MASK) + 1; // align to next multiple of 2048 (disc sector size)
     uint32_t* item_table_storage = mem_dynamic_alloc(item_table_size, MEM_CAT_FILE, path);

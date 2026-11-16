@@ -21,7 +21,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
 
     if (path[length - 3] == ';') {
         new_path[0] = '.';
-        memcpy(&new_path[1], path, length - 2);
+        mem_copy(&new_path[1], path, length - 2);
         new_path[length - 2] = 0;
     }
     else {

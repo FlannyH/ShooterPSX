@@ -167,8 +167,8 @@ void renderer_init(void) {
 
 void renderer_set_view(const transform_t* camera_transform) {
     VECTOR position;
-    memcpy(&position, &camera_transform->position, sizeof(position));
-    memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
+    mem_copy(&position, &camera_transform->position, sizeof(position));
+    mem_copy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
     position.vx = -position.vx >> FRAC_BITS;
     position.vy = -position.vy >> FRAC_BITS;
     position.vz = -position.vz >> FRAC_BITS;

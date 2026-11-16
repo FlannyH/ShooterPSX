@@ -85,7 +85,7 @@ void renderer_begin_frame(const transform_t* camera_transform) {
     glRotateYi(angle_to_16(camera_transform->rotation.y));
     glRotateZi(angle_to_16(camera_transform->rotation.z));
     glTranslatef32(-camera_transform->position.x >> 12, -camera_transform->position.y >> 12, -camera_transform->position.z >> 12);
-    memcpy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
+    mem_copy(&camera_pos, &camera_transform->position, sizeof(camera_pos));
 }
 
 void renderer_end_frame(void) {

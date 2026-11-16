@@ -7,8 +7,6 @@ extern "C" {
 
 #include <stddef.h>
 
-// todo(memory_helpers): desc: custom solutions for memcpy, strncpy, etc
-
 typedef enum {
     MEM_CAT_UNDEFINED,
     MEM_CAT_TEXTURE,
@@ -47,6 +45,9 @@ void mem_dynamic_free(void* ptr);
 void mem_dynamic_delayed_free(void* ptr);
 void mem_dynamic_cleanup(void);
 void mem_debug(void);
+
+void mem_copy(void* to, const void* from, size_t bytes);
+void mem_string_copy(char* to, const char* from, size_t max_bytes);
 
 #ifdef _DEBUG
 char* mem_stack_get_name(int i);

@@ -253,7 +253,7 @@ void mixer_init(void) {
 void mixer_upload_sample_data(const void* const sample_data, size_t n_bytes, int soundbank_slot) {
     if (samples[soundbank_slot]) mem_dynamic_free(samples[soundbank_slot]);
     samples[soundbank_slot] = mem_dynamic_alloc(n_bytes + 4, MEM_CAT_AUDIO, "soundbank"); // 4 dummy samples required for gaussian sampling
-    memcpy(samples[soundbank_slot], sample_data, n_bytes);
+    mem_copy(samples[soundbank_slot], sample_data, n_bytes);
     memset(((uint8_t*)samples[soundbank_slot]) + n_bytes, 0, 4);
     return;
 }

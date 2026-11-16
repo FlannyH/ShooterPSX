@@ -292,7 +292,7 @@ void* mem_dynamic_alloc(size_t size, memory_category_t category, const char* nam
             allocated_memory_pointers[i] = result;
             allocated_memory_size[i] = size;
             allocated_memory_category[i] = category;
-            strncpy(&allocated_memory_name[i][0], name, MAX_DYNAMIC_ALLOC_NAME_LENGTH - 1);
+            mem_string_copy(&allocated_memory_name[i][0], name, MAX_DYNAMIC_ALLOC_NAME_LENGTH - 1);
             allocated_memory_name[i][MAX_DYNAMIC_ALLOC_NAME_LENGTH - 1] = 0;
             break;
         }
@@ -379,4 +379,19 @@ void mem_debug(void) {
     printf("MEM_CAT_FILE:      %i bytes (%i allocations)\n", size_per_category[MEM_CAT_FILE], n_per_category[MEM_CAT_FILE]);
     printf("total:             %i bytes (%i allocations)\n", size_total, n_total);
 #endif
+}
+
+void mem_copy(void* to, const void* from, size_t bytes) {
+    const uint8_t* source = from;
+    uint8_t* destination = to;
+    for (size_t i = 0; i < bytes; ++i) {
+        destination[i] = source[i];
+    }
+}
+
+void mem_string_copy(char* to, const char* from, size_t max_bytes) {
+    for (size_t i = 0; i < max_bytes; ++i) {
+        if (from[i] == 0) return;
+        to[i] = from[i];
+    }
 }
