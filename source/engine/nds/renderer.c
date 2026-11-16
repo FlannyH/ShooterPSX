@@ -107,7 +107,7 @@ void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform,
         glTranslatef32(model_transform->position.x, -model_transform->position.y, -model_transform->position.z);
         glScalef32(-model_transform->scale.x, -model_transform->scale.y, -model_transform->scale.z);
         if (facing_camera) {
-            // todo(renderer_nds_facing_camera): verify that nds facing camera code is correct, if used at all
+            // todo(renderer_nds_facing_camera): desc: verify that nds facing camera code is correct, if used at all
             const vec3_t up = vec3_from_scalars(0, ONE, 0);
             const vec3_t forward = vec3_normalize(vec3_neg(model_transform->position)); // When local, the camera is at (0, 0, 0), so the vector from the mesh to the camera is the negative of the mesh translation
             const vec3_t right = vec3_normalize(vec3_cross(up, forward));

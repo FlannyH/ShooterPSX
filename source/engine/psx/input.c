@@ -86,14 +86,12 @@ void input_update(void) {
         controller_curr[i].l3     = (pad[i]->btn & PAD_L3) ?       0 : ONE;
         controller_curr[i].r3     = (pad[i]->btn & PAD_R3) ?       0 : ONE;
 
-        const vec2_t left_stick = apply_deadzone((vec2_t){stick_to_scalar(pad[i]->ls_x), -stick_to_scalar(pad[i]->ls_y)});
-        controller_curr[i].stick_left.x = left_stick.x;
-        controller_curr[i].stick_left.y = left_stick.y;
-        const vec2_t right_stick = apply_deadzone((vec2_t){stick_to_scalar(pad[i]->rs_x), -stick_to_scalar(pad[i]->rs_y)});
-        controller_curr[i].stick_right.x = right_stick.x;
-        controller_curr[i].stick_right.y = right_stick.y;
-
-        // todo: mouse
+        if (pad[i]->type == PAD_ID_ANALOG) {
+            const vec2_t left_stick = apply_deadzone((vec2_t){stick_to_scalar(pad[i]->ls_x), -stick_to_scalar(pad[i]->ls_y)});
+            const vec2_t right_stick = apply_deadzone((vec2_t){stick_to_scalar(pad[i]->rs_x), -stick_to_scalar(pad[i]->rs_y)});
+            controller_curr[i].stick_left = left_stick;
+            controller_curr[i].stick_right = right_stick;
+        }
     }
 }
 

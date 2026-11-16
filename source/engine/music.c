@@ -29,7 +29,7 @@ scalar_t sfx_max_distances[N_SPU_CHANNELS];
 sound_bank_t sound_banks[N_SOUNDBANKS] = {0};
 
 // Sequence
-// todo(music_multi_sequence): allow playing multiple sequences, where each sequence may have an origin point, so that the positions sent to the music code are relative to that origin point
+// todo(music_multi_sequence): desc: allow playing multiple sequences, where each sequence may have an origin point, so that the positions sent to the music code are relative to that origin point
 size_t music_stack_seq_offset = 0;
 dyn_song_seq_header_t* curr_loaded_seq = NULL;
 uint8_t* sequence_pointer = NULL;

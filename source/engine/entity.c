@@ -75,6 +75,9 @@ void entity_init(void) {
 
 void entity_register_type(uint8_t entity_type, entity_reg_t registration) {
     entity_register[entity_type] = registration;
+    if (registration.struct_size > entity_pool_stride) {
+        entity_pool_stride = registration.struct_size;
+    }
 }
 
 const entity_reg_t* entity_register_get(uint8_t entity_type) {

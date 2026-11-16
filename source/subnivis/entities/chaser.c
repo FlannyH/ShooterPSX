@@ -74,7 +74,7 @@ void decide_action(entity_chaser_t* chaser, const vec3_t player_pos) {
 	const scalar_t dist_chaser_to_player_squared = vec3_magnitude_squared(chaser_to_player);
 
 	// If the player is within aggro distance, do a raycast to see if the enemy can see the player
-	// todo(chaser_logic): desc rework this to new collision engine
+	// todo(chaser_logic): desc: rework this to new collision engine
 	/*
 	if (dist_chaser_to_player_squared < CHASER_AGGRO_DISTANCE_SQUARED) {
 		ray_t ray = {

@@ -1789,6 +1789,8 @@ int main(int argc, char** argv) {
     int mouse_lock = 0;
     input_unlock_mouse();
 
+    bool do_set_to_viewport = true;
+
     renderer_set_view(&editor.misc.camera.transform);
 
     while (!renderer_should_close()) {
@@ -1820,7 +1822,6 @@ int main(int argc, char** argv) {
 
         cleanup();
         level_metadata();
-        // player_update(&editor.misc.player, &editor.level.lvl, 0, 0); // Tick the player with 0 delta time to update the camera transform
         entity_stuff();
         render_3d_debug_stuff();
         general_info();
@@ -1831,6 +1832,12 @@ int main(int argc, char** argv) {
         viewport();
         math_verification();
         audio_debugger();
+        memory_debugger();
+
+        if (do_set_to_viewport) {
+            ImGui::SetWindowFocus("Viewport");
+            do_set_to_viewport = false;
+        }
 
         renderer_end_frame();
         debug_layer_end();
