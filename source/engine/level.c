@@ -198,11 +198,11 @@ level_t level_load(const char* level_path, const uint32_t flags) {
         // Load shapes
         level.n_shapes = level_header->n_shapes;
 #ifdef _LEVEL_EDITOR
-        level.shapes = malloc(MAX_SHAPE_COUNT * sizeof(shape_t));
-        memset(level.shapes, 0, MAX_SHAPE_COUNT * sizeof(shape_t));
+        level.shapes = mem_stack_alloc(MAX_SHAPE_COUNT * sizeof(shape_t), STACK_LEVEL);
 #else
         level.shapes = mem_stack_alloc(level.n_shapes * sizeof(shape_t), STACK_LEVEL);
 #endif
+        memset(level.shapes, 0, MAX_SHAPE_COUNT * sizeof(shape_t));
         size_t offset = 0;
         for (int i = 0; i < level.n_shapes; ++i) {
             deserialize_shape(shapes, &offset, &level.shapes[i]);
@@ -231,7 +231,7 @@ level_t level_load(const char* level_path, const uint32_t flags) {
         if (level_header->text_offset && level_header->n_text_entries > 0) {
             level.n_text_entries = level_header->n_text_entries;
 #ifdef _LEVEL_EDITOR
-            level.text_entries = malloc(level.n_text_entries * sizeof(char**));
+            level.text_entries = mem_stack_alloc(256 * sizeof(char**), STACK_LEVEL);
 #else
             level.text_entries = mem_stack_alloc(level.n_text_entries * sizeof(char**), STACK_LEVEL);
 #endif

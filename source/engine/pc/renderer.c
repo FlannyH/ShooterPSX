@@ -319,7 +319,7 @@ void renderer_init(void) {
 
 	// Zero init textures
 	// todo(pc_texture_atlas_resolution): desc: unhardcode texture atlas resolutions
-    uint32_t* zero_data = mem_alloc(2048 * 2048 * 4, MEM_CAT_TEXTURE);
+    uint32_t* zero_data = mem_dynamic_alloc(2048 * 2048 * 4, MEM_CAT_TEXTURE, "texture atlas initial memory");
 	for (size_t i = 0; i < 2048 * 2048; ++i) {
 		zero_data[i] = 0u;
 	}
@@ -336,11 +336,11 @@ void renderer_init(void) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
 	glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
-    mem_free(zero_data);
+    mem_dynamic_free(zero_data);
 
 	// Create pool info buffer
 	const size_t texture_data_size = MAX_TEXTURE_COUNT * N_TEX_CATS * sizeof(uint16_t) * 4;
-    uint16_t* zero_metadata = mem_alloc(texture_data_size, MEM_CAT_TEXTURE);
+    uint16_t* zero_metadata = mem_dynamic_alloc(texture_data_size, MEM_CAT_TEXTURE, "zero_metadata init buffer");
 	for (size_t i = 0; i < texture_data_size / 2; ++i) {
 		zero_metadata[i] = 0;
 	}
@@ -354,7 +354,7 @@ void renderer_init(void) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16I, MAX_TEXTURE_COUNT, (GLsizei)N_TEX_CATS, 0, GL_RGBA_INTEGER, GL_SHORT, zero_metadata);
     glBindTexture(GL_TEXTURE_2D, 0);
-    mem_free(zero_metadata);
+    mem_dynamic_free(zero_metadata);
 
 	// Create gpu light buffer
 	glGenBuffers(1, &light_buffer_gpu);
@@ -773,7 +773,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     glUniform1i(glGetUniformLocation(shader_gouraud, "curr_depth_bias"), curr_depth_bias - 16);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "interpolation_mode"), 0);
 	glUniform1i(glGetUniformLocation(shader_gouraud, "edge_behavior"), 0);
-    glUniform1f(glGetUniformLocation(shader_gouraud, "alpha"), 1.0f);
+	glUniform1f(glGetUniformLocation(shader_gouraud, "alpha"), ((float)color.a) / 255.0f);
 
     // Copy data into it
     line_3d_t line;
@@ -789,8 +789,7 @@ void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const trans
     line.v1.r = color.r;
     line.v1.g = color.g;
     line.v1.b = color.b;
-    glBufferData(GL_ARRAY_BUFFER, sizeof(line_3d_t),
-        &line, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(line_3d_t), &line, GL_DYNAMIC_DRAW);
 
     // Enable depth and draw
     glDisable(GL_BLEND);
@@ -829,7 +828,7 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 	if (height == 0) height = 256;
 	const size_t pixel_count = width * height;
 
-	pixel32_t* pixels = mem_alloc(pixel_count * sizeof(*pixels), MEM_CAT_TEXTURE);
+	pixel32_t* pixels = mem_dynamic_alloc(pixel_count * sizeof(*pixels), MEM_CAT_TEXTURE, "texture upload buffer");
 	for (size_t pi = 0; pi < pixel_count; ++pi) {
 		pixels[pi] = (pixel32_t){.r = 0x72, .g = 0x05, .b = 0xFF, .a = 0x00};
 	}
@@ -880,7 +879,7 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 
 	else {
 		printf("Invalid bits per pixel, got %i, expected 4, 8 or 16\n", texture->bits_per_pixel);
-		mem_free(pixels);
+		mem_dynamic_free(pixels);
 		return;
 	}
 
@@ -898,7 +897,7 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 		};
 		printf("[ERROR] Failed to allocate texture %i in category %s, ran out of texture pool space\n", index, texture_category_names[(size_t)category]);
 #endif
-		mem_free(pixels);
+		mem_dynamic_free(pixels);
 		return;
 	}
 	rect_t tex_rect = texture_pool_rect(pool_id, pool_entry);
@@ -943,7 +942,7 @@ void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_ca
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// Clean up after we're done
-	mem_free(pixels);
+	mem_dynamic_free(pixels);
 }
 
 void update_delta_time(void) {
@@ -1059,7 +1058,7 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 	glUniform1f(glGetUniformLocation(shader_gouraud, "alpha"), ((float)color.a) / 255.0f);
 
 	// Copy data into it
-	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(vertex_3d_t), triangulated, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(vertex_3d_t), triangulated, GL_DYNAMIC_DRAW);
 
 	// Enable depth and draw
 	glEnable(GL_BLEND);

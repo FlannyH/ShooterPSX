@@ -379,7 +379,7 @@ int inspect_shape(size_t shape_id, int& render_hull_build_set_cap) {
                 }
                 ImGui::SameLine();
                 if (inspect_vec3(&editor.level.lvl.shapes[shape_id].convex_hull.points[i], "Pos")) {
-                    mem_free(editor.resources.specialized_meshes[shape_id]);
+                    mem_dynamic_free(editor.resources.specialized_meshes[shape_id]);
                     editor.resources.specialized_meshes[shape_id] = create_convex_hull_from_point_cloud(
                         editor.level.lvl.shapes[shape_id].convex_hull.points,
                         editor.level.lvl.shapes[shape_id].convex_hull.n_points,
@@ -391,7 +391,7 @@ int inspect_shape(size_t shape_id, int& render_hull_build_set_cap) {
             }
             ImGui::TreePop();
 
-            mem_free(editor.resources.specialized_meshes[shape_id]);
+            mem_dynamic_free(editor.resources.specialized_meshes[shape_id]);
             editor.resources.specialized_meshes[shape_id] = create_convex_hull_from_point_cloud(
                 editor.level.lvl.shapes[shape_id].convex_hull.points,
                 editor.level.lvl.shapes[shape_id].convex_hull.n_points,
@@ -494,6 +494,34 @@ void draw_texture_category(const char* name, texture_category_t category, bool s
         }
     ImGui::TreePop();
     }
+}
+
+void memory_debugger() {
+    ImGui::Begin("Memory debugger");
+    for (size_t i = 0; i < N_STACK_TYPES; ++i) {
+        if (i != 0) ImGui::Separator();
+        ImGui::Text("Name: %s", mem_stack_get_name(i));
+        ImGui::Text("Usage: %.2f KB / %.2f KB (%i%%)", (float)mem_stack_get_occupied((stack_t)i) / 1024, (float)mem_stack_get_size((stack_t)i) / 1024);
+        ImGui::ProgressBar((float)mem_stack_get_occupied((stack_t)i) / mem_stack_get_size((stack_t)i));
+    }
+    for (size_t i = 0; i < N_MEM_CATS; ++i) {
+        if (i != 0) ImGui::Separator();
+        ImGui::Text("Name: %s", mem_dynamic_get_name(i));
+        ImGui::Text("Usage: %.2f KB / %.2f KB (%i%%)", (float)mem_dynamic_get_occupied((memory_category_t)i) / 1024, (float)mem_dynamic_get_size((memory_category_t)i) / 1024);
+        ImGui::ProgressBar((float)mem_dynamic_get_occupied((memory_category_t)i) / mem_dynamic_get_size((memory_category_t)i));
+    }
+    if (ImGui::TreeNode("All dynamic allocations")) {
+        for (size_t i = 0; i < 512; ++i) {
+            const mem_cat_debug_info_t info = mem_get_dynamic_debug_info(i);
+            if (!info.ptr) continue;
+            if (i != 0) ImGui::Separator();
+            ImGui::Text("Category: %s", mem_dynamic_get_name(info.category));
+            ImGui::Text("Name: %s", info.name);
+            ImGui::Text("Size: %i", info.size);
+        }
+        ImGui::TreePop();
+    }
+    ImGui::End();
 }
 
 void audio_debugger() {
@@ -617,23 +645,21 @@ void render_3d_debug_stuff() {
 void level_metadata() {
     ImGui::Begin("Level Metadata");
     auto load = []() {
-        mem_debug();
         if (editor.level.lvl.graphics) {
             for (uint32_t i = 0; i < editor.level.lvl.graphics->n_meshes; ++i) {
-                mem_free(editor.level.lvl.graphics->meshes[i].vertices);
+                mem_dynamic_free(editor.level.lvl.graphics->meshes[i].vertices);
             }
         }
         if (editor.level.lvl.collision_mesh_debug) {
             if (editor.level.lvl.collision_mesh_debug->meshes) {
                 for (uint32_t i = 0; i < editor.level.lvl.collision_mesh_debug->n_meshes; ++i) {
-                    mem_free(editor.level.lvl.collision_mesh_debug->meshes[i].vertices);
+                    mem_dynamic_free(editor.level.lvl.collision_mesh_debug->meshes[i].vertices);
                 }
-                mem_free(editor.level.lvl.collision_mesh_debug->meshes);
+                mem_dynamic_free(editor.level.lvl.collision_mesh_debug->meshes);
             }
-            mem_free(editor.level.lvl.collision_mesh_debug);
+            mem_dynamic_free(editor.level.lvl.collision_mesh_debug);
         }
-        mem_free(editor.level.lvl.lights);
-        mem_debug();
+        mem_dynamic_free(editor.level.lvl.lights);
 
         uint32_t* data;
         size_t size;
@@ -718,7 +744,7 @@ void level_metadata() {
 
         const size_t n_entities_padded = (n_entities + 3) & ~0x03;
         const size_t n_extra_values = n_entities_padded - n_entities;
-        uint8_t* entity_types = (uint8_t*)mem_alloc(n_entities_padded, MEM_CAT_UNDEFINED);
+        uint8_t entity_types[ENTITY_LIST_LENGTH] = {0};
         for (int i = 0; i < n_entities; ++i) {
             entity_types[i] = entity_get_type(i);
         }
@@ -737,7 +763,7 @@ void level_metadata() {
         }
 
         // serialize shapes
-        uint8_t* shapes = (uint8_t*)mem_alloc(1 * MiB, MEM_CAT_UNDEFINED); // 1 MB should be overkill
+        uint8_t* shapes = (uint8_t*)mem_stack_alloc(1 * MiB, STACK_TEMP); // 1 MB should be overkill
         size_t shape_cursor = 0;
         size_t n_shapes = 0;
         for (int i = 0; i < MAX_SHAPE_COUNT; ++i) {
@@ -755,7 +781,7 @@ void level_metadata() {
             .path_vislist_offset = (uint32_t)write_text_and_get_offset(binary_section, editor.level.path_vislist),
             .path_model_offset = (uint32_t)write_text_and_get_offset(binary_section, editor.level.path_model),
             .path_model_lod_offset = (uint32_t)write_text_and_get_offset(binary_section, editor.level.path_model_lod),
-            .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_types, (n_entities + 3) & ~0x03), // 4-byte padding
+            .entity_types_offset = (uint32_t)write_data_and_get_offset(binary_section, &entity_types[0], (n_entities + 3) & ~0x03), // 4-byte padding
             .entity_pool_offset = (uint32_t)write_data_and_get_offset(binary_section, entity_data_serialized.data(), entity_data_cursor),
             .light_data_offset =  (uint32_t)write_data_and_get_offset(binary_section, lights, n_lights * sizeof(light_t)),
             .shape_data_offset =  (uint32_t)write_data_and_get_offset(binary_section, shapes, shape_cursor),
@@ -768,8 +794,6 @@ void level_metadata() {
             .n_lights = (uint16_t)n_lights,
             .n_shapes = (uint16_t)n_shapes,
         };
-
-        mem_free(entity_types);
 
         FILE* file = fopen(editor.level.path, "wb");
         if (file == nullptr) {
@@ -905,8 +929,8 @@ void initialize() {
 
     debug_layer_init();
 
-    editor.level.lvl.lights = (light_t*)mem_alloc(256 * sizeof(light_t), MEM_CAT_UNDEFINED);
-    editor.level.lvl.shapes = (shape_t*)mem_alloc(256 * sizeof(shape_t), MEM_CAT_UNDEFINED);
+    editor.level.lvl.lights = (light_t*)mem_dynamic_alloc(256 * sizeof(light_t), MEM_CAT_UNDEFINED, "lights");
+    editor.level.lvl.shapes = (shape_t*)mem_dynamic_alloc(256 * sizeof(shape_t), MEM_CAT_UNDEFINED, "shapes");
     memset(editor.level.lvl.lights, 0, 256 * sizeof(light_t));
     memset(editor.level.lvl.shapes, 0, 256 * sizeof(shape_t));
 
@@ -1157,7 +1181,7 @@ void collision_stuff() {
                     editor.level.lvl.shapes[i].aabb.max = vec3_add(spawn_pos, vec3_from_scalar(SCALAR(250.0)));
                 }
                 else if (curr_selected_shape_type == SHAPE_CONVEX_HULL) {
-                    editor.level.lvl.shapes[i].convex_hull.points = (vec3_t*)mem_alloc(256 * sizeof(vec3_t), MEM_CAT_MESH);
+                    editor.level.lvl.shapes[i].convex_hull.points = (vec3_t*)mem_stack_alloc(256 * sizeof(vec3_t), STACK_LEVEL);
                     editor.level.lvl.shapes[i].convex_hull.n_points = 0;
                 }
                 editor.level.lvl.shapes[i].type = curr_selected_shape_type;
@@ -1250,7 +1274,7 @@ void collision_stuff() {
         lazy_update_convex_hulls++;
         lazy_update_convex_hulls %= editor.level.lvl.n_shapes;
         if (editor.level.lvl.shapes[lazy_update_convex_hulls].type == SHAPE_CONVEX_HULL) {
-            mem_free(editor.resources.specialized_meshes[lazy_update_convex_hulls]);
+            mem_dynamic_free(editor.resources.specialized_meshes[lazy_update_convex_hulls]);
             editor.resources.specialized_meshes[lazy_update_convex_hulls] = create_convex_hull_from_point_cloud(
                 editor.level.lvl.shapes[lazy_update_convex_hulls].convex_hull.points,
                 editor.level.lvl.shapes[lazy_update_convex_hulls].convex_hull.n_points,
@@ -1274,8 +1298,7 @@ void text_editor() {
         }
 
         if (!found) {
-            editor.level.lvl.text_entries = (char**)realloc(editor.level.lvl.text_entries, (editor.level.lvl.n_text_entries + 1) * sizeof(char**));
-            editor.level.lvl.text_entries[editor.level.lvl.n_text_entries] = (char*)mem_alloc(255, MEM_CAT_UNDEFINED);
+            editor.level.lvl.text_entries[editor.level.lvl.n_text_entries] = (char*)mem_stack_alloc(255, STACK_LEVEL);
             editor.level.lvl.text_entries[editor.level.lvl.n_text_entries][0] = 0;
             ++editor.level.lvl.n_text_entries;
         }

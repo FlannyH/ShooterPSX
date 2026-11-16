@@ -69,7 +69,7 @@ void file_init(const char* path) {
     memcpy(&archive_header, header, sizeof(fsfa_header_t));
     size_t item_table_size = archive_header.n_items * sizeof(fsfa_item_t);
     item_table_size = (item_table_size | SECTOR_SIZE_MASK) + 1; // align to next multiple of 2048 (disc sector size)
-    uint32_t* item_table_storage = mem_alloc(item_table_size, MEM_CAT_FILE);
+    uint32_t* item_table_storage = mem_dynamic_alloc(item_table_size, MEM_CAT_FILE, path);
     seek_in_archive(archive_header.items_offset & ~SECTOR_SIZE_MASK);
     CdRead(item_table_size / SECTOR_SIZE, item_table_storage, CdlModeSpeed);
     CdReadSync(0, 0);
@@ -150,7 +150,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
 
         const size_t item_size_aligned = (item->size | 2047) + 1;
         if (on_stack) *destination = (uint32_t*)mem_stack_alloc(item_size_aligned, stack);
-        else *destination = (uint32_t*)mem_alloc(item_size_aligned, MEM_CAT_FILE);
+        else *destination = (uint32_t*)mem_dynamic_alloc(item_size_aligned, MEM_CAT_FILE, path);
         *size = item->size;
         seek_in_archive(item->offset + archive_header.data_offset);
         CdRead(item_size_aligned / SECTOR_SIZE, *destination, CdlModeSpeed);

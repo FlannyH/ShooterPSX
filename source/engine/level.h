@@ -11,6 +11,10 @@ extern "C" {
 
 #include <stdint.h>
 
+#define MAX_LIGHT_COUNT 256
+#define MAX_SHAPE_COUNT 256
+#define MAX_TEXT_ENTRIES 256
+
 // Level file header
 #define MAGIC_FLVL 0x4C564C46
 typedef struct {
@@ -93,9 +97,6 @@ typedef enum {
     LEVEL_LOAD_ALL = LEVEL_LOAD_MUSIC | LEVEL_LOAD_TEXTURES | LEVEL_LOAD_COLLISION | LEVEL_LOAD_MODEL | LEVEL_LOAD_ENTITIES | LEVEL_LOAD_LIGHTS | LEVEL_LOAD_TEXT,
     LEVEL_LOAD_ALL_VISUAL = LEVEL_LOAD_TEXTURES | LEVEL_LOAD_MODEL | LEVEL_LOAD_LIGHTS
 } level_load_flags_t;
-
-#define MAX_LIGHT_COUNT 256
-#define MAX_SHAPE_COUNT 256
 
 void serialize_shape(uint8_t* shapes, size_t* cursor, const shape_t* shape);
 void deserialize_shape(const uint8_t* data, size_t* offset, shape_t* shape);

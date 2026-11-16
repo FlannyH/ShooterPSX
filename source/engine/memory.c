@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #if defined(_PSX)
 #define size_stack_temp (333  * KiB)
@@ -11,7 +12,7 @@
 #define size_stack_music (100 * KiB)
 #define size_stack_entity (112 * KiB)
 #define size_stack_persistent (64 * KiB)
-#elif defined(_NDS) 
+#elif defined(_NDS)
 #define size_stack_temp (333 * KiB)
 #define size_stack_level (1024 * KiB)
 #define size_stack_music (100 * KiB)
@@ -38,7 +39,7 @@ size_t mem_stack_cursor_entity = 0;
 size_t mem_stack_cursor_persistent = 0;
 
 #ifdef _DEBUG
-char* mem_cat_strings[] = {
+char* mem_cat_names[] = {
     "MEM_CAT_UNDEFINED",
     "MEM_CAT_TEXTURE",
     "MEM_CAT_MODEL",
@@ -56,9 +57,12 @@ char* stack_names[] = {
     "STACK_PERSISTENT",
 };
 
-static void* allocated_memory_pointers[512] = {0};
-static size_t allocated_memory_size[512] = {0};
-static memory_category_t allocated_memory_category[512] = {0};
+#define MAX_DYNAMIC_ALLOCS 512
+#define MAX_DYNAMIC_ALLOC_NAME_LENGTH 64
+static void* allocated_memory_pointers[MAX_DYNAMIC_ALLOCS] = {0};
+static size_t allocated_memory_size[MAX_DYNAMIC_ALLOCS] = {0};
+static memory_category_t allocated_memory_category[MAX_DYNAMIC_ALLOCS] = {0};
+static char allocated_memory_name[MAX_DYNAMIC_ALLOCS][MAX_DYNAMIC_ALLOC_NAME_LENGTH] = {0};
 #endif
 
 void* scheduled_frees[32];
@@ -88,7 +92,7 @@ void* mem_stack_alloc(size_t size, stack_t stack) {
 #ifdef _DEBUG_VERBOSE
 	printf("stack %s (id %i) has %i bytes available and we need %i bytes... ", stack_names[stack], stack, mem_stack_get_size(stack) - mem_stack_get_occupied(stack), size);
 #endif
-	
+
 	switch (stack) {
 		case STACK_LEVEL:
 			base = mem_stack_level;
@@ -249,21 +253,47 @@ char* mem_stack_get_name(int i) {
 	if (i < 0 || i >= N_STACK_TYPES) return "(invalid)";
 	return stack_names[i];
 }
+char* mem_dynamic_get_name(int i) {
+	if (i < 0 || i >= N_MEM_CATS) return "(invalid)";
+	return mem_cat_names[i];
+}
+#endif
+
+#ifdef _LEVEL_EDITOR
+mem_cat_debug_info_t mem_get_dynamic_debug_info(int i) {
+    if (i < 0 || i >= MAX_DYNAMIC_ALLOCS) {
+        return (mem_cat_debug_info_t){
+            .ptr = NULL,
+            .name = NULL,
+            .size = 0,
+            .category = MEM_CAT_UNDEFINED
+        };
+    }
+
+    return (mem_cat_debug_info_t){
+        .ptr = allocated_memory_pointers[i],
+        .name = &allocated_memory_name[i][0],
+        .size = allocated_memory_size[i],
+        .category = allocated_memory_category[i],
+    };
+}
 #endif
 
 size_t mem_stack_get_free(stack_t stack) {
 	return mem_stack_get_size(stack) - mem_stack_get_occupied(stack);
 }
 
-void* mem_alloc(size_t size, memory_category_t category) {
+void* mem_dynamic_alloc(size_t size, memory_category_t category, const char* name) {
 #ifdef _DEBUG
     void* result = NULL;
-    for (size_t i = 0; i < 512; ++i) {
+    for (size_t i = 0; i < MAX_DYNAMIC_ALLOCS; ++i) {
         if (allocated_memory_pointers[i] == NULL) {
             result = malloc(size);
             allocated_memory_pointers[i] = result;
             allocated_memory_size[i] = size;
             allocated_memory_category[i] = category;
+            strncpy(&allocated_memory_name[i][0], name, MAX_DYNAMIC_ALLOC_NAME_LENGTH - 1);
+            allocated_memory_name[i][MAX_DYNAMIC_ALLOC_NAME_LENGTH - 1] = 0;
             break;
         }
     }
@@ -278,9 +308,31 @@ void* mem_alloc(size_t size, memory_category_t category) {
 #endif
 }
 
-void mem_free(void* ptr) {
+size_t mem_dynamic_get_size(memory_category_t category) {
+    (void)category;
+    return 2 * MiB; // todo(memory_dynamic_size): desc: after reworking dynamic allocation, replace dynamic size to what the actual allocator size is
+}
+
+size_t mem_dynamic_get_occupied(memory_category_t category) {
+    // Sum up each category
+    size_t size_per_category[16] = {0};
+    int n_per_category[16] = {0};
+    for (size_t i = 0; i < MAX_DYNAMIC_ALLOCS; ++i) {
+		if (allocated_memory_pointers[i]) {
+        	size_per_category[allocated_memory_category[i]] += allocated_memory_size[i];
+			n_per_category[allocated_memory_category[i]] += 1;
+		}
+    }
+    return size_per_category[category];
+}
+
+size_t mem_dynamic_get_free(memory_category_t category) {
+    return (mem_dynamic_get_size(category) - mem_dynamic_get_occupied(category));
+}
+
+void mem_dynamic_free(void* ptr) {
 #ifdef _DEBUG
-    for (size_t i = 0; i < 512; ++i) {
+    for (size_t i = 0; i < MAX_DYNAMIC_ALLOCS; ++i) {
         if (allocated_memory_pointers[i] == ptr) {
             allocated_memory_pointers[i] = NULL;
             allocated_memory_size[i] = 0;
@@ -292,13 +344,13 @@ void mem_free(void* ptr) {
     free(ptr);
 }
 
-void mem_delayed_free(void* ptr) {
+void mem_dynamic_delayed_free(void* ptr) {
     scheduled_frees[n_scheduled_frees++] = ptr;
 }
 
-void mem_free_scheduled_frees(void) {
+void mem_dynamic_cleanup(void) {
     for (int i = 0; i < n_scheduled_frees; ++i) {
-        mem_free(scheduled_frees[i]);
+        mem_dynamic_free(scheduled_frees[i]);
     }
 }
 
@@ -309,7 +361,7 @@ void mem_debug(void) {
     int n_per_category[16] = {0};
     size_t size_total = 0;
 	int n_total = 0;
-    for (size_t i = 0; i < 512; ++i) {
+    for (size_t i = 0; i < MAX_DYNAMIC_ALLOCS; ++i) {
 		if (allocated_memory_pointers[i]) {
         	size_per_category[allocated_memory_category[i]] += allocated_memory_size[i];
         	size_total += allocated_memory_size[i];

@@ -81,7 +81,7 @@ entity_header_t* entity_cinecam_new(vec3_t spawn_pos) {
 	entity->entity_header.scale = (vec3_t){ONE, ONE, ONE};
 	entity->entity_header.mesh = NULL;
 	entity->n_nodes = 1;
-	entity->nodes = mem_alloc(PATH_CAMERA_MAX_NODES * sizeof(*entity->nodes), MEM_CAT_UNDEFINED);
+	entity->nodes = mem_dynamic_alloc(PATH_CAMERA_MAX_NODES * sizeof(*entity->nodes), MEM_CAT_UNDEFINED, "cinecam nodes (entity_cinecam_new)");
 	entity->progress = 0;
 	entity->active = 0;
 	return (entity_header_t*)entity;
@@ -120,7 +120,7 @@ size_t entity_cinecam_deserialize(int slot, const uint8_t* data) {
 
     // path
     #ifdef _LEVEL_EDITOR
-	cinecam_dest->nodes = mem_alloc(PATH_CAMERA_MAX_NODES * sizeof(cinecam_node_t), MEM_CAT_UNDEFINED);
+	cinecam_dest->nodes = mem_dynamic_alloc(PATH_CAMERA_MAX_NODES * sizeof(cinecam_node_t), MEM_CAT_UNDEFINED, "cinecam path nodes (entity_cinecam_deserialize, editor only)");
 	#else
 	cinecam_dest->nodes = mem_stack_alloc(cinecam_dest->n_nodes * sizeof(cinecam_node_t), STACK_ENTITY);
 	#endif

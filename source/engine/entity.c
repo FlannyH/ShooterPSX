@@ -62,8 +62,8 @@ void entity_init(void) {
 #ifdef _LEVEL_EDITOR
 	if (entity_models) {
 		for (uint32_t i = 0; i < entity_models->n_meshes; ++i) {
-			mem_free(entity_models->meshes[i].vertices);
-			mem_free(entity_models->meshes[i].normals);
+			mem_dynamic_free(entity_models->meshes[i].vertices);
+			mem_dynamic_free(entity_models->meshes[i].normals);
 		}
 	}
 #endif

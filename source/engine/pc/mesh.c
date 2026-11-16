@@ -12,8 +12,8 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
     (void)optimize_for_single_render_per_frame;
 
     // Read the file
-    uint32_t* file_data;
-    size_t size;
+    uint32_t* file_data = NULL;
+    size_t size = 0;
     if (!file_read(path, &file_data, &size, on_stack, stack)) {
         return 0;
     }
@@ -40,8 +40,8 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
 		model->meshes = mem_stack_alloc(sizeof(mesh_t) * model_header->n_submeshes, stack);
 	}
 	else {
-		model = mem_alloc(sizeof(model_t), MEM_CAT_MODEL);
-		model->meshes = mem_alloc(sizeof(mesh_t) * model_header->n_submeshes, MEM_CAT_MESH);
+		model = mem_dynamic_alloc(sizeof(model_t), MEM_CAT_MODEL, path);
+		model->meshes = mem_dynamic_alloc(sizeof(mesh_t) * model_header->n_submeshes, MEM_CAT_MESH, path);
 	}
     model->n_meshes = model_header->n_submeshes;
 
@@ -60,7 +60,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
             string = mem_stack_alloc(mesh_name_length + 1, stack);
         }
         else {
-            string = mem_alloc(mesh_name_length + 1, MEM_CAT_MODEL);
+            string = mem_dynamic_alloc(mesh_name_length + 1, MEM_CAT_MODEL, path);
         }
 
         // Copy the data into it
@@ -88,8 +88,8 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
 
         // Convert quads to triangles
         mesh_t* mesh = &model->meshes[i];
-        vertex_3d_t* new_verts = mem_alloc(((mesh->n_triangles * 3) + (mesh->n_quads * 6)) * sizeof(vertex_3d_t), MEM_CAT_MODEL);
-        normal_t* new_normals = mem_alloc(((mesh->n_triangles * 3) + (mesh->n_quads * 6)) * sizeof(normal_t), MEM_CAT_MODEL);
+        vertex_3d_t* new_verts = mem_dynamic_alloc(((mesh->n_triangles * 3) + (mesh->n_quads * 6)) * sizeof(vertex_3d_t), MEM_CAT_MODEL, path);
+        normal_t* new_normals = mem_dynamic_alloc(((mesh->n_triangles * 3) + (mesh->n_quads * 6)) * sizeof(normal_t), MEM_CAT_MODEL, path);
 
         // todo(pc_mesh_generate_normals): desc: generate mesh normals on pc if none are provided
         // Copy the vertex texture ids to each vertex instead of just the first. OpenGL is annoying about this.
@@ -163,10 +163,10 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
     	model->meshes[0].normals = mem_stack_alloc(sizeof(normal_t) * col_mesh->n_verts, stack);
 	}
 	else {
-		model = mem_alloc(sizeof(model_t), MEM_CAT_MODEL);
-		model->meshes = mem_alloc(sizeof(mesh_t), MEM_CAT_MESH);
-    	model->meshes[0].vertices = mem_alloc(sizeof(vertex_3d_t) * col_mesh->n_verts, MEM_CAT_MESH);
-    	model->meshes[0].normals = mem_alloc(sizeof(normal_t) * col_mesh->n_verts, MEM_CAT_MESH);
+		model = mem_dynamic_alloc(sizeof(model_t), MEM_CAT_MODEL, path);
+		model->meshes = mem_dynamic_alloc(sizeof(mesh_t), MEM_CAT_MESH, path);
+		model->meshes[0].vertices = mem_dynamic_alloc(sizeof(vertex_3d_t) * col_mesh->n_verts, MEM_CAT_MESH, path);
+		model->meshes[0].normals = mem_dynamic_alloc(sizeof(normal_t) * col_mesh->n_verts, MEM_CAT_MESH, path);
 	}
     model->n_meshes = 1;
     model->meshes[0].n_quads = 0;
@@ -225,14 +225,14 @@ model_t* model_load_collision_debug(const char* path, int on_stack, stack_t stac
         out_vtx[(i*3)+2].z = tris[i].v2.z * ONE;
     }
 
-    if (!on_stack) mem_free(file_data);
+    if (!on_stack) mem_dynamic_free(file_data);
 
     return model;
 }
 
 mesh_t* create_debug_mesh_from_raw_triangles(triangle_t* tri, size_t count) {
     mesh_t* mesh = NULL;
-    mesh = mem_alloc(sizeof(mesh_t), MEM_CAT_MESH);
+    mesh = mem_dynamic_alloc(sizeof(mesh_t), MEM_CAT_MESH, "debug triangle meshW");
     if (!mesh) return NULL;
 
     mesh->n_quads = 0;

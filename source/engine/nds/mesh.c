@@ -39,8 +39,8 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
 		model->meshes = mem_stack_alloc(sizeof(mesh_t) * model_header->n_submeshes, stack);
 	}
 	else {
-		model = mem_alloc(sizeof(model_t), MEM_CAT_MODEL);
-		model->meshes = mem_alloc(sizeof(mesh_t) * model_header->n_submeshes, MEM_CAT_MESH);
+		model = mem_dynamic_alloc(sizeof(model_t), MEM_CAT_MODEL);
+		model->meshes = mem_dynamic_alloc(sizeof(mesh_t) * model_header->n_submeshes, MEM_CAT_MESH);
 	}
     model->n_meshes = model_header->n_submeshes;
 
@@ -59,7 +59,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
             string = mem_stack_alloc(mesh_name_length + 1, stack);
         }
         else {
-            string = mem_alloc(mesh_name_length + 1, MEM_CAT_MODEL);
+            string = mem_dynamic_alloc(mesh_name_length + 1, MEM_CAT_MODEL);
         }
 
         // Copy the data into it

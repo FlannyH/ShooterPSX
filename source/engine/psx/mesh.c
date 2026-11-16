@@ -40,8 +40,8 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
 		model->meshes = mem_stack_alloc(sizeof(mesh_t) * model_header->n_submeshes, stack);
 	}
 	else {
-		model = mem_alloc(sizeof(model_t), MEM_CAT_MODEL);
-		model->meshes = mem_alloc(sizeof(mesh_t) * model_header->n_submeshes, MEM_CAT_MESH);
+		model = mem_dynamic_alloc(sizeof(model_t), MEM_CAT_MODEL, path);
+		model->meshes = mem_dynamic_alloc(sizeof(mesh_t) * model_header->n_submeshes, MEM_CAT_MESH, path);
 	}
     model->n_meshes = model_header->n_submeshes;
 
@@ -60,7 +60,7 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
             string = mem_stack_alloc(mesh_name_length + 1, stack);
         }
         else {
-            string = mem_alloc(mesh_name_length + 1, MEM_CAT_MODEL);
+            string = mem_dynamic_alloc(mesh_name_length + 1, MEM_CAT_MODEL, path);
         }
 
         // Copy the data into it
@@ -96,10 +96,10 @@ model_t* model_load(const char* path, int on_stack, stack_t stack, texture_categ
         }
         else {
             for (int i = 0; i < 2; ++i) {
-                model->meshes[mesh_id].tex_tris[i] = mem_alloc(n_tris * sizeof(POLY_GT3), MEM_CAT_MESH);
-                model->meshes[mesh_id].tex_quads[i] = mem_alloc(n_quads * sizeof(POLY_GT4), MEM_CAT_MESH);
+                model->meshes[mesh_id].tex_tris[i] = mem_dynamic_alloc(n_tris * sizeof(POLY_GT3), MEM_CAT_MESH, path);
+                model->meshes[mesh_id].tex_quads[i] = mem_dynamic_alloc(n_quads * sizeof(POLY_GT4), MEM_CAT_MESH, path);
             }
-            model->meshes[mesh_id].vtx_pos_and_size = mem_alloc((n_tris * 3 + n_quads * 4) * sizeof(aligned_position_t), MEM_CAT_MESH);
+            model->meshes[mesh_id].vtx_pos_and_size = mem_dynamic_alloc((n_tris * 3 + n_quads * 4) * sizeof(aligned_position_t), MEM_CAT_MESH, path);
         }
 
         const vertex_3d_t* verts = &vertex_data[mesh_descriptions[mesh_id].vertex_start];

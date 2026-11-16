@@ -29,7 +29,7 @@ collision_mesh_t* model_load_collision(const char* path, int on_stack, stack_t s
     // Return the collision model
 	collision_mesh_t* output;
 	if (on_stack) output = mem_stack_alloc(sizeof(collision_mesh_t), stack);
-	else output = mem_alloc(sizeof(collision_mesh_t), MEM_CAT_COLLISION);
+	else output = mem_dynamic_alloc(sizeof(collision_mesh_t), MEM_CAT_COLLISION, path);
     output->n_verts = col_mesh->n_verts;
     output->verts = (col_mesh_file_vert_t*)(col_mesh + 1);
     return output;

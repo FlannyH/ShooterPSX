@@ -26,7 +26,7 @@ uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures,
 
     // Allocate space for TextureCPU structs
 	if (on_stack) *out_textures = mem_stack_alloc(sizeof(texture_cpu_t) * tex_col_hdr->n_texture_cell, stack);
-	else *out_textures = mem_alloc(sizeof(texture_cpu_t) * tex_col_hdr->n_texture_cell, MEM_CAT_TEXTURE);
+	else *out_textures = mem_dynamic_alloc(sizeof(texture_cpu_t) * tex_col_hdr->n_texture_cell, MEM_CAT_TEXTURE, path);
 
     // Find the data sections
     const void* binary_section = &tex_col_hdr[1];
@@ -52,8 +52,8 @@ uint32_t texture_collection_load(const char* path, texture_cpu_t** out_textures,
     }
 
     if (!on_stack) {
-        mem_delayed_free(file_data);
-        mem_delayed_free(*out_textures);
+        mem_dynamic_delayed_free(file_data);
+        mem_dynamic_delayed_free(*out_textures);
     }
 
     return tex_col_hdr->n_texture_cell;

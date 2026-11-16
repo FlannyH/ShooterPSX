@@ -51,7 +51,7 @@ void file_init(const char* path) {
     }
 
     // Read file table
-    item_table = mem_alloc(archive_header.n_items * sizeof(fsfa_item_t), MEM_CAT_FILE);
+    item_table = mem_dynamic_alloc(archive_header.n_items * sizeof(fsfa_item_t), MEM_CAT_FILE, path);
     fseek(file_archive, archive_header.items_offset, SEEK_SET);
     fread(item_table, sizeof(fsfa_item_t), archive_header.n_items, file_archive);
 }
@@ -95,7 +95,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
 
     // Allocate memory for the data
 	if (on_stack) *destination = (uint32_t*)mem_stack_alloc(*size, stack);
-	else *destination = (uint32_t*)mem_alloc(*size, MEM_CAT_FILE);
+	else *destination = (uint32_t*)mem_dynamic_alloc(*size, MEM_CAT_FILE, path);
 
     // Read the data
     fread(*destination, sizeof(char), *size, file);
@@ -183,7 +183,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
         }
 
         if (on_stack) *destination = (uint32_t*)mem_stack_alloc(item->size, stack);
-        else *destination = (uint32_t*)mem_alloc(item->size, MEM_CAT_FILE);
+        else *destination = (uint32_t*)mem_dynamic_alloc(item->size, MEM_CAT_FILE, path);
         *size = item->size;
         fseek(file_archive, item->offset + archive_header.data_offset, SEEK_SET);
         fread(*destination, 1, item->size, file_archive);
