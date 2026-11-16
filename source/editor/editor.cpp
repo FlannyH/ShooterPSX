@@ -2,9 +2,6 @@
 
 #include "subnivis/entity.h"
 
-// todo(editor_memory_debugger): desc: memory debugger
-// ideally with a hex editor per memory stack, meters for the stack, and maybe if i figure out my own dynamic allocator a visualizer with a strip?
-
 #include "camera.h"
 #include "imgui.h"
 
@@ -165,6 +162,30 @@ void shape_defragment() {
             editor.level.lvl.shapes[j] = editor.level.lvl.shapes[j + 1];
         }
         memset(&editor.level.lvl.shapes[editor.level.lvl.n_shapes], 0, sizeof(shape_t));
+    }
+}
+
+void light_defragment() {
+    // find last valid entry
+    size_t last_valid = 0;
+    for (size_t i = 0; i < MAX_LIGHT_COUNT; ++i) {
+        if (editor.level.lvl.lights[i].type != LIGHT_NONE) last_valid = i;
+    }
+    editor.level.lvl.n_lights = last_valid + 1;
+
+    // defragment up to last valid entry
+    int i = 0;
+    while (i < editor.level.lvl.n_lights) {
+        if (editor.level.lvl.lights[i].type != LIGHT_NONE) {
+            ++i;
+            continue;
+        }
+
+        --editor.level.lvl.n_lights;
+        for (int j = i; j < editor.level.lvl.n_lights; ++j) {
+            editor.level.lvl.lights[j] = editor.level.lvl.lights[j + 1];
+        }
+        memset(&editor.level.lvl.lights[editor.level.lvl.n_lights], 0, sizeof(light_t));
     }
 }
 
@@ -1095,7 +1116,7 @@ void light_stuff() {
     }
 
     if (ImGui::Button("Defragment")) {
-        // todo(debug_light_defragment): desc: light_defragment();
+        light_defragment();
     }
     ImGui::End();
 
