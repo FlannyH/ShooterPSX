@@ -43,7 +43,7 @@ size_t entity_benchmarker_deserialize(int slot, const uint8_t* data) {
     (void)data;
 
     entity_benchmarker_t* benchmarker = (entity_benchmarker_t*)entity_get_header(slot);
-    benchmarker->max_samples = 512;
+    benchmarker->max_samples = 30;
     benchmarker->samples = mem_stack_alloc(benchmarker->max_samples * sizeof(benchmark_sample_t), STACK_ENTITY);
     benchmarker->sample_cursor = 0;
     benchmarker->fps = 0;
@@ -65,6 +65,8 @@ void entity_benchmarker_update(int slot, player_t* player, scalar_t dt, level_t*
         benchmarker->second_counter -= ONE;
         benchmarker->fps = benchmarker->fps_counter;
         benchmarker->fps_counter = 0;
+        benchmarker->samples[benchmarker->sample_cursor++] = (benchmark_sample_t) { benchmarker->time_counter, dt, benchmarker->fps };
+        benchmarker->sample_cursor %= benchmarker->max_samples;
     }
 
     char text[32] = {0};
@@ -77,27 +79,27 @@ void entity_benchmarker_update(int slot, player_t* player, scalar_t dt, level_t*
 
     if (benchmarker->max_samples == 0) return;
 
-    benchmarker->samples[benchmarker->sample_cursor++] = (benchmark_sample_t) { benchmarker->time_counter, dt, benchmarker->fps };
-    benchmarker->sample_cursor %= benchmarker->max_samples;
 
-    // graph
-    const scalar_t delta_mul = -1200;
-    const scalar_t y_offset = 0;
+    const scalar_t fps_mul = SCALAR(-1);
+    const scalar_t y_offset = 64;
     renderer_draw_2d_line((vec2_t){SCALAR(-256), SCALAR(y_offset)}, (vec2_t){SCALAR(256), SCALAR(y_offset)}, black, 3);
-    renderer_draw_2d_line((vec2_t){SCALAR(-256), SCALAR(y_offset) - delta_mul * SCALAR(0.05)}, (vec2_t){SCALAR(256), SCALAR(y_offset) - delta_mul * SCALAR(0.05)}, red, 3);
-    renderer_draw_2d_line((vec2_t){SCALAR(-256), SCALAR(y_offset) - delta_mul * SCALAR(0.033)}, (vec2_t){SCALAR(256), SCALAR(y_offset) - delta_mul * SCALAR(0.033)}, yellow, 3);
-    renderer_draw_2d_line((vec2_t){SCALAR(-256), SCALAR(y_offset) - delta_mul * SCALAR(0.016)}, (vec2_t){SCALAR(256), SCALAR(y_offset) - delta_mul * SCALAR(0.016)}, green, 3);
+    renderer_draw_2d_line((vec2_t){SCALAR(-256), SCALAR(y_offset) + fps_mul * 20}, (vec2_t){SCALAR(256), SCALAR(y_offset) + fps_mul * 20}, red, 3);
+    renderer_draw_2d_line((vec2_t){SCALAR(-256), SCALAR(y_offset) + fps_mul * 30}, (vec2_t){SCALAR(256), SCALAR(y_offset) + fps_mul * 30}, yellow, 3);
+    renderer_draw_2d_line((vec2_t){SCALAR(-256), SCALAR(y_offset) + fps_mul * 60}, (vec2_t){SCALAR(256), SCALAR(y_offset) + fps_mul * 60}, green, 3);
+    const scalar_t pitch = scalar_div(512, benchmarker->max_samples - 1);
     for (size_t i = 0; i < benchmarker->max_samples; ++i) {
-        size_t offset1 = (benchmarker->sample_cursor + i - 1) % benchmarker->max_samples;
-        size_t offset2 = (benchmarker->sample_cursor + i) % benchmarker->max_samples;
+        size_t offset0 = (benchmarker->sample_cursor + i) % benchmarker->max_samples;
+        size_t offset1 = (benchmarker->sample_cursor + i + 1) % benchmarker->max_samples;
+        scalar_t x0 = pitch * i;
+        scalar_t x1 = pitch * (i + 1);
         renderer_draw_2d_line(
-            (vec2_t){SCALAR(i - 1 - 256), SCALAR(y_offset) - (delta_mul * benchmarker->samples[offset1].delta)},
-            (vec2_t){SCALAR(i - 256), SCALAR(y_offset) - (delta_mul * benchmarker->samples[offset2].delta)},
+            (vec2_t){x0 - SCALAR(256), SCALAR(y_offset) + (fps_mul * benchmarker->samples[offset0].fps)},
+            (vec2_t){x1 - SCALAR(256), SCALAR(y_offset) + (fps_mul * benchmarker->samples[offset1].fps)},
             white, 1
         );
         renderer_draw_2d_line(
-            (vec2_t){SCALAR(i - 1 - 256 + 1), SCALAR(y_offset + 1) - (delta_mul * benchmarker->samples[offset1].delta)},
-            (vec2_t){SCALAR(i - 256 + 1), SCALAR(y_offset + 1) - (delta_mul * benchmarker->samples[offset2].delta)},
+            (vec2_t){(x0 - SCALAR(256) + 1), SCALAR(y_offset - 1) + (fps_mul * benchmarker->samples[offset0].fps)},
+            (vec2_t){(x1 - SCALAR(256) + 1), SCALAR(y_offset - 1) + (fps_mul * benchmarker->samples[offset1].fps)},
             black, 2
         );
     }
