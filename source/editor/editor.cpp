@@ -335,8 +335,8 @@ int inspect_shape(size_t shape_id, int& render_hull_build_set_cap) {
     int kill = (editor.level.lvl.shapes[shape_id].flags.kill != 0);
     int nav_consider = (editor.level.lvl.shapes[shape_id].flags.nav_consider != 0);
     result |= inspect_bool(&non_solid, "Disable collision");
-    result |= inspect_bool(&floor_reachable, "Kill zone");
-    result |= inspect_bool(&kill, "Floor reachable by player");
+    result |= inspect_bool(&kill, "Kill zone");
+    result |= inspect_bool(&floor_reachable, "Floor reachable by player");
     result |= inspect_bool(&nav_consider, "Floor reachable by entity");
     editor.level.lvl.shapes[shape_id].flags.non_solid = non_solid;
     editor.level.lvl.shapes[shape_id].flags.floor_reachable = floor_reachable;

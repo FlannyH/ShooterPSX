@@ -28,6 +28,7 @@
 
 #define PI 3.14159265358979f
 #define RESOLUTION_SCALING 4
+#define TEX_ATLAS_RES 1024
 GLFWwindow* window;
 mat4 perspective_matrix;
 mat4 view_matrix;
@@ -319,8 +320,8 @@ void renderer_init(void) {
 
 	// Zero init textures
 	// todo(pc_texture_atlas_resolution): desc: unhardcode texture atlas resolutions
-    uint32_t* zero_data = mem_dynamic_alloc(2048 * 2048 * 4, MEM_CAT_TEXTURE, "texture atlas initial memory");
-	for (size_t i = 0; i < 2048 * 2048; ++i) {
+    uint32_t* zero_data = mem_dynamic_alloc(TEX_ATLAS_RES * TEX_ATLAS_RES * 4, MEM_CAT_TEXTURE, "texture atlas initial memory");
+	for (size_t i = 0; i < TEX_ATLAS_RES * TEX_ATLAS_RES; ++i) {
 		zero_data[i] = 0u;
 	}
 
@@ -328,7 +329,7 @@ void renderer_init(void) {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textures);
 	glObjectLabel(GL_TEXTURE, textures, -1, "texture atlas pixel data");
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 2048, 2048, 0, GL_RGBA, GL_UNSIGNED_BYTE, zero_data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, TEX_ATLAS_RES, TEX_ATLAS_RES, 0, GL_RGBA, GL_UNSIGNED_BYTE, zero_data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_NEAREST_MIPMAP_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_NEAREST);
@@ -418,7 +419,7 @@ void renderer_init(void) {
 
 	glfwGetWindowSize(window, &window_w, &window_h);
 
-	texture_pool_init(0, 0, 0, 2048);
+	texture_pool_init(0, 0, 0, TEX_ATLAS_RES);
 }
 double lasttime = 0.0;
 void renderer_begin_frame(void) {
