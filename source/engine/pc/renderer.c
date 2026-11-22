@@ -1070,6 +1070,49 @@ void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv
 	glDisable(GL_BLEND);
 }
 
+void renderer_draw_2d_line(vec2_t v0, vec2_t v1, pixel32_t color, int depth) {
+	mat4 id_matrix;
+	glm_mat4_identity(id_matrix);
+
+	mat4 screen_matrix;
+	glm_mat4_identity(screen_matrix);
+	screen_matrix[0][0] = 1.0f / 256.0f;
+	screen_matrix[1][1] = -2.0f / 240.0f;
+	screen_matrix[2][2] = 1.0f / 256.0f;
+
+    glUseProgram(shader_gouraud);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "proj_matrix"), 1, GL_FALSE, &id_matrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "view_matrix"), 1, GL_FALSE, &screen_matrix[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader_gouraud, "model_matrix"), 1, GL_FALSE, &id_matrix[0][0]);
+    glUniform1i(glGetUniformLocation(shader_gouraud, "texture_bound"), 0);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "curr_depth_bias"), curr_depth_bias);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "interpolation_mode"), 0);
+	glUniform1i(glGetUniformLocation(shader_gouraud, "edge_behavior"), 0);
+	glUniform1f(glGetUniformLocation(shader_gouraud, "alpha"), ((float)color.a) / 255.0f);
+
+    line_3d_t line;
+    line.v0.x = (int16_t)int_from_scalar(v0.x);
+    line.v0.y = (int16_t)int_from_scalar(v0.y);
+    line.v0.z = (int16_t)depth;
+    line.v1.x = (int16_t)int_from_scalar(v1.x);
+    line.v1.y = (int16_t)int_from_scalar(v1.y);
+    line.v1.z = (int16_t)depth;
+    line.v0.r = color.r;
+    line.v0.g = color.g;
+    line.v0.b = color.b;
+    line.v1.r = color.r;
+    line.v1.g = color.g;
+    line.v1.b = color.b;
+    glBufferData(GL_ARRAY_BUFFER, sizeof(line_3d_t), &line, GL_DYNAMIC_DRAW);
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glDrawArrays(GL_LINES, 0, 2);
+}
+
 void renderer_apply_fade(scalar_t fade_level) {
 	const scalar_t fade_level_normalized = scalar_div(fade_level, MAX_FADE_LEVEL);
 	const int fade_level_255 = (fade_level_normalized * 255) / ONE;

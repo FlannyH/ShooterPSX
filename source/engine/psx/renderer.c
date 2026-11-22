@@ -366,6 +366,20 @@ void renderer_apply_fade(scalar_t fade_level) {
     addPrim(ord_tbl[drawbuffer] + 0, new_tpage);
 }
 
+void renderer_draw_2d_line(vec2_t v0, vec2_t v1, pixel32_t color, int depth) {
+    if (depth >= ORD_TBL_LENGTH || (depth <= 0)) return;
+
+    LINE_F2* new_line = (LINE_F2*)next_primitive;
+    next_primitive += sizeof(LINE_F2) / sizeof(*next_primitive);
+
+    setLineF2(new_line);
+    setXY2(new_line,
+        (v0.x / ONE) + (res_x / 2), (v0.y / ONE) + (curr_res_y / 2),
+        (v1.x / ONE) + (res_x / 2), (v1.y / ONE) + (curr_res_y / 2));
+    setColor0(new_line, *(uint32_t*)&color);
+    addPrim(ord_tbl[drawbuffer] + depth + curr_ot_bias, new_line);
+}
+
 void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const transform_t* model_transform) {
     // Set rotation and translation matrix
     MATRIX model_matrix;
