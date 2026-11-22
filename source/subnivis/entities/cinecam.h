@@ -25,6 +25,7 @@ typedef struct {
 } entity_cinecam_t;
 
 entity_header_t* entity_cinecam_new(vec3_t spawn_pos);
+void entity_cinecam_destroy(void);
 size_t entity_cinecam_serialize(int slot, uint8_t* data);
 size_t entity_cinecam_deserialize(int slot, const uint8_t* data);
 void entity_cinecam_update(int slot, player_t* player, scalar_t dt, level_t* level);

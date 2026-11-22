@@ -13,6 +13,7 @@ typedef struct {
 } entity_crate_t;
 
 entity_header_t* entity_crate_new(vec3_t spawn_pos);
+void entity_crate_destroy(void);
 size_t entity_crate_deserialize(int slot, const uint8_t* data);
 size_t entity_crate_serialize(int slot, uint8_t* data);
 void entity_crate_update(int slot, player_t* player, scalar_t dt, level_t* level);

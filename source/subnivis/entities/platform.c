@@ -86,6 +86,10 @@ entity_header_t* entity_platform_new(vec3_t spawn_pos) {
 	return (entity_header_t*)entity;
 }
 
+void entity_platform_destroy(void) {
+    return;
+}
+
 void entity_platform_update(int slot, player_t* player, scalar_t dt, level_t* level) {
 	(void)player;
 	(void)level;

@@ -49,6 +49,10 @@ entity_header_t* entity_crate_new(vec3_t spawn_pos) {
 	return (entity_header_t*)entity;
 }
 
+void entity_crate_destroy(void) {
+    return;
+}
+
 void entity_crate_update(int slot, player_t* player, scalar_t dt, level_t* level) {
     (void)level;
 	PANIC_IF("entity_models is null!", entity_get_models() == NULL);

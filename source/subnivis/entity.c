@@ -1,5 +1,6 @@
 #include "entity.h"
 
+#include "entities/benchmarker.h"
 #include "entities/chaser.h"
 #include "entities/cinecam.h"
 #include "entities/crate.h"
@@ -13,6 +14,7 @@
         entity_register_type(ENTITY_##name, (entity_reg_t){ \
             sizeof(entity_##type##_t), \
             entity_##type##_new, \
+            entity_##type##_destroy, \
             entity_##type##_deserialize, \
             entity_##type##_serialize, \
             entity_##type##_update, \
@@ -25,6 +27,7 @@
         entity_register_type(ENTITY_##name, (entity_reg_t){ \
             sizeof(entity_##type##_t), \
             entity_##type##_new, \
+            entity_##type##_destroy, \
             entity_##type##_deserialize, \
             entity_##type##_serialize, \
             entity_##type##_update, \

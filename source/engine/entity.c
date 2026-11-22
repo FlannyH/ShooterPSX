@@ -137,10 +137,11 @@ void entity_sanitize(void) {
 	}
 }
 
-void entity_kill(int slot) {
-	PANIC_IF("index out of bounds", slot < 0 || slot >= ENTITY_LIST_LENGTH);
-	// todo(entity_destructors): desc: maybe support destructors?
-	entity_types[slot] = ENTITY_NONE;
+void entity_kill(int entity_index) {
+	PANIC_IF("index out of bounds", entity_index < 0 || entity_index >= ENTITY_LIST_LENGTH);
+	entity_reg_t* entity_funcs = &entity_register[entity_get_type(entity_index)];
+	if (entity_funcs->destroy) entity_funcs->destroy();
+	entity_types[entity_index] = ENTITY_NONE;
 }
 
 const char* entity_names[] = {

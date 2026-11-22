@@ -66,6 +66,10 @@ entity_header_t* entity_door_new(vec3_t spawn_pos) {
 	return (entity_header_t*)entity;
 }
 
+void entity_door_destroy(void) {
+    return;
+}
+
 mesh_t* update_mesh(entity_door_t* door) {
 	mesh_t* mesh = NULL;
 	if (door->is_rotated) {

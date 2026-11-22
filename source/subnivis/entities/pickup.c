@@ -51,6 +51,10 @@ entity_header_t* entity_pickup_new(vec3_t spawn_pos) {
     return (entity_header_t*)entity;
 }
 
+void entity_pickup_destroy(void) {
+    return;
+}
+
 void entity_pickup_update(int slot, player_t* player, scalar_t dt, level_t* level) {
     (void)level;
 	entity_pickup_t* pickup = (entity_pickup_t*)entity_get_header(slot);

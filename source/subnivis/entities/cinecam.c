@@ -87,6 +87,10 @@ entity_header_t* entity_cinecam_new(vec3_t spawn_pos) {
 	return (entity_header_t*)entity;
 }
 
+void entity_cinecam_destroy(void) {
+    return;
+}
+
 size_t entity_cinecam_serialize(int slot, uint8_t* data) {
     entity_cinecam_t* cinecam_source = (entity_cinecam_t*)entity_get_header(slot);
     size_t cursor = sizeof(vec3_t) * 3;

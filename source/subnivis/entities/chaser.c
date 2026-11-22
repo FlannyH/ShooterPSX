@@ -65,6 +65,10 @@ entity_header_t* entity_chaser_new(vec3_t spawn_pos) {
 	return (entity_header_t*)entity;
 }
 
+void entity_chaser_destroy(void) {
+    return;
+}
+
 void decide_action(entity_chaser_t* chaser, const vec3_t player_pos) {
 	const vec3_t chaser_pos = chaser->entity_header.position;
 	int player_visible = 0;

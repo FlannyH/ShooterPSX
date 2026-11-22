@@ -130,6 +130,10 @@ entity_header_t* entity_trigger_new(vec3_t spawn_pos) {
     return (entity_header_t*)entity;
 }
 
+void entity_trigger_destroy(void) {
+    return;
+}
+
 void entity_trigger_update(int slot, player_t* player, scalar_t dt, level_t* level) {
     (void)player;
     entity_trigger_t* trigger = (entity_trigger_t*)entity_get_header(slot);

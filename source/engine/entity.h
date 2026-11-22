@@ -43,6 +43,7 @@ typedef struct {
 } entity_collision_box_t;
 
 typedef entity_header_t* (*entity_new_func_t)(vec3_t position);
+typedef void (*entity_destroy_func_t)(void);
 typedef size_t (*entity_deserialize_func_t)(int slot, const uint8_t* data);
 typedef size_t (*entity_serialize_func_t)(int slot, uint8_t* data);
 typedef void (*entity_update_func_t)(int slot, player_t* player, scalar_t dt, level_t* level);
@@ -55,6 +56,7 @@ typedef int (*entity_inspect_func_t)(int slot);
 typedef struct {
     uint32_t struct_size;
     entity_new_func_t new_fn;
+    entity_destroy_func_t destroy;
     entity_deserialize_func_t deserialize;
     entity_serialize_func_t serialize;
     entity_update_func_t update;
