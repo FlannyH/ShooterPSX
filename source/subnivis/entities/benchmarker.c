@@ -98,8 +98,8 @@ void entity_benchmarker_update(int slot, player_t* player, scalar_t dt, level_t*
             white, 1
         );
         renderer_draw_2d_line(
-            (vec2_t){(x0 - SCALAR(256) + 1), SCALAR(y_offset - 1) + (fps_mul * benchmarker->samples[offset0].fps)},
-            (vec2_t){(x1 - SCALAR(256) + 1), SCALAR(y_offset - 1) + (fps_mul * benchmarker->samples[offset1].fps)},
+            (vec2_t){(x0 - SCALAR(256) + 1), SCALAR(y_offset + 1) + (fps_mul * benchmarker->samples[offset0].fps)},
+            (vec2_t){(x1 - SCALAR(256) + 1), SCALAR(y_offset + 1) + (fps_mul * benchmarker->samples[offset1].fps)},
             black, 2
         );
     }

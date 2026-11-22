@@ -94,7 +94,7 @@ int file_read(const char* path, uint32_t** destination, size_t* size, int on_sta
 
     // Allocate space and read data
     if (on_stack) *destination = mem_stack_alloc(data_size, stack);
-    else *destination = mem_dynamic_alloc(data_size, MEM_CAT_FILE);
+    else *destination = mem_dynamic_alloc(data_size, MEM_CAT_FILE, path);
 
     // Read :D
     pc_read(file_handle, data_size, *destination);
