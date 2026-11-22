@@ -81,6 +81,7 @@ CODE_GAME_C = 		   subnivis/debug_menu_main.c \
 			  	  	   subnivis/player.c \
 					   subnivis/text.c \
 			  	  	   subnivis/entities/cinecam.c \
+			  	  	   subnivis/entities/benchmarker.c \
 				  	   subnivis/entities/platform.c \
 				  	   subnivis/entities/trigger.c \
 				  	   subnivis/entities/pickup.c \
@@ -89,6 +90,7 @@ CODE_GAME_C = 		   subnivis/debug_menu_main.c \
 				  	   subnivis/entities/door.c
 
 CODE_EDITOR_C =        subnivis/entity.c \
+			  	  	   subnivis/entities/benchmarker.c \
 			  	  	   subnivis/entities/cinecam.c \
 				  	   subnivis/entities/platform.c \
 				  	   subnivis/entities/trigger.c \

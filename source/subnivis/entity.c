@@ -44,6 +44,7 @@ void subnivis_register_entities(void) {
     REGISTER_ENTITY(PLATFORM, platform);
     REGISTER_ENTITY(TRIGGER, trigger);
     REGISTER_ENTITY(CINECAM, cinecam);
+    REGISTER_ENTITY(BENCHMARKER, benchmarker);
 }
 
 #undef REGISTER_ENTITY
