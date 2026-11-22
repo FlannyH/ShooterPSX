@@ -16,6 +16,7 @@ typedef enum {
 	ENTITY_TRIGGER,
 	ENTITY_CINECAM,
 	ENTITY_BENCHMARKER,
+	N_ENTITY_TYPES
 } entity_type_t; // typically represented by a uint8_t
 
 typedef enum {

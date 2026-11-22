@@ -144,19 +144,6 @@ void entity_kill(int entity_index) {
 	entity_types[entity_index] = ENTITY_NONE;
 }
 
-const char* entity_names[] = {
-	"(none)",
-	"Door",
-	"Pickup",
-	"Crate",
-	"Chaser enemy",
-	"Platform",
-	"Trigger box",
-	"Cinecam",
-	"Benchmarker",
-	NULL
-};
-
 model_t* entity_get_models(void) {
 	return entity_models;
 }
@@ -233,7 +220,7 @@ void entity_set_signal(int index, int value) {
 #ifdef _DEBUG
 void entity_debug(void) {
 	for (int i = 0; i < ENTITY_LIST_LENGTH; ++i) {
-		printf("entity %03i:\t%s\n", i, entity_names[entity_types[i]]);
+		printf("entity %03i:\t%s\n", i, entity_register_get(entity_types[i])->name);
 	}
 }
 

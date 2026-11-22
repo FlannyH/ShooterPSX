@@ -29,7 +29,7 @@ int inspect_pixel32(pixel32_t* pixel, const char* label);
 int inspect_vec3(vec3_t* vec, const char* label);
 int inspect_svec3_4_12(svec3_t* vec, const char* label);
 int inspect_scalar(scalar_t* scalar, const char* label);
-size_t inspect_enum(size_t value, const char** names, const char* label);
+size_t inspect_enum(size_t value, const char* const* names, const char* label);
 int inspect_entity(size_t entity_id);
 int inspect_light(size_t light_id);
 int inspect_shape(size_t shape_id);

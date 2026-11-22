@@ -23,7 +23,7 @@
 #include <vector>
 #include <format>
 
-// todo(debug_renderer_fix): desc: fix debug renderers for collision, nav, etc
+// todo(debug_renderer_fix): desc: fix debug renderers for nav, etc
 
 struct editor_state_t {
     bool initialized;
@@ -123,8 +123,8 @@ extern "C" {
     extern GLuint fbo;
 }
 
-// todo(debug_layer_extern_entity_names): desc: maybe dont use extern for entity_names
-extern const char* entity_names[];
+char* entity_names[N_ENTITY_TYPES] = {0};
+
 const char* light_type_names[] = {
     "None",
     "Directional light",
@@ -236,7 +236,7 @@ int inspect_scalar(scalar_t* scalar, const char* label) {
     return 0;
 }
 
-size_t inspect_enum(size_t value, const char** names, const char* label) {
+size_t inspect_enum(size_t value, const char* const* names, const char* label) {
     size_t new_value = value;
     if (ImGui::BeginCombo(label, names[value]))
     {
@@ -954,6 +954,11 @@ void initialize() {
     editor.level.lvl.shapes = (shape_t*)mem_dynamic_alloc(256 * sizeof(shape_t), MEM_CAT_UNDEFINED, "shapes");
     memset(editor.level.lvl.lights, 0, 256 * sizeof(light_t));
     memset(editor.level.lvl.shapes, 0, 256 * sizeof(shape_t));
+
+    for (size_t i = 0; i < N_ENTITY_TYPES; ++i) {
+        entity_names[i] = entity_register_get(i)->name;
+    }
+    entity_names[N_ENTITY_TYPES] = NULL;
 
     editor.render.graphics = 1;
     editor.misc.selected_entity = -1;

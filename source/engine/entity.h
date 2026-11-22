@@ -55,6 +55,7 @@ typedef int (*entity_inspect_func_t)(int slot);
 
 typedef struct {
     uint32_t struct_size;
+    char* name;
     entity_new_func_t new_fn;
     entity_destroy_func_t destroy;
     entity_deserialize_func_t deserialize;
