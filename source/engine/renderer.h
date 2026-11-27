@@ -71,38 +71,40 @@ typedef union {
     } bits;
 } video_mode_t;
 
-// Functions
-void renderer_init(void); // Initializes the renderer by configuring the GPU, setting the video mode, and preparing the drawing environment
-void renderer_begin_frame(void); // preparing it for a new frame
-void renderer_end_frame(void); // Draws the render queue, swaps the drawbuffer, clears the render queue, and applies the display environments
-void renderer_set_view(const transform_t* view_transform); // Any 3D draw calls after this will use this view matrix
+// Shared functions
 void renderer_draw_model_shaded(const model_t* model, const transform_t* model_transform, visfield_t* vislist); // Draws a 3D model at a given transform using shaded triangle primitives
-void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform, int local, int facing_camera); // Draws a 3D mesh at a given transform using shaded triangle primitives. Setting local to 1 draws it relative to the camera view.
 void renderer_draw_2d_quad_axis_aligned(vec2_t center, vec2_t size, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, texture_category_t category);
-void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, texture_category_t category);
-void renderer_draw_2d_line(vec2_t v0, vec2_t v1, pixel32_t color, int depth);
 void renderer_draw_text(vec2_t pos, const char* text, const int text_type, const int centered, const pixel32_t color);
-void renderer_apply_fade(scalar_t fade_level);
 void renderer_tick_fade(void);
 void renderer_start_fade_in(scalar_t speed);
 void renderer_start_fade_out(scalar_t speed);
 void renderer_stop_fade(void);
 int renderer_is_fading(void);
 int renderer_get_fade_level(void);
-void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const transform_t* model_transform);
 void renderer_debug_draw_aabb(const aabb_t* box, pixel32_t color, const transform_t* model_transform);
 void renderer_debug_draw_centered_box(vec3_t position, vec3_t size, pixel32_t color, const transform_t* model_transform);
 void renderer_debug_draw_sphere(sphere_t sphere);
-void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_category_t category);
 void renderer_free_texture(int index, texture_category_t category);
 void renderer_free_texture_category(texture_category_t category);
+int renderer_get_camera_level_section(vec3_t pos, const vislist_t vis);
+
+// Platform specific functions
+void renderer_init(void); // Initializes the renderer by configuring the GPU, setting the video mode, and preparing the drawing environment
+void renderer_begin_frame(void); // preparing it for a new frame
+void renderer_end_frame(void); // Draws the render queue, swaps the drawbuffer, clears the render queue, and applies the display environments
+void renderer_set_view(const transform_t* view_transform); // Any 3D draw calls after this will use this view matrix
+void renderer_draw_mesh_shaded(mesh_t* mesh, const transform_t* model_transform, int local, int facing_camera); // Draws a 3D mesh at a given transform using shaded triangle primitives. Setting local to 1 draws it relative to the camera view.
+void renderer_draw_2d_quad(vec2_t tl, vec2_t tr, vec2_t bl, vec2_t br, vec2_t uv_tl, vec2_t uv_br, pixel32_t color, int depth, int texture_id, texture_category_t category);
+void renderer_draw_2d_line(vec2_t v0, vec2_t v1, pixel32_t color, int depth);
+void renderer_apply_fade(scalar_t fade_level);
+void renderer_debug_draw_line(vec3_t v0, vec3_t v1, pixel32_t color, const transform_t* model_transform);
+void renderer_upload_texture(const texture_cpu_t* texture, int index, texture_category_t category);
 void renderer_set_video_mode(video_mode_t new_video_mode);
 video_mode_t renderer_get_video_mode(void);
 scalar_t renderer_delta_time(dt_flags_t flags);
 int renderer_should_close(void);
 void renderer_set_depth_bias(int bias);
 int renderer_n_meshes_drawn(void);
-int renderer_get_camera_level_section(vec3_t pos, const vislist_t vis);
 int renderer_width(void);
 int renderer_height(void);
 texture_entry_t* renderer_get_texture_entry(texture_category_t category, int texture_id);
