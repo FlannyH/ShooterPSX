@@ -18,7 +18,7 @@
 // todo(entity): desc: entity
     // todo(entity_chaser): desc: chaser
     // todo(entity_chaser): deps: chaser_logic chaser_body_hits chaser_head_hits
-// todo(entity): deps: entity_state entity_destructors
+// todo(entity): deps: chaser
 
 // todo(input): desc: input
 // todo(input): deps: input_remap_menu
@@ -42,6 +42,3 @@
 
 // todo(particles): desc: particles
 // todo(particles): deps: particle_test_system particle_system_new
-
-// todo(tools): desc: tools
-// todo(tools): deps: unhardcode_terrain_id collision_sah unused_function_get_bytes name_table matrix_correctness unhardcode_texture_bpp
