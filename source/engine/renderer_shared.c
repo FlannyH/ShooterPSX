@@ -124,9 +124,9 @@ void renderer_debug_draw_sphere(const sphere_t sphere) {
 void renderer_draw_model_shaded(const model_t* model, const transform_t* model_transform, visfield_t* vislist) {
 	if (!model) return;
 
-#ifdef _LEVEL_EDITOR
+	#ifdef _LEVEL_EDITOR
 	renderer_set_drawing_id(0, 0);
-#endif
+	#endif
 
     if (vislist == NULL || n_sections == 0) {
         for (size_t i = 0; i < model->n_meshes; ++i) {
@@ -282,16 +282,16 @@ void renderer_free_texture(int index, texture_category_t category) {
 
     // clear vram
     if (tex_rect.w > 0 && tex_rect.h > 0) {
-#if defined(_DEBUG) && defined(_PSX)
+        #if defined(_DEBUG) && defined(_PSX)
         renderer_psx_clear_vram((svec2_t){tex_rect.x, tex_rect.y}, (svec2_t){tex_rect.w, tex_rect.h}, (pixel32_t){255, 0, 255, 0});
-#endif
+        #endif
         int texture_entry_id = entry->texture_entry_id;
         texture_pool_free((uint32_t)entry->texture_pool_id, &texture_entry_id, 1);
     }
     if (pal_rect.w > 0 && pal_rect.h > 0) {
-#if defined(_DEBUG) && defined(_PSX)
+        #if defined(_DEBUG) && defined(_PSX)
         renderer_psx_clear_vram((svec2_t){pal_rect.x, pal_rect.y}, (svec2_t){pal_rect.w, pal_rect.h}, (pixel32_t){255, 0, 255, 0});
-#endif
+        #endif
         int palette_entry_id = entry->palette_entry_id;
         texture_pool_free((uint32_t)entry->palette_pool_id, &palette_entry_id, 1);
     }
@@ -311,9 +311,9 @@ void renderer_free_texture_category(texture_category_t category) {
         rect_t rect = texture_pool_rect(entry->texture_pool_id, entry->texture_entry_id);
         if (rect.w <= 0 && rect.h <= 0) continue;
 
-#if defined(_PSX) && defined(_DEBUG)
+        #if defined(_PSX) && defined(_DEBUG)
         renderer_psx_clear_vram((svec2_t){rect.x, rect.y}, (svec2_t){rect.w, rect.h}, (pixel32_t){255, 0, 255, 0});
-#endif
+        #endif
 
         const size_t pool_id = entry->texture_pool_id;
         const size_t textures_id = (pool_id * MAX_TEXTURE_COUNT) + (n_textures[entry->texture_pool_id]++);
@@ -324,9 +324,9 @@ void renderer_free_texture_category(texture_category_t category) {
         rect = texture_pool_rect(entry->palette_pool_id, entry->palette_entry_id);
         if (rect.w <= 0 && rect.h <= 0) continue;
 
-#if defined(_DEBUG) && defined(_PSX)
+        #if defined(_DEBUG) && defined(_PSX)
         renderer_psx_clear_vram((svec2_t){rect.x, rect.y}, (svec2_t){rect.w, rect.h}, (pixel32_t){255, 0, 255, 0});
-#endif
+        #endif
 
         const size_t pal_pool_id = entry->palette_pool_id;
         const size_t pal_textures_id = (pal_pool_id * MAX_TEXTURE_COUNT) + (n_textures[entry->palette_pool_id]++);
